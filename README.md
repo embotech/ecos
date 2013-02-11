@@ -1,0 +1,4 @@
+ecos
+====
+
+Embedded Conic Solver
