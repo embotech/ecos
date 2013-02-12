@@ -1,12 +1,5 @@
 function lambda = conelp_timesWsquare(scaling,z,dims)
-% Linear time multiplication with scaling matrix W.
-%
-% NOTE: The solver is heavily based on the document
-%
-%  [1] L. Vandenberghe: "The CVXOPT linear and quadratic cone program
-%      solvers", March 20, 2010.
-%      [Online]: http://abel.ee.ucla.edu/cvxopt/documentation/coneprog.pdf
-%
+% Linear time multiplication with square of scaling matrix W.
 %
 % (c) Alexander Domahidi, IfA, ETH Zurich, 2012.
 
@@ -14,7 +7,7 @@ function lambda = conelp_timesWsquare(scaling,z,dims)
 lambda = NaN(length(z),1);
 
 % LP cone
-lambda(1:dims.l) = scaling.l.wl .* scaling.l.wl .* z(1:dims.l);
+lambda(1:dims.l) = scaling.l.wl .* z(1:dims.l) .* scaling.l.wl;
 
 % Second-oder cone
 for k = 1:length(dims.q)
@@ -24,11 +17,9 @@ for k = 1:length(dims.q)
     zk = z(coneidx);
     
     % multiplication
-    atilde = scaling.q(k).atilde;  
-    beta = scaling.q(k).alpha^2;
-    zk1 = zk(2:end);
-    zeta = scaling.q(k).qtilde' * zk1;
-    lambda0 = atilde*zk(1) + zeta;    
-    lambda1 = zk1 + (zk(1) + zeta*beta).*scaling.q(k).qtilde;
-    lambda(coneidx) = scaling.q(k).etasqrt.*[lambda0; lambda1].*scaling.q(k).etasqrt;
+    d = scaling.q(k).d;
+    u = scaling.q(k).u;
+    alpha = scaling.q(k).alpha;
+    beta = scaling.q(k).beta;
+    lambda(coneidx,1) = d.*zk + alpha*u*(u'*zk) - [beta*zk(1); zeros(dims.q(k)-1,1)];
 end

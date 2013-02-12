@@ -1,4 +1,4 @@
-function [W,a,b,q,eta] = conelp_socscaling(s,z)
+function [V,beta] = conelp_socscaling(s,z)
 % Returns Nesterov-Todd scaling matrix for s,z in cone.
 
 %% check whether s and z are in the cone.
@@ -18,7 +18,16 @@ zbar = z./sqrt(zres);
 eta = (sres / zres)^(1/4);
 gamma = sqrt( (1+sbar'*zbar)/2 );
 wbar = 1/2/gamma*(sbar + [zbar(1); -zbar(2:end)]);
-a = wbar(1);
 q = wbar(2:end);
-b = 1/(1+a);
-W = eta*[a q'; q, eye(length(q)) + b*(q*q')];
+w = q'*q;
+a = wbar(1);
+% b = 1/(1+a);
+c = 1 + a + w / (1+a);
+d = 1 + 2/(1+a) + w/(1+a)^2;
+D = diag([a^2 + w; ones(n-1,1)]);
+alpha = d;
+beta = c^2/d;
+v = [1; zeros(n-1,1)];
+u = [c/d; q];
+% W = eta*[a q'; q, eye(length(q)) + b*(q*q')];
+V = eta^2*(D + alpha*(u*u') - beta*(v*v'));

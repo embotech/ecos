@@ -78,7 +78,7 @@ SCALING = 'Nesterov-Todd';        % primal-dual scaling method
                                   % so far only 'Nesterov-Todd' implemented
 GAMMA = 0.98;                     % scaling the final step length
 DOPRINTS = 1;                     % toggle printing
-EPS = 1e-7;                       % regularization parameter
+EPS = 1e-5;                       % regularization parameter
 NITREF = 3;                     % number of iterative refinement steps
 
 FEASTOL = 1e-6;                   % primal infeasibility tolerance
@@ -87,48 +87,14 @@ RELTOL  = 1e-6;                   % relative tolerance on duality gap
 
 
 % EXITCODES ------------------------------------------------------------ */
-CONELP_NUMERICS = 2;    % Line search gave step length 0: numerics? */
+%CONELP_NUMERICS = 2;    % Line search gave step length 0: numerics? */
 CONELP_MAXIT    = 1;    % Maximum number of iterations reached      */
 CONELP_OPTIMAL  = 0;    % Problem solved to optimality              */
 CONELP_PINF     = -1;   % Found certificate of primal infeasibility */
 CONELP_DINF     = -2;   % Found certificate of dual infeasibility   */
-CONELP_KKTZERO  = -3;   % Element of D zero during factorization    */
-CONELP_OUTCONE  = -5;   % s or z got outside the cone, numerics?    */
-CONELP_FATAL    = -7;   % Unknown problem in solver                 */
-
-
-
-global CONELP_LINSOLVER_;
-if(isempty(CONELP_LINSOLVER_))
-    CONELP_LINSOLVER_ = 'backslash';
-end
-switch lower(CONELP_LINSOLVER_)
-%     case 'backslash'
-%         LINSOLVER = 'backslash';
-%     case 'backslash2'
-%         LINSOLVER = 'backslash2';
-%     case 'backslash3'
-%         LINSOLVER = 'backslash3'; 
-    case 'ldlsparse'
-        LINSOLVER = 'ldlsparse';
-%     case 'ldlsparse2'
-%         LINSOLVER = 'ldlsparse2';
-%     case 'ldlsparse3'
-%         LINSOLVER = 'ldlsparse3';
-%     case 'ldlsparse4'
-%         LINSOLVER = 'ldlsparse4';
-%     case 'ldlsparse5'
-%         LINSOLVER = 'ldlsparse5';    
-%     case 'ldlsparse6'
-%         LINSOLVER = 'ldlsparse6';
-    
-    otherwise
-        error('Invalid solver method');
-end
-
-
-global WRITE_INTERMEDIATE_RESULTS;
-WRITE_INTERMEDIATE_RESULTS = 0;
+%CONELP_KKTZERO  = -3;   % Element of D zero during factorization    */
+%CONELP_OUTCONE  = -5;   % s or z got outside the cone, numerics?    */
+%CONELP_FATAL    = -7;   % Unknown problem in solver                 */
 
 
 %LINSOLVER = 'backslash';         % linear solver. Choose between
@@ -148,7 +114,7 @@ end
 % -- p: number of equality constraints on x
 [m, n] = size(G); 
 p = size(A,1);
-% mtilde = m + length(dims.q);
+mtilde = m + length(dims.q);
 
 % dimension checking
 if( p > 0 )
@@ -162,21 +128,20 @@ assert( dims.l+sum(dims.q) == m,'Wrong dimension information in dims struct' );
 %% 0. Init
 
 % init info struct
-info.LINSOLVER = LINSOLVER;
+info.LINSOLVER = 'diag plus low rank';
 info.numerr = 0;
 info.r0 = FEASTOL;
 info.pinf = 0;
 info.dinf = 0;
 
 % need to stretch G to go with sparse representation
-% Gtilde = conelp_stretch(G, dims);
+Gtilde = conelp_stretch(G, dims);
 
 % init variables
-[P,x,y,s,z,tau,kap] = conelp_init(c,G,h,dims,A,b, EPS, NITREF);
+[P,x,y,s,z,tau,kap] = conelp_init(c,G,Gtilde,h,dims,A,b, EPS, NITREF);
 
 % scaling
-[scaling,lambda,Vreg,Vtrue,pp] = conelp_scaling(s,z,dims);
-pp = [zeros(n+p,length(dims.q)); pp];
+[scaling,lambda,Vreg,Vtrue] = conelp_scaling(s,z,dims);
 
 % other variables
 alphaaff = 0; alpha = 0;
@@ -184,15 +149,6 @@ em = conelp_e(dims);
 resx0 = max([1,norm(c,2)]); 
 resy0 = max([1,norm(b,2)]); 
 resz0 = max([1,norm(h,2)]);
-
-
-if( WRITE_INTERMEDIATE_RESULTS )
-    dumpMatrix(x, 'M_x_init.txt');
-    dumpMatrix(y, 'M_y_init.txt');
-    dumpMatrix(z, 'M_z_init.txt');
-    dumpMatrix(s, 'M_s_init.txt');
-    dumpMatrix(s, 'P.txt');
-end
 
 
 %% Main interior-point loop - [1, ?7.1]
@@ -293,25 +249,23 @@ for nIt = 0:MAXIT+1
     %% 2. Affine search direction.
     
     % build & factor KKT matrix
-    K = conelp_KKTmatrix(A, G, Vreg, EPS);
+    K = conelp_KKTmatrix(A, Gtilde, Vreg, EPS);
          
 % fprintf('cond(K) = %4.2e\n', condest(K));
 
-    [~,DD] = ldlsparse(K,1:size(K,1));
-    S = sign(full(diag(DD)));
     [L, D] = conelp_factor(K, P);
     assert( all( ~isnan(L(:)) ), 'Factorization returned NaN');
     assert( all( ~isnan(D(:)) ), 'Factorization returned NaN');
     
-    if( WRITE_INTERMEDIATE_RESULTS )
-        dumpMatrix(full(L), 'M_K.txt');
-        dumpMatrix(P'-1, 'M_P.txt');
+    % rank1-update of Cholesky factors
+    for k=1:length(dims.q)
+        v = zeros(n+p+mtilde,1);
+        v(n+p+dims.l+sum(dims.q(1:k-1))+k) = 1;
+        [L,D] = rank1update(L,D,scaling.q(k).beta,v(P));
     end
     
-%     break;
-    
     % first solve for x1 y1 z1
-    [x1,y1,z1] = conelp_solve(L,D,P, -c,b,h, A,Gtilde,Vtrue, dims, NITREF);
+    [x1,y1,z1] = conelp_solve(L,D,P, -c,b,h, A,G,Vtrue, dims, NITREF);
     assert( all( ~isnan(x1) ), 'Linear solver returned NaN');
     assert( all( ~isnan(y1) ), 'Linear solver returned NaN');
     assert( all( ~isnan(z1) ), 'Linear solver returned NaN');
@@ -324,7 +278,7 @@ for nIt = 0:MAXIT+1
     
     % second solve for x2 y2 z2
     bx = rx;  by = ry;  bz = -rz + s; dt = rt - kap;  bkap = kap*tau;            
-    [x2,y2,z2] = conelp_solve(L,D,P, bx,by,bz, A,Gtilde,Vtrue, dims, NITREF);
+    [x2,y2,z2] = conelp_solve(L,D,P, bx,by,bz, A,G,Vtrue, dims, NITREF);
     if( p > 0 ), by1 = b'*y1; else by1 = 0; end    
     if( p > 0 ), by2 = b'*y2; else by2 = 0; end  
     dtau_denom = kap/tau - (c'*x1 + by1 + h'*z1);
@@ -361,7 +315,7 @@ for nIt = 0:MAXIT+1
     bkap = kap*tau - sigma*info.mu + dkapaff*dtauaff;
     lambda_raute_bs = conelp_raute(lambda,bs,dims);    
     W_times_lambda_raute_bs = conelp_timesW(scaling,lambda_raute_bs,dims);
-    [x2, y2, z2] = conelp_solve(L,D,P, (1-sigma)*rx,(1-sigma)*ry,-(1-sigma)*rz + W_times_lambda_raute_bs, A,Gtilde,Vtrue, dims, NITREF); 
+    [x2, y2, z2] = conelp_solve(L,D,P, (1-sigma)*rx,(1-sigma)*ry,-(1-sigma)*rz + W_times_lambda_raute_bs, A,G,Vtrue, dims, NITREF); 
     if( p > 0 ), by2 = b'*y2; else by2 = 0; end
     dtau = ((1-sigma)*rt - bkap/tau + c'*x2 + by2 + h'*z2) / dtau_denom;
     dx = x2 + dtau*x1;     dy = y2 + dtau*y1;       dz = z2 + dtau*z1;
@@ -380,7 +334,7 @@ for nIt = 0:MAXIT+1
     kap = kap + alpha*dkap;     tau = tau + alpha*dtau;
     assert( tau > 0, 'tau <= 0, exiting.');
     assert( kap > 0, 'kappa <= 0, exiting');
-    [scaling,lambda,Vreg,Vtrue,Signs] = conelp_scaling(s,z,dims);    
+    [scaling,lambda,Vreg,Vtrue] = conelp_scaling(s,z,dims);    
 end
 
 %% scale variables back

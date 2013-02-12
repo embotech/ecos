@@ -1,13 +1,6 @@
 function lambda = conelp_timesW(scaling,z,dims)
 % Linear time multiplication with scaling matrix W.
 %
-% NOTE: The solver is heavily based on the document
-%
-%  [1] L. Vandenberghe: "The CVXOPT linear and quadratic cone program
-%      solvers", March 20, 2010.
-%      [Online]: http://abel.ee.ucla.edu/cvxopt/documentation/coneprog.pdf
-%
-%
 % (c) Alexander Domahidi, IfA, ETH Zurich, 2012.
 
 % assign memory
@@ -29,5 +22,5 @@ for k = 1:length(dims.q)
     zeta = scaling.q(k).q' * zk1;
     lambda0 = a*zk(1) + zeta;    
     lambda1 = zk1 + (zk(1) + zeta/(1+a)).*scaling.q(k).q;
-    lambda(coneidx) = scaling.q(k).etasqrt.*[lambda0; lambda1];
+    lambda(coneidx) = scaling.q(k).eta.*[lambda0; lambda1];
 end

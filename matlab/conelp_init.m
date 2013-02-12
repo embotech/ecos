@@ -1,4 +1,4 @@
-function [P,xhat,yhat,shat,zhat,kaphat,tauhat] = conelp_init(c,G,h,dims,A,b, EPS, NITREF)
+function [P,xhat,yhat,shat,zhat,kaphat,tauhat] = conelp_init(c,G,Gtilde,h,dims,A,b, EPS, NITREF)
 % Initialization of variables for conelp solver, see [1, ?7.3].
 %
 % NOTE: The solver and the text above are heavily based on the document
@@ -13,18 +13,19 @@ function [P,xhat,yhat,shat,zhat,kaphat,tauhat] = conelp_init(c,G,h,dims,A,b, EPS
 %% dimensions
 n = size(G,2);
 m = dims.l + sum(dims.q);
+mtilde = m + length(dims.q);
 p = size(A,1);
 
 
 %% compute permutation
 Vpattern = conelp_scaling(dims);
-Kpattern = conelp_KKTmatrix(A,G,Vpattern,1);
+Kpattern = conelp_KKTmatrix(A,Gtilde,Vpattern,1);
 P = conelp_getPerm(Kpattern~=0);
-%P=1:size(Kpattern,1);
+% P=1:size(Kpattern,1);
 
 %% assemble and factor coefficient matrix
-Vinit = eye(m);
-Kinit = conelp_KKTmatrix(A,G,Vinit,EPS);
+Vinit = eye(mtilde);
+Kinit = conelp_KKTmatrix(A,Gtilde,Vinit,EPS);
 [Linit,Dinit] = conelp_factor(Kinit,P);
 
 
@@ -44,7 +45,7 @@ Kinit = conelp_KKTmatrix(A,G,Vinit,EPS);
 % xhat = v(1:n);
 % r = -v(n+p+1:end);
 
-[xhat, ~, minus_r] = conelp_solve(Linit,Dinit,P, zeros(n,1),b,h, A,G,Vinit, dims, NITREF);
+[xhat, ~, minus_r] = conelp_solve(Linit,Dinit,P, zeros(n,1),b,h, A,G,Vinit(1:m,1:m), dims, NITREF);
 shat = bring2cone(-minus_r,dims);
 
 
@@ -65,7 +66,7 @@ shat = bring2cone(-minus_r,dims);
 %zbar = v(n+p+1:end);
 
 
-[~, yhat, zbar] = conelp_solve(Linit,Dinit,P, -c,zeros(p,1),zeros(m,1), A,G,Vinit, dims, NITREF);
+[~, yhat, zbar] = conelp_solve(Linit,Dinit,P, -c,zeros(p,1),zeros(m,1), A,G,Vinit(1:m,1:m), dims, NITREF);
 zhat = bring2cone(zbar,dims);
 
 %% homogeneous embedding variables
