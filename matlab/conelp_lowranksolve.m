@@ -10,11 +10,15 @@ function x = conelp_lowranksolve(L,D,P,Q,b)
 
 % forwardsubs
 x = conelp_forwardsub(L,b);
-x = conelp_lowrankforwardsub(P,Q,x);
+if( ~isempty(P) && ~isempty(Q) )
+    x = conelp_lowrankforwardsub(P,Q,x);
+end
 
 % diagonal
 x = conelp_byDiag(D,x);
 
 % backwardsubs
-x = conelp_lowrankbackwardsub(P,Q,x);
+if( ~isempty(P) && ~isempty(Q) )
+    x = conelp_lowrankbackwardsub(P,Q,x);
+end
 x = conelp_backwardsub(L',x);

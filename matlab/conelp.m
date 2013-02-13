@@ -81,9 +81,9 @@ DOPRINTS = 1;                     % toggle printing
 EPS = 1e-5;                       % regularization parameter
 NITREF = 3;                     % number of iterative refinement steps
 
-FEASTOL = 1e-6;                   % primal infeasibility tolerance
-ABSTOL  = 1e-6;                   % absolute tolerance on duality gap
-RELTOL  = 1e-6;                   % relative tolerance on duality gap
+FEASTOL = 1e-7;                   % primal infeasibility tolerance
+ABSTOL  = 1e-7;                   % absolute tolerance on duality gap
+RELTOL  = 1e-7;                   % relative tolerance on duality gap
 
 
 % EXITCODES ------------------------------------------------------------ */
@@ -253,19 +253,22 @@ for nIt = 0:MAXIT+1
          
 % fprintf('cond(K) = %4.2e\n', condest(K));
 
-    [L, D] = conelp_factor(K, P);
+    [S,Vrank1] = conelp_buildlowrankmatrices(scaling,n,p,dims);
+
+    %[L, D] = conelp_factor(K, P);
+    [L,D,PL,QL] = conelp_lowrankfactor(K,P,S,Vrank1);
     assert( all( ~isnan(L(:)) ), 'Factorization returned NaN');
     assert( all( ~isnan(D(:)) ), 'Factorization returned NaN');
     
     % rank1-update of Cholesky factors
-    for k=1:length(dims.q)
-        v = zeros(n+p+mtilde,1);
-        v(n+p+dims.l+sum(dims.q(1:k-1))+k) = 1;
-        [L,D] = rank1update(L,D,scaling.q(k).beta,v(P));
-    end
+%     for k=1:length(dims.q)
+%         v = zeros(n+p+mtilde,1);
+%         v(n+p+dims.l+sum(dims.q(1:k-1))+k) = 1;
+%         [L,D] = rank1update(L,D,scaling.q(k).beta,v(P));
+%     end
     
     % first solve for x1 y1 z1
-    [x1,y1,z1] = conelp_solve(L,D,P, -c,b,h, A,G,Vtrue, dims, NITREF);
+    [x1,y1,z1] = conelp_solve(L,D,P,PL,QL, -c,b,h, A,G,Vtrue, dims, NITREF);
     assert( all( ~isnan(x1) ), 'Linear solver returned NaN');
     assert( all( ~isnan(y1) ), 'Linear solver returned NaN');
     assert( all( ~isnan(z1) ), 'Linear solver returned NaN');
@@ -278,7 +281,7 @@ for nIt = 0:MAXIT+1
     
     % second solve for x2 y2 z2
     bx = rx;  by = ry;  bz = -rz + s; dt = rt - kap;  bkap = kap*tau;            
-    [x2,y2,z2] = conelp_solve(L,D,P, bx,by,bz, A,G,Vtrue, dims, NITREF);
+    [x2,y2,z2] = conelp_solve(L,D,P,PL,QL, bx,by,bz, A,G,Vtrue, dims, NITREF);
     if( p > 0 ), by1 = b'*y1; else by1 = 0; end    
     if( p > 0 ), by2 = b'*y2; else by2 = 0; end  
     dtau_denom = kap/tau - (c'*x1 + by1 + h'*z1);
@@ -315,7 +318,7 @@ for nIt = 0:MAXIT+1
     bkap = kap*tau - sigma*info.mu + dkapaff*dtauaff;
     lambda_raute_bs = conelp_raute(lambda,bs,dims);    
     W_times_lambda_raute_bs = conelp_timesW(scaling,lambda_raute_bs,dims);
-    [x2, y2, z2] = conelp_solve(L,D,P, (1-sigma)*rx,(1-sigma)*ry,-(1-sigma)*rz + W_times_lambda_raute_bs, A,G,Vtrue, dims, NITREF); 
+    [x2, y2, z2] = conelp_solve(L,D,P,PL,QL, (1-sigma)*rx,(1-sigma)*ry,-(1-sigma)*rz + W_times_lambda_raute_bs, A,G,Vtrue, dims, NITREF); 
     if( p > 0 ), by2 = b'*y2; else by2 = 0; end
     dtau = ((1-sigma)*rt - bkap/tau + c'*x2 + by2 + h'*z2) / dtau_denom;
     dx = x2 + dtau*x1;     dy = y2 + dtau*y1;       dz = z2 + dtau*z1;

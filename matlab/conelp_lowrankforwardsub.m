@@ -6,11 +6,12 @@ function x = conelp_lowrankforwardsub(P,Q,b)
 
 
 [n, k] = size(P);
-x = NaN(n,1);
+
 
 for j = 1:k
     
     gamma = 0;
+    x = NaN(n,1);
     for i=1:n
         x(i) = b(i) - gamma*P(i,j);
         gamma = gamma + Q(i,j)*x(i);

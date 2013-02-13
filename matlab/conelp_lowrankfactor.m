@@ -1,8 +1,8 @@
-function [L,D,P,Q,Lt] = conelp_lowrankfactor(A,S,V)
+function [L,D,PL,QL] = conelp_lowrankfactor(A,P,S,V)
 % Returns the representations of Cholesky factors from rank1 updates.
 %
-%   [L,D,P,Q] = CONELP_RANK1FACTOR(A,S,V) computes L,D,P,Q such that
-%   A + V*S*V' = L*L(P,Q)*D*L(P,Q)'*L'. A is a matrix of size [n x n], 
+%   [L,D,PL,QL] = CONELP_LOWRANKFACTOR(A,P,S,V) computes L,D,PL,QL such that
+%   A + V*S*V' = L*L(PL,QL)*D*L(PL,QL)'*L'. A is a matrix of size [n x n],
 %   V is a [n x k] matrix with k <= n, and S is a [k x k] diagonal matrix.
 %
 %                    [ 1                                 ]
@@ -13,13 +13,16 @@ function [L,D,P,Q,Lt] = conelp_lowrankfactor(A,S,V)
 %                    [   .      .                   .    ]
 %                    [ pn*q1  pn*q2   . . . pn*qn-1   1  ]
 %
-%   Note that L(Q,P) is never explicitly formed; instead, only the
-%   necessary vectors p and q are returned as columns of P and Q.
+%   Note that L(QL,PL) is never explicitly formed; instead, only the
+%   necessary vectors p and q are returned as columns of PL and QL.
+%
+%   If a permutation vector P is given, it is used to determine the
+%   permuted factors.
 %
 %   The method to compute these matrices is described in the paper by
 %   D. Goldfarb and K. Scheinberg: "Product-form Cholesky factorization in
 %   interior point methods for second-order cone programming", Jnl. Math.
-%   Programming, 2005, p. 162. DOI: 10.1007/s10107-004-0556-1 
+%   Programming, 2005, p. 162. DOI: 10.1007/s10107-004-0556-1
 %
 % See also conelp_lowranksolve conelp_lowrankL
 %
@@ -27,29 +30,38 @@ function [L,D,P,Q,Lt] = conelp_lowrankfactor(A,S,V)
 
 [n, k] = size(V);
 
-[L,D] = ldlsparse(sparse(A));
+if( nargin < 2 )
+    P = 1:n;
+end
+
+[L,D] = ldlsparse(sparse(A),P);
 L = L + speye(n);
 
-P = NaN(n,k);
-Q = NaN(n,k);
-d1 = full(diag(D));
-d2 = NaN(1,n);
-s = diag(S);
-q = NaN(n,1);
-for j = 1:k
-    p = conelp_forwardsub(L,V(:,j));
-    Lt{j} = eye(n);
-    % Low-rank-update kernel, see Gill et. al., p. 516
-    alpha = s(j);
-    for i = 1:n
-        d2(i) = d1(i) + alpha*p(i)^2;
-        q(i) = alpha*p(i) / d2(i);
-        alpha = alpha*d1(i)/d2(i);
-        Lt{j}(i+1:end,i) = q(i)*p(i+1:end,1);
-    end
-    
-    P(:,j) = p;
-    Q(:,j) = q;
-    
+if( nargin > 2 )
+    PL = NaN(n,k);
+    QL = NaN(n,k);    
+    s = diag(S);    
+    for j = 1:k
+        p = conelp_forwardsub(L,V(P,j));
+        for jj = 1:j-1
+            p = conelp_lowrankforwardsub(PL(:,jj),QL(:,jj),p);
+        end            
+        
+%         Lt{j} = eye(n); % explicit representation of L(PL,QL) for debugging
+        % Low-rank-update kernel, see Gill et. al., p. 516
+        alpha = s(j);
+        q = NaN(n,1);
+        d1 = full(diag(D));
+        d2 = NaN(1,n);
+        for i = 1:n
+            d2(i) = d1(i) + alpha*p(i)^2;
+            q(i) = alpha*p(i) / d2(i);
+            alpha = alpha*d1(i)/d2(i);
+%             Lt{j}(i+1:end,i) = q(i)*p(i+1:end,1); % explicit representation of L(PL,QL) for debugging
+        end
+        
+        PL(:,j) = p;
+        QL(:,j) = q;
+        D = sparse(diag(d2));
+    end   
 end
-D = sparse(diag(d2));

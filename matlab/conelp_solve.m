@@ -1,4 +1,4 @@
-function [x,y,z] = conelp_solve(L,D,P, bx,by,bz, A,G,V, dims, nItref) %, LINSOLVER, A,G,Gtilde,V,dims, K, Dreg, nItref, ppp)%,W,G,scaling,Gtilde,Winv,A,V)
+function [x,y,z] = conelp_solve(L,D,P,PL,QL, bx,by,bz, A,G,V, dims, nItref) %, LINSOLVER, A,G,Gtilde,V,dims, K, Dreg, nItref, ppp)%,W,G,scaling,Gtilde,Winv,A,V)
 % Solve KKT system using the cached factors L,D and permutation matrix P.
 %
 % (c) Alexander Domahidi, IfA, ETH Zurich, 2013.
@@ -12,9 +12,10 @@ RHS = [bx; by; bztilde];
 PRHS = full(RHS); PRHS = PRHS(P);
 
 % solve
-u = conelp_forwardsub(L,PRHS);
-v = conelp_byDiag(D,u);
-dx(P,1) = conelp_backwardsub(L',v);
+% u = conelp_forwardsub(L,PRHS);
+% v = conelp_byDiag(D,u);
+% dx(P,1) = conelp_backwardsub(L',v);
+dx(P,1) = conelp_lowranksolve(L,D,PL,QL,PRHS);
 
 % iterative refinement
 % bnorm = norm(PRHS);
@@ -35,9 +36,10 @@ for i = 1:nItref
 %     if(norm(ex)/bnorm < 1e-9 && norm(ey)/bnorm < 1e-9 && norm(ez)/bnorm < 1e-13 ), break; end    
 %     fprintf('*');
     % solve
-    u = conelp_forwardsub(L,e(P));
-    v = conelp_byDiag(D,u);
-    dx(P,1) = dx(P,1) + conelp_backwardsub(L',v);
+%     u = conelp_forwardsub(L,e(P));
+%     v = conelp_byDiag(D,u);
+%     dx(P,1) = dx(P,1) + conelp_backwardsub(L',v);
+    dx(P,1) = dx(P,1) + conelp_lowranksolve(L,D,PL,QL,e(P));
 end
 
 % copy out variables
