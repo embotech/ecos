@@ -28,7 +28,8 @@ function [L,D,PL,QL] = conelp_lowrankfactor(A,P,S,V)
 %
 % (c) Alexander Domahidi, Automatic Control Laboratory, ETH Zurich, 2013.
 
-[n, k] = size(V);
+n = size(A,1);
+k = size(V,2);
 
 if( nargin < 2 )
     P = 1:n;

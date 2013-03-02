@@ -1,4 +1,4 @@
-function lambda = conelp_timesWsquare(scaling,z,dims)
+function lambda = conelp_timesWsquare(scaling,z,dims, LINSOLVER)
 % Linear time multiplication with square of scaling matrix W.
 %
 % (c) Alexander Domahidi, IfA, ETH Zurich, 2012.
@@ -17,9 +17,18 @@ for k = 1:length(dims.q)
     zk = z(coneidx);
     
     % multiplication
-    d = scaling.q(k).d;
-    u = scaling.q(k).u;
-    alpha = scaling.q(k).alpha;
-    beta = scaling.q(k).beta;
-    lambda(coneidx,1) = d.*zk + alpha*u*(u'*zk) - [beta*zk(1); zeros(dims.q(k)-1,1)];
+    switch( LINSOLVER )
+        case 'rank1updates'
+            d = scaling.q(k).d;
+            u = scaling.q(k).u;
+            alpha = scaling.q(k).alpha;
+            beta = scaling.q(k).beta;
+            lambda(coneidx,1) = d.*zk + alpha*u*(u'*zk) - [beta*zk(1); zeros(dims.q(k)-1,1)];
+            
+        case 'backslash'
+            lambda(coneidx,1) = scaling.q(k).V*zk;
+            
+        otherwise, error('Unknown linear solver');
+            
+    end
 end

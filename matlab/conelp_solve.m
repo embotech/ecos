@@ -1,4 +1,4 @@
-function [x,y,z] = conelp_solve(L,D,P,PL,QL, bx,by,bz, A,G,V, dims, nItref) %, LINSOLVER, A,G,Gtilde,V,dims, K, Dreg, nItref, ppp)%,W,G,scaling,Gtilde,Winv,A,V)
+function [x,y,z] = conelp_solve(L,D,P,PL,QL, bx,by,bz, A,G,V, dims, nItref, LINSOLVER) %A,G,Gtilde,V,dims, K, Dreg, nItref, ppp)%,W,G,scaling,Gtilde,Winv,A,V)
 % Solve KKT system using the cached factors L,D and permutation matrix P.
 %
 % (c) Alexander Domahidi, IfA, ETH Zurich, 2013.
@@ -6,47 +6,72 @@ function [x,y,z] = conelp_solve(L,D,P,PL,QL, bx,by,bz, A,G,V, dims, nItref) %, L
 n = length(bx);
 p = length(by);
 
+% determine how many new rows are to be added
+switch( LINSOLVER )
+    case 'backslash',    Nstretch = 0;
+    case 'rank1updates', Nstretch = 1;
+    case 'ldlsparse',    Nstretch = 2;
+end
+
 % prepare RHS with zeros at appropriate places
-bztilde = conelp_stretch(bz, dims);
+bztilde = conelp_stretch(bz, dims, Nstretch);
 RHS = [bx; by; bztilde];
 PRHS = full(RHS); PRHS = PRHS(P);
 
-% solve
-% u = conelp_forwardsub(L,PRHS);
-% v = conelp_byDiag(D,u);
-% dx(P,1) = conelp_backwardsub(L',v);
-dx(P,1) = conelp_lowranksolve(L,D,PL,QL,PRHS);
+% initial solve
+switch( LINSOLVER )
+    case 'backslash'
+        dx(P,1) = L'\(D\(L\PRHS));
+    
+    case 'rank1updates'
+        dx(P,1) = conelp_lowranksolve(L,D,PL,QL,PRHS);
+        
+    case 'ldlsparse'
+        u = conelp_forwardsub(L,PRHS);
+        v = conelp_byDiag(D,u);
+        dx(P,1) = conelp_backwardsub(L',v);
+        
+    otherwise, error('Unknown linear solver');
+end
 
 % iterative refinement
-% bnorm = norm(PRHS);
 for i = 1:nItref
     
     % variables
     x = dx(1:n);
     y = dx(n+1:n+p);
-    z = conelp_unstretch(dx(n+p+1:end),dims);
-%     z = dx(n+p+1:end);
+    z = conelp_unstretch(dx(n+p+1:end),dims, Nstretch);
     
     % errors
     ex = bx - A'*y - G'*z;
     ey = by - A*x;
     ez = bz - G*x + V*z;
-    e = [ex; ey; conelp_stretch(ez,dims)];
-%     fprintf('||ex||=%4.2e  ||ey||=%4.2e  ||ez||=%4.2e  (k=%d)\n', norm(ex), norm(ey), norm(ez), i);
-%     if(norm(ex)/bnorm < 1e-9 && norm(ey)/bnorm < 1e-9 && norm(ez)/bnorm < 1e-13 ), break; end    
-%     fprintf('*');
-    % solve
-%     u = conelp_forwardsub(L,e(P));
-%     v = conelp_byDiag(D,u);
-%     dx(P,1) = dx(P,1) + conelp_backwardsub(L',v);
-    dx(P,1) = dx(P,1) + conelp_lowranksolve(L,D,PL,QL,e(P));
+    e = [ex; ey; conelp_stretch(ez,dims,Nstretch)];
+%         fprintf('||ex||=%4.2e  ||ey||=%4.2e  ||ez||=%4.2e  (k=%d)\n', norm(ex), norm(ey), norm(ez), i);
+    %     if(norm(ex)/bnorm < 1e-9 && norm(ey)/bnorm < 1e-9 && norm(ez)/bnorm < 1e-13 ), break; end
+    %     fprintf('*');
+    
+    % solve for correction
+    switch( LINSOLVER )
+        case 'backslash'
+            dx(P,1) = dx(P,1) + L'\(D\(L\e(P)));
+        
+        case 'rank1updates'
+            dx(P,1) = dx(P,1) + conelp_lowranksolve(L,D,PL,QL,e(P));
+            
+        case 'ldlsparse'
+            u = conelp_forwardsub(L,e(P));
+            v = conelp_byDiag(D,u);
+            dx(P,1) = dx(P,1) + conelp_backwardsub(L',v);
+            
+        otherwise, error('Unknown linear solver');
+    end
 end
 
 % copy out variables
 x = dx(1:n);
 y = dx(n+1:n+p);
-% z = dx(n+p+1:end);
-z = conelp_unstretch(dx(n+p+1:end),dims);
+z = conelp_unstretch(dx(n+p+1:end),dims,Nstretch);
 
 % fprintf('\n');
 

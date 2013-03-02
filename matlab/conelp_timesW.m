@@ -1,4 +1,4 @@
-function lambda = conelp_timesW(scaling,z,dims)
+function lambda = conelp_timesW(scaling,z,dims,LINSOLVER)
 % Linear time multiplication with scaling matrix W.
 %
 % (c) Alexander Domahidi, IfA, ETH Zurich, 2012.
@@ -7,7 +7,7 @@ function lambda = conelp_timesW(scaling,z,dims)
 lambda = NaN(length(z),1);
 
 % LP cone
-lambda(1:dims.l) = scaling.l.wl .* z(1:dims.l);
+lambda(1:dims.l,1) = scaling.l.wl .* z(1:dims.l);
 
 % Second-oder cone
 for k = 1:length(dims.q)
@@ -17,10 +17,18 @@ for k = 1:length(dims.q)
     zk = z(coneidx);
     
     % multiplication
-    a = scaling.q(k).a;    
-    zk1 = zk(2:end);
-    zeta = scaling.q(k).q' * zk1;
-    lambda0 = a*zk(1) + zeta;    
-    lambda1 = zk1 + (zk(1) + zeta/(1+a)).*scaling.q(k).q;
-    lambda(coneidx) = scaling.q(k).eta.*[lambda0; lambda1];
+    switch( LINSOLVER )
+        case 'rank1updates'
+            a = scaling.q(k).a;
+            zk1 = zk(2:end);
+            zeta = scaling.q(k).q' * zk1;
+            lambda0 = a*zk(1) + zeta;
+            lambda1 = zk1 + (zk(1) + zeta/(1+a)).*scaling.q(k).q;
+            lambda(coneidx,1) = scaling.q(k).eta.*[lambda0; lambda1];
+            
+        case 'backslash'
+            lambda(coneidx,1) = scaling.q(k).W*zk;
+            
+        otherwise, error('Unknown linear solver');
+    end
 end

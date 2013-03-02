@@ -1,4 +1,4 @@
-function lambda = conelp_byW(scaling,z,dims)
+function lambda = conelp_byW(scaling,z,dims,LINSOLVER)
 % Linear time multiplication with scaling matrix W.
 %
 % NOTE: The solver is heavily based on the document
@@ -24,10 +24,18 @@ for k = 1:length(dims.q)
     zk = z(coneidx);
     
     % multiplication
-    a = scaling.q(k).a;    
-    zk1 = zk(2:end);
-    zeta = scaling.q(k).q' * zk1;
-    lambda0 = a*zk(1) - zeta;    
-    lambda1 = zk1 + (-zk(1) + zeta/(1+a)).*scaling.q(k).q;
-    lambda(coneidx) = [lambda0; lambda1]./scaling.q(k).etasqrt;
+    switch( LINSOLVER )
+        case 'rank1updates'
+            a = scaling.q(k).a;
+            zk1 = zk(2:end);
+            zeta = scaling.q(k).q' * zk1;
+            lambda0 = a*zk(1) - zeta;
+            lambda1 = zk1 + (-zk(1) + zeta/(1+a)).*scaling.q(k).q;
+            lambda(coneidx,1) = [lambda0; lambda1]./scaling.q(k).etasqrt;
+            
+        case 'backslash'
+            lambda(coneidx,1) = scaling.q(k).W \?zk;
+            
+        otherwise, error('Unknown linear solver');
+    end
 end

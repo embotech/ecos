@@ -17,11 +17,9 @@ if( info.iter == 0 )
     fprintf('    ***************************************************************************\n');
     fprintf('\n');
     switch( lower(info.LINSOLVER) )
-        case 'ldlsparse', disp('Using LDLSPARSE as linear solver on unreduced system');        
-        case 'ldlsparse2', disp('Using LDLSPARSE as linear solver on unreduced system, avoiding W^2');     
-        case 'backslash', disp('Using MATLAB''s backslash as linear system solver on unreduced system');
-        case 'backslash2', disp('Using MATLAB''s backslash as linear system solver on reduced system');
-        case 'backslash3', disp('Using MATLAB''s backslash as linear system solver on full system, avoiding W^2');    
+        case 'ldlsparse',    disp('Search direction computation: LDLSPARSE with sparse SOC scalings');  
+        case 'rank1updates', disp('Search direction computation: LDLSPARSE + rank 1 updates');  
+        case 'backslash',    disp('Search direction computation: MATLAB''s LDL + backslash');
     end
     fprintf('\n');
     if( ismac )

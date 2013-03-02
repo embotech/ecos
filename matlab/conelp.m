@@ -1,4 +1,4 @@
-function [x,y,info,s,z] = conelp(c,G,h,dims,A,b)
+function [x,y,info,s,z] = conelp(c,G,h,dims,A,b,LINSOLVER)
 % Self-dual homogeneous embedding interior point method for optimization
 % over linear or second-order cones. No SDP cones supported!
 %
@@ -74,33 +74,33 @@ tic;
 
 %% Parameters
 MAXIT = 30;                       % maximum number of iterations
-SCALING = 'Nesterov-Todd';        % primal-dual scaling method
-                                  % so far only 'Nesterov-Todd' implemented
 GAMMA = 0.98;                     % scaling the final step length
-DOPRINTS = 1;                     % toggle printing
 EPS = 1e-5;                       % regularization parameter
-NITREF = 3;                     % number of iterative refinement steps
-
+NITREF = 3;                       % number of iterative refinement steps
 FEASTOL = 1e-7;                   % primal infeasibility tolerance
 ABSTOL  = 1e-7;                   % absolute tolerance on duality gap
 RELTOL  = 1e-7;                   % relative tolerance on duality gap
-
+DOPRINTS = 1;                     % toggle printing
 
 % EXITCODES ------------------------------------------------------------ */
-%CONELP_NUMERICS = 2;    % Line search gave step length 0: numerics? */
+CONELP_NUMERICS = 2;    % Line search gave step length 0: numerics? */
 CONELP_MAXIT    = 1;    % Maximum number of iterations reached      */
 CONELP_OPTIMAL  = 0;    % Problem solved to optimality              */
 CONELP_PINF     = -1;   % Found certificate of primal infeasibility */
 CONELP_DINF     = -2;   % Found certificate of dual infeasibility   */
-%CONELP_KKTZERO  = -3;   % Element of D zero during factorization    */
-%CONELP_OUTCONE  = -5;   % s or z got outside the cone, numerics?    */
-%CONELP_FATAL    = -7;   % Unknown problem in solver                 */
+CONELP_KKTZERO  = -3;   % Element of D zero during factorization    */
+CONELP_OUTCONE  = -5;   % s or z got outside the cone, numerics?    */
+CONELP_FATAL    = -7;   % Unknown problem in solver                 */
 
-
-%LINSOLVER = 'backslash';         % linear solver. Choose between
-                                  % 'backslash' (MATLAB)                                    
-                                  % 'ldlsparse' (sparse LDL by Tim Davis)
-                                  % 'conelp_ldl' (naive LDL solver by AD)
+% Choose linear solver or method for obtaining search directions. Options:
+% 'backslash' (MATLAB)  
+% 'ldlsparse' (sparse LDL by Tim Davis)
+% 'rank1updates' (sparse LDL by Tim Davis + rank1updates)
+if( ~exist('LINSOLVER','var') )  
+    LINSOLVER = 'backslash';     
+end                                                              
+                                                                    
+                               
 
 %% Input argument checking
 assert(nargin >= 4,'conelp needs at least 4 arguments: conelp(c,G,h,dims)');
@@ -128,20 +128,24 @@ assert( dims.l+sum(dims.q) == m,'Wrong dimension information in dims struct' );
 %% 0. Init
 
 % init info struct
-info.LINSOLVER = 'diag plus low rank';
+info.LINSOLVER = LINSOLVER;
 info.numerr = 0;
 info.r0 = FEASTOL;
 info.pinf = 0;
 info.dinf = 0;
 
-% need to stretch G to go with sparse representation
-Gtilde = conelp_stretch(G, dims);
+% need to stretch G to go with sparse representation (if needed)
+switch( LINSOLVER )
+    case 'ldlsparse', Gtilde = conelp_stretch(G, dims, 2);
+    case 'rank1updates', Gtilde = conelp_stretch(G, dims, 1);
+    otherwise, Gtilde = G;
+end
 
 % init variables
-[P,x,y,s,z,tau,kap] = conelp_init(c,G,Gtilde,h,dims,A,b, EPS, NITREF);
+[P,x,y,s,z,tau,kap] = conelp_init(c,G,Gtilde,h,dims,A,b,LINSOLVER,EPS,NITREF);
 
 % scaling
-[scaling,lambda,Vreg,Vtrue] = conelp_scaling(s,z,dims);
+[scaling,lambda,Vreg,Vtrue] = conelp_scaling(s,z,dims,LINSOLVER,EPS);
 
 % other variables
 alphaaff = 0; alpha = 0;
@@ -253,10 +257,7 @@ for nIt = 0:MAXIT+1
          
 % fprintf('cond(K) = %4.2e\n', condest(K));
 
-    [S,Vrank1] = conelp_buildlowrankmatrices(scaling,n,p,dims);
-
-    %[L, D] = conelp_factor(K, P);
-    [L,D,PL,QL] = conelp_lowrankfactor(K,P,S,Vrank1);
+    [L,D,PL,QL,P] = conelp_factor(K,P,LINSOLVER,n,p,dims,scaling);    
     assert( all( ~isnan(L(:)) ), 'Factorization returned NaN');
     assert( all( ~isnan(D(:)) ), 'Factorization returned NaN');
     
@@ -268,7 +269,7 @@ for nIt = 0:MAXIT+1
 %     end
     
     % first solve for x1 y1 z1
-    [x1,y1,z1] = conelp_solve(L,D,P,PL,QL, -c,b,h, A,G,Vtrue, dims, NITREF);
+    [x1,y1,z1] = conelp_solve(L,D,P,PL,QL, -c,b,h, A,G,Vtrue, dims, NITREF,LINSOLVER);
     assert( all( ~isnan(x1) ), 'Linear solver returned NaN');
     assert( all( ~isnan(y1) ), 'Linear solver returned NaN');
     assert( all( ~isnan(z1) ), 'Linear solver returned NaN');
@@ -281,18 +282,18 @@ for nIt = 0:MAXIT+1
     
     % second solve for x2 y2 z2
     bx = rx;  by = ry;  bz = -rz + s; dt = rt - kap;  bkap = kap*tau;            
-    [x2,y2,z2] = conelp_solve(L,D,P,PL,QL, bx,by,bz, A,G,Vtrue, dims, NITREF);
+    [x2,y2,z2] = conelp_solve(L,D,P,PL,QL, bx,by,bz, A,G,Vtrue, dims, NITREF,LINSOLVER);
     if( p > 0 ), by1 = b'*y1; else by1 = 0; end    
     if( p > 0 ), by2 = b'*y2; else by2 = 0; end  
     dtau_denom = kap/tau - (c'*x1 + by1 + h'*z1);
     dtauaff = (dt + c'*x2 + by2 + h'*z2) / dtau_denom;
     dzaff = z2 + dtauaff*z1;    
-    W_times_dzaff = conelp_timesW(scaling,dzaff,dims); % = W*dzaff
+    W_times_dzaff = conelp_timesW(scaling,dzaff,dims,LINSOLVER); % = W*dzaff
     
-    dsaff = -conelp_timesWsquare(scaling, dzaff, dims) - s; 
+    dsaff = -conelp_timesWsquare(scaling, dzaff, dims, LINSOLVER) - s; 
     % W \ dsaff = -W*dzaff - lambda
     % dsaff as such not needed, line search is on scaled variables
-    dsaff_by_W =  -conelp_timesW(scaling, dzaff, dims) - lambda;
+    dsaff_by_W =  -conelp_timesW(scaling, dzaff, dims, LINSOLVER) - lambda;
     
     dkapaff = -(bkap + kap*dtauaff)/tau;
         
@@ -317,17 +318,17 @@ for nIt = 0:MAXIT+1
     bs = conelp_kringel(lambda,lambda,dims) - sigma*info.mu*em + conelp_kringel(dsaff_by_W,W_times_dzaff,dims);     
     bkap = kap*tau - sigma*info.mu + dkapaff*dtauaff;
     lambda_raute_bs = conelp_raute(lambda,bs,dims);    
-    W_times_lambda_raute_bs = conelp_timesW(scaling,lambda_raute_bs,dims);
-    [x2, y2, z2] = conelp_solve(L,D,P,PL,QL, (1-sigma)*rx,(1-sigma)*ry,-(1-sigma)*rz + W_times_lambda_raute_bs, A,G,Vtrue, dims, NITREF); 
+    W_times_lambda_raute_bs = conelp_timesW(scaling,lambda_raute_bs,dims,LINSOLVER);
+    [x2, y2, z2] = conelp_solve(L,D,P,PL,QL, (1-sigma)*rx,(1-sigma)*ry,-(1-sigma)*rz + W_times_lambda_raute_bs, A,G,Vtrue, dims, NITREF,LINSOLVER); 
     if( p > 0 ), by2 = b'*y2; else by2 = 0; end
     dtau = ((1-sigma)*rt - bkap/tau + c'*x2 + by2 + h'*z2) / dtau_denom;
     dx = x2 + dtau*x1;     dy = y2 + dtau*y1;       dz = z2 + dtau*z1;
-    ds_by_W = -(lambda_raute_bs + conelp_timesW(scaling,dz,dims));
-    ds = conelp_timesW(scaling, ds_by_W, dims);
+    ds_by_W = -(lambda_raute_bs + conelp_timesW(scaling,dz,dims,LINSOLVER));
+    ds = conelp_timesW(scaling, ds_by_W, dims,LINSOLVER);
     dkap = -(bkap + kap*dtau)/tau;    
     
     %% 5. Line search for combined search direction.    
-    W_times_dz = conelp_timesW(scaling,dz,dims); % = W*dz
+    W_times_dz = conelp_timesW(scaling,dz,dims,LINSOLVER); % = W*dz
     alpha = conelp_stepsize(lambda,ds_by_W,W_times_dz,dims,tau,dtau,kap,dkap)*GAMMA;
 %     fprintf('Combined step length: %10.8f\n',alpha);
 %     alpha = conelp_linesearch(s,z,tau,kap,ds,dz,dtau,dkap,dims,lambda)*GAMMA;          
@@ -337,7 +338,7 @@ for nIt = 0:MAXIT+1
     kap = kap + alpha*dkap;     tau = tau + alpha*dtau;
     assert( tau > 0, 'tau <= 0, exiting.');
     assert( kap > 0, 'kappa <= 0, exiting');
-    [scaling,lambda,Vreg,Vtrue] = conelp_scaling(s,z,dims);    
+    [scaling,lambda,Vreg,Vtrue] = conelp_scaling(s,z,dims,LINSOLVER,EPS);    
 end
 
 %% scale variables back
