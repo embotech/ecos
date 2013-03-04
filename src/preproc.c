@@ -220,7 +220,7 @@ spmat* createKKT_U(spmat* Gt, spmat* At, pfloat delta, cone* C, idxint* Sign, id
 		cone_strt += C->soc[l].p;
 	}
     
-    PRINTTEXT("SETUP: nK=%d and ks=%d\n",nK,ks);
+    PRINTTEXT("SETUP: nK=%d and ks=%d\n",(int)nK,(int)ks);
 
 	/* return KKT matrix */
 	return createSparseMatrix(nK, nK, nnzK, Kjc, Kir, Kpr);
