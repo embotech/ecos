@@ -80,7 +80,7 @@ if( nargin == 5 )
     
     % LP-cone [1, ?4.1]
     w_l = sqrt( s(1:dims.l) ./ z(1:dims.l) );
-    V = spdiags(w_l.^2,0,dims.l,dims.l);
+    V = spdiags(w_l.^2,0,dims.l,dims.l) + EPS*eye(dims.l);
     V_noreg = V;
     scaling.l.wl = w_l;
     % W = diag(w_l);
@@ -151,23 +151,54 @@ if( nargin == 5 )
                 
             case 'ldlsparse'
                 u0_lower = c^2/(1/w+d);
-                u0_upper = min([a^2+w, c^2/d]);
-                assert(u0_lower < u0_upper,'lower-upper proof does not hold');
-                u0 = sqrt( u0_lower + (u0_upper - u0_lower)/2);
-                u1 = c / u0;
+                u0_upper = a^2+w; %min([a^2+w, c^2/d]);
+                %if( u0_upper - u0_lower <= 0 )
+                %    u0 = sqrt( u0_lower +  (u0_upper - u0_lower)/2);
+                %else
+                %    u0 = sqrt( u0_lower + (u0_upper - u0_lower)/2);
+                %end
+                
+                %assert(u0_lower < u0_upper,'lower-upper proof does not hold');
+                
+                d1 = (a^2 + w - w*c^2/(1+w*d))/2;
+                if( d1 < 0 )
+                    d1 = 0;
+%                     fprintf('d1 < 0, setting to 0\n');
+                end
+                assert(d1 >= 0,'d1 <= 0');
+                %d1 = EPS;
+                u0_2 = a^2 + w - d1;%u0_lower + EPS;%(u0_upper - u0_lower)/2;
+                if( u0_2 <= 0 )
+                    keyboard;
+                end
                 v0 = 0;
-                v1 = sqrt(c^2/u0^2 - d);
+                c2byu02 = c^2 / u0_2;
+                if( c2byu02 <= 0 )
+                    keyboard
+                else
+                    u0 = sqrt(u0_2);
+                end
+%                 v1 = sqrt(c^2/u0^2 - d);
+                v1 = sqrt(c2byu02 - d);
+%                 u1 = c / u0;
+                u1 = sqrt(c2byu02);
                 assert(isreal(v1),'v1 is complex');
-                d1 = a^2 + w - u0^2;
-                assert(d1 > 0,'d1 is negative');                
+%                 d1 = a^2 + w - u0_2;
+% d1 = w - ((a^2 - 1)*(a + 1)^2 - 3*w*(a + 1)^2)/(2*(2*a + w*(a^2 + 4*a + 3) + a^2 + w^2 + 1));
+                                
                 D = blkdiag(d1,eye(conesize-1));
                 u = [u0; u1*q];
                 v = [v0; v1*q];
-                S = [ones(conesize,1); -1; 1];
-                Vk = eta^2*[D, u, v; u', -1, 0; v', 0, 1] + EPS*diag(S);
+                S = [ones(conesize,1); 1; -1];
+                Vk = eta^2*[D, v, u; v', +1, 0; u', 0, -1] + EPS*diag(S);
                 Vk_noreg = eta^2*(D + u*u' - v*v');
-                assert(all(eig(D-v*v'))>0,'D-vv'' has negative eigenvalues');
-                
+%                 norm(Vk_noreg - scaling.q(k).V)
+                if(any(eig(D-v*v') <= 0) )
+%                     keyboard
+                end
+                scaling.q(k).u = u;
+                scaling.q(k).v = v;
+                scaling.q(k).d = diag(D);
                 
             otherwise, error('Unknown linear solver');
         end

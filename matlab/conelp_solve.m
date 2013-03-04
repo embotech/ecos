@@ -1,4 +1,4 @@
-function [x,y,z] = conelp_solve(L,D,P,PL,QL, bx,by,bz, A,G,V, dims, nItref, LINSOLVER) %A,G,Gtilde,V,dims, K, Dreg, nItref, ppp)%,W,G,scaling,Gtilde,Winv,A,V)
+function [x,y,z,nitref] = conelp_solve(L,D,P,PL,QL, bx,by,bz, A,G,V, dims, nItref, LINSOLVER) %A,G,Gtilde,V,dims, K, Dreg, nItref, ppp)%,W,G,scaling,Gtilde,Winv,A,V)
 % Solve KKT system using the cached factors L,D and permutation matrix P.
 %
 % (c) Alexander Domahidi, IfA, ETH Zurich, 2013.
@@ -35,6 +35,7 @@ switch( LINSOLVER )
 end
 
 % iterative refinement
+bnorm = norm(PRHS,inf);
 for i = 1:nItref
     
     % variables
@@ -47,9 +48,12 @@ for i = 1:nItref
     ey = by - A*x;
     ez = bz - G*x + V*z;
     e = [ex; ey; conelp_stretch(ez,dims,Nstretch)];
-%         fprintf('||ex||=%4.2e  ||ey||=%4.2e  ||ez||=%4.2e  (k=%d)\n', norm(ex), norm(ey), norm(ez), i);
-    %     if(norm(ex)/bnorm < 1e-9 && norm(ey)/bnorm < 1e-9 && norm(ez)/bnorm < 1e-13 ), break; end
-    %     fprintf('*');
+%         fprintf('||ex||=%4.2e  ||ey||=%4.2e  ||ez||=%4.2e  (k=%d)\n', norm(ex)/bnorm, norm(ey)/bnorm, norm(ez)/bnorm, i);
+        if(norm(ex,inf)/bnorm < 1e-13 && ...
+           norm(ey,inf)/bnorm < 1e-13 && ...
+           norm(ez,inf)/bnorm < 1e-13 ), break; end
+
+%         fprintf('*');
     
     % solve for correction
     switch( LINSOLVER )
@@ -72,6 +76,6 @@ end
 x = dx(1:n);
 y = dx(n+1:n+p);
 z = conelp_unstretch(dx(n+p+1:end),dims,Nstretch);
-
+nitref = i;
 % fprintf('\n');
 

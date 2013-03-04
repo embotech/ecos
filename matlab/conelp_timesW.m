@@ -18,17 +18,18 @@ for k = 1:length(dims.q)
     
     % multiplication
     switch( LINSOLVER )
-        case 'rank1updates'
+        
+        case 'backslash'
+            lambda(coneidx,1) = scaling.q(k).W*zk;
+        
+        case {'rank1updates', 'ldlsparse'}
             a = scaling.q(k).a;
             zk1 = zk(2:end);
             zeta = scaling.q(k).q' * zk1;
             lambda0 = a*zk(1) + zeta;
             lambda1 = zk1 + (zk(1) + zeta/(1+a)).*scaling.q(k).q;
             lambda(coneidx,1) = scaling.q(k).eta.*[lambda0; lambda1];
-            
-        case 'backslash'
-            lambda(coneidx,1) = scaling.q(k).W*zk;
-            
+         
         otherwise, error('Unknown linear solver');
     end
 end

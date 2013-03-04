@@ -18,7 +18,11 @@ switch( LINSOLVER )
         [L,D,P] = ldl(K,'vector');
         
     case 'ldlsparse'
-        [L,D] = ldlsparse(sparse(K), P);
+        S = [ones(n,1); -ones(p,1); -ones(dims.l,1)];
+        for k = 1:length(dims.q)
+            S = [S; -ones(dims.q(k),1); -1; 1];
+        end
+        [L,D] = sldlsparse(sparse(K), P, S, 1e-5);
         L = L + eye(size(L));
         
     otherwise, error('Unknown linear solver');

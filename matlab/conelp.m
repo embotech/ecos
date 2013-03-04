@@ -73,13 +73,13 @@ function [x,y,info,s,z] = conelp(c,G,h,dims,A,b,LINSOLVER)
 tic;
 
 %% Parameters
-MAXIT = 30;                       % maximum number of iterations
+MAXIT = 20;                       % maximum number of iterations
 GAMMA = 0.98;                     % scaling the final step length
-EPS = 1e-5;                       % regularization parameter
-NITREF = 3;                       % number of iterative refinement steps
-FEASTOL = 1e-7;                   % primal infeasibility tolerance
-ABSTOL  = 1e-7;                   % absolute tolerance on duality gap
-RELTOL  = 1e-7;                   % relative tolerance on duality gap
+EPS = 0;                          % regularization parameter
+NITREF = 7;                       % number of iterative refinement steps
+FEASTOL = 1e-6;                   % primal infeasibility tolerance
+ABSTOL  = 1e-6;                   % absolute tolerance on duality gap
+RELTOL  = 1e-6;                   % relative tolerance on duality gap
 DOPRINTS = 1;                     % toggle printing
 
 % EXITCODES ------------------------------------------------------------ */
@@ -97,7 +97,7 @@ CONELP_FATAL    = -7;   % Unknown problem in solver                 */
 % 'ldlsparse' (sparse LDL by Tim Davis)
 % 'rank1updates' (sparse LDL by Tim Davis + rank1updates)
 if( ~exist('LINSOLVER','var') )  
-    LINSOLVER = 'backslash';     
+    LINSOLVER = 'ldlsparse';     
 end                                                              
                                                                     
                                
@@ -154,6 +154,8 @@ resx0 = max([1,norm(c,2)]);
 resy0 = max([1,norm(b,2)]); 
 resz0 = max([1,norm(h,2)]);
 
+
+presprior = inf;
 
 %% Main interior-point loop - [1, ?7.1]
 % Note: we omit the "hat" for all variables for brevity
@@ -252,6 +254,20 @@ for nIt = 0:MAXIT+1
     
     %% 2. Affine search direction.
     
+%     % BACKTRACKING-HACK
+%     gamma = -0.0001;
+%     if( presprior < info.pres )
+%         x = x - gamma*alpha*dx; 
+%         y = y - gamma*alpha*dy; 
+%         s = s - gamma*alpha*ds; 
+%         z = z - gamma*alpha*dz;
+%         kap = kap - gamma*alpha*dkap;     
+%         tau = tau - gamma*alpha*dtau;
+%         fprintf('BACKTRACKING...\n');
+% %         continue;
+%     end    
+%     presprior = info.pres;
+        
     % build & factor KKT matrix
     K = conelp_KKTmatrix(A, Gtilde, Vreg, EPS);
          
@@ -269,7 +285,7 @@ for nIt = 0:MAXIT+1
 %     end
     
     % first solve for x1 y1 z1
-    [x1,y1,z1] = conelp_solve(L,D,P,PL,QL, -c,b,h, A,G,Vtrue, dims, NITREF,LINSOLVER);
+    [x1,y1,z1,info.nitref1] = conelp_solve(L,D,P,PL,QL, -c,b,h, A,G,Vtrue, dims, NITREF,LINSOLVER);
     assert( all( ~isnan(x1) ), 'Linear solver returned NaN');
     assert( all( ~isnan(y1) ), 'Linear solver returned NaN');
     assert( all( ~isnan(z1) ), 'Linear solver returned NaN');
@@ -282,7 +298,7 @@ for nIt = 0:MAXIT+1
     
     % second solve for x2 y2 z2
     bx = rx;  by = ry;  bz = -rz + s; dt = rt - kap;  bkap = kap*tau;            
-    [x2,y2,z2] = conelp_solve(L,D,P,PL,QL, bx,by,bz, A,G,Vtrue, dims, NITREF,LINSOLVER);
+    [x2,y2,z2,info.nitref2] = conelp_solve(L,D,P,PL,QL, bx,by,bz, A,G,Vtrue, dims, NITREF,LINSOLVER);
     if( p > 0 ), by1 = b'*y1; else by1 = 0; end    
     if( p > 0 ), by2 = b'*y2; else by2 = 0; end  
     dtau_denom = kap/tau - (c'*x1 + by1 + h'*z1);
@@ -319,7 +335,7 @@ for nIt = 0:MAXIT+1
     bkap = kap*tau - sigma*info.mu + dkapaff*dtauaff;
     lambda_raute_bs = conelp_raute(lambda,bs,dims);    
     W_times_lambda_raute_bs = conelp_timesW(scaling,lambda_raute_bs,dims,LINSOLVER);
-    [x2, y2, z2] = conelp_solve(L,D,P,PL,QL, (1-sigma)*rx,(1-sigma)*ry,-(1-sigma)*rz + W_times_lambda_raute_bs, A,G,Vtrue, dims, NITREF,LINSOLVER); 
+    [x2, y2, z2,info.nitref3] = conelp_solve(L,D,P,PL,QL, (1-sigma)*rx,(1-sigma)*ry,-(1-sigma)*rz + W_times_lambda_raute_bs, A,G,Vtrue, dims, NITREF,LINSOLVER); 
     if( p > 0 ), by2 = b'*y2; else by2 = 0; end
     dtau = ((1-sigma)*rt - bkap/tau + c'*x2 + by2 + h'*z2) / dtau_denom;
     dx = x2 + dtau*x1;     dy = y2 + dtau*y1;       dz = z2 + dtau*z1;
