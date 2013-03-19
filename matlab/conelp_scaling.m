@@ -205,9 +205,9 @@ if( nargin == 5 )
                 D = blkdiag(d1,eye(conesize-1));
                 u = [u0; u1*q];
                 v = [v0; v1*q];
-                S = [ones(conesize,1); 1; -1];
-                Vk = eta^2*[D, v, u; v', +1, 0; u', 0, -1] + EPS*diag(S);
-                Vk_noreg = eta^2*(D + u*u' - v*v');
+%                 S = [ones(conesize,1); 1; -1];
+                Vk = eta^2*[D, v, u; v', +1, 0; u', 0, -1];% + EPS*diag(S);
+                Vk_noreg = Vk;%eta^2*(D + u*u' - v*v');
 %                 norm(Vk_noreg - scaling.q(k).V)
 %                 if(any(eig(D-v*v') <= 0) )
 %                     keyboard

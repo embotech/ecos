@@ -90,7 +90,7 @@ void kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy,
     pfloat* ez = e + n+p;
     pfloat Pxnorm, temp;
 	nK = KKT->PKPt->n;
-    pfloat bnorm = norm2(Pb, n+p+m+C->nsoc);
+    pfloat bnorm = norminf(Pb, n+p+m+2*C->nsoc);
     pfloat nex, ney, nez;
 
 
@@ -109,7 +109,7 @@ void kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy,
         for( i=0; i<C->lpc->p; i++ ){ dz[j++] = Px[Pinv[k++]]; }
         for( l=0; l<C->nsoc; l++ ){
             for( i=0; i<C->soc[l].p; i++ ){ dz[j++] = Px[Pinv[k++]]; }
-            k++;
+            k += 2;
         }
         
 		/* compute error term */
@@ -118,15 +118,15 @@ void kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy,
         for( i=0; i<n; i++ ){ ex[i] = Pb[Pinv[k++]]; }
         sparseMtVm(A, dy, ex, 0, 0);
         sparseMtVm(G, dz, ex, 0, 0);
-        nex = norm2(ex,n);
-        //PRINTTEXT("norm(ex) = %8.6e (k=%d)\n", norm2(ex, 48), kItRef);
+        nex = norminf(ex,n);
+        //PRINTTEXT("norm(ex) = %8.6e (k=%d)\n", nex, (int)kItRef);
         //for( i=0; i<n; i++){ PRINTTEXT("ex[%d] = %6.4e\n", i+1, ex[i]); }
         	
         /* --> 2. ey = by - A*dx */
         for( i=0; i<p; i++ ){ ey[i] = Pb[Pinv[k++]]; }
         sparseMV(A, dx, ey, -1, 0);
-        ney = norm2(ey,p);
-        //PRINTTEXT("norm(ey) = %8.6e (k=%d)\n", norm2(ey, 35), kItRef);
+        ney = norminf(ey,p);
+        //PRINTTEXT("norm(ey) = %8.6e (k=%d)\n", ney, (int)kItRef);
         //for( i=0; i<p; i++){ PRINTTEXT("ey[%d] = %6.4e\n", i+1, ey[i]); }
         
         /* --> 3. ez = bz - G*dx + V*dz_true */
@@ -141,8 +141,9 @@ void kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy,
                 ez[kk++] = Pb[Pinv[k++]] - Gdx[j++];
             }
             ez[kk++] =  Pb[Pinv[k++]];
+            ez[kk++] =  Pb[Pinv[k++]];
         }
-        for( i=0; i<m+C->nsoc; i++) { truez[i] = Px[Pinv[n+p+i]]; }
+        for( i=0; i<m+2*C->nsoc; i++) { truez[i] = Px[Pinv[n+p+i]]; }
         
         
         //PRINTTEXT("dz =   \n");
@@ -158,10 +159,12 @@ void kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy,
             scale2add(truez, ez, C);
             //scale2add(dz, ez, C);
         } else {
-            vadd(m+C->nsoc, truez, ez);
+            vadd(m+2*C->nsoc, truez, ez);
             //vadd(m+C->nsoc, dz, ez);
         }
-        //PRINTTEXT("norm(ez) = %8.6e (k=%d)\n", norm2(ez, 35), kItRef);
+        nez = norminf(ez,m+2*C->nsoc);
+        
+        //PRINTTEXT("norm(ez) = %8.6e (k=%d)\n", nez, (int)kItRef);
         //if( norm2(ez,35) < DELTA ) break;
         //if( norm2(ez,35) > 1e-5 ) kItRef--;
         //PRINTTEXT("ez =   \n");
@@ -171,15 +174,15 @@ void kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy,
         //if( isinit == 0 )
         //exit(-1);
         
-        nez = norm2(ez,m+C->nsoc);
         
         
-        /* break here if errors are small enough */
-        if( nez/bnorm < LINSYSACC && ney/bnorm < LINSYSACC && nex/bnorm < LINSYSACC){
+        
+        /* continue with refinement only if errors are small enough */
+        if( nex/bnorm < LINSYSACC && ney/bnorm < LINSYSACC && nez/bnorm < LINSYSACC){
             break;
         }
         
-        PRINTTEXT("*");
+        //PRINTTEXT("*");
         
         /* permute */
         for( i=0; i<nK; i++) { Pe[Pinv[i]] = e[i]; }
@@ -204,54 +207,44 @@ void kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy,
 	for( i=0; i<C->lpc->p; i++ ){ dz[j++] = Px[Pinv[k++]]; }
 	for( l=0; l<C->nsoc; l++ ){
 		for( i=0; i<C->soc[l].p; i++ ){ dz[j++] = Px[Pinv[k++]]; }
-		k++;
-	}	
+		k += 2;
+	}
 }
 
 
 /**
  * Updates the permuted KKT matrix by copying in the new scalings.
  */
-void kkt_update(spmat* PKP, idxint* P, cone *C, idxint* Sign)
+void kkt_update(spmat* PKP, idxint* P, cone *C)
 {
-	idxint i, k, size_minus_1;
-    pfloat eta_times_delta;
-    pfloat temp, Dii;
-    pfloat cumsign;
+	idxint i, j, k, conesize, conesize_m1;
+    pfloat eta_square, d1, u0, u1, v1, *q;
 	
 	/* LP cone */
     for( i=0; i < C->lpc->p; i++ ){ PKP->pr[P[C->lpc->kkt_idx[i]]] = -C->lpc->v[i]; }
+    conesize_m1 = conesize - 1;
 
 	/* Second-order cone */
 	for( i=0; i<C->nsoc; i++ ){
-		size_minus_1 = C->soc[i].p - 1;
-        eta_times_delta = DELTA;
-
-		/* atilde */
-        PKP->pr[P[C->soc[i].kkt_atilde]] = -C->soc[i].atilde - eta_times_delta; // regularized
-
-		/* q' in U and -eta on diagonal */
-        temp = -C->soc[i].qtildefact*C->soc[i].qtildefact/C->soc[i].atilde;
-        cumsign = 0;
-		for( k=0; k < size_minus_1; k++ ){
-            
-            /* precompute sign */
-            Dii = 1.0 + temp*C->soc[i].qtilde[k]*C->soc[i].qtilde[k];
-            temp = temp / Dii;
-            cumsign += Dii < 0 ? 1.0 : 0.0;
-            
-            /* update scalings (with regularization) */
-			PKP->pr[P[C->soc[i].kkt_qtU[k]]]   = -C->soc[i].qtilde[k];
-            //PKP->pr[P[C->soc[i].kkt_qtU[k]+1]] = -C->soc[i].eta;
-            PKP->pr[P[C->soc[i].kkt_qtU[k]+1]] = Dii < 0 ? -C->soc[i].eta + eta_times_delta : -C->soc[i].eta - eta_times_delta; // regularized            
-		}
-
-		/* v part in U */
-		for( k=0; k < size_minus_1; k++ ){
-			PKP->pr[P[C->soc[i].kkt_vU+k]] = -C->soc[i].vtilde[k];
-		}
-
-		/* -1 part on diagonal */
-		PKP->pr[P[C->soc[i].kkt_vU + size_minus_1]] = C->soc[i].eta - (2*cumsign-1.0)*eta_times_delta;
+        
+        getSOCDetails(&C->soc[i], &conesize, &eta_square, &d1, &u0, &u1, &v1, &q);
+        
+        /* D */
+        PKP->pr[P[C->soc[i].Didx[0]]] = -eta_square * d1;
+        for (k=1; k < conesize; k++) {
+            PKP->pr[P[C->soc[i].Didx[k]]] = -eta_square;
+        }
+        
+        /* v */
+        j=0;
+        for (k=0; k < conesize_m1; k++) {
+            PKP->pr[P[C->soc[i].vuidx + j++]] = -eta_square * v1 * q[k];
+        }
+        
+        /* u */
+        PKP->pr[P[C->soc[i].vuidx + j++]] = -eta_square * u0;
+        for (k=0; k < conesize_m1; k++) {
+            PKP->pr[P[C->soc[i].vuidx + j++]] = -eta_square * u1 * q[k];
+        }
 	}
 }

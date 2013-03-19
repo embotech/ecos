@@ -41,17 +41,19 @@ for i = 1:nItref
     % variables
     x = dx(1:n);
     y = dx(n+1:n+p);
-    z = conelp_unstretch(dx(n+p+1:end),dims, Nstretch);
+    ztilde = dx(n+p+1:end);
+    z = conelp_unstretch(ztilde,dims, Nstretch);
     
     % errors
     ex = bx - A'*y - G'*z;
     ey = by - A*x;
-    ez = bz - G*x + V*z;
-    e = [ex; ey; conelp_stretch(ez,dims,Nstretch)];
+    eztilde = conelp_stretch(bz - G*x,dims,2) + V*ztilde;
+%     e = [ex; ey; conelp_stretch(ez,dims,Nstretch)];
+    e = [ex; ey; eztilde];
 %         fprintf('||ex||=%4.2e  ||ey||=%4.2e  ||ez||=%4.2e  (k=%d)\n', norm(ex)/bnorm, norm(ey)/bnorm, norm(ez)/bnorm, i);
         if(norm(ex,inf)/bnorm < 1e-13 && ...
            norm(ey,inf)/bnorm < 1e-13 && ...
-           norm(ez,inf)/bnorm < 1e-13 ), break; end
+           norm(eztilde,inf)/bnorm < 1e-13 ), break; end
 
 %         fprintf('*');
     

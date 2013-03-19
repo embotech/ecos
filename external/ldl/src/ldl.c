@@ -323,22 +323,9 @@ LDL_int LDL_numeric2	/* returns n if successful, k if D (k,k) is zero */
 			Lx [p] = l_ki ;
 			Lnz [i]++ ;		        /* increment count of nonzeros in col i */
 		}
-
-//#ifdef WITH_DYN_REG
-        /* Dynamic regularization */
-        /*
-        if( Pinv[k] < nn+pp ){
-            mydelta = delta;
-        } else {
-            mydelta = 1;
-        }
-        D[k] = (Sign[k] != 0 && ((double)Sign[k])*D[k] < mydelta) ? ((double)Sign[k])*mydelta : D[k];
-         */
-//#endif
-        if (D [k] == 0.0) return (k); // this indicates a numerical problem in KKT system
-        //if( D[k] == 0.0 ) D[k] = 1.0;//3.1623e-4;
         
-        //D[k] = ((double)Sign[pinvk])*D[k] < mydelta ? ((double)Sign[pinvk])*mydelta : D[k];
+        /* dynamic regularization */
+        D[k] = Sign[k]*D[k] < delta ? Sign[k]*delta : D[k];
         
     }
     return (n) ;	/* success, diagonal of D is all nonzero */

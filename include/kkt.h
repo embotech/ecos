@@ -98,7 +98,7 @@ void kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy,
 /**
  * Updates the permuted KKT matrix by copying in the new scalings.
  */
-void kkt_update(spmat* PKP, idxint* P, cone *C, idxint *Sign);
+void kkt_update(spmat* PKP, idxint* P, cone *C);
 
 
 #endif

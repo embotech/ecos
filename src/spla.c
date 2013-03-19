@@ -132,6 +132,22 @@ pfloat norm2(pfloat* v, idxint n)
 
 
 /*
+ * infinity norm of a vector.
+ */
+pfloat norminf(pfloat* v, idxint n)
+{
+	idxint i;
+	pfloat norm = 0;
+    pfloat mv;
+	for( i=0; i<n; i++ ){
+        if( v[i] > norm ){ norm = v[i]; }
+        mv = -v[i];
+        if( mv > norm){ norm = mv; }
+    }
+	return norm;
+}
+
+/*
  * Dot product z = x'*y of size n.
  */
 pfloat ddot(idxint n, pfloat* x, pfloat* y)

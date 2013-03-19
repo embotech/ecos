@@ -76,7 +76,7 @@ tic;
 MAXIT = 30;                       % maximum number of iterations
 GAMMA = 0.98;                     % scaling the final step length
 EPS = 0;   % regularization parameter
-NITREF = 9;                       % number of iterative refinement steps
+NITREF = 10;                      % number of iterative refinement steps
 FEASTOL = 1e-6;                   % primal infeasibility tolerance
 ABSTOL  = 1e-6;                   % absolute tolerance on duality gap
 RELTOL  = 1e-6;                   % relative tolerance on duality gap

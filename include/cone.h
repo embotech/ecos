@@ -39,24 +39,27 @@ typedef struct lpcone{
 /* (all KKT indices are in compressed column format pointing into Kpr)   */
 typedef struct socone{    
 	idxint p;         /* dimension of cone                               */
-    pfloat etasqrt;   /* square root of eta                              */
-    pfloat a;         /* a                                               */
-	pfloat omega;     /* = q'*q                                          */
-	pfloat atilde;    /* = a^2 + omega                                   */	
+    //pfloat etasqrt;   /* square root of eta                            */
+    //pfloat a;         /* a                                             */
+	//pfloat omega;     /* = q'*q                                        */
 	//pfloat beta;      /* = (vtilde / qtilde)^2                         */
-	idxint kkt_vU;    /* index for v in K (upper triangular part)        */	
-	idxint kkt_qL;    /* index for q in K (lower triangular part)        */		
-	idxint kkt_atilde;  /* index for atilde on diagonal                  */		
-    idxint szidx;     /* index of associated slacks / multipliers        */
+	//idxint kkt_vU;    /* index for v in K (upper triangular part)        */
+	//idxint kkt_qL;    /* index for q in K (lower triangular part)        */
+	//idxint kkt_atilde;  /* index for atilde on diagonal                  */
+    //idxint szidx;     /* index of associated slacks / multipliers        */
 	pfloat* skbar;    /* temporary variables to work with                */
-	pfloat* zkbar;    /* temporary variables to work with                */	      
-	pfloat* qtilde;   /* qtilde vector (see documentation)               */        
-	pfloat* vtilde;   /* vtilde vector (see documentation)               */        
-	idxint* kkt_qtU;  /* p-1 indices for q' in K (upper triangular part) */
-    idxint* sidx;     /* p indices for sign entries in big sign vector   */
-    pfloat qtildefact;
-    pfloat vtildefact;
+	pfloat* zkbar;    /* temporary variables to work with                */
+	//pfloat* qtilde;   /* qtilde vector (see documentation)               */
+	//pfloat* vtilde;   /* vtilde vector (see documentation)               */
+	//idxint* kkt_qtU;  /* p-1 indices for q' in K (upper triangular part) */
+    //idxint* sidx;     /* p indices for sign entries in big sign vector   */
+    //pfloat qtildefact;
+    //pfloat vtildefact;
     /* ---------------  new formulation  ---------------*/
+    pfloat a;           /* = wbar(1)                                     */
+    pfloat atilde;      /* = a^2 + w                                     */
+    pfloat d1;          /* first element of D                            */
+    pfloat w;           /* = q'*q                                        */
     pfloat u0;          /* eta                                           */
     pfloat u1;          /* u = [u0; u1*q]                                */
     pfloat v1;          /* v = [0; v1*q]                                 */
@@ -64,7 +67,7 @@ typedef struct socone{
     pfloat eta_square;  /* eta^2 = (sres / zres)^(1/2)                   */
     idxint vuidx;       /* first index for vectors v and u -- these are
                                 stacked in the sparse unpermuted system) */
-    pfloat* q;          /* q vector (see documentation)                  */
+    pfloat* q;          /* = wbar(2:end)                                 */
     idxint* Didx;       /* indices for D                                 */
     
 } socone;
@@ -127,9 +130,17 @@ void unscale(pfloat* lambda, cone* C, pfloat* z);
  */
 pfloat conicProduct(pfloat* u, pfloat* v, cone* C, pfloat* w);
 
+
 /**
  * Conic division, implements the "\" operator, w = u \ v
  */
 void conicDivision(pfloat* u, pfloat* v, cone* C, pfloat* w);
+
+
+/*
+ * Returns details on second order cone
+ * Purpose: cleaner code
+ */
+void getSOCDetails(socone *soc, idxint *conesize, pfloat* eta_square, pfloat* d1, pfloat* u0, pfloat* u1, pfloat* v1, pfloat **q);
 
 #endif

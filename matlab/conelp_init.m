@@ -45,7 +45,7 @@ Kinit = conelp_KKTmatrix(A,Gtilde,Vinit,EPS);
 % xhat = v(1:n);
 % r = -v(n+p+1:end);
 
-[xhat, ~, minus_r] = conelp_solve(Linit,Dinit,P,[],[], zeros(n,1),b,h, A,G,Vinit(1:m,1:m), dims, NITREF,LINSOLVER);
+[xhat, ~, minus_r] = conelp_solve(Linit,Dinit,P,[],[], zeros(n,1),b,h, A,G,Vinit, dims, NITREF,LINSOLVER);
 shat = bring2cone(-minus_r,dims);
 
 
@@ -66,7 +66,7 @@ shat = bring2cone(-minus_r,dims);
 %zbar = v(n+p+1:end);
 
 
-[~, yhat, zbar] = conelp_solve(Linit,Dinit,P,[],[], -c,zeros(p,1),zeros(m,1), A,G,Vinit(1:m,1:m), dims, NITREF,LINSOLVER);
+[~, yhat, zbar] = conelp_solve(Linit,Dinit,P,[],[], -c,zeros(p,1),zeros(m,1), A,G,Vinit, dims, NITREF,LINSOLVER);
 zhat = bring2cone(zbar,dims);
 
 %% homogeneous embedding variables

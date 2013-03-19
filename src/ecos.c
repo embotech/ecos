@@ -92,20 +92,8 @@ idxint init(pwork* w)
 	
 	/* Solve for RHS [0; b; h] */
 	tic(&tkktsolve);
-	kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS1, w->KKT->dx1, w->KKT->dy1, w->KKT->dz1, w->n, w->p, w->m, w->C, 1, 1);
+	kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS1, w->KKT->dx1, w->KKT->dy1, w->KKT->dz1, w->n, w->p, w->m, w->C, 1, w->stgs->nitref);
 	w->info->tkktsolve += toc(&tkktsolve);
-    
-    /*
-    PRINTTEXT("DELTA adjusted from %6.4e to ", w->stgs->delta);
-    w->stgs->delta += DELTA_TI*(log10(itreferr) - ITREFERR);
-    PRINTTEXT("%6.4e\n", w->stgs->delta);
-     */
-    
-    /*
-    PRINTTEXT("DELTAP adjusted from %6.4e to ", w->stgs->deltaP);
-    w->stgs->deltaP = 0.5*(w->stgs->itreferr - itreferr);
-    PRINTTEXT("%6.4e\n", w->stgs->deltaP);
-     */
 
 	/* Copy out initial value of x */
 	for( i=0; i<w->n; i++ ){ w->x[i] = w->KKT->dx1[i]; }
@@ -132,20 +120,8 @@ idxint init(pwork* w)
 	
 	/* Solve for RHS [-c; 0; 0] */	
 	tic(&tkktsolve);
-	kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS2, w->KKT->dx2, w->KKT->dy2, w->KKT->dz2, w->n, w->p, w->m, w->C, 1, 1);
+	kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS2, w->KKT->dx2, w->KKT->dy2, w->KKT->dz2, w->n, w->p, w->m, w->C, 1, w->stgs->nitref);
 	w->info->tkktsolve += toc(&tkktsolve);
-    
-    /*
-    PRINTTEXT("DELTA adjusted from %6.4e to ", w->stgs->delta);
-     w->stgs->delta += DELTA_TI*(log10(itreferr) - ITREFERR);
-    PRINTTEXT("%6.4e\n", w->stgs->delta);
-     */
-    
-    /*
-    PRINTTEXT("DELTA adjusted from %6.4e to ", w->stgs->deltaP);
-    w->stgs->deltaP += 0.5*(w->stgs->itreferr - itreferr);
-    PRINTTEXT("%6.4e\n", w->stgs->deltaP);
-     */
 	
 	/* Copy out initial value of y */
 	for( i=0; i<w->p; i++ ){ w->y[i] = w->KKT->dy2[i]; }
@@ -191,9 +167,7 @@ void computeResiduals(pwork *w)
 	/* ry = A*x - b.*tau */
 	sparseMV(w->A, w->x, w->ry, 1, 1);
 	w->hresy = norm2(w->ry, w->p);
-    //PRINTTEXT("hresy = %8.6e\n", w->hresy);
 	vsubscale(w->p, w->tau, w->b, w->ry);
-    //PRINTTEXT("tau = %8.6e\n", w->tau);
 	
 	/* rz = s + G*x - h.*tau */
 	sparseMV(w->G, w->x, w->rz, 1, 1);
@@ -205,8 +179,7 @@ void computeResiduals(pwork *w)
 	w->cx = ddot(w->n, w->c, w->x);
 	w->by = ddot(w->p, w->b, w->y);
 	w->hz = ddot(w->m, w->h, w->z);
-	w->rt = w->kap + w->cx + w->by + w->hz;
-    
+	w->rt = w->kap + w->cx + w->by + w->hz;    
 }
 
 
@@ -236,10 +209,13 @@ void updateStatistics(pwork* w)
 	nry = norm2(w->ry, w->p)/w->resy0;  nrz = norm2(w->rz, w->m)/w->resz0;
 	info->pres = MAX(nry, nrz) / w->tau;
 	info->dres = norm2(w->rx, w->n)/w->resx0 / w->tau;
-    //PRINTTEXT("norm(rx) = %6.4e    resx0 = %6.4e\n", norm2(w->rx, w->n), w->resx0);
-    //PRINTTEXT("norm(ry) = %6.4e    resy0 = %6.4e\n", norm2(w->ry, w->p), w->resy0);
-    //PRINTTEXT("norm(rz) = %6.4e    resz0 = %6.4e\n", norm2(w->rz, w->m), w->resz0);
-
+    
+#if PRINTLEVEL > 2 && DEBUG > 0
+    PRINTTEXT("norm(rx) = %6.4e    resx0 = %6.4e\n", norm2(w->rx, w->n), w->resx0);
+    PRINTTEXT("norm(ry) = %6.4e    resy0 = %6.4e\n", norm2(w->ry, w->p), w->resy0);
+    PRINTTEXT("norm(rz) = %6.4e    resz0 = %6.4e\n", norm2(w->rz, w->m), w->resz0);
+#endif
+    
 	/* infeasibility measures */
 	info->pinfres = w->hz + w->by < 0 ? w->hresx / w->resx0 / (-w->hz - w->by) * w->tau : NAN;
 	info->dinfres = w->cx < 0 ? MAX(w->hresy/w->resy0, w->hresz/w->resz0) / (-w->cx) * w->tau : NAN;
@@ -519,11 +495,12 @@ idxint ECOS_solve(pwork* w)
     }
     
     
-    //deltacurrent = w->stgs->delta;
-    //dumpDenseMatrix(w->x, 1, w->n, "x_init.txt");
-    //dumpDenseMatrix(w->y, 1, w->p, "y_init.txt");
-    //dumpDenseMatrix(w->z, 1, w->m, "z_init.txt");
-    //dumpDenseMatrix(w->s, 1, w->m, "s_init.txt");
+#if DEBUG > 0
+    dumpDenseMatrix(w->x, 1, w->n, "x_init.txt");
+    dumpDenseMatrix(w->y, 1, w->p, "y_init.txt");
+    dumpDenseMatrix(w->z, 1, w->m, "z_init.txt");
+    dumpDenseMatrix(w->s, 1, w->m, "s_init.txt");
+#endif
     
 
 	/* Interior point loop */
@@ -601,16 +578,19 @@ idxint ECOS_solve(pwork* w)
         }
         
         
-        if( w->info->iter == 50)
-            exit(-1);
+        
         
 
 		/* Update KKT matrix with scalings */
-		kkt_update(w->KKT->PKPt, w->KKT->PK, w->C, w->KKT->Sign);
+		kkt_update(w->KKT->PKPt, w->KKT->PK, w->C);
         
-        /* DEBUG 
-        dumpSparseMatrix(w->KKT->PKPt, "K.mat");
-        */
+        
+        
+#if DEBUG > 0
+        dumpSparseMatrix(w->KKT->PKPt, "K.txt");
+#endif
+        PRINTTEXT("DEVELOPMENT MODUS - exit here\n");
+        exit(-1);
         
 		
 		/* Adjust size of regularization depending on accuracy of solution */

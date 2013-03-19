@@ -105,6 +105,7 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
 	pfloat sres, zres, snorm, znorm, gamma, one_over_2gamma, qtildefact, vtildefact;
 	pfloat* sk;
 	pfloat* zk;
+    pfloat a, b, c, d, w, temp, u0, u0_square, u1, v1, d1, c2byu02;
 
 	/* LP cone */
 	for( i=0; i < C->lpc->p; i++ ){
@@ -129,22 +130,41 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
 		snorm = sqrt(sres);    znorm = sqrt(zres);   
 		for( i=0; i<p; i++ ){ C->soc[l].skbar[i] = sk[i] / snorm; }
 		for( i=0; i<p; i++ ){ C->soc[l].zkbar[i] = zk[i] / znorm; }		
-		C->soc[l].eta = snorm/znorm;
-		C->soc[l].etasqrt = sqrt(C->soc[l].eta);
+		C->soc[l].eta_square = snorm/znorm;
+		C->soc[l].eta = sqrt(C->soc[l].eta_square);
 
 		/* Normalized Nesterov-Todd scaling point */
 		gamma = 1.0; 
 		for( i=0; i<p; i++){ gamma += C->soc[l].skbar[i]*C->soc[l].zkbar[i]; }
 		gamma = sqrt(0.5*gamma);		
 		one_over_2gamma = 0.5/gamma;
-		C->soc[l].a = one_over_2gamma*(C->soc[l].skbar[0] + C->soc[l].zkbar[0]);
-		C->soc[l].omega = 0;
+		a = one_over_2gamma*(C->soc[l].skbar[0] + C->soc[l].zkbar[0]);
+		w = 0;
 		for( i=1; i<p; i++ ){ 
 			C->soc[l].q[i-1] = one_over_2gamma*(C->soc[l].skbar[i] - C->soc[l].zkbar[i]);
-			C->soc[l].omega += C->soc[l].q[i-1]*C->soc[l].q[i-1];
+			w += C->soc[l].q[i-1]*C->soc[l].q[i-1];
 		}
+        C->soc[l].w = w;
+        C->soc[l].a = a;
 
 		/* pre-compute variables needed for KKT matrix (kkt_update uses those) */
+        temp = 1.0 + a;
+        b = 1.0/temp;
+        c = 1.0 + a + w / temp;
+        d = 1 + 2/temp + w/(temp*temp);
+        d1 = 0.5*(a*a + w*(1.0 - (c*c)/(1.0 + w*d)));  d1 = d1 < 1e-3 ? 1e-3 : d1;
+        u0_square = a*a + w - d1;
+        u0 = sqrt(u0_square);
+        c2byu02 = (c*c)/u0_square;
+        v1 = sqrt(c2byu02 - d);
+        u1 = sqrt(c2byu02);
+        C->soc[l].d1 = d1;
+        C->soc[l].u0 = u0;
+        C->soc[l].u1 = u1;
+        C->soc[l].v1 = v1;
+        
+        
+        /* DEPRECATED 
 		C->soc[l].atilde = C->soc[l].eta*(C->soc[l].a*C->soc[l].a + C->soc[l].omega);
 		qtildefact = 1 + C->soc[l].a + C->soc[l].omega/(1+C->soc[l].a);
 		vtildefact = sqrt( 1 + 2/(1+C->soc[l].a) + C->soc[l].omega/((1+C->soc[l].a)*(1+C->soc[l].a)) );
@@ -157,6 +177,9 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
 		}
         C->soc[l].qtildefact = qtildefact;
         C->soc[l].vtildefact = vtildefact;
+         */
+        
+        
         
 
         /* DEBUG
@@ -222,10 +245,10 @@ void scale(pfloat* z, cone* C, pfloat* lambda)
 		factor = z[cone_start] + zeta/(1+C->soc[l].a);
 
 		/* second pass (on k): write out result */
-		lambda[cone_start] = C->soc[l].etasqrt*(C->soc[l].a*z[cone_start] + zeta); /* lambda[0] */
+		lambda[cone_start] = C->soc[l].eta*(C->soc[l].a*z[cone_start] + zeta); /* lambda[0] */
 		for( i=1; i < C->soc[l].p; i++ ){ 
 			j = cone_start+i; 
-			lambda[j] = C->soc[l].etasqrt*(z[j] + factor*C->soc[l].q[i-1]); 
+			lambda[j] = C->soc[l].eta*(z[j] + factor*C->soc[l].q[i-1]); 
 		}
 
 		cone_start += C->soc[l].p;
@@ -234,16 +257,19 @@ void scale(pfloat* z, cone* C, pfloat* lambda)
 
 
 /**
- *                               [ atilde     qtilde'        0    ]
- * Fast multiplication with V =  [ qtilde      eta*I      vtilde  ] = W^2
- *                               [   0        vtilde'      -eta   ]
+ *                                       [ D   v   u  ]
+ * Fast multiplication with V =  eta^2 * [ v'  1   0  ] = W^2
+ *                                       [ u   0  -1  ]
  * Computes y += W^2*x;
  */
 void scale2add(pfloat *x, pfloat* y, cone* C)
 {
-    idxint i, l, cone_start, size_minus_1;
-    pfloat *x1, *x2, *x3;
-    pfloat *y1, *y2, *y3;
+    idxint i, l, cone_start, conesize, conesize_m1;
+    pfloat *x1, *x2, *x3, *x4;
+    pfloat *y1, *y2, *y3, *y4;
+    pfloat eta_square, d1, u0, u1, v1, *q;
+    pfloat v1x3_plus_u1x4;
+    pfloat qtx2;
     
     /* LP cone */
 	for( i=0; i < C->lpc->p; i++ ){ y[i] += C->lpc->v[i] * x[i]; }
@@ -252,59 +278,39 @@ void scale2add(pfloat *x, pfloat* y, cone* C)
     cone_start = C->lpc->p;
 	for( l=0; l < C->nsoc; l++ ){
         
-        size_minus_1 = C->soc[l].p - 1;
+        getSOCDetails(&C->soc[l], &conesize, &eta_square, &d1, &u0, &u1, &v1, &q);
+        conesize_m1 = conesize - 1;
         
         x1 = x + cone_start;
         x2 = x1 + 1;
-        x3 = x2 + size_minus_1;
+        x3 = x2 + conesize - 1;
+        x4 = x3 + 1;
         
         y1 = y + cone_start;
         y2 = y1 + 1;
-        y3 = y2 + size_minus_1;
+        y3 = y2 + conesize - 1;
+        y4 = y3 + 1;
         
+        /* y1 += d1*x1 + u0*x4 */
+        y1[0] += d1*x1[0] + u0*x4[0];
         
-        /* y1 = atilde*x1 + q'*x2 */
-        *y1 += C->soc[l].atilde * (*x1);
-        for( i=0; i < size_minus_1; i++){
-            *y1 += C->soc[l].qtilde[i] * x2[i];
+        /* y2 += x2 + v1*q*x3 + u1*q*x4 */
+        v1x3_plus_u1x4 = v1*x3[0] + u1*x4[0];
+        qtx2 = 0;
+        for (i=0; i<conesize_m1; i++) {
+            y2[i] += x2[i] + v1x3_plus_u1x4*q[i];
+            qtx2 += q[i]*x2[i];
         }
-       
-        /*
-        PRINTTEXT(" zk = %12.10e  ", *x1);
-        for( i=0; i < size_minus_1; i++){
-            PRINTTEXT("%12.10e  ", x2[i]);
-        }
-        PRINTTEXT("%12.10e\n", *x3);
         
-        PRINTTEXT(" cone %d: eta = %12.10e\n", l+1, C->soc[l].eta);
-        PRINTTEXT(" q = %12.10e  ", C->soc[l].qtilde[0]);
-        for( i=1; i < size_minus_1; i++){
-            PRINTTEXT("%12.10e  ", C->soc[l].qtilde[i]);
-        }
-        PRINTTEXT("\n");
+        /* y3 += v1*q'*x2 + x3 */
+        y3[0] += v1*qtx2 + x3[0];
         
-        PRINTTEXT(" v = %12.10e  ", C->soc[l].vtilde[0]);
-        for( i=1; i < size_minus_1; i++){
-            PRINTTEXT("%12.10e  ", C->soc[l].vtilde[i]);
-        }
-        PRINTTEXT("\n");
-         */
+        /* y4 += u0*x1 + u1*q'*x2 - x4 */
+        y4[0] += u0*x1[0] + u1*qtx2 - x4[0];
         
-        
-        /* y2 = q*x1 + x2*eta + v*x3 */
-        for( i=0; i < size_minus_1; i++ ){
-            y2[i] +=  x2[i]*C->soc[l].eta + C->soc[l].vtilde[i]*(*x3) + C->soc[l].qtilde[i]*(*x1);
-        }
-
-        
-        /* y3 = v'*x2 - x3*eta */
-        for( i=0; i < size_minus_1; i++ ){
-            *y3 += C->soc[l].vtilde[i] * x2[i];
-        }
-        *y3 -= *x3*C->soc[l].eta;
         
         /* prepare index for next cone */
-        cone_start += size_minus_1 + 2;
+        cone_start += conesize + 2;
     }
 }
 
@@ -333,10 +339,10 @@ void unscale(pfloat* lambda, cone* C, pfloat* z)
 		factor = -lambda[cone_start] + zeta/(1+C->soc[l].a);
 
 		/* second pass (on k): write out result */
-		z[cone_start] = (C->soc[l].a*lambda[cone_start] - zeta) / C->soc[l].etasqrt;
+		z[cone_start] = (C->soc[l].a*lambda[cone_start] - zeta) / C->soc[l].eta;
 		for( i=1; i < C->soc[l].p; i++ ){ 
 			j = cone_start+i; 
-			z[j] = (lambda[j] + factor*C->soc[l].q[i-1]) / C->soc[l].etasqrt; 
+			z[j] = (lambda[j] + factor*C->soc[l].q[i-1]) / C->soc[l].eta; 
 		}
 
 		cone_start += C->soc[l].p;
@@ -413,3 +419,19 @@ void conicDivision(pfloat* u, pfloat* w, cone* C, pfloat* v)
 		cone_start += C->soc[i].p;
 	}
 }
+
+/* 
+ * Returns details on second order cone 
+ * Purpose: cleaner code
+ */
+void getSOCDetails(socone *soc, idxint *conesize, pfloat* eta_square, pfloat* d1, pfloat* u0, pfloat* u1, pfloat* v1, pfloat **q)
+{
+    *conesize = soc->p;
+    *eta_square = soc->eta_square;
+    *d1 = soc->d1;
+    *u0 = soc->u0;
+    *u1 = soc->u1;
+    *v1 = soc->v1;
+    *q = soc->q;
+}
+

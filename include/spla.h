@@ -85,6 +85,11 @@ void vsubscale(idxint n, pfloat a, pfloat* x, pfloat* y);
 pfloat norm2(pfloat* v, idxint n);
 
 /*
+ * inf-norm of a vector.
+ */
+pfloat norminf(pfloat* v, idxint n);
+
+/*
  * Dot product z = x'*y of size n.
  */
 pfloat ddot(idxint n, pfloat* x, pfloat* y);
