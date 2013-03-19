@@ -73,10 +73,10 @@ function [x,y,info,s,z] = conelp(c,G,h,dims,A,b,LINSOLVER)
 tic;
 
 %% Parameters
-MAXIT = 20;                       % maximum number of iterations
+MAXIT = 30;                       % maximum number of iterations
 GAMMA = 0.98;                     % scaling the final step length
-EPS = 0;                          % regularization parameter
-NITREF = 7;                       % number of iterative refinement steps
+EPS = 0;   % regularization parameter
+NITREF = 9;                       % number of iterative refinement steps
 FEASTOL = 1e-6;                   % primal infeasibility tolerance
 ABSTOL  = 1e-6;                   % absolute tolerance on duality gap
 RELTOL  = 1e-6;                   % relative tolerance on duality gap
@@ -255,8 +255,8 @@ for nIt = 0:MAXIT+1
     %% 2. Affine search direction.
     
 %     % BACKTRACKING-HACK
-%     gamma = -0.0001;
-%     if( presprior < info.pres )
+%     gamma = 0.999998;
+%     if( presprior < info.pres / 100 )
 %         x = x - gamma*alpha*dx; 
 %         y = y - gamma*alpha*dy; 
 %         s = s - gamma*alpha*ds; 
@@ -264,7 +264,8 @@ for nIt = 0:MAXIT+1
 %         kap = kap - gamma*alpha*dkap;     
 %         tau = tau - gamma*alpha*dtau;
 %         fprintf('BACKTRACKING...\n');
-% %         continue;
+%         NITREF = NITREF*2;
+%         continue
 %     end    
 %     presprior = info.pres;
         
@@ -323,6 +324,7 @@ for nIt = 0:MAXIT+1
 %     fprintf('Mu = %10.8f\n',mu);
     sigma = (muaff/mu)^3;
 %     sigma = 1.3*(1-alphaaff)^3;
+%     sigma = 0.3;
     if(sigma < 0 )
         error('Centering parameter < 0');
     end

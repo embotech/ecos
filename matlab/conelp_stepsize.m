@@ -17,7 +17,7 @@ function alpha = conelp_stepsize(lambda,ds,dz,dims,tau,dtau,kap,dkap)
 %
 % (c) Alexander Domahidi, IfA, ETH Zurich, 2012.
 
-alpha = 10.0;
+alpha = 2.0;
 
 % LP cone
 if( dims.l > 0 )

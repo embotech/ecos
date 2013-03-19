@@ -1,10 +1,14 @@
 function varargout = conelp_scaling(varargin)
 % Computes a scaling for the CONELP solver.
 %
-% V = CONELP_SCALING(DIMS, LINSOLVER) returns a matrix that has the same
-% sparsity pattern as a true scaling matrix, but has only ones and zeros as
-% entries. This is needed to determine the ordering of the KKT matrix based
-% on sparsity and symbolic factorization prior to numerical factorization.
+% V = CONELP_SCALING(DIMS, LINSOLVER, 'pattern') returns a matrix that has
+% the same sparsity pattern as a true scaling matrix but has only ones and
+% zeros as entries. This is needed to determine the ordering of the KKT 
+% matrix based on sparsity and symbolic factorization prior to numerical 
+% factorization.
+%
+% V = CONELP_SCALING(DIMS, LINSOLVER, 'init') returns a matrix that has all
+% zeros except on the diagonal - this is needed for initialization.
 %
 % [S,LAM,V,VNR] = CONELP_SCALING(S,Z,DIMS,LINSOLVER,EPS) returns a struct S
 % that contains an O(n) representation of the scaling matrix W as follows:
@@ -28,14 +32,15 @@ function varargout = conelp_scaling(varargin)
 
 
 %% Generate scaling pattern only
-if( ~(nargin == 2 || nargin == 5) )
-    error('conelp_scaling needs 2 or 5 arguments, see help conelp_scaling');
+if( ~(nargin == 3 || nargin == 5) )
+    error('conelp_scaling needs 3 or 5 arguments, see help conelp_scaling');
 end
 
 dims = varargin{1};
 LINSOLVER = varargin{2};
+MODE = varargin{3};
 
-if( nargin == 2 )
+if( nargin == 3 )
     
     % LP cone
     Vpattern = eye(dims.l);
@@ -49,14 +54,24 @@ if( nargin == 2 )
                 Vk_pattern = ones(dims.q(i));
                 
             case 'rank1updates'
-                e = ones(dims.q(i),1);
+                switch( MODE )
+                    case 'pattern', e = ones(dims.q(i),1);
+                    case 'init',    e = zeros(dims.q(i),1);
+                    otherwise, error('Unknown MODE for this operation');
+                end
                 I = eye(dims.q(i));
                 Vk_pattern = [I, e; e' -1];
                 
             case 'ldlsparse'
-                e = ones(dims.q(i),1);
+                switch( MODE )
+                    case 'pattern', e = ones(dims.q(i),1);
+                                    oe = [0; ones(dims.q(i)-1,1)];
+                    case 'init',    e = zeros(dims.q(i),1);
+                                    oe = [0; zeros(dims.q(i)-1,1)];
+                    otherwise, error('Unknown MODE for this operation');
+                end
                 I = eye(dims.q(i));
-                Vk_pattern = [I, e, e; e' -1, 0; e', 0, 1];
+                Vk_pattern = [I, oe, e; oe' 1, 0; e', 0, -1];
                 
             otherwise, error('Unknown linear solver');
         end
@@ -161,9 +176,10 @@ if( nargin == 5 )
                 %assert(u0_lower < u0_upper,'lower-upper proof does not hold');
                 
                 d1 = (a^2 + w - w*c^2/(1+w*d))/2;
-                if( d1 < 0 )
-                    d1 = 0;
-%                     fprintf('d1 < 0, setting to 0\n');
+                d1eps = 1e-3;
+                if( d1 < d1eps )
+                    d1 = d1eps;
+%                     fprintf('d1 < %3.1e, setting to %3.1e\n',d1eps,d1eps);
                 end
                 assert(d1 >= 0,'d1 <= 0');
                 %d1 = EPS;
@@ -171,7 +187,7 @@ if( nargin == 5 )
                 if( u0_2 <= 0 )
                     keyboard;
                 end
-                v0 = 0;
+                v0 = 0;               
                 c2byu02 = c^2 / u0_2;
                 if( c2byu02 <= 0 )
                     keyboard
@@ -193,9 +209,10 @@ if( nargin == 5 )
                 Vk = eta^2*[D, v, u; v', +1, 0; u', 0, -1] + EPS*diag(S);
                 Vk_noreg = eta^2*(D + u*u' - v*v');
 %                 norm(Vk_noreg - scaling.q(k).V)
-                if(any(eig(D-v*v') <= 0) )
+%                 if(any(eig(D-v*v') <= 0) )
 %                     keyboard
-                end
+%                     warning('eig(D-vv) <= 0');
+%                 end
                 scaling.q(k).u = u;
                 scaling.q(k).v = v;
                 scaling.q(k).d = diag(D);

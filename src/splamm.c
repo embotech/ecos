@@ -236,9 +236,9 @@ void printDenseMatrix_i(idxint *M, idxint dim1, idxint dim2, char *name)
     for( i=0; i<dim1; i++ ){
         for( j=0; j<dim2; j++ ){
             if( j<dim2-1 )
-                PRINTTEXT("%d,  ",M[i*dim2+j]);
+                PRINTTEXT("%d,  ",(int)M[i*dim2+j]);
             else
-                PRINTTEXT("%d;  ",M[i*dim2+j]);
+                PRINTTEXT("%d;  ",(int)M[i*dim2+j]);
         }
         if( i<dim1-1){
             PRINTTEXT("\n\t");
@@ -262,7 +262,7 @@ void printSparseMatrix(spmat* M)
             continue;
         else {
             for(i=row_strt; i<row_stop; i++ ){                
-                PRINTTEXT("\t(%3u,%3u) = %g\n", M->ir[i]+1, j+1, M->pr[k++]);
+                PRINTTEXT("\t(%3u,%3u) = %g\n", (int)M->ir[i]+1, (int)j+1, M->pr[k++]);
             }
         }
     }
@@ -284,7 +284,7 @@ void dumpSparseMatrix(spmat* M, char* fn)
 				continue;
 			else {
 				for(i=row_strt; i<row_stop; i++ ){                
-					fprintf(f,"%d\t%d\t%20.18e\n", M->ir[i]+1, j+1, M->pr[k++]);
+					fprintf(f,"%d\t%d\t%20.18e\n", (int)M->ir[i]+1, (int)j+1, M->pr[k++]);
 				}
 			}
 		}
@@ -351,12 +351,12 @@ void dumpDenseMatrix_i(idxint *M, int dim1, int dim2, char *fn)
         for( i=0; i<dim1; i++ ){
             if( dim2 > 1 ){
                 for( j=0; j<dim2-1; j++ ){
-                    fprintf(f, "%d,",M[i*dim2+j]);
+                    fprintf(f, "%d,",(int)M[i*dim2+j]);
                 }
                 j = dim2;
-                fprintf(f, "%d\n",M[i*dim2+j]);                
+                fprintf(f, "%d\n",(int)M[i*dim2+j]);
             } else {
-                fprintf(f, "%d\n",M[i]);                
+                fprintf(f, "%d\n",(int)M[i]);
             }                
         }
         fclose(f);

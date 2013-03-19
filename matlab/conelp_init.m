@@ -17,13 +17,13 @@ p = size(A,1);
 
 
 %% compute permutation
-Vpattern = conelp_scaling(dims, LINSOLVER);
-Kpattern = conelp_KKTmatrix(A,Gtilde,Vpattern,1);
+Vpattern = conelp_scaling(dims, LINSOLVER, 'pattern');
+Kpattern = conelp_KKTmatrix(A,Gtilde,Vpattern,0);
 P = conelp_getPerm(Kpattern~=0);
 % P=1:size(Kpattern,1);
 
 %% assemble and factor coefficient matrix
-Vinit = eye(mtilde);
+Vinit = conelp_scaling(dims, LINSOLVER, 'init');
 Kinit = conelp_KKTmatrix(A,Gtilde,Vinit,EPS);
 % [Linit,Dinit] = conelp_factor(Kinit,P);
 [Linit,Dinit,~,~,P] = conelp_factor(Kinit,P,LINSOLVER,n,p,dims);

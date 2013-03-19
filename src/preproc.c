@@ -62,168 +62,212 @@
  * We store and operate only on the upper triangular part.
  * Replace by or use in codegen.
  *
- * We do not regularize on the multipliers/scalings.
+ * INPUT:      spmat* Gt - pointer to G'
+ *             spmat* At - pointer to A'
+ *               cone* C - pointer to cone struct
+ *
+ * OUTPUT:  idxint* Sign - pointer to vector of signs for regularization
+ *              spmat* K - pointer to unpermuted upper triangular part of KKT matrix
  */
-spmat* createKKT_U(spmat* Gt, spmat* At, pfloat delta, cone* C, idxint* Sign, idxint* DiagIdx)
+void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 {
-	idxint i, j, k, l, r, row_stop, row, cone_strt, ks;
+	idxint i, j, k, l, r, row_stop, row, cone_strt, ks, conesize;
 	idxint n = Gt->m;
 	idxint m = Gt->n;
 	idxint p = At->n;
 	idxint nK, nnzK;
-	pfloat* Kpr;
-	idxint* Kjc;
-	idxint* Kir;
+	pfloat *Kpr;
+	idxint *Kjc, *Kir;
+    idxint *Sign;
 	
-	/* calculate non-zeros needed for K and the number of columns */	
-	nK = n + p + m + C->nsoc;
-	nnzK = n + p + m + At->nnz + Gt->nnz + C->nsoc;
+	/* Dimension of KKT matrix 
+     *   =   n (number of variables)
+     *     + p (number of equality constraints)
+     *     + m (number of inequality constraints)
+     *     + 2*C->nsoc (expansion of SOC scalings)
+     */
+    nK = n + p + m + 2*C->nsoc;
+    
+    /* Number of non-zeros in KKT matrix 
+     *   =   At->nnz (nnz of equality constraint matrix A)
+     *     + Gt->nnz (nnz of inequality constraint matrix)
+     *     + C->lpc.p (nnz of LP cone)
+     *     + 3*[sum(C->soc[i].p)+1] (nnz of expanded soc scalings)
+     */
+	nnzK = At->nnz + Gt->nnz + C->lpc->p;
 	for( i=0; i<C->nsoc; i++ ){ 
-		nnzK += 2*(C->soc[i].p - 1);
+		nnzK += 3*C->soc[i].p+1;
 	}
+#if PRINTLEVEL > 2
+    PRINTTEXT("Non-zeros in KKT matrix: %d\n", (int) nnzK);
+#endif
 	
-	/* allocate memory for K */	
+	/* Allocate memory for KKT matrix */
 	Kpr = (pfloat *)MALLOC(nnzK*sizeof(pfloat));
 	Kir = (idxint *)MALLOC(nnzK*sizeof(idxint));
 	Kjc = (idxint *)MALLOC((nK+1)*sizeof(idxint));
+    
+    /* Allocate memory for sign vector */
+    Sign = (idxint *)MALLOC(nK*sizeof(idxint));
+#if PRINTLEVEL > 2
+    PRINTTEXT("Memory allocated for sign vector\n");
+#endif
+    
+	/* Set signs for regularization of (1,1) block */
+    for( ks=0; ks < n; ks++ ){
+        Sign[ks] = +1; /* (1,1) block */
+    }
+    for( ks=n; ks < n+p; ks++){
+        Sign[ks] = -1; /* (2,2) block */
+    }
+    for( ks=n+p; ks < n+p+C->lpc->p; ks++){
+        Sign[ks] = -1; /* (3,3) block: LP cone */
+    }
+    ks = n+p+C->lpc->p;
+    for( l=0; l<C->nsoc; l++){
+        for (i=0; i<C->soc[l].p; i++) {
+            Sign[ks++] = -1; /* (3,3) block: SOC, D */
+        }
+        Sign[ks++] = -1;     /* (3,3) block: SOC, v */
+        Sign[ks++] = +1;     /* (3,3) block: SOC, u */
+    }
+#if DEBUG > 2
+    if (ks!=nK) {
+        PRINTTEXT("ks = %d, whereas nK = %d - exiting.", (int)ks, (int)nK);
+        exit(-1);
+    }
+#endif
 	
-	/* fill upper triangular part of K with values */	
-	k = 0; ks=0;
-	/* (1,1) block: regularization with +delta*I */	
-	for( j=0; j<n; j++ ){
-		Kjc[j] = j;
-		Kir[k] = j;
-		Kpr[k] = +delta;
-		Sign[ks] = +1;
-		DiagIdx[ks] = k;
-		k++;
-		ks++;
-	}
-
-	/* (1,2) and (2,2) block: [A'; -delta*I] */
-	i = 0; 
+    
+    /* Fill upper triangular part of K with values */
+    /* (1,2) block: A' */    
+	k = 0; /* counts the number of non-zero entries in K */
+	i = 0; /* counter for non-zero entries in A or G, respectively */
 	for( j=0; j<p; j++ ){
+        /* A' */
 		row = At->jc[j];
 		row_stop = At->jc[j+1];
 		if( row <= row_stop ){
 			Kjc[n+j] = k;
 			while( row++ < row_stop ){
 				Kir[k] = At->ir[i];
-				Kpr[k++] = At->pr[i++];
+				Kpr[k] = At->pr[i];
+                k++; i++;
 			}
 		}
-		Kir[k] = n+j;
-		Kpr[k] = -delta;
-		Sign[ks] = -1;
-		DiagIdx[ks] = k;
-		k++;
-		ks++;
-	}
+    }
 
-	/* (1,3) and (3,3) block: [G'; 0; -I] */
+	/* (1,3) and (3,3) block: [G'; 0; -Vinit]
+     * where 
+     * 
+     *   Vinit = blkdiag(I, blkdiag(I,1,-1), ...,  blkdiag(I,1,-1));
+     *                        ^ #number of second-order cones ^
+     * 
+     * Note that we have to prepare the (3,3) block accordingly
+     * (put zeros for init but store indices that are used in KKT_update 
+     * of cone module)
+     */
+     
 	/* LP cone */
 	i = 0; 
 	for( j=0; j < C->lpc->p; j++ ){
+        /* copy in G' */
 		row = Gt->jc[j];
 		row_stop = Gt->jc[j+1];
 		if( row <= row_stop ){
 			Kjc[n+p+j] = k;
 			while( row++ < row_stop ){
 				Kir[k] = Gt->ir[i];
-				Kpr[k++] = Gt->pr[i++];
+				Kpr[k] = Gt->pr[i];
+                k++; i++;
 			}
 		}
+        
+        /* -I for LP-cone */
 		C->lpc->kkt_idx[j] = k;
 		Kir[k] = n+p+j;		
-		Kpr[k++] = -1.0;
-		Sign[ks++] = 0;
-	}
+		Kpr[k] = -1.0;
+        k++;
+	}    
     
-    
-	/* Second-order cones */	
+	/* Second-order cones - copy in G' and set up the scaling matrix
+     * which has the following structure:
+     *
+     *
+     *    [ *             0  * ]
+     *    [   *           *  * ]
+     *    [     *         *  * ]       [ I   v  u  ]      I: identity of size conesize
+     *  - [       *       *  * ]   =  -[ u'  1  0  ]      v: vector of size conesize - 1
+     *    [         *     *  * ]       [ v'  0' -1 ]      u: vector of size conesize
+     *    [           *   *  * ]
+     *    [             * *  * ]
+     *    [ 0 * * * * * * 1  0 ]
+     *    [ * * * * * * * 0 -1 ]
+     *
+     * NOTE: only the upper triangular part (with the diagonal elements)
+     *       is copied in here.
+     */
 	cone_strt = C->lpc->p;
     for( l=0; l < C->nsoc; l++ ){
-			 
-		for( j=0; j <  C->soc[l].p; j++ ){
-            
-            /* copy in the G' copy part */
-			row = Gt->jc[cone_strt+j];
-			row_stop = Gt->jc[cone_strt+j+1];
-			if( row <= row_stop ){
-				Kjc[n+p+cone_strt+l+j] = k;
-				while( row++ < row_stop ){
-					Kir[k] = Gt->ir[i];
-					Kpr[k++] = Gt->pr[i++];
-				}
-			}
-            
-			/* we now copy in the scaling matrix which
-             * looks as follows:
-             *
-             *    * * * * * * * 0
-             *    * *           *
-             *    *   *         *         [ a  q'  0 ]      a: scalar
-             *    *     *       *      =  [ q  I   v ]    q,v: vectors of size conedim- 1
-             *    *       *     *         [ 0  v' -1 ]      I: identity of size conedim - 1
-             *    *         *   *
-             *    *           * *
-             *    0 * * * * * * -1
-             *
-             * NOTE: only the upper triangular part (with the diagonal elements)
-             *       is copied in here.
-             */
-            
-			/* copy in q' (row above diagonal) */
-			if( j>0 ){
-				C->soc[l].kkt_qtU[j-1] = k;
-				Kir[k] = n+p+cone_strt+l;
-				Kpr[k++] = 1.0;
+        
+        /* size of the cone */
+        conesize = C->soc[l].p;
+        
+        /* go column-wise about it */
+		for( j=0; j < conesize; j++ ){
+           	
+           row = Gt->jc[cone_strt+j];
+           row_stop = Gt->jc[cone_strt+j+1];
+           if( row <= row_stop ){
+               Kjc[n+p+cone_strt+2*l+j] = k;
+               while( row++ < row_stop ){
+                   Kir[k] = Gt->ir[i];
+                   Kpr[k++] = Gt->pr[i++];
+               }
+           }
                 
-                C->soc[l].sidx[j-1] = ks;
-                Sign[ks] = 0; // to be computed during kkt update
-                ks++;
-			} else {
-                C->soc[l].kkt_atilde = k;
-                Sign[ks++] = 0;//+1;
-            }
-
-			/*
-             * copy in the diagonal part, i.e. a or the identity
-             * we fill this -1 just to make sure there is something
-             * for the symbolic factorization - true values are filled
-             * in later
-             */
-			Kir[k] = n+p+cone_strt+l+j;
-			Kpr[k++] = -1.0;
-            //Sign[ks++] = 0; // to be computed during kkt update
-		}
+           /* diagonal D */
+           Kir[k] = n+p+cone_strt + 2*l + j;
+           Kpr[k] = -1.0;
+           C->soc[l].Didx[j] = k;
+           k++;
+        }
+            
+        /* v */
+        C->soc[l].vuidx = k;
+        Kjc[n+p+cone_strt+2*l+conesize] = k;
+        for (r=1; r<conesize; r++) {
+            Kir[k] = n+p+cone_strt + 2*l + r;
+            Kpr[k] = 0;
+            k++;
+        }
+        Kir[k] = n+p+cone_strt + 2*l + conesize;
+        Kpr[k] = -1;
+        k++;         
         
-		/*
-         * now do the last column,
-		 * this is the v part (row below diagonal)
-         */
-		Kjc[n+p+cone_strt+l+j] = k;
-		C->soc[l].kkt_vU = k;
-		for( r=1; r< C->soc[l].p; r++ ){
-			Kir[k] = n+p+cone_strt+l+r;
-			Kpr[k++] = 1.0;
-		}
         
-		/* this is the lower -1 part */
-		Kir[k] = n+p+cone_strt+l+r;
-		Kpr[k++] = -1.0;
-		Sign[ks] = 0; // to be computed during kkt update
-        C->soc[l].sidx[C->soc[l].p-1] = ks;
-        ks++;
-
+        /* u */
+        Kjc[n+p+cone_strt+2*l+conesize+1] = k;
+        for (r=0; r<conesize; r++) {
+            Kir[k] = n+p+cone_strt + 2*l + r;
+            Kpr[k] = 0;
+            k++;
+        }
+        Kir[k] = n+p+cone_strt + 2*l + conesize + 1;
+        Kpr[k] = +1;
+        k++;
+        
+	
         /* prepare index for next cone */
 		cone_strt += C->soc[l].p;
 	}
-    
-    PRINTTEXT("SETUP: nK=%d and ks=%d\n",(int)nK,(int)ks);
+    PRINTTEXT("CREATEKKT: Written %d KKT entries\n", (int)k);
+    PRINTTEXT("CREATEKKT: nK=%d and ks=%d\n",(int)nK,(int)ks);
+    PRINTTEXT("CREATEKKT: Size of KKT matrix: %d\n", (int)nK);
 
-	/* return KKT matrix */
-	return createSparseMatrix(nK, nK, nnzK, Kjc, Kir, Kpr);
+	/* return Sign vector and KKT matrix */
+    *S = Sign;
+	*K = createSparseMatrix(nK, nK, nnzK, Kjc, Kir, Kpr);
 }
 
 
@@ -280,7 +324,8 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 		FREE(w->C->soc[i].qtilde);
 		FREE(w->C->soc[i].skbar);
 		FREE(w->C->soc[i].zkbar);
-		FREE(w->C->soc[i].vtilde);		
+		FREE(w->C->soc[i].vtilde);
+		FREE(w->C->soc[i].Didx);
 	}
 	if( w->C->nsoc > 0 ){
 		FREE(w->C->soc);
@@ -376,7 +421,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
                    pfloat* Apr, idxint* Ajc, idxint* Air,
                    pfloat* c, pfloat* h, pfloat* b)
 {
-    idxint i, j, k, cidx, conesize, lnz, amd_result, nK, *Ljc, *Lir, *P, *Pinv, *Sign, *DiagIdx;
+    idxint i, j, k, cidx, conesize, lnz, amd_result, nK, *Ljc, *Lir, *P, *Pinv, *Sign;
     pwork* mywork;
 	double Control [AMD_CONTROL], Info [AMD_INFO];		
 	pfloat rx, ry, rz, *Lpr;
@@ -415,14 +460,14 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	PRINTTEXT("  ****************************************************************************\n");
 	PRINTTEXT("\n\n");
     PRINTTEXT("PROBLEM SUMMARY:\n");
-    PRINTTEXT("    Primal variables (n): %d\n", n);
-	PRINTTEXT("Equality constraints (p): %d\n", p);
-	PRINTTEXT("     Conic variables (m): %d\n", m);
+    PRINTTEXT("    Primal variables (n): %d\n", (int)n);
+	PRINTTEXT("Equality constraints (p): %d\n", (int)p);
+	PRINTTEXT("     Conic variables (m): %d\n", (int)m);
 	PRINTTEXT("- - - - - - - - - - - - - - -\n");
-    PRINTTEXT("         Size of LP cone: %d\n", l);
-    PRINTTEXT("          Number of SOCs: %d\n", ncones);
+    PRINTTEXT("         Size of LP cone: %d\n", (int)l);
+    PRINTTEXT("          Number of SOCs: %d\n", (int)ncones);
     for( i=0; i<ncones; i++ ){
-        PRINTTEXT("    Size of SOC #%02d: %d\n", i+1, q[i]);
+        PRINTTEXT("    Size of SOC #%02d: %d\n", (int)(i+1), (int)q[i]);
     }
 #endif
 	
@@ -504,6 +549,8 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
         mywork->C->soc[i].sidx = (idxint *)MALLOC((conesize)*sizeof(idxint));
 		mywork->C->soc[i].skbar = (pfloat *)MALLOC((conesize)*sizeof(pfloat));
 		mywork->C->soc[i].zkbar = (pfloat *)MALLOC((conesize)*sizeof(pfloat));
+        mywork->C->soc[i].Didx = (idxint *)MALLOC((conesize)*sizeof(idxint));
+        mywork->C->soc[i].vuidx = 0;
         cidx += conesize;
     }
 #if PRINTLEVEL > 2
@@ -523,7 +570,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->stgs->maxit = MAXIT;
 	mywork->stgs->gamma = GAMMA;	
 	mywork->stgs->delta = DELTA;	
-	//mywork->stgs->nitref = NITREF;
+	mywork->stgs->nitref = NITREF;
 	mywork->stgs->abstol = ABSTOL;	
 	mywork->stgs->feastol = FEASTOL;
 	mywork->stgs->reltol = RELTOL;
@@ -565,14 +612,32 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     PRINTTEXT("Hung pointers for c, h and b into WORK struct\n");
 #endif
 
-	/* size of KKT system */
-	nK = n + p + m + ncones;
-#if PRINTLEVEL > 2
-    PRINTTEXT("Size of KKT system: %d\n", nK);
+  
+    /* set up KKT system */
+#if PROFILING > 1
+	tic(&tcreatekkt);
 #endif
-
+	createKKT_U(Gt, At, mywork->C, &Sign, &KU);
+#if PROFILING > 1
+	mywork->info->tkktcreate = toc(&tcreatekkt);
+#endif
+#if PRINTLEVEL > 2
+    PRINTTEXT("Created upper part of KKT matrix K\n");
+#endif
+    
 	/* KKT system stuff (L comes later after symbolic factorization) */
-	mywork->KKT = (kkt *)MALLOC(sizeof(kkt));		
+    nK = KU->n;
+
+#if DEBUG > 0
+    dumpSparseMatrix(KU, "KU.txt");
+#endif
+#if PRINTLEVEL > 2
+    PRINTTEXT("Dimension of KKT matrix: %d\n", (int)nK);
+    PRINTTEXT("Non-zeros in KKT matrix: %d\n", (int)KU->nnz);
+    exit(-1);
+#endif
+    
+	mywork->KKT = (kkt *)MALLOC(sizeof(kkt));
 	mywork->KKT->D = (pfloat *)MALLOC(nK*sizeof(pfloat));
 	mywork->KKT->Parent = (idxint *)MALLOC(nK*sizeof(idxint));
 	mywork->KKT->Pinv = (idxint *)MALLOC(nK*sizeof(idxint));
@@ -584,7 +649,6 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     mywork->KKT->work6 = (pfloat *)MALLOC(nK*sizeof(pfloat));
 	mywork->KKT->Flag = (idxint *)MALLOC(nK*sizeof(idxint));	
 	mywork->KKT->Pattern = (idxint *)MALLOC(nK*sizeof(idxint));
-	mywork->KKT->Sign = (idxint *)MALLOC(nK*sizeof(idxint));
 	mywork->KKT->Lnz = (idxint *)MALLOC(nK*sizeof(idxint));	
 	mywork->KKT->RHS1 = (pfloat *)MALLOC(nK*sizeof(pfloat));
 	mywork->KKT->RHS2 = (pfloat *)MALLOC(nK*sizeof(pfloat));
@@ -594,24 +658,9 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->KKT->dy2 = (pfloat *)MALLOC(mywork->p*sizeof(pfloat));
 	mywork->KKT->dz1 = (pfloat *)MALLOC(mywork->m*sizeof(pfloat));
 	mywork->KKT->dz2 = (pfloat *)MALLOC(mywork->m*sizeof(pfloat));
-#if PRINTLEVEL > 2
-    PRINTTEXT("Created memory for KKT system\n");
-#endif
 
-	/* temporary sign storage */
-	Sign = (idxint *)MALLOC(nK*sizeof(idxint));
-	DiagIdx = (idxint *)MALLOC((n+p)*sizeof(idxint));
-
-	/* set up KKT system */
-#if PROFILING > 1
-	tic(&tcreatekkt);
-#endif	
-	KU = createKKT_U(Gt, At, mywork->stgs->delta, mywork->C, Sign, DiagIdx);
-#if PROFILING > 1	
-	mywork->info->tkktcreate = toc(&tcreatekkt);
-#endif	
 #if PRINTLEVEL > 2
-    PRINTTEXT("Created upper part of KKT matrix K\n");
+    PRINTTEXT("Created memory for KKT-related data\n");    
 #endif
 
 	/* allocate memory in KKT system */
@@ -638,19 +687,6 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
         return NULL;
 	}	
 #endif
-
-	
-//#ifndef WITH_STATIC_REG
-    /* switch off static regularization */
-	//for( i=0; i<n+p; i++ ) { KU->pr[DiagIdx[i]] = 0; }
-//#if PRINTLEVEL > 2
-  //  PRINTTEXT("Static regularization is switched off");
-//#endif
-//#else
-//#if PRINTLEVEL > 2
-//    PRINTTEXT("Static regularization is switched on");
-//#endif
-//#endif
 	
 	/* calculate inverse permutation and permutation mapping of KKT matrix */	
 	pinv(nK, P, mywork->KKT->Pinv);		
@@ -665,18 +701,17 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	/* permute sign vector */    
 #if PRINTLEVEL > 2
     PRINTTEXT("Sign = [");
-    for( i=0; i<nK; i++ ){ PRINTTEXT("%+d ", Sign[i]); }
+    for( i=0; i<nK; i++ ){ PRINTTEXT("%+d ", (int)Sign[i]); }
     PRINTTEXT("];\n");
 #endif
 	for( i=0; i<nK; i++ ){ mywork->KKT->Sign[i] = Sign[P[i]]; }
-    //for( i=0; i<nK; i++ ){ mywork->KKT->Sign[i] = Sign[i]; }
     
 	
 	/* symbolic factorization */	
 	Ljc = (idxint *)MALLOC((nK+1)*sizeof(idxint));	
 	LDL_symbolic2(
-		mywork->KKT->PKPt->n,   /* A and L are n-by-n, where n >= 0 */
-		mywork->KKT->PKPt->jc,  /* input of size n+1, not modified */
+		mywork->KKT->PKPt->n,    /* A and L are n-by-n, where n >= 0 */
+		mywork->KKT->PKPt->jc,   /* input of size n+1, not modified */
 		mywork->KKT->PKPt->ir,	 /* input of size nz=Ap[n], not modified */
 		Ljc,					 /* output of size n+1, not defined on input */
 		mywork->KKT->Parent,	 /* output of size n, not defined on input */
@@ -688,11 +723,13 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	/* assign memory for L */
 	lnz = Ljc[nK];
 #if PRINTLEVEL > 2
-	PRINTTEXT("Nonzeros in L, excluding diagonal: %d\n", lnz) ;
+	PRINTTEXT("Nonzeros in L, excluding diagonal: %d\n", (int)lnz) ;
 #endif
 	Lir = (idxint *)MALLOC(lnz*sizeof(idxint));
 	Lpr = (pfloat *)MALLOC(lnz*sizeof(pfloat));
 	mywork->KKT->L = createSparseMatrix(nK, nK, lnz, Ljc, Lir, Lpr);
+    
+    exit(-1);
 
 	/* initialize (3,3) block V to I in KKT matrix */	
 	prepareKKT4initU(KU, mywork->C);
@@ -732,7 +769,6 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	freeSparseMatrix(Gt);
 	freeSparseMatrix(KU);
 	FREE(Sign);
-	FREE(DiagIdx);
 
     return mywork;
 }

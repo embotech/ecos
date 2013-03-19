@@ -39,8 +39,7 @@ typedef struct lpcone{
 /* (all KKT indices are in compressed column format pointing into Kpr)   */
 typedef struct socone{    
 	idxint p;         /* dimension of cone                               */
-    pfloat eta;       /* eta                                             */
-	pfloat etasqrt;   /* square root of eta                              */
+    pfloat etasqrt;   /* square root of eta                              */
     pfloat a;         /* a                                               */
 	pfloat omega;     /* = q'*q                                          */
 	pfloat atilde;    /* = a^2 + omega                                   */	
@@ -50,14 +49,24 @@ typedef struct socone{
 	idxint kkt_atilde;  /* index for atilde on diagonal                  */		
     idxint szidx;     /* index of associated slacks / multipliers        */
 	pfloat* skbar;    /* temporary variables to work with                */
-	pfloat* zkbar;    /* temporary variables to work with                */
-	pfloat* q;        /* q vector (see documentation)                    */        
+	pfloat* zkbar;    /* temporary variables to work with                */	      
 	pfloat* qtilde;   /* qtilde vector (see documentation)               */        
 	pfloat* vtilde;   /* vtilde vector (see documentation)               */        
 	idxint* kkt_qtU;  /* p-1 indices for q' in K (upper triangular part) */
     idxint* sidx;     /* p indices for sign entries in big sign vector   */
     pfloat qtildefact;
     pfloat vtildefact;
+    /* ---------------  new formulation  ---------------*/
+    pfloat u0;          /* eta                                           */
+    pfloat u1;          /* u = [u0; u1*q]                                */
+    pfloat v1;          /* v = [0; v1*q]                                 */
+    pfloat eta;         /* eta = (sres / zres)^(1/4)                     */
+    pfloat eta_square;  /* eta^2 = (sres / zres)^(1/2)                   */
+    idxint vuidx;       /* first index for vectors v and u -- these are
+                                stacked in the sparse unpermuted system) */
+    pfloat* q;          /* q vector (see documentation)                  */
+    idxint* Didx;       /* indices for D                                 */
+    
 } socone;
 
 

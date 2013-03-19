@@ -658,7 +658,7 @@ idxint ECOS_solve(pwork* w)
 
 		/* Solve for RHS1, which is used later also in combined direction */
 		tic(&tkktsolve);
-		kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS1, w->KKT->dx1, w->KKT->dy1, w->KKT->dz1, w->n, w->p, w->m, w->C, 0, NITREF1);
+		kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS1, w->KKT->dx1, w->KKT->dy1, w->KKT->dz1, w->n, w->p, w->m, w->C, 0, w->stgs->nitref);
 		w->info->tkktsolve += toc(&tkktsolve);
         
         //dumpDenseMatrix(w->KKT->dx1, 1, w->n, "x1_00.txt");
@@ -701,7 +701,7 @@ idxint ECOS_solve(pwork* w)
 		/* AFFINE SEARCH DIRECTION */
 		RHS_affine(w);
 		tic(&tkktsolve);
-		kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS2, w->KKT->dx2, w->KKT->dy2, w->KKT->dz2, w->n, w->p, w->m, w->C, 0, NITREF2);
+		kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS2, w->KKT->dx2, w->KKT->dy2, w->KKT->dz2, w->n, w->p, w->m, w->C, 0, w->stgs->nitref);
 		w->info->tkktsolve += toc(&tkktsolve);
         
         //break;
@@ -791,7 +791,7 @@ idxint ECOS_solve(pwork* w)
 		/* COMBINED SEARCH DIRECTION */
 		RHS_combined(w);
 		tic(&tkktsolve);
-		kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS2, w->KKT->dx2, w->KKT->dy2, w->KKT->dz2, w->n, w->p, w->m, w->C, 0, NITREF3);
+		kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS2, w->KKT->dx2, w->KKT->dy2, w->KKT->dz2, w->n, w->p, w->m, w->C, 0, w->stgs->nitref);
 		w->info->tkktsolve += toc(&tkktsolve);
         
         /*
