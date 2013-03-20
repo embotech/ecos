@@ -131,12 +131,17 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
         Sign[ks++] = -1;     /* (3,3) block: SOC, v */
         Sign[ks++] = +1;     /* (3,3) block: SOC, u */
     }
-#if DEBUG > 2
+#if DEBUG > 0
     if (ks!=nK) {
         PRINTTEXT("ks = %d, whereas nK = %d - exiting.", (int)ks, (int)nK);
         exit(-1);
     }
 #endif
+    
+    /* (1,1) block: the first n columns are empty */
+    for (j=0; j<n; j++) {
+        Kjc[j] = 0;
+    }
 	
     
     /* Fill upper triangular part of K with values */
@@ -285,32 +290,32 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 {
 	idxint i;
 	
-	/* Free KKT related memory */
-	FREE(w->KKT->D);
-	FREE(w->KKT->dx1);
-	FREE(w->KKT->dx2);
-	FREE(w->KKT->dy1);
-	FREE(w->KKT->dy2);
-	FREE(w->KKT->dz1);
-	FREE(w->KKT->dz2);
-	FREE(w->KKT->Flag);
+	/* Free KKT related memory      ---            below are the corresponding MALLOCs                */
+	FREE(w->KKT->D);                /* mywork->KKT->D = (pfloat *)MALLOC(nK*sizeof(pfloat));          */
+	FREE(w->KKT->dx1);              /* mywork->KKT->dx1 = (pfloat *)MALLOC(mywork->n*sizeof(pfloat)); */
+	FREE(w->KKT->dx2);              /* mywork->KKT->dx2 = (pfloat *)MALLOC(mywork->n*sizeof(pfloat)); */
+	FREE(w->KKT->dy1);              /* mywork->KKT->dy1 = (pfloat *)MALLOC(mywork->p*sizeof(pfloat)); */
+	FREE(w->KKT->dy2);              /* mywork->KKT->dy2 = (pfloat *)MALLOC(mywork->p*sizeof(pfloat)); */
+	FREE(w->KKT->dz1);              /* mywork->KKT->dz1 = (pfloat *)MALLOC(mywork->m*sizeof(pfloat)); */
+	FREE(w->KKT->dz2);              /* mywork->KKT->dz2 = (pfloat *)MALLOC(mywork->m*sizeof(pfloat)); */
+	FREE(w->KKT->Flag);             /* mywork->KKT->Flag = (idxint *)MALLOC(nK*sizeof(idxint));       */
 	freeSparseMatrix(w->KKT->L);
-	FREE(w->KKT->Lnz);
-	FREE(w->KKT->Parent);
-	FREE(w->KKT->Pattern);
-	FREE(w->KKT->Sign);
-	FREE(w->KKT->Pinv);
-	FREE(w->KKT->PK);
-	freeSparseMatrix(w->KKT->PKPt);
-	FREE(w->KKT->RHS1);
-	FREE(w->KKT->RHS2);
-	FREE(w->KKT->work1);
-	FREE(w->KKT->work2);
-    FREE(w->KKT->work3);
-    FREE(w->KKT->work4);
-    FREE(w->KKT->work5);
-    FREE(w->KKT->work6);
-	FREE(w->KKT);
+	FREE(w->KKT->Lnz);              /* mywork->KKT->Lnz = (idxint *)MALLOC(nK*sizeof(idxint));        */
+	FREE(w->KKT->Parent);           /* mywork->KKT->Parent = (idxint *)MALLOC(nK*sizeof(idxint));     */
+	FREE(w->KKT->Pattern);          /* mywork->KKT->Pattern = (idxint *)MALLOC(nK*sizeof(idxint));    */
+	FREE(w->KKT->Sign);             /* mywork->KKT->Sign = (idxint *)MALLOC(nK*sizeof(idxint));       */
+	FREE(w->KKT->Pinv);             /* mywork->KKT->Pinv = (idxint *)MALLOC(nK*sizeof(idxint));       */
+	FREE(w->KKT->PK);               /* mywork->KKT->PK = (idxint *)MALLOC(KU->nnz*sizeof(idxint));    */
+	freeSparseMatrix(w->KKT->PKPt); /* mywork->KKT->PKPt = newSparseMatrix(nK, nK, KU->nnz);          */
+	FREE(w->KKT->RHS1);             /* mywork->KKT->RHS1 = (pfloat *)MALLOC(nK*sizeof(pfloat));       */
+	FREE(w->KKT->RHS2);             /* mywork->KKT->RHS2 = (pfloat *)MALLOC(nK*sizeof(pfloat));       */
+	FREE(w->KKT->work1);            /* mywork->KKT->work1 = (pfloat *)MALLOC(nK*sizeof(pfloat));      */
+	FREE(w->KKT->work2);            /* mywork->KKT->work2 = (pfloat *)MALLOC(nK*sizeof(pfloat));      */
+    FREE(w->KKT->work3);            /* mywork->KKT->work3 = (pfloat *)MALLOC(nK*sizeof(pfloat));      */
+    FREE(w->KKT->work4);            /* mywork->KKT->work4 = (pfloat *)MALLOC(nK*sizeof(pfloat));      */
+    FREE(w->KKT->work5);            /* mywork->KKT->work5 = (pfloat *)MALLOC(nK*sizeof(pfloat));      */
+    FREE(w->KKT->work6);            /* mywork->KKT->work6 = (pfloat *)MALLOC(nK*sizeof(pfloat));      */
+	FREE(w->KKT);                   /* mywork->KKT = (kkt *)MALLOC(sizeof(kkt));                      */
 
 	/* Free memory for cones */
 	if( w->C->lpc->p > 0 ){
@@ -446,21 +451,21 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
    
 #if PRINTLEVEL > 2
 	PRINTTEXT("\n");		
-	PRINTTEXT("  ****************************************************************************\n");
-	PRINTTEXT("  * ECOS: Embedded Conic Solver - Sparse Interior Point method for SOCPs     *\n");
-	PRINTTEXT("  *                                                                          *\n");
-	PRINTTEXT("  * NOTE: The solver is heavily based on L. Vandenberghe's 'The CVXOPT       *\n");
-	PRINTTEXT("  *       linear and quadratic cone program solvers', March 20, 2010.        *\n");
-	PRINTTEXT("  *       [http://abel.ee.ucla.edu/cvxopt/documentation/coneprog.pdf]        *\n");
-	PRINTTEXT("  *                                                                          *\n");
-	PRINTTEXT("  *       This code uses T.A. Davis' sparse LDL package and AMD code.        *\n");
-	PRINTTEXT("  *       [http://www.cise.ufl.edu/research/sparse]                          *\n");
-	PRINTTEXT("  *                                                                          *\n");
-	PRINTTEXT("  *       Written during a summer visit at Stanford University with S. Boyd. *\n");
-	PRINTTEXT("  *                                                                          *\n");
-	PRINTTEXT("  * (C) Alexander Domahidi, Automatic Control Laboratory, ETH Zurich, 2012.  *\n");
-	PRINTTEXT("  *     Email: domahidi@control.ee.ethz.ch                                   *\n");
-	PRINTTEXT("  ****************************************************************************\n");
+	PRINTTEXT("  *******************************************************************************\n");
+	PRINTTEXT("  * ECOS: Embedded Conic Solver - Sparse Interior Point method for SOCPs        *\n");
+	PRINTTEXT("  *                                                                             *\n");
+	PRINTTEXT("  * NOTE: The solver is based on L. Vandenberghe's 'The CVXOPT linear and quad- *\n");
+	PRINTTEXT("  *       ratic cone program solvers', March 20, 2010. Available online:        *\n");
+	PRINTTEXT("  *       [http://abel.ee.ucla.edu/cvxopt/documentation/coneprog.pdf]           *\n");
+	PRINTTEXT("  *                                                                             *\n");
+	PRINTTEXT("  *       This code uses T.A. Davis' sparse LDL package and AMD code.           *\n");
+	PRINTTEXT("  *       [http://www.cise.ufl.edu/research/sparse]                             *\n");
+	PRINTTEXT("  *                                                                             *\n");
+	PRINTTEXT("  *       Written during a summer visit at Stanford University with S. Boyd.    *\n");
+	PRINTTEXT("  *                                                                             *\n");
+	PRINTTEXT("  * (C) Alexander Domahidi, Automatic Control Laboratory, ETH Zurich, 2012-13.  *\n");
+	PRINTTEXT("  *                     Email: domahidi@control.ee.ethz.ch                      *\n");
+	PRINTTEXT("  *******************************************************************************\n");
 	PRINTTEXT("\n\n");
     PRINTTEXT("PROBLEM SUMMARY:\n");
     PRINTTEXT("    Primal variables (n): %d\n", (int)n);
@@ -610,6 +615,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     PRINTTEXT("Hung pointers for c, h and b into WORK struct\n");
 #endif
 
+     
   
     /* set up KKT system */
 #if PROFILING > 1
@@ -623,8 +629,14 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     PRINTTEXT("Created upper part of KKT matrix K\n");
 #endif
     
-	/* KKT system stuff (L comes later after symbolic factorization) */
+    
+	/* 
+     * Set up KKT system related data
+     * (L comes later after symbolic factorization) 
+     */
     nK = KU->n;
+    
+    
 
 #if DEBUG > 0
     dumpSparseMatrix(KU, "KU.txt");
@@ -634,6 +646,9 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     PRINTTEXT("Non-zeros in KKT matrix: %d\n", (int)KU->nnz);
 #endif
     
+    
+    
+    /* allocate memory in KKT system */
 	mywork->KKT = (kkt *)MALLOC(sizeof(kkt));
 	mywork->KKT->D = (pfloat *)MALLOC(nK*sizeof(pfloat));
 	mywork->KKT->Parent = (idxint *)MALLOC(nK*sizeof(idxint));
@@ -656,17 +671,29 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->KKT->dz1 = (pfloat *)MALLOC(mywork->m*sizeof(pfloat));
 	mywork->KKT->dz2 = (pfloat *)MALLOC(mywork->m*sizeof(pfloat));
     mywork->KKT->Sign = (idxint *)MALLOC(nK*sizeof(idxint));
+    mywork->KKT->PKPt = newSparseMatrix(nK, nK, KU->nnz);
+	mywork->KKT->PK = (idxint *)MALLOC(KU->nnz*sizeof(idxint));
 
 #if PRINTLEVEL > 2
     PRINTTEXT("Created memory for KKT-related data\n");    
 #endif
-
-	/* allocate memory in KKT system */
-	mywork->KKT->PKPt = newSparseMatrix(nK, nK, KU->nnz);
-	mywork->KKT->PK = (idxint *)MALLOC(KU->nnz*sizeof(idxint));
-
-
-	/* calculate ordering of KKT matrix */
+    
+    /* HEAVY DEBUG
+    PRINTTEXT("Kjc = [");
+    for (j=0; j<KU->n+1; j++) {
+        PRINTTEXT(" %d ", KU->jc[j]);
+    }
+    PRINTTEXT("]\n");
+    
+    PRINTTEXT("Kir = [");
+    for (i=0; i<KU->nnz; i++) {
+        PRINTTEXT(" %d ", KU->ir[i]);
+    }
+    PRINTTEXT("]\n");
+    */
+     
+     
+	/* calculate ordering of KKT matrix using AMD */
 	P = (idxint *)MALLOC(nK*sizeof(idxint));
 #if PROFILING > 1
 	tic(&tordering);
@@ -676,16 +703,19 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #if PROFILING > 1	
 	mywork->info->torder = toc(&tordering);
 #endif
-#if PRINTLEVEL > 2
+
 	if( amd_result == AMD_OK ){
+#if PRINTLEVEL > 2
 		PRINTTEXT("AMD ordering successfully computed.\n");
 		AMD_info(Info);
-	} else {
-		PRINTTEXT("Problem in AMD ordering, exiting.\n");
-        /* AMD_info(Info); */
-        return NULL;
-	}	
 #endif
+	} else {
+#if PRINTLEVEL > 2
+		PRINTTEXT("Problem in AMD ordering, exiting.\n");
+        AMD_info(Info);
+#endif
+        return NULL;
+	}
 	
 	/* calculate inverse permutation and permutation mapping of KKT matrix */
 	pinv(nK, P, mywork->KKT->Pinv);		
@@ -769,10 +799,10 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	
 	/* clean up */
 	FREE(P);
-	freeSparseMatrix(At);
-	freeSparseMatrix(Gt);
-	freeSparseMatrix(KU);
 	FREE(Sign);
+    freeSparseMatrix(At);
+	freeSparseMatrix(Gt);
+	freeSparseMatrix(KU);	
 
     return mywork;
 }

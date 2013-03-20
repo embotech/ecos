@@ -580,7 +580,7 @@ idxint ECOS_solve(pwork* w)
         }
         
         
-        
+       
         
 
 		/* Update KKT matrix with scalings */
