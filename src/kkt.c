@@ -66,7 +66,7 @@ idxint kkt_factor(kkt* KKT, pfloat delta)
 /**
  * Solves the permuted KKT system and returns the unpermuted search directions.
  *
- * On entry, the factorization of the permuted KKT matrix, PKPt, 
+ * On entry, the factorization of the permuted KKT matrix, PKPt,
  * is assumed to be up to date (call kkt_factor beforehand to achieve this).
  * The right hand side, Pb, is assumed to be already permuted.
  *
@@ -74,8 +74,10 @@ idxint kkt_factor(kkt* KKT, pfloat delta)
  * where these variables are permuted back to the original ordering.
  *
  * KKT->nitref iterative refinement steps are applied to solve the linear system.
+ *
+ * Returns the number of iterative refinement steps really taken.
  */
-void kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy, pfloat* dz, idxint n, idxint p, idxint m, cone* C, idxint isinit, idxint nitref)
+idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy, pfloat* dz, idxint n, idxint p, idxint m, cone* C, idxint isinit, idxint nitref)
 {
 	idxint i, k, l, j, kk, nK, kItRef;
 	idxint*  Pinv = KKT->Pinv;
@@ -99,6 +101,11 @@ void kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy,
 	LDL_dsolve(nK, Px, KKT->D);
 	LDL_ltsolve(nK, Px, KKT->L->jc, KKT->L->ir, KKT->L->pr);
     
+#if PRINTLEVEL > 2
+    PRINTTEXT("\nIR: it  ||ex||   ||ey||   ||ez||\n");
+    PRINTTEXT("    -----------------------------\n");
+#endif
+    
 	/* iterative refinement */
 	for( kItRef=1; kItRef <= nitref; kItRef++ ){
         
@@ -119,15 +126,11 @@ void kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy,
         sparseMtVm(A, dy, ex, 0, 0);
         sparseMtVm(G, dz, ex, 0, 0);
         nex = norminf(ex,n);
-        //PRINTTEXT("norm(ex) = %8.6e (k=%d)\n", nex, (int)kItRef);
-        //for( i=0; i<n; i++){ PRINTTEXT("ex[%d] = %6.4e\n", i+1, ex[i]); }
         	
         /* --> 2. ey = by - A*dx */
         for( i=0; i<p; i++ ){ ey[i] = Pb[Pinv[k++]]; }
         sparseMV(A, dx, ey, -1, 0);
         ney = norminf(ey,p);
-        //PRINTTEXT("norm(ey) = %8.6e (k=%d)\n", ney, (int)kItRef);
-        //for( i=0; i<p; i++){ PRINTTEXT("ey[%d] = %6.4e\n", i+1, ey[i]); }
         
         /* --> 3. ez = bz - G*dx + V*dz_true */
         kk = 0;
@@ -146,43 +149,22 @@ void kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy,
         for( i=0; i<m+2*C->nsoc; i++) { truez[i] = Px[Pinv[n+p+i]]; }
         
         
-        //PRINTTEXT("dz =   \n");
-        //for( i=0; i<m+C->nsoc; i++){ PRINTTEXT("%6.4e  ", truez[i]); }
-        //PRINTTEXT("\n");
-        
-        //PRINTTEXT("b - G*dx =   \n");
-        //for( i=0; i<m+C->nsoc; i++){ PRINTTEXT("%6.4e  ", ez[i]); }
-        //PRINTTEXT("\n");
-        
-        
         if( isinit == 0 ){
             scale2add(truez, ez, C);
-            //scale2add(dz, ez, C);
         } else {
             vadd(m+2*C->nsoc, truez, ez);
-            //vadd(m+C->nsoc, dz, ez);
         }
         nez = norminf(ez,m+2*C->nsoc);
         
-        //PRINTTEXT("norm(ez) = %8.6e (k=%d)\n", nez, (int)kItRef);
-        //if( norm2(ez,35) < DELTA ) break;
-        //if( norm2(ez,35) > 1e-5 ) kItRef--;
-        //PRINTTEXT("ez =   \n");
-        //for( i=0; i<m+C->nsoc; i++){ PRINTTEXT("%6.4e  ", ez[i]); }
-        //PRINTTEXT("\n");
-        
-        //if( isinit == 0 )
-        //exit(-1);
-        
-        
-        
+#if PRINTLEVEL > 2
+        PRINTTEXT("    %2d  %3.1e  %3.1e  %3.1e\n", (int)kItRef, nex, ney, nez);
+#endif
         
         /* continue with refinement only if errors are small enough */
         if( nex/bnorm < LINSYSACC && ney/bnorm < LINSYSACC && nez/bnorm < LINSYSACC){
+            kItRef--;
             break;
         }
-        
-        //PRINTTEXT("*");
         
         /* permute */
         for( i=0; i<nK; i++) { Pe[Pinv[i]] = e[i]; }
@@ -191,15 +173,15 @@ void kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy,
         LDL_lsolve2(nK, Pe, KKT->L->jc, KKT->L->ir, KKT->L->pr, dPx);
         LDL_dsolve(nK, dPx, KKT->D);
         LDL_ltsolve(nK, dPx, KKT->L->jc, KKT->L->ir, KKT->L->pr);
-
-        //for( i=0; i<nK; i++){ PRINTTEXT("dPx[%d] = %6.4e\n", i+1, dPx[Pinv[i]]); }
-        //exit(-1);
         
         /* add refinement to Px */
         for( i=0; i<nK; i++ ){ Px[i] += dPx[i]; }
 	}
+
+#if PRINTLEVEL > 2
     PRINTTEXT("\n");
-	
+#endif
+    
 	/* copy solution out into the different arrays, permutation included */
 	k = 0; j=0;
 	for( i=0; i<n; i++ ){ dx[i] = Px[Pinv[k++]]; }
@@ -209,6 +191,8 @@ void kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy,
 		for( i=0; i<C->soc[l].p; i++ ){ dz[j++] = Px[Pinv[k++]]; }
 		k += 2;
 	}
+    
+    return kItRef == nitref+1 ? nitref : kItRef;
 }
 
 
@@ -222,12 +206,12 @@ void kkt_update(spmat* PKP, idxint* P, cone *C)
 	
 	/* LP cone */
     for( i=0; i < C->lpc->p; i++ ){ PKP->pr[P[C->lpc->kkt_idx[i]]] = -C->lpc->v[i]; }
-    conesize_m1 = conesize - 1;
 
 	/* Second-order cone */
 	for( i=0; i<C->nsoc; i++ ){
         
         getSOCDetails(&C->soc[i], &conesize, &eta_square, &d1, &u0, &u1, &v1, &q);
+        conesize_m1 = conesize - 1;
         
         /* D */
         PKP->pr[P[C->soc[i].Didx[0]]] = -eta_square * d1;
@@ -235,16 +219,19 @@ void kkt_update(spmat* PKP, idxint* P, cone *C)
             PKP->pr[P[C->soc[i].Didx[k]]] = -eta_square;
         }
         
+        
         /* v */
-        j=0;
+        j=1;
         for (k=0; k < conesize_m1; k++) {
-            PKP->pr[P[C->soc[i].vuidx + j++]] = -eta_square * v1 * q[k];
+            PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = -eta_square * v1 * q[k];
         }
+        PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = -eta_square;
         
         /* u */
-        PKP->pr[P[C->soc[i].vuidx + j++]] = -eta_square * u0;
+        PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = -eta_square * u0;
         for (k=0; k < conesize_m1; k++) {
-            PKP->pr[P[C->soc[i].vuidx + j++]] = -eta_square * u1 * q[k];
+            PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = -eta_square * u1 * q[k];
         }
+        PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = +eta_square;
 	}
 }

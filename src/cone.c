@@ -292,22 +292,21 @@ void scale2add(pfloat *x, pfloat* y, cone* C)
         y4 = y3 + 1;
         
         /* y1 += d1*x1 + u0*x4 */
-        y1[0] += d1*x1[0] + u0*x4[0];
+        y1[0] += eta_square*(d1*x1[0] + u0*x4[0]);
         
         /* y2 += x2 + v1*q*x3 + u1*q*x4 */
         v1x3_plus_u1x4 = v1*x3[0] + u1*x4[0];
         qtx2 = 0;
         for (i=0; i<conesize_m1; i++) {
-            y2[i] += x2[i] + v1x3_plus_u1x4*q[i];
+            y2[i] += eta_square*(x2[i] + v1x3_plus_u1x4*q[i]);
             qtx2 += q[i]*x2[i];
         }
         
         /* y3 += v1*q'*x2 + x3 */
-        y3[0] += v1*qtx2 + x3[0];
+        y3[0] += eta_square*(v1*qtx2 + x3[0]);
         
         /* y4 += u0*x1 + u1*q'*x2 - x4 */
-        y4[0] += u0*x1[0] + u1*qtx2 - x4[0];
-        
+        y4[0] += eta_square*(u0*x1[0] + u1*qtx2 - x4[0]);        
         
         /* prepare index for next cone */
         cone_start += conesize + 2;

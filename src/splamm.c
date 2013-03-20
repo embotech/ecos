@@ -270,7 +270,7 @@ void printSparseMatrix(spmat* M)
 
 
 /* dump a sparse matrix in Matlab format */
-/* use SPCONVERT to read in the file */
+/* use LOAD and SPCONVERT to read in the file in MATLAB */
 void dumpSparseMatrix(spmat* M, char* fn)
 {	
 	idxint j, i, row_strt, row_stop;
@@ -288,6 +288,7 @@ void dumpSparseMatrix(spmat* M, char* fn)
 				}
 			}
 		}
+        fprintf(f,"%d\t%d\t%20.18e\n", (int)M->m, (int)M->n, 0.0);
 		fclose(f);
 		PRINTTEXT("File %s successfully written.\n", fn);
 	} else {

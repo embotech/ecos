@@ -29,7 +29,7 @@
 typedef double pfloat;              /* for numerical values  */
 
 /* SET PRINT LEVEL ----------------------------------------------------- */
-#define PRINTLEVEL (3)     /* 0: no prints					             */
+#define PRINTLEVEL (2)     /* 0: no prints					             */
 						   /* 1: only final info				         */
                            /* 2: progress print per iteration            */
 						   /* 3: debug level, enables print & dump fcns. */
@@ -40,7 +40,7 @@ typedef double pfloat;              /* for numerical values  */
                            /* 2: detailed profiling                      */
 
 /* SET DEBUG LEVEL ----------------------------------------------------- */
-#define DEBUG (1)          /* 0: no debugging information                */
+#define DEBUG (0)          /* 0: no debugging information                */
                            /* 1: debug info & dump intermediate results  */
 
 /* NAN ----------------------------------------------------------------- */

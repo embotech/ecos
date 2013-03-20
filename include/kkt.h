@@ -91,8 +91,10 @@ idxint kkt_factor(kkt* KKT, pfloat delta);
  * where these variables are permuted back to the original ordering.
  *
  * KKT->nitref iterative refinement steps are applied to solve the linear system.
+ *
+ * Returns the number of iterative refinement steps really taken.
  */
-void kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy, pfloat* dz, idxint n, idxint p, idxint m, cone* C, idxint isinit, idxint nitref);
+idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy, pfloat* dz, idxint n, idxint p, idxint m, cone* C, idxint isinit, idxint nitref);
 
 
 /**

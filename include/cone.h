@@ -65,8 +65,6 @@ typedef struct socone{
     pfloat v1;          /* v = [0; v1*q]                                 */
     pfloat eta;         /* eta = (sres / zres)^(1/4)                     */
     pfloat eta_square;  /* eta^2 = (sres / zres)^(1/2)                   */
-    idxint vuidx;       /* first index for vectors v and u -- these are
-                                stacked in the sparse unpermuted system) */
     pfloat* q;          /* = wbar(2:end)                                 */
     idxint* Didx;       /* indices for D                                 */
     

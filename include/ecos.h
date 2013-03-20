@@ -32,7 +32,7 @@
 #define MAXIT     (30)           /* maximum number of iterations         */
 #define GAMMA     (0.98)         /* scaling the final step length        */
 #define DELTA     (1E-6)         /* dyn. regularization parameter        */
-#define NITREF    (10)         	 /* number of iterative refinement steps */
+#define NITREF    (9)         	 /* number of iterative refinement steps */
 #define LINSYSACC (1E-13)        /* rel. accuracy of search direction    */
 #define FEASTOL   (1E-6)         /* primal/dual infeasibility tolerance  */
 #define ABSTOL    (1E-6)         /* absolute tolerance on duality gap    */
@@ -68,7 +68,10 @@ typedef struct stats{
     pfloat step;
     pfloat step_aff;
 	pfloat kapovert;
-	idxint iter;    
+	idxint iter;
+    idxint nitref1;
+    idxint nitref2;
+    idxint nitref3;
 #if PROFILING > 0
 	pfloat tsetup;
 	pfloat tsolve;

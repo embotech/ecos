@@ -92,7 +92,7 @@ idxint init(pwork* w)
 	
 	/* Solve for RHS [0; b; h] */
 	tic(&tkktsolve);
-	kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS1, w->KKT->dx1, w->KKT->dy1, w->KKT->dz1, w->n, w->p, w->m, w->C, 1, w->stgs->nitref);
+	w->info->nitref1 = kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS1, w->KKT->dx1, w->KKT->dy1, w->KKT->dz1, w->n, w->p, w->m, w->C, 1, w->stgs->nitref);
 	w->info->tkktsolve += toc(&tkktsolve);
 
 	/* Copy out initial value of x */
@@ -120,7 +120,7 @@ idxint init(pwork* w)
 	
 	/* Solve for RHS [-c; 0; 0] */	
 	tic(&tkktsolve);
-	kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS2, w->KKT->dx2, w->KKT->dy2, w->KKT->dz2, w->n, w->p, w->m, w->C, 1, w->stgs->nitref);
+	w->info->nitref2 = kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS2, w->KKT->dx2, w->KKT->dy2, w->KKT->dz2, w->n, w->p, w->m, w->C, 1, w->stgs->nitref);
 	w->info->tkktsolve += toc(&tkktsolve);
 	
 	/* Copy out initial value of y */
@@ -229,19 +229,19 @@ void printProgress(stats* info)
 	{
 		/* print header at very first iteration */		
 #if PRINTLEVEL == 2
-		PRINTTEXT("\nECOS - (c) A. Domahidi, Automatic Control Laboratory, ETH Zurich, 2012.\n\n");		
+		PRINTTEXT("\nECOS - (c) A. Domahidi, Automatic Control Laboratory, ETH Zurich, 2012-13.\n\n");		
 #endif
-		PRINTTEXT("It     pcost         dcost      gap     pres    dres     k/t     mu     step\n");
+		PRINTTEXT("It     pcost         dcost      gap     pres    dres     k/t     mu     step    IR\n");
 #if defined WIN32 || defined _WIN64		
-		PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e   N/A  \n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu);
+		PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e   N/A    %d %d -\n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, (int)info->nitref1, (int)info->nitref2);
 #else
-		PRINTTEXT("%2d  %c%+5.3e  %c%+5.3e  %c%+2.0e  %c%2.0e  %c%2.0e  %c%2.0e  %c%2.0e   N/A  \n",(int)info->iter, 32, info->pcost, 32, info->dcost, 32, info->gap, 32, info->pres, 32, info->dres, 32, info->kapovert, 32, info->mu);
+		PRINTTEXT("%2d  %c%+5.3e  %c%+5.3e  %c%+2.0e  %c%2.0e  %c%2.0e  %c%2.0e  %c%2.0e   N/A    %d %d -\n",(int)info->iter, 32, info->pcost, 32, info->dcost, 32, info->gap, 32, info->pres, 32, info->dres, 32, info->kapovert, 32, info->mu, (int)info->nitref1, (int)info->nitref2);
 #endif	
 	}  else {
 #if defined WIN32 || defined _WIN64
-		PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e  %6.4f\n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, info->step);
+		PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e  %6.4f  %d %d %d\n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, info->step, (int)info->nitref1, (int)info->nitref2, (int)info->nitref3);
 #else
-		PRINTTEXT("%2d  %c%+5.3e%c  %+5.3e %c %+2.0e%c  %2.0e%c  %2.0e%c  %2.0e%c  %2.0e  %6.4f\n",(int)info->iter, 32,info->pcost, 32,info->dcost, 32, info->gap, 32, info->pres, 32, info->dres, 32, info->kapovert, 32, info->mu, info->step);
+		PRINTTEXT("%2d  %c%+5.3e%c  %+5.3e %c %+2.0e%c  %2.0e%c  %2.0e%c  %2.0e%c  %2.0e  %6.4f  %d %d %d\n",(int)info->iter, 32,info->pcost, 32,info->dcost, 32, info->gap, 32, info->pres, 32, info->dres, 32, info->kapovert, 32, info->mu, info->step, (int)info->nitref1, (int)info->nitref2, (int)info->nitref3);
 #endif
 	}
 }
@@ -272,6 +272,7 @@ void RHS_affine(pwork* w)
 			RHS[Pinv[j++]] = w->s[k] - w->rz[k]; k++;			
 		}
 		RHS[Pinv[j++]] = 0;
+        RHS[Pinv[j++]] = 0;
 	}	
 }
 
@@ -311,9 +312,10 @@ void RHS_combined(pwork* w)
 	for( l=0; l < w->C->nsoc; l++ ){
 		for( i=0; i < w->C->soc[l].p; i++ ){ 
 			w->KKT->RHS2[Pinv[j++]] = -one_minus_sigma*w->rz[k] + ds1[k];
-			k++;			
+			k++;
 		}
 		w->KKT->RHS2[Pinv[j++]] = 0;
+        w->KKT->RHS2[Pinv[j++]] = 0;
 	}	
 }
 
@@ -589,8 +591,7 @@ idxint ECOS_solve(pwork* w)
 #if DEBUG > 0
         dumpSparseMatrix(w->KKT->PKPt, "K.txt");
 #endif
-        PRINTTEXT("DEVELOPMENT MODUS - exit here\n");
-        exit(-1);
+        
         
 		
 		/* Adjust size of regularization depending on accuracy of solution */
@@ -620,6 +621,7 @@ idxint ECOS_solve(pwork* w)
             
             /* BACKTRACKING */
             /* Update variables */
+            /*
             for( i=0; i < w->n; i++ ){ w->x[i] -= 0.5*w->info->step * w->KKT->dx2[i] ; }
             for( i=0; i < w->p; i++ ){ w->y[i] -= 0.5*w->info->step * w->KKT->dy2[i]; }
             for( i=0; i < w->m; i++ ){ w->z[i] -= 0.5*w->info->step * w->KKT->dz2[i]; }
@@ -629,6 +631,7 @@ idxint ECOS_solve(pwork* w)
             
             PRINTTEXT("ZERO PIVOT ENCOUNTERED, BACKTRACKING\n");
             continue;
+             */
         }
 		w->info->tfactor += toc(&tfactor);
         
@@ -638,72 +641,27 @@ idxint ECOS_solve(pwork* w)
 
 		/* Solve for RHS1, which is used later also in combined direction */
 		tic(&tkktsolve);
-		kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS1, w->KKT->dx1, w->KKT->dy1, w->KKT->dz1, w->n, w->p, w->m, w->C, 0, w->stgs->nitref);
+		w->info->nitref1 = kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS1, w->KKT->dx1, w->KKT->dy1, w->KKT->dz1, w->n, w->p, w->m, w->C, 0, w->stgs->nitref);
 		w->info->tkktsolve += toc(&tkktsolve);
         
-        //dumpDenseMatrix(w->KKT->dx1, 1, w->n, "x1_00.txt");
-        //dumpDenseMatrix(w->KKT->dy1, 1, w->p, "y1_00.txt");
-        //dumpDenseMatrix(w->KKT->dz1, 1, w->m, "z1_00.txt");
-        //printDenseMatrix(w->KKT->RHS1, 1, w->n+ w->p + w->m + w->C->nsoc, "PRHS1_00");
-        //printDenseMatrix(w->c, 1, w->n, "c");
-        //printDenseMatrix(w->b, 1, w->p, "b");
-        //printDenseMatrix(w->h, 1, w->m, "h");
-        
-        //break;
-        
-        /*
-        if( w->info->iter > 0){
-        PRINTTEXT("DELTA adjusted from %6.4e to ", w->stgs->delta);
-         w->stgs->delta -= DELTA_TI*(log10(itreferr) - log10(itreferr_prev));
-        PRINTTEXT("%6.4e\n", w->stgs->delta);
-        }
-        itreferr_prev = itreferr;
-        */ 
-         
-         
-        /*
-        PRINTTEXT("DELTAP adjusted from %6.4e to ", w->stgs->deltaP);
-        w->stgs->deltaP = (w->stgs->itreferr - itreferr)/3;
-        PRINTTEXT("%6.4e\n", w->stgs->deltaP);
-         */
-        
-        
-        
-        /* DEBUG 
-        dumpDenseMatrix("dx1.mat", w->KKT->dx1, w->n, 1);
-        dumpDenseMatrix("dy1.mat", w->KKT->dy1, w->p, 1);
-        dumpDenseMatrix("dz1.mat", w->KKT->dz1, w->m, 1);
-        */
-        
-       
-        
+#if DEBUG > 0
+        dumpDenseMatrix(w->KKT->dx1, 1, w->n, "x1_00.txt");
+        dumpDenseMatrix(w->KKT->dy1, 1, w->p, "y1_00.txt");
+        dumpDenseMatrix(w->KKT->dz1, 1, w->m, "z1_00.txt");
+#endif
     
-		/* AFFINE SEARCH DIRECTION */
+		/* AFFINE SEARCH DIRECTION (predictor, need dsaff and dzaff only) */
 		RHS_affine(w);
 		tic(&tkktsolve);
-		kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS2, w->KKT->dx2, w->KKT->dy2, w->KKT->dz2, w->n, w->p, w->m, w->C, 0, w->stgs->nitref);
+		w->info->nitref2 = kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS2, w->KKT->dx2, w->KKT->dy2, w->KKT->dz2, w->n, w->p, w->m, w->C, 0, w->stgs->nitref);
 		w->info->tkktsolve += toc(&tkktsolve);
         
-        //break;
         
-        /*
-        PRINTTEXT("DELTA adjusted from %6.4e to ", w->stgs->delta);
-         w->stgs->delta += DELTA_TI*(log10(itreferr) - ITREFERR);
-        PRINTTEXT("%6.4e\n", w->stgs->delta);
-         */
-        
-        /*
-        PRINTTEXT("DELTAP adjusted from %6.4e to ", w->stgs->deltaP);
-        w->stgs->deltaP += (w->stgs->itreferr - itreferr)/3;
-        PRINTTEXT("%6.4e\n", w->stgs->deltaP);
-         */
-        
-        /* DEBUG 
-        dumpDenseMatrix("dx2.mat", w->KKT->dx2, w->n, 1);
-        dumpDenseMatrix("dy2.mat", w->KKT->dy2, w->p, 1);
-        dumpDenseMatrix("dz2.mat", w->KKT->dz2, w->m, 1);
-        */
-       
+#if DEBUG > 0
+        dumpDenseMatrix(w->KKT->dx2, 1, w->n, "x2_00.txt");
+        dumpDenseMatrix(w->KKT->dy2, 1, w->p, "y2_00.txt");
+        dumpDenseMatrix(w->KKT->dz2, 1, w->m, "z2_00.txt");
+#endif
         
 
 		/* dtau_denom = kap/tau - (c'*x1 + by1 + h'*z1); */
@@ -713,8 +671,8 @@ idxint ECOS_solve(pwork* w)
 		dtauaff = (w->rt - w->kap + ddot(w->n, w->c, w->KKT->dx2) + ddot(w->p, w->b, w->KKT->dy2) + ddot(w->m, w->h, w->KKT->dz2)) / dtau_denom;
         
 		
-		/* dzaff = z2 + dtauaff*z1; */
-		for( i=0; i<w->m; i++ ){ w->W_times_dzaff[i] = w->KKT->dz2[i] + dtauaff*w->KKT->dz1[i]; } /* dzaff = dz2 + dtau_aff*dz1 */
+		/* dzaff = dz2 + dtau_aff*dz1 */
+		for( i=0; i<w->m; i++ ){ w->W_times_dzaff[i] = w->KKT->dz2[i] + dtauaff*w->KKT->dz1[i]; } 
 		scale(w->W_times_dzaff, w->C, w->W_times_dzaff);
         
         /* DEBUG
@@ -731,10 +689,11 @@ idxint ECOS_solve(pwork* w)
 		/* dkapaff = -(bkap + kap*dtauaff)/tau; bkap = kap*tau*/
 		dkapaff = -w->kap - w->kap/w->tau*dtauaff;
         
-        /* DEBUG
+#if PRINTLEVEL > 2
         PRINTTEXT("dkapaff = %16.14f\n",dkapaff);
         PRINTTEXT("dtauaff = %16.14f\n",dtauaff);
-        */
+#endif
+        
         
         
 
@@ -771,7 +730,7 @@ idxint ECOS_solve(pwork* w)
 		/* COMBINED SEARCH DIRECTION */
 		RHS_combined(w);
 		tic(&tkktsolve);
-		kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS2, w->KKT->dx2, w->KKT->dy2, w->KKT->dz2, w->n, w->p, w->m, w->C, 0, w->stgs->nitref);
+		w->info->nitref3 = kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS2, w->KKT->dx2, w->KKT->dy2, w->KKT->dz2, w->n, w->p, w->m, w->C, 0, w->stgs->nitref);
 		w->info->tkktsolve += toc(&tkktsolve);
         
         /*

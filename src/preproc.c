@@ -234,7 +234,6 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
         }
             
         /* v */
-        C->soc[l].vuidx = k;
         Kjc[n+p+cone_strt+2*l+conesize] = k;
         for (r=1; r<conesize; r++) {
             Kir[k] = n+p+cone_strt + 2*l + r;
@@ -261,9 +260,12 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
         /* prepare index for next cone */
 		cone_strt += C->soc[l].p;
 	}
+
+#if PRINTLEVEL > 2
     PRINTTEXT("CREATEKKT: Written %d KKT entries\n", (int)k);
     PRINTTEXT("CREATEKKT: nK=%d and ks=%d\n",(int)nK,(int)ks);
     PRINTTEXT("CREATEKKT: Size of KKT matrix: %d\n", (int)nK);
+#endif
 
 	/* return Sign vector and KKT matrix */
     *S = Sign;
@@ -547,7 +549,6 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 		mywork->C->soc[i].skbar = (pfloat *)MALLOC((conesize)*sizeof(pfloat));
 		mywork->C->soc[i].zkbar = (pfloat *)MALLOC((conesize)*sizeof(pfloat));
         mywork->C->soc[i].Didx = (idxint *)MALLOC((conesize)*sizeof(idxint));
-        mywork->C->soc[i].vuidx = 0;
         cidx += conesize;
     }
 #if PRINTLEVEL > 2
@@ -662,7 +663,8 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 
 	/* allocate memory in KKT system */
 	mywork->KKT->PKPt = newSparseMatrix(nK, nK, KU->nnz);
-	mywork->KKT->PK = (idxint *)MALLOC(KU->nnz*sizeof(idxint));		
+	mywork->KKT->PK = (idxint *)MALLOC(KU->nnz*sizeof(idxint));
+
 
 	/* calculate ordering of KKT matrix */
 	P = (idxint *)MALLOC(nK*sizeof(idxint));
@@ -685,7 +687,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	}	
 #endif
 	
-	/* calculate inverse permutation and permutation mapping of KKT matrix */	
+	/* calculate inverse permutation and permutation mapping of KKT matrix */
 	pinv(nK, P, mywork->KKT->Pinv);		
 	Pinv = mywork->KKT->Pinv;
 #if DEBUG > 0
@@ -693,7 +695,6 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     dumpDenseMatrix_i(mywork->KKT->Pinv, nK, 1, "PINV.txt");
 #endif
 	permuteSparseSymmetricMatrix(KU, mywork->KKT->Pinv, mywork->KKT->PKPt, mywork->KKT->PK);
-    
 
 	/* permute sign vector */    
 #if PRINTLEVEL > 2
