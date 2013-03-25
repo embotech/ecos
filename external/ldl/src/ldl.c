@@ -325,8 +325,10 @@ LDL_int LDL_numeric2	/* returns n if successful, k if D (k,k) is zero */
 		}
         
         /* dynamic regularization */
-        D[k] = Sign[k]*D[k] < delta ? Sign[k]*delta : D[k];
-        
+        if( Sign[k]*D[k] < delta ){
+            /* PRINTTEXT("Regularizing D[%d]=%3.2e <-- %3.1e (Sign[%d]=%d)\n", k+1, D[k], Sign[k]*delta, k+1, Sign[k]); */
+            D[k] = Sign[k]*delta;
+        }
     }
     return (n) ;	/* success, diagonal of D is all nonzero */
 }

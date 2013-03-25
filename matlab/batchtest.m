@@ -8,9 +8,9 @@ for dd = 1:length(dirs)
         continue;
     end
     
-    %if( isempty(strfind(dirs(dd).name,'least_squares')) )
-    %    continue;
-    %end 
+    if( isempty(strfind(dirs(dd).name,'least_squares')) )
+        continue;
+    end 
     
     fprintf('Testing ''%s'' ', dirs(dd).name);
     cd(dirs(dd).name);

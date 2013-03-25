@@ -152,7 +152,7 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
         b = 1.0/temp;
         c = 1.0 + a + w / temp;
         d = 1 + 2/temp + w/(temp*temp);
-        d1 = 0.5*(a*a + w*(1.0 - (c*c)/(1.0 + w*d)));  d1 = d1 < 1e-3 ? 1e-3 : d1;
+        d1 = 0.5*(a*a + w*(1.0 - (c*c)/(1.0 + w*d)));  if( d1 < 0 ){ d1 = 0; }
         u0_square = a*a + w - d1;
         u0 = sqrt(u0_square);
         c2byu02 = (c*c)/u0_square;

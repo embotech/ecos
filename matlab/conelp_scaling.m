@@ -176,7 +176,7 @@ if( nargin == 5 )
                 %assert(u0_lower < u0_upper,'lower-upper proof does not hold');
                 
                 d1 = (a^2 + w - w*c^2/(1+w*d))/2;
-                d1eps = 1e-3;
+                d1eps = 0;%1e-4;
                 if( d1 < d1eps )
                     d1 = d1eps;
 %                     fprintf('d1 < %3.1e, setting to %3.1e\n',d1eps,d1eps);

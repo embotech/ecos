@@ -219,6 +219,12 @@ void updateStatistics(pwork* w)
 	/* infeasibility measures */
 	info->pinfres = w->hz + w->by < 0 ? w->hresx / w->resx0 / (-w->hz - w->by) * w->tau : NAN;
 	info->dinfres = w->cx < 0 ? MAX(w->hresy/w->resy0, w->hresz/w->resz0) / (-w->cx) * w->tau : NAN;
+    
+    
+    /* test 
+    info->pinfres = w->hz + w->by < 0 ? w->hresx / w->resx0 / (-w->hz - w->by) : NAN;
+	info->dinfres = w->cx < 0 ? MAX(w->hresy/w->resy0, w->hresz/w->resz0) / (-w->cx) : NAN;
+    */
 }
 
 
@@ -476,7 +482,9 @@ idxint ECOS_solve(pwork* w)
 	idxint i, initcode;
 	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap, mu, muaff; // deltacurrent, itreferr, itreferr_prev, muaff, mu;
 	idxint exitcode = ECOS_FATAL;	
-	timer tsolve, tfactor, tkktsolve;	
+	timer tsolve, tfactor, tkktsolve;
+    idxint backtracking;
+    pfloat delta;
 		
 	tic(&tsolve);
 	
@@ -504,6 +512,7 @@ idxint ECOS_solve(pwork* w)
     dumpDenseMatrix(w->s, 1, w->m, "s_init.txt");
 #endif
     
+    delta = w->stgs->delta;
 
 	/* Interior point loop */
 	for( w->info->iter = 0; w->info->iter <= w->stgs->maxit; w->info->iter++ ){
@@ -610,8 +619,11 @@ idxint ECOS_solve(pwork* w)
         PRINTTEXT("*** Regularization parameter set to %6.4e *** \n", deltacurrent);
         */
         
+        /*delta = w->stgs->delta;
+    REFACTOR:
+         */
 		tic(&tfactor);
-        if( kkt_factor(w->KKT, w->stgs->delta) != KKT_OK ){
+        if( kkt_factor(w->KKT, delta) != KKT_OK ){
 #if PRINTLEVEL > 0
             PRINTTEXT("\nElement of D zero during factorization of KKT system, aborting.");
 #endif
@@ -643,6 +655,15 @@ idxint ECOS_solve(pwork* w)
 		tic(&tkktsolve);
 		w->info->nitref1 = kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS1, w->KKT->dx1, w->KKT->dy1, w->KKT->dz1, w->n, w->p, w->m, w->C, 0, w->stgs->nitref);
 		w->info->tkktsolve += toc(&tkktsolve);
+        /*
+        if (w->info->nitref1 == w->stgs->nitref) {
+            delta *= 0.5;
+            backtracking = 1;
+            PRINTTEXT("IR failed, backtracking with delta = %3.1e\n", delta);
+            goto REFACTOR;
+        }
+         */
+        
         
 #if DEBUG > 0
         dumpDenseMatrix(w->KKT->dx1, 1, w->n, "x1_00.txt");

@@ -91,10 +91,11 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
     pfloat* ey = e + n;
     pfloat* ez = e + n+p;
     pfloat Pxnorm, temp;
-	nK = KKT->PKPt->n;
-    pfloat bnorm = norminf(Pb, n+p+m+2*C->nsoc);
+    pfloat bnorm = 1.0 + norminf(Pb, n+p+m+2*C->nsoc);
     pfloat nex, ney, nez;
-
+    pfloat error_threshold = bnorm*LINSYSACC;
+    
+    nK = KKT->PKPt->n;
 
 	/* forward - diagonal - backward solves: Px holds solution */		
 	LDL_lsolve2(nK, Pb, KKT->L->jc, KKT->L->ir, KKT->L->pr, Px );		
@@ -161,7 +162,7 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
 #endif
         
         /* continue with refinement only if errors are small enough */
-        if( nex/bnorm < LINSYSACC && ney/bnorm < LINSYSACC && nez/bnorm < LINSYSACC){
+        if( nex < error_threshold && ney < error_threshold && nez < error_threshold){
             kItRef--;
             break;
         }
