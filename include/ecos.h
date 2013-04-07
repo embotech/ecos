@@ -25,7 +25,10 @@
 #include "spla.h"
 #include "cone.h"
 #include "kkt.h"
+
+#if PROFILING > 0
 #include "timer.h"
+#endif
 
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */

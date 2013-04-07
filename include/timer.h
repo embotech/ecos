@@ -64,11 +64,10 @@ typedef struct timer{
 
 #endif
 
-
-#endif
-
 /* METHODS are the same for both */
 void tic(timer* t);
 pfloat toc(timer* t);
 
-#endif
+#endif /* END IF PROFILING > 0 */
+
+#endif /* END IFDEF __TIMER_H__ */

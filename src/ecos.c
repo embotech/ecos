@@ -49,7 +49,7 @@
  */
 idxint init(pwork* w)
 {
-	idxint i;
+	idxint i, KKT_FACTOR_RETURN_CODE;
 	idxint* Pinv = w->KKT->Pinv;
 
 #if PROFILING > 1
@@ -58,20 +58,24 @@ idxint init(pwork* w)
 
 	w->KKT->delta = w->stgs->delta;
 
-	/* Factor KKT matrix - this is needed in both solves */
+	
 #if PROFILING > 1
 	tic(&tfactor);
 #endif
-	if( kkt_factor(w->KKT, w->stgs->eps, w->stgs->delta) != KKT_OK ){
-#if PRINTLEVEL > 0
-        PRINTTEXT("\nElement of D zero during factorization of KKT system, aborting.");
-#endif
-        w->info->tfactor += toc(&tfactor);
-        return ECOS_KKTZERO;
-    }
+    /* Factor KKT matrix - this is needed in all 3 linear system solves */
+    KKT_FACTOR_RETURN_CODE = kkt_factor(w->KKT, w->stgs->eps, w->stgs->delta);
 #if PROFILING > 1
 	w->info->tfactor += toc(&tfactor);
 #endif
+    
+    /* check if factorization was successful, exit otherwise */
+	if(  KKT_FACTOR_RETURN_CODE != KKT_OK ){
+#if PRINTLEVEL > 0
+        PRINTTEXT("\nElement of D zero during factorization of KKT system, aborting.");
+#endif
+        return ECOS_KKTZERO;
+    }
+
 	
 	/* 
 	 * PRIMAL VARIABLES:
@@ -88,9 +92,13 @@ idxint init(pwork* w)
 	 */	
 	
 	/* Solve for RHS [0; b; h] */
+#if PROFILING > 1
 	tic(&tkktsolve);
+#endif
 	w->info->nitref1 = kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS1, w->KKT->dx1, w->KKT->dy1, w->KKT->dz1, w->n, w->p, w->m, w->C, 1, w->stgs->nitref);
+#if PROFILING > 1
 	w->info->tkktsolve += toc(&tkktsolve);
+#endif
 
 	/* Copy out initial value of x */
 	for( i=0; i<w->n; i++ ){ w->x[i] = w->KKT->dx1[i]; }
@@ -115,10 +123,14 @@ idxint init(pwork* w)
 	 * where alphad = inf{ alpha | zbar + alpha*e >= 0 }
 	 */
 	
-	/* Solve for RHS [-c; 0; 0] */	
+	/* Solve for RHS [-c; 0; 0] */
+#if PROFILING > 1
 	tic(&tkktsolve);
+#endif
 	w->info->nitref2 = kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS2, w->KKT->dx2, w->KKT->dy2, w->KKT->dz2, w->n, w->p, w->m, w->C, 1, w->stgs->nitref);
+#if PROFILING > 1
 	w->info->tkktsolve += toc(&tkktsolve);
+#endif
 	
 	/* Copy out initial value of y */
 	for( i=0; i<w->p; i++ ){ w->y[i] = w->KKT->dy2[i]; }
@@ -207,12 +219,6 @@ void updateStatistics(pwork* w)
 	nry = norm2(w->ry, w->p)/w->resy0;  nrz = norm2(w->rz, w->m)/w->resz0;
 	info->pres = MAX(nry, nrz) / w->tau;
 	info->dres = norm2(w->rx, w->n)/w->resx0 / w->tau;
-    
-#if PRINTLEVEL > 2 && DEBUG > 0
-    PRINTTEXT("norm(rx) = %6.4e    resx0 = %6.4e\n", norm2(w->rx, w->n), w->resx0);
-    PRINTTEXT("norm(ry) = %6.4e    resy0 = %6.4e\n", norm2(w->ry, w->p), w->resy0);
-    PRINTTEXT("norm(rz) = %6.4e    resz0 = %6.4e\n", norm2(w->rz, w->m), w->resz0);
-#endif
     
 	/* infeasibility measures */
 	info->pinfres = w->hz + w->by < 0 ? w->hresx / w->resx0 / (-w->hz - w->by) : NAN;
@@ -442,13 +448,20 @@ void backscale(pwork *w)
  */
 idxint ECOS_solve(pwork* w)
 {
-	idxint i, initcode;
+	idxint i, initcode, KKT_FACTOR_RETURN_CODE;
 	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap, mu, muaff;
-	idxint exitcode = ECOS_FATAL;	
-	timer tsolve, tfactor, tkktsolve;
+	idxint exitcode = ECOS_FATAL;
+#if PROFILING > 0
+	timer tsolve;
+#endif
+#if PROFILING > 1
+    timer tfactor, tkktsolve;
+#endif
     
+#if PROFILING > 0
     /* start timer */
     tic(&tsolve);
+#endif
 	
 	/* Initialize solver */
     initcode = init(w);
@@ -466,15 +479,8 @@ idxint ECOS_solve(pwork* w)
         return ECOS_KKTZERO;
     }
     
-    
-#if DEBUG > 0
-    dumpDenseMatrix(w->x, 1, w->n, "x_init.txt");
-    dumpDenseMatrix(w->y, 1, w->p, "y_init.txt");
-    dumpDenseMatrix(w->z, 1, w->m, "z_init.txt");
-    dumpDenseMatrix(w->s, 1, w->m, "s_init.txt");
-#endif
 
-	/* Interior point loop */
+	/* MAIN INTERIOR POINT LOOP */
 	for( w->info->iter = 0; w->info->iter <= w->stgs->maxit; w->info->iter++ ){
 
 		/* Compute residuals */
@@ -547,53 +553,44 @@ idxint ECOS_solve(pwork* w)
 		/* Update KKT matrix with scalings */
 		kkt_update(w->KKT->PKPt, w->KKT->PK, w->C);
         
-#if DEBUG > 0
-        dumpSparseMatrix(w->KKT->PKPt, "K.txt");
+#if PROFILING > 1
+		tic(&tfactor);
+#endif
+        /* factor KKT matrix */
+        KKT_FACTOR_RETURN_CODE = kkt_factor(w->KKT, w->stgs->eps, w->stgs->delta);
+#if PROFILING > 1
+        w->info->tfactor += toc(&tfactor);
 #endif
         
-        
-        
-        //PRINTTEXT("delta = %6.4e\n",w->stgs->delta);
-		tic(&tfactor);
-        if( kkt_factor(w->KKT, w->stgs->eps, w->stgs->delta) != KKT_OK ){
+        /* check if factorization was successful, quit otherwise */
+        if( KKT_FACTOR_RETURN_CODE != KKT_OK ){
 #if PRINTLEVEL > 0
             PRINTTEXT("\nElement of D zero during factorization of KKT system, aborting.");
 #endif
-            w->info->tfactor += toc(&tfactor);
             exitcode = ECOS_KKTZERO;
             break;
         }
-		w->info->tfactor += toc(&tfactor);
-        
-        //w->stgs->delta *= 0.7;
-        //if( w->stgs->delta < 1e-8 ) w->stgs->delta = 1e-8;
 
 		/* Solve for RHS1, which is used later also in combined direction */
+#if PROFILING > 1
 		tic(&tkktsolve);
-		w->info->nitref1 = kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS1, w->KKT->dx1, w->KKT->dy1, w->KKT->dz1, w->n, w->p, w->m, w->C, 0, w->stgs->nitref);
-		w->info->tkktsolve += toc(&tkktsolve);
-        
-
-#if DEBUG > 0
-        dumpDenseMatrix(w->KKT->dx1, 1, w->n, "x1_00.txt");
-        dumpDenseMatrix(w->KKT->dy1, 1, w->p, "y1_00.txt");
-        dumpDenseMatrix(w->KKT->dz1, 1, w->m, "z1_00.txt");
 #endif
-    
+		w->info->nitref1 = kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS1, w->KKT->dx1, w->KKT->dy1, w->KKT->dz1, w->n, w->p, w->m, w->C, 0, w->stgs->nitref);
+#if PROFILING > 1
+		w->info->tkktsolve += toc(&tkktsolve);
+#endif
+        
+            
 		/* AFFINE SEARCH DIRECTION (predictor, need dsaff and dzaff only) */
 		RHS_affine(w);
+#if PROFILING > 1
 		tic(&tkktsolve);
+#endif
 		w->info->nitref2 = kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS2, w->KKT->dx2, w->KKT->dy2, w->KKT->dz2, w->n, w->p, w->m, w->C, 0, w->stgs->nitref);
+#if PROFILING > 1
 		w->info->tkktsolve += toc(&tkktsolve);
-        
-        
-#if DEBUG > 0
-        dumpDenseMatrix(w->KKT->dx2, 1, w->n, "x2_00.txt");
-        dumpDenseMatrix(w->KKT->dy2, 1, w->p, "y2_00.txt");
-        dumpDenseMatrix(w->KKT->dz2, 1, w->m, "z2_00.txt");
 #endif
         
-
 		/* dtau_denom = kap/tau - (c'*x1 + by1 + h'*z1); */
 		dtau_denom = w->kap/w->tau - ddot(w->n, w->c, w->KKT->dx1) - ddot(w->p, w->b, w->KKT->dy1) - ddot(w->m, w->h, w->KKT->dz1);		
 
@@ -610,12 +607,7 @@ idxint ECOS_solve(pwork* w)
 		/* dkapaff = -(bkap + kap*dtauaff)/tau; bkap = kap*tau*/
 		dkapaff = -w->kap - w->kap/w->tau*dtauaff;
         
-#if PRINTLEVEL > 2
-        PRINTTEXT("dkapaff = %16.14f\n",dkapaff);
-        PRINTTEXT("dtauaff = %16.14f\n",dtauaff);
-#endif
-        
-		/* Line search on W\dsaff and W*dzaff */
+        /* Line search on W\dsaff and W*dzaff */
 		w->info->step_aff = lineSearch(w->lambda, w->dsaff_by_W, w->W_times_dzaff, w->tau, dtauaff, w->kap, dkapaff, w->C, w->KKT);
         
 		/* Centering parameter */
@@ -624,18 +616,27 @@ idxint ECOS_solve(pwork* w)
         for( i=0; i<w->m; i++) { w->saff[i] = w->s[i] + w->info->step_aff*w->dsaff[i]; }
         for( i=0; i<w->m; i++) { w->zaff[i] = w->z[i] + w->info->step_aff*w->dzaff[i]; }
         
-        muaff = conicProduct(w->saff, w->zaff, w->C, w->KKT->work1) + (w->kap + w->info->step_aff*dkapaff)*(w->tau + w->info->step_aff*dtauaff);
-        mu = conicProduct(w->s, w->z, w->C, w->KKT->work2) + w->kap*w->tau;
+        //muaff = conicProduct(w->saff, w->zaff, w->C, w->KKT->work1) + (w->kap + w->info->step_aff*dkapaff)*(w->tau + w->info->step_aff*dtauaff);
+        //mu = conicProduct(w->s, w->z, w->C, w->KKT->work2) + w->kap*w->tau;
+        
+        muaff = ddot(w->m, w->saff, w->zaff) + (w->kap + w->info->step_aff*dkapaff)*(w->tau + w->info->step_aff*dtauaff);
+        mu = ddot(w->m, w->s, w->z) +  w->kap*w->tau;
         sigma = muaff/mu;
         sigma = sigma*sigma*sigma;
         if( sigma > 1.0 ) sigma = 1.0;
-        w->info->sigma = sigma;						
+        if( sigma < 0.0 ) sigma = 0.0;
+        w->info->sigma = sigma;
+        
 		
 		/* COMBINED SEARCH DIRECTION */
 		RHS_combined(w);
+#if PROFILING > 1
 		tic(&tkktsolve);
+#endif
 		w->info->nitref3 = kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS2, w->KKT->dx2, w->KKT->dy2, w->KKT->dz2, w->n, w->p, w->m, w->C, 0, w->stgs->nitref);
+#if PROFILING > 1
 		w->info->tkktsolve += toc(&tkktsolve);
+#endif
         
   		/* bkap = kap*tau + dkapaff*dtauaff - sigma*info.mu; */
 		bkap = w->kap*w->tau + dkapaff*dtauaff - sigma*w->info->mu;
@@ -674,10 +675,12 @@ idxint ECOS_solve(pwork* w)
 	/* scale variables back */
 	backscale(w);
 
-	/* stop timer */	
+	/* stop timer */
+#if PROFILING > 0
 	w->info->tsolve = toc(&tsolve);
+#endif
 
-#if PRINTLEVEL > 0 
+#if PRINTLEVEL > 0
 #if PROFILING > 0
 	PRINTTEXT("\nRuntime: %f seconds.", w->info->tsetup + w->info->tsolve);
 #endif

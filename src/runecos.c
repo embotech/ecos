@@ -29,7 +29,12 @@ int main(void)
 {
 	idxint exitflag = ECOS_FATAL;
 	pwork* mywork;
-	double ttotal, tsolve, tsetup, torder, tkktcreate, ttranspose, tfactor, tkktsolve;
+#if PROFILING > 0
+	double ttotal, tsolve, tsetup;
+#endif
+#if PROFILING > 1
+    double torder, tkktcreate, ttranspose, tfactor, tkktsolve;
+#endif
 	
 	/* set up data */	
 	mywork = ECOS_setup(n, m, p, l, ncones, q, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b);

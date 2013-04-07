@@ -35,13 +35,14 @@ typedef double pfloat;              /* for numerical values  */
 						   /* 3: debug level, enables print & dump fcns. */
 
 /* SET PROFILING LEVEL ------------------------------------------------- */
-#define PROFILING (2)      /* 0: no timing information				     */
+#define PROFILING (1)      /* 0: no timing information				     */
                            /* 1: runtime (divided in setup and solve)    */
                            /* 2: detailed profiling                      */
 
 /* SET DEBUG LEVEL ----------------------------------------------------- */
 #define DEBUG (0)          /* 0: no debugging information                */
                            /* 1: debug info & dump intermediate results  */
+                           /* (flag used only for development)           */
 
 /* NAN ----------------------------------------------------------------- */
 #define NAN ((double)0x7ff8000000000000)

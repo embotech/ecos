@@ -8,9 +8,9 @@ for dd = 1:length(dirs)
         continue;
     end
     
-%     if( isempty(strfind(dirs(dd).name,'least_squares')) )
-%         continue;
-%     end 
+    if( isempty(strfind(dirs(dd).name,'least_squares')) )
+        continue;
+    end 
     
     fprintf('Testing ''%s'' ', dirs(dd).name);
     cd(dirs(dd).name);
@@ -24,7 +24,7 @@ for dd = 1:length(dirs)
         temp = strfind(datdef{1}(kt),'rand');
         if( ~isempty(temp{1}) )
             fprintf('on randomized data ');
-            N = 1e4;
+            N = 1e5;
             break;
         end
     end

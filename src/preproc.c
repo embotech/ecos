@@ -496,9 +496,11 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #endif
 
 	/* info struct */
-    mywork->info = (stats *)MALLOC(sizeof(stats));   
+    mywork->info = (stats *)MALLOC(sizeof(stats));
+#if PROFILING > 1
 	mywork->info->tfactor = 0;
 	mywork->info->tkktsolve = 0;
+#endif
 #if PRINTLEVEL > 2
     PRINTTEXT("Memory allocated for info struct\n");
 #endif
@@ -727,7 +729,9 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->ry = (pfloat *)MALLOC(p*sizeof(pfloat));
 	mywork->rz = (pfloat *)MALLOC(m*sizeof(pfloat));
 	
+#if PROFILING > 1
 	mywork->info->tsetup = toc(&tsetup);
+#endif
 	
 	/* clean up */
     mywork->KKT->P = P;
