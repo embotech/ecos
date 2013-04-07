@@ -615,12 +615,8 @@ idxint ECOS_solve(pwork* w)
         scale(w->dsaff_by_W, w->C, w->dsaff);
         for( i=0; i<w->m; i++) { w->saff[i] = w->s[i] + w->info->step_aff*w->dsaff[i]; }
         for( i=0; i<w->m; i++) { w->zaff[i] = w->z[i] + w->info->step_aff*w->dzaff[i]; }
-        
-        //muaff = conicProduct(w->saff, w->zaff, w->C, w->KKT->work1) + (w->kap + w->info->step_aff*dkapaff)*(w->tau + w->info->step_aff*dtauaff);
-        //mu = conicProduct(w->s, w->z, w->C, w->KKT->work2) + w->kap*w->tau;
-        
-        muaff = ddot(w->m, w->saff, w->zaff) + (w->kap + w->info->step_aff*dkapaff)*(w->tau + w->info->step_aff*dtauaff);
-        mu = ddot(w->m, w->s, w->z) +  w->kap*w->tau;
+        muaff = conicProduct(w->saff, w->zaff, w->C, w->KKT->work1) + (w->kap + w->info->step_aff*dkapaff)*(w->tau + w->info->step_aff*dtauaff);
+        mu = conicProduct(w->s, w->z, w->C, w->KKT->work2) + w->kap*w->tau;
         sigma = muaff/mu;
         sigma = sigma*sigma*sigma;
         if( sigma > 1.0 ) sigma = 1.0;
