@@ -38,24 +38,9 @@ typedef struct lpcone{
 /* SECOND-ORDER CONE --------------------------------------------------- */
 /* (all KKT indices are in compressed column format pointing into Kpr)   */
 typedef struct socone{    
-	idxint p;         /* dimension of cone                               */
-    //pfloat etasqrt;   /* square root of eta                            */
-    //pfloat a;         /* a                                             */
-	//pfloat omega;     /* = q'*q                                        */
-	//pfloat beta;      /* = (vtilde / qtilde)^2                         */
-	//idxint kkt_vU;    /* index for v in K (upper triangular part)        */
-	//idxint kkt_qL;    /* index for q in K (lower triangular part)        */
-	//idxint kkt_atilde;  /* index for atilde on diagonal                  */
-    //idxint szidx;     /* index of associated slacks / multipliers        */
-	pfloat* skbar;    /* temporary variables to work with                */
-	pfloat* zkbar;    /* temporary variables to work with                */
-	//pfloat* qtilde;   /* qtilde vector (see documentation)               */
-	//pfloat* vtilde;   /* vtilde vector (see documentation)               */
-	//idxint* kkt_qtU;  /* p-1 indices for q' in K (upper triangular part) */
-    //idxint* sidx;     /* p indices for sign entries in big sign vector   */
-    //pfloat qtildefact;
-    //pfloat vtildefact;
-    /* ---------------  new formulation  ---------------*/
+	idxint p;           /* dimension of cone                             */
+	pfloat* skbar;      /* temporary variables to work with              */
+	pfloat* zkbar;      /* temporary variables to work with              */
     pfloat a;           /* = wbar(1)                                     */
     pfloat atilde;      /* = a^2 + w                                     */
     pfloat d1;          /* first element of D                            */
@@ -140,5 +125,12 @@ void conicDivision(pfloat* u, pfloat* v, cone* C, pfloat* w);
  * Purpose: cleaner code
  */
 void getSOCDetails(socone *soc, idxint *conesize, pfloat* eta_square, pfloat* d1, pfloat* u0, pfloat* u1, pfloat* v1, pfloat **q);
+
+
+/*
+ * Returns dx, dy and dz from the expanded and permuted version of
+ * a search direction vector.
+ */
+void unstretch(idxint n, idxint p, idxint m, cone *C, idxint *Pinv, pfloat *Px, pfloat *dx, pfloat *dy, pfloat *dz);
 
 #endif

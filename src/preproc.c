@@ -65,11 +65,12 @@
  * INPUT:      spmat* Gt - pointer to G'
  *             spmat* At - pointer to A'
  *               cone* C - pointer to cone struct
+ *                 delta - static regularization parameter
  *
  * OUTPUT:  idxint* Sign - pointer to vector of signs for regularization
  *              spmat* K - pointer to unpermuted upper triangular part of KKT matrix
  */
-void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
+void createKKT_U(spmat* Gt, spmat* At, cone* C, pfloat delta, idxint** S, spmat** K)
 {
 	idxint i, j, k, l, r, row_stop, row, cone_strt, ks, conesize;
 	idxint n = Gt->m;
@@ -138,15 +139,16 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
     }
 #endif
     
+    /* count the number of non-zero entries in K */
+    k = 0;
+    
     /* (1,1) block: the first n columns are empty */
     for (j=0; j<n; j++) {
         Kjc[j] = 0;
-    }
-	
+    }	
     
     /* Fill upper triangular part of K with values */
-    /* (1,2) block: A' */    
-	k = 0; /* counts the number of non-zero entries in K */
+    /* (1,2) block: A' */
 	i = 0; /* counter for non-zero entries in A or G, respectively */
 	for( j=0; j<p; j++ ){
         /* A' */
@@ -325,12 +327,9 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 		FREE(w->C->lpc);
 	}
 	for( i=0; i < w->C->nsoc; i++ ){
-  //      FREE(w->C->soc[i].sidx);
 		FREE(w->C->soc[i].q);
-	//	FREE(w->C->soc[i].qtilde);
 		FREE(w->C->soc[i].skbar);
 		FREE(w->C->soc[i].zkbar);
-	//	FREE(w->C->soc[i].vtilde);
 		FREE(w->C->soc[i].Didx);
 	}
 	if( w->C->nsoc > 0 ){
@@ -360,65 +359,6 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 	FREE(w);
 }
 
-
-/* 
- * Sets the (3,3) block in KKT matrix to -I by
- * overwriting the non-diagonal parts of the conic
- * multipliers with 0.
- * Assumes that the diagonal is already -I.
- */
-/*
-void prepareKKT4init(spmat* K, cone* C)
-{	
-	idxint i, k, size_minus_1;
-	for( i=0; i<C->nsoc; i++ ){
-		size_minus_1 = C->soc[i].p - 1;
-
-		* q part in L *
-		for( k=0; k < size_minus_1; k++ ){
-			K->pr[C->soc[i].kkt_qL+k] = 0;
-		}
-
-		* q' part in U and L *
-		for( k=0; k < size_minus_1; k++ ){
-			K->pr[C->soc[i].kkt_qtU[k]] = 0;
-			K->pr[C->soc[i].kkt_qtU[k]+2] = 0;
-		}
-
-		* q part in U *
-		for( k=0; k < size_minus_1; k++ ){
-			K->pr[C->soc[i].kkt_vU+k] = 0;
-		}
-	}
-}
-*/
-
-/* 
- * Sets the (3,3) block in KKT matrix to -I by
- * overwriting the non-diagonal parts of the conic
- * multipliers with 0.
- * Assumes that the diagonal is already -I.
- * Works only on the upper part of K.
- */
-/* DEPRECATED ****************************************************
-void prepareKKT4initU(spmat* K, cone* C)
-{	
-	idxint i, k, size_minus_1;
-	for( i=0; i<C->nsoc; i++ ){
-		size_minus_1 = C->soc[i].p - 1;
-
-		* q' part in U *
-		for( k=0; k < size_minus_1; k++ ){
-			K->pr[C->soc[i].kkt_qtU[k]] = 0;			
-		}
-
-		* q part in U *
-		for( k=0; k < size_minus_1; k++ ){
-			K->pr[C->soc[i].kkt_vU+k] = 0;
-		}
-	}
-}
-******************************************************************/
 
 /*
  * Sets up all data structures needed.
@@ -542,15 +482,10 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     for( i=0; i<ncones; i++ ){
         conesize = (idxint)q[i];
         mywork->C->soc[i].p = conesize;
-    //    mywork->C->soc[i].szidx = l + cidx;
         mywork->C->soc[i].a = 0;
 		mywork->C->soc[i].eta = 0;
 		mywork->C->soc[i].atilde = 0;
         mywork->C->soc[i].q = (pfloat *)MALLOC((conesize-1)*sizeof(pfloat));
-	//	mywork->C->soc[i].qtilde = (pfloat *)MALLOC((conesize-1)*sizeof(pfloat));
-	//	mywork->C->soc[i].vtilde = (pfloat *)MALLOC((conesize-1)*sizeof(pfloat));
-	//	mywork->C->soc[i].kkt_qtU = (idxint *)MALLOC((conesize-1)*sizeof(idxint));
-    //    mywork->C->soc[i].sidx = (idxint *)MALLOC((conesize)*sizeof(idxint));
 		mywork->C->soc[i].skbar = (pfloat *)MALLOC((conesize)*sizeof(pfloat));
 		mywork->C->soc[i].zkbar = (pfloat *)MALLOC((conesize)*sizeof(pfloat));
         mywork->C->soc[i].Didx = (idxint *)MALLOC((conesize)*sizeof(idxint));
@@ -572,7 +507,8 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->stgs = (settings *)MALLOC(sizeof(settings));
 	mywork->stgs->maxit = MAXIT;
 	mywork->stgs->gamma = GAMMA;	
-	mywork->stgs->delta = DELTA;	
+	mywork->stgs->delta = DELTA;
+    mywork->stgs->eps = EPS;
 	mywork->stgs->nitref = NITREF;
 	mywork->stgs->abstol = ABSTOL;	
 	mywork->stgs->feastol = FEASTOL;
@@ -621,7 +557,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #if PROFILING > 1
 	tic(&tcreatekkt);
 #endif
-	createKKT_U(Gt, At, mywork->C, &Sign, &KU);
+	createKKT_U(Gt, At, mywork->C, mywork->stgs->delta, &Sign, &KU);
 #if PROFILING > 1
 	mywork->info->tkktcreate = toc(&tcreatekkt);
 #endif
@@ -678,22 +614,8 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     PRINTTEXT("Created memory for KKT-related data\n");    
 #endif
     
-    /* HEAVY DEBUG
-    PRINTTEXT("Kjc = [");
-    for (j=0; j<KU->n+1; j++) {
-        PRINTTEXT(" %d ", KU->jc[j]);
-    }
-    PRINTTEXT("]\n");
     
-    PRINTTEXT("Kir = [");
-    for (i=0; i<KU->nnz; i++) {
-        PRINTTEXT(" %d ", KU->ir[i]);
-    }
-    PRINTTEXT("]\n");
-    */
-     
-     
-	/* calculate ordering of KKT matrix using AMD */
+    /* calculate ordering of KKT matrix using AMD */
 	P = (idxint *)MALLOC(nK*sizeof(idxint));
 #if PROFILING > 1
 	tic(&tordering);
@@ -726,16 +648,23 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #endif
 	permuteSparseSymmetricMatrix(KU, mywork->KKT->Pinv, mywork->KKT->PKPt, mywork->KKT->PK);
 
-	/* permute sign vector */    
+	/* permute sign vector */
+    for( i=0; i<nK; i++ ){ mywork->KKT->Sign[Pinv[i]] = Sign[i]; }
 #if PRINTLEVEL > 2
     PRINTTEXT("P = [");
     for( i=0; i<nK; i++ ){ PRINTTEXT("%d ", (int)P[i]); }
     PRINTTEXT("];\n");
+    PRINTTEXT("Pinv = [");
+    for( i=0; i<nK; i++ ){ PRINTTEXT("%d ", (int)Pinv[i]); }
+    PRINTTEXT("];\n");
     PRINTTEXT("Sign = [");
     for( i=0; i<nK; i++ ){ PRINTTEXT("%+d ", (int)Sign[i]); }
     PRINTTEXT("];\n");
+    PRINTTEXT("SignP = [");
+    for( i=0; i<nK; i++ ){ PRINTTEXT("%+d ", (int)mywork->KKT->Sign[i]); }
+    PRINTTEXT("];\n");
 #endif
-	for( i=0; i<nK; i++ ){ mywork->KKT->Sign[Pinv[i]] = Sign[i]; }
+	
     
 	
 	/* symbolic factorization */	
@@ -801,7 +730,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->info->tsetup = toc(&tsetup);
 	
 	/* clean up */
-	FREE(P);
+    mywork->KKT->P = P;
 	FREE(Sign);
     freeSparseMatrix(At);
 	freeSparseMatrix(Gt);

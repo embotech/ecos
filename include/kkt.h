@@ -54,6 +54,7 @@ typedef struct kkt{
 	pfloat* dz1;     /* search direction of size m				  */
 	pfloat* dz2;     /* search direction of size m				  */	
 	
+    idxint* P;       /* permutation                               */
 	idxint* Pinv;    /* reverse permutation						  */
 	idxint* PK;      /* permutation of row indices of KKT matrix  */	
 	idxint* Parent;  /* Elimination tree of factorization         */
@@ -63,8 +64,6 @@ typedef struct kkt{
 	idxint* Lnz;     /* idxint workspace needed for factorization */
 	
 	pfloat delta;    /* size of regularization					  */
-	
-	//idxint nitref;   /* number of iterative refinement steps	  */
 } kkt;
 
 /* Return codes */
@@ -75,9 +74,10 @@ typedef struct kkt{
 
 /** 
  * Factorization of KKT matrix. Just a convenient wrapper for the LDL call.
- * The second argument delta determindes the size of dynamic regularization.
+ * The second argument delta determindes the threshold of dynamic regularization,
+ * while the last argument is the regularization parameter if it becomes active.
  */
-idxint kkt_factor(kkt* KKT, pfloat delta);
+idxint kkt_factor(kkt* KKT, pfloat eps, pfloat delta);
 
 
 /**

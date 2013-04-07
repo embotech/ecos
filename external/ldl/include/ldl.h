@@ -41,7 +41,7 @@
 void ldl_symbolic2 (int n, int Ap [ ], int Ai [ ], int Lp [ ], int Parent [ ], int Lnz [ ], int Flag [ ]) ;
 
 int ldl_numeric2 (int n, int Ap [ ], int Ai [ ], double Ax [ ],
-    int Lp [ ], int Parent [ ], int Sign[], int Pinv[], double delta, int Lnz [ ], int Li [ ], double Lx [ ],
+    int Lp [ ], int Parent [ ], int Sign[], double eps, double delta, int Lnz [ ], int Li [ ], double Lx [ ],
     double D [ ], double Y [ ], int Pattern [ ], int Flag [ ]) ;
 
 void ldl_lsolve (int n, double B [], int Lp [ ], int Li [ ], double Lx [ ]) ;
@@ -63,7 +63,7 @@ void ldl_l_symbolic2 (SuiteSparse_long n, SuiteSparse_long Ap [ ],
 
 SuiteSparse_long ldl_l_numeric2 (SuiteSparse_long n, SuiteSparse_long Ap [ ],
     SuiteSparse_long Ai [ ], double Ax [ ], SuiteSparse_long Lp [ ],
-    SuiteSparse_long Parent [ ], SuiteSparse_long Sign [ ], SuiteSparse_long Pinv [ ], double delta, SuiteSparse_long Lnz [ ],
+    SuiteSparse_long Parent [ ], SuiteSparse_long Sign [ ], double eps, double delta, SuiteSparse_long Lnz [ ],
     SuiteSparse_long Li [ ], double Lx [ ], double D [ ], double Y [ ],
     SuiteSparse_long Pattern [ ], SuiteSparse_long Flag [ ]) ;
 
@@ -79,7 +79,7 @@ void ldl_l_ltsolve (SuiteSparse_long n, double X [ ], SuiteSparse_long Lp [ ],
 /* === LDL version ========================================================== */
 /* ========================================================================== */
 
-#define LDL_DATE "Aug 12, 2012"
+#define LDL_DATE "April 6, 2013, with dynamic regularization by A. Domahidi"
 #define LDL_VERSION_CODE(main,sub) ((main) * 1000 + (sub))
 #define LDL_MAIN_VERSION 2
 #define LDL_SUB_VERSION 1

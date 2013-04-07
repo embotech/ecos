@@ -101,8 +101,8 @@ void bring2cone(cone* C, pfloat* r, pfloat* s)
  */
 idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
 {
-	idxint i, l, k, p, pm1, ii, jj;
-	pfloat sres, zres, snorm, znorm, gamma, one_over_2gamma, qtildefact, vtildefact;
+	idxint i, l, k, p, pm1;
+	pfloat sres, zres, snorm, znorm, gamma, one_over_2gamma;
 	pfloat* sk;
 	pfloat* zk;
     pfloat a, b, c, d, w, temp, u0, u0_square, u1, v1, d1, c2byu02;
@@ -122,8 +122,6 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
 
 		/* check residuals and quit if they're negative */
 		sres = socres(sk, p);  zres = socres(zk, p);
-        //while( sres <= 0 ) { sk[0] += 1e-5; sres = socres(sk, p); }
-        //while( zres <= 0 ) { zk[0] += 1e-5; zres = socres(zk, p); }
         if( sres <= 0 || zres <= 0 ){ return OUTSIDE_CONE; }
 
 		/* normalize variables */
@@ -161,54 +159,7 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
         C->soc[l].d1 = d1;
         C->soc[l].u0 = u0;
         C->soc[l].u1 = u1;
-        C->soc[l].v1 = v1;
-        
-        
-        /* DEPRECATED 
-		C->soc[l].atilde = C->soc[l].eta*(C->soc[l].a*C->soc[l].a + C->soc[l].omega);
-		qtildefact = 1 + C->soc[l].a + C->soc[l].omega/(1+C->soc[l].a);
-		vtildefact = sqrt( 1 + 2/(1+C->soc[l].a) + C->soc[l].omega/((1+C->soc[l].a)*(1+C->soc[l].a)) );
-		//C->soc[l].beta = vtildefact / qtildefact; C->soc[l].beta *= C->soc[l].beta;
-		qtildefact *=  C->soc[l].eta;
-		vtildefact *=  C->soc[l].eta;		
-		for( i=0; i<pm1; i++ ){
-			C->soc[l].qtilde[i] = qtildefact * C->soc[l].q[i];
-			C->soc[l].vtilde[i] = vtildefact * C->soc[l].q[i];
-		}
-        C->soc[l].qtildefact = qtildefact;
-        C->soc[l].vtildefact = vtildefact;
-         */
-        
-        
-        
-
-        /* DEBUG
-        // Print V
-        
-        PRINTTEXT("V = \n");
-        PRINTTEXT("% +7.4f  ", C->soc[l].atilde);
-        for (int ii=0; ii<pm1; ii++) {
-            PRINTTEXT("% +7.4f  ",C->soc[l].qtilde[ii]);
-        }
-        PRINTTEXT("% +7.4f\n", 0.0);
-        for (int ii=0; ii<pm1; ii++) {
-            PRINTTEXT("% +7.4f  ",C->soc[l].qtilde[ii]);
-            for (jj=pm1-ii; jj<pm1; jj++) {
-                PRINTTEXT("% +7.4f  ", 0.0);
-            }
-            PRINTTEXT("% +7.4f  ", C->soc[l].eta);
-            for (jj=ii+1; jj<pm1; jj++) {
-                PRINTTEXT("% +7.4f  ", 0.0);
-            }
-            PRINTTEXT("% +7.4f\n",C->soc[l].vtilde[ii]);
-        }
-        PRINTTEXT("% +7.4f  ", 0.0);
-        for (ii=0; ii<pm1; ii++) {
-            PRINTTEXT("% +7.4f  ", C->soc[l].vtilde[ii]);
-        }
-        PRINTTEXT("% +7.4f\n", -C->soc[l].eta);
-         */
-        
+        C->soc[l].v1 = v1;        
         
 		/* increase offset for next cone */
 		k += C->soc[l].p;
@@ -434,3 +385,21 @@ void getSOCDetails(socone *soc, idxint *conesize, pfloat* eta_square, pfloat* d1
     *q = soc->q;
 }
 
+
+/* 
+ * Returns dx, dy and dz from the expanded and permuted version of 
+ * a search direction vector.
+ */
+void unstretch(idxint n, idxint p, idxint m, cone *C, idxint *Pinv, pfloat *Px, pfloat *dx, pfloat *dy, pfloat *dz)
+{
+    idxint i,j,k,l;
+    k = 0;    
+    for( i=0; i<n; i++ ){ dx[i] = Px[Pinv[k++]]; }
+    for( i=0; i<p; i++ ){ dy[i] = Px[Pinv[k++]]; }
+    j = 0;
+    for( i=0; i<C->lpc->p; i++ ){ dz[j++] = Px[Pinv[k++]]; }
+    for( l=0; l<C->nsoc; l++ ){
+        for( i=0; i<C->soc[l].p; i++ ){ dz[j++] = Px[Pinv[k++]]; }
+        k += 2;
+    }    
+}

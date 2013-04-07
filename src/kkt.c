@@ -35,11 +35,11 @@
 #include <math.h>
 
 /* Factorization of KKT matrix. Just a wrapper for some LDL code */
-idxint kkt_factor(kkt* KKT, pfloat delta)
+idxint kkt_factor(kkt* KKT, pfloat eps, pfloat delta)
 {
 	idxint nd;
-	
-	/* returns n if successful, k if D (k,k) is zero */
+    
+    /* returns n if successful, k if D (k,k) is zero */
 	nd = LDL_numeric2(
 				KKT->PKPt->n,	/* K and L are n-by-n, where n >= 0 */
 				KKT->PKPt->jc,	/* input of size n+1, not modified */
@@ -48,8 +48,8 @@ idxint kkt_factor(kkt* KKT, pfloat delta)
 				KKT->L->jc,		/* input of size n+1, not modified */
 				KKT->Parent,	/* input of size n, not modified */
 				KKT->Sign,      /* input, permuted sign vector for regularization */
-                KKT->Pinv,      /* input, inverse permutation vector */
-				delta,			/* size of dynamic regularization */
+                eps,            /* input, inverse permutation vector */
+				delta,          /* size of dynamic regularization */
 				KKT->Lnz,		/* output of size n, not defn. on input */
 				KKT->L->ir,		/* output of size lnz=Lp[n], not defined on input */
 				KKT->L->pr,		/* output of size lnz=Lp[n], not defined on input */
@@ -79,7 +79,7 @@ idxint kkt_factor(kkt* KKT, pfloat delta)
  */
 idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy, pfloat* dz, idxint n, idxint p, idxint m, cone* C, idxint isinit, idxint nitref)
 {
-	idxint i, k, l, j, kk, nK, kItRef;
+	idxint i, k, l, j, kk, kItRef;
 	idxint*  Pinv = KKT->Pinv;
 	pfloat*    Px = KKT->work1;
 	pfloat*   dPx = KKT->work2;
@@ -90,12 +90,10 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
     pfloat* ex = e;
     pfloat* ey = e + n;
     pfloat* ez = e + n+p;
-    pfloat Pxnorm, temp;
     pfloat bnorm = 1.0 + norminf(Pb, n+p+m+2*C->nsoc);
     pfloat nex, ney, nez;
     pfloat error_threshold = bnorm*LINSYSACC;
-    
-    nK = KKT->PKPt->n;
+    idxint nK = KKT->PKPt->n;
 
 	/* forward - diagonal - backward solves: Px holds solution */		
 	LDL_lsolve2(nK, Pb, KKT->L->jc, KKT->L->ir, KKT->L->pr, Px );		
@@ -103,22 +101,15 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
 	LDL_ltsolve(nK, Px, KKT->L->jc, KKT->L->ir, KKT->L->pr);
     
 #if PRINTLEVEL > 2
-    PRINTTEXT("\nIR: it  ||ex||   ||ey||   ||ez||\n");
-    PRINTTEXT("    -----------------------------\n");
+    PRINTTEXT("\nIR: it  ||ex||   ||ey||   ||ez|| (threshold: %4.2e\n", error_threshold);
+    PRINTTEXT("    -------------------------------------------------\n");
 #endif
     
 	/* iterative refinement */
 	for( kItRef=1; kItRef <= nitref; kItRef++ ){
         
         /* unpermute x & copy into arrays */
-        k = 0; j=0;
-        for( i=0; i<n; i++ ){ dx[i] = Px[Pinv[k++]]; }
-        for( i=0; i<p; i++ ){ dy[i] = Px[Pinv[k++]]; }
-        for( i=0; i<C->lpc->p; i++ ){ dz[j++] = Px[Pinv[k++]]; }
-        for( l=0; l<C->nsoc; l++ ){
-            for( i=0; i<C->soc[l].p; i++ ){ dz[j++] = Px[Pinv[k++]]; }
-            k += 2;
-        }
+        unstretch(n, p, m, C, Pinv, Px, dx, dy, dz);
         
 		/* compute error term */
         k=0; j=0;
@@ -144,12 +135,12 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
             for( i=0; i<C->soc[l].p; i++ ){
                 ez[kk++] = Pb[Pinv[k++]] - Gdx[j++];
             }
-            ez[kk++] =  Pb[Pinv[k++]];
-            ez[kk++] =  Pb[Pinv[k++]];
+            ez[kk] = 0;
+            ez[kk+1] = 0;
+            k += 2;
+            kk += 2;
         }
         for( i=0; i<m+2*C->nsoc; i++) { truez[i] = Px[Pinv[n+p+i]]; }
-        
-        
         if( isinit == 0 ){
             scale2add(truez, ez, C);
         } else {
@@ -157,8 +148,9 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
         }
         nez = norminf(ez,m+2*C->nsoc);
         
+        
 #if PRINTLEVEL > 2
-        PRINTTEXT("    %2d  %3.1e  %3.1e  %3.1e\n", (int)kItRef, nex, ney, nez);
+        PRINTTEXT("    %2d  %3.1e  %3.1e  %3.1e\n", (int)kItRef, nex/bnorm, ney/bnorm, nez/bnorm);
 #endif
         
         /* continue with refinement only if errors are small enough */
@@ -184,14 +176,7 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
 #endif
     
 	/* copy solution out into the different arrays, permutation included */
-	k = 0; j=0;
-	for( i=0; i<n; i++ ){ dx[i] = Px[Pinv[k++]]; }
-	for( i=0; i<p; i++ ){ dy[i] = Px[Pinv[k++]]; }
-	for( i=0; i<C->lpc->p; i++ ){ dz[j++] = Px[Pinv[k++]]; }
-	for( l=0; l<C->nsoc; l++ ){
-		for( i=0; i<C->soc[l].p; i++ ){ dz[j++] = Px[Pinv[k++]]; }
-		k += 2;
-	}
+	unstretch(n, p, m, C, Pinv, Px, dx, dy, dz);
     
     return kItRef == nitref+1 ? nitref : kItRef;
 }

@@ -2,12 +2,12 @@
 
 ## Intel C Compiler
 #CC = icc
-#CFLAGS = -O3 -m64 -strict-ansi
+#CFLAGS = -O3 -m64 -Wall -strict-ansi -DLDL_LONG -DDLONG
 #LIBS = -lm
 
 ## GNU C Compiler
 #CC = gcc
-CFLAGS = -O3 -DLDL_LONG -DDLONG
+CFLAGS = -O3 -Wall -DLDL_LONG -DDLONG -strict-ansi
 
 UNAME := $(shell uname)
 

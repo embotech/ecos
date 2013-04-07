@@ -76,18 +76,18 @@ tic;
 MAXIT = 30;                       % maximum number of iterations
 GAMMA = 0.98;                     % scaling the final step length
 EPS = 0;   % regularization parameter
-NITREF = 9;                      % number of iterative refinement steps
+NITREF = 10000;                      % number of iterative refinement steps
 FEASTOL = 1e-6;                   % primal infeasibility tolerance
 ABSTOL  = 1e-6;                   % absolute tolerance on duality gap
 RELTOL  = 1e-6;                   % relative tolerance on duality gap
 DOPRINTS = 1;                     % toggle printing
 
 % EXITCODES ------------------------------------------------------------ */
-CONELP_NUMERICS = 2;    % Line search gave step length 0: numerics? */
-CONELP_MAXIT    = 1;    % Maximum number of iterations reached      */
+CONELP_DINF     = 2;   % Found certificate of dual infeasibility   */
+CONELP_PINF     = 1;   % Found certificate of primal infeasibility */
 CONELP_OPTIMAL  = 0;    % Problem solved to optimality              */
-CONELP_PINF     = -1;   % Found certificate of primal infeasibility */
-CONELP_DINF     = -2;   % Found certificate of dual infeasibility   */
+CONELP_MAXIT    = -1;    % Maximum number of iterations reached      */
+CONELP_NUMERICS = -2;    % Line search gave step length 0: numerics? */
 CONELP_KKTZERO  = -3;   % Element of D zero during factorization    */
 CONELP_OUTCONE  = -5;   % s or z got outside the cone, numerics?    */
 CONELP_FATAL    = -7;   % Unknown problem in solver                 */
@@ -209,11 +209,11 @@ for nIt = 0:MAXIT+1
     info.dres = norm(rx,2)/resx0/tau;                          % dual residuals
     
     % primal infeasibility measure
-    if( hz+by < 0 ), info.pinfres = hresx/resx0/(-hz-by)*tau; 
+    if( hz+by < 0 ), info.pinfres = hresx/resx0/(-hz-by);%*tau; 
     else             info.pinfres = NaN; end               
     
     % dual infeasibility measure
-    if( cx < 0 ),    info.dinfres = max([hresy/resy0, hresz/resz0])/(-cx)*tau; 
+    if( cx < 0 ),    info.dinfres = max([hresy/resy0, hresz/resz0])/(-cx);%*tau; 
     else             info.dinfres = NaN; end
     
     %% 1c. Printing    

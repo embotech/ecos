@@ -22,7 +22,7 @@ switch( LINSOLVER )
         for k = 1:length(dims.q)
             S = [S; -ones(dims.q(k),1); -1; 1];
         end
-        [L,D] = sldlsparse(sparse(K), P, S, 1e-6);
+        [L,D] = sldlsparse(sparse(K), P, S, 1e-7);
         L = L + eye(size(L));
         
     otherwise, error('Unknown linear solver');

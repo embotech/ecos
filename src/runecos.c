@@ -27,7 +27,7 @@
 
 int main(void)
 {
-	idxint exitflag;	
+	idxint exitflag = ECOS_FATAL;
 	pwork* mywork;
 	double ttotal, tsolve, tsetup, torder, tkktcreate, ttranspose, tfactor, tkktsolve;
 	

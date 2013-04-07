@@ -272,8 +272,8 @@ LDL_int LDL_numeric2	/* returns n if successful, k if D (k,k) is zero */
     LDL_int Lp [ ],	     /* input of size n+1, not modified */
     LDL_int Parent [ ],	 /* input of size n, not modified */
 	LDL_int Sign[ ],     /* input of size n, sign vector of diagonal entries for regularization */
-    LDL_int Pinv[],      /* input of size n, inverse permutation vector */
-	double delta,        /* input, size of regularization */
+    double eps,          /* input, regularization threshold */
+	double delta,        /* input, regularization parameter */
     LDL_int Lnz [ ],	 /* output of size n, not defn. on input */
     LDL_int Li [ ],	     /* output of size lnz=Lp[n], not defined on input */
     double Lx [ ],	     /* output of size lnz=Lp[n], not defined on input */
@@ -283,12 +283,8 @@ LDL_int LDL_numeric2	/* returns n if successful, k if D (k,k) is zero */
     LDL_int Flag [ ]	 /* workspace of size n, not defn. on input or output */
 )
 {
-    double yi, l_ki, temp;
-    double mydelta;
+    double yi, l_ki;
     LDL_int i, k, p, p2, len, top;
-    LDL_int nn = 48;
-    LDL_int pp = 35;
-    LDL_int pinvk;
     
     for (k = 0 ; k < n ; k++){
 		/* compute nonzero Pattern of kth row of L, in topological order */
@@ -324,11 +320,8 @@ LDL_int LDL_numeric2	/* returns n if successful, k if D (k,k) is zero */
 			Lnz [i]++ ;		        /* increment count of nonzeros in col i */
 		}
         
-        /* dynamic regularization */
-        if( Sign[k]*D[k] < delta ){
-            /* PRINTTEXT("Regularizing D[%d]=%3.2e <-- %3.1e (Sign[%d]=%d)\n", k+1, D[k], Sign[k]*delta, k+1, Sign[k]); */
-            D[k] = Sign[k]*delta;
-        }
+        /* Dynamic regularization */
+        D[k] = Sign[k]*D[k] <= eps ? Sign[k]*delta : D[k];         
     }
     return (n) ;	/* success, diagonal of D is all nonzero */
 }

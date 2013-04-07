@@ -49,23 +49,20 @@
  */
 idxint init(pwork* w)
 {
-	pfloat* RHS1 = w->KKT->RHS1;
 	idxint i;
 	idxint* Pinv = w->KKT->Pinv;
-    pfloat itreferr;
 
 #if PROFILING > 1
 	timer tfactor, tkktsolve;
 #endif
 
-	//w->KKT->nitref = w->stgs->nitref;
 	w->KKT->delta = w->stgs->delta;
 
 	/* Factor KKT matrix - this is needed in both solves */
 #if PROFILING > 1
 	tic(&tfactor);
 #endif
-	if( kkt_factor(w->KKT, w->stgs->delta) != KKT_OK ){
+	if( kkt_factor(w->KKT, w->stgs->eps, w->stgs->delta) != KKT_OK ){
 #if PRINTLEVEL > 0
         PRINTTEXT("\nElement of D zero during factorization of KKT system, aborting.");
 #endif
@@ -183,6 +180,7 @@ void computeResiduals(pwork *w)
 }
 
 
+
 /* 
  * Updates statistics.
  */
@@ -217,15 +215,10 @@ void updateStatistics(pwork* w)
 #endif
     
 	/* infeasibility measures */
-	info->pinfres = w->hz + w->by < 0 ? w->hresx / w->resx0 / (-w->hz - w->by) * w->tau : NAN;
-	info->dinfres = w->cx < 0 ? MAX(w->hresy/w->resy0, w->hresz/w->resz0) / (-w->cx) * w->tau : NAN;
-    
-    
-    /* test 
-    info->pinfres = w->hz + w->by < 0 ? w->hresx / w->resx0 / (-w->hz - w->by) : NAN;
+	info->pinfres = w->hz + w->by < 0 ? w->hresx / w->resx0 / (-w->hz - w->by) : NAN;
 	info->dinfres = w->cx < 0 ? MAX(w->hresy/w->resy0, w->hresz/w->resz0) / (-w->cx) : NAN;
-    */
 }
+
 
 
 #if PRINTLEVEL > 0
@@ -252,6 +245,7 @@ void printProgress(stats* info)
 	}
 }
 #endif
+
 
 
 /**
@@ -281,6 +275,7 @@ void RHS_affine(pwork* w)
         RHS[Pinv[j++]] = 0;
 	}	
 }
+
 
 
 /**
@@ -326,6 +321,7 @@ void RHS_combined(pwork* w)
 }
 
 
+
 /*
  * Line search according to Vandenberghe (cf. §8 in his manual).
  */
@@ -361,13 +357,6 @@ pfloat lineSearch(pfloat* lambda, pfloat* ds, pfloat* dz, pfloat tau, pfloat dta
     } else {
         alpha = 10;
     }
-	
-    /* DEBUG
-    PRINTTEXT("After LP cone line search: alpha = %8.6f\n", alpha);
-    PRINTTEXT("-tau/dtau = %8.6f\n", minus_tau_by_dtau);
-    PRINTTEXT("-kap/dkap = %8.6f\n", minus_kap_by_dkap);
-     */
-    
     
     /* tau and kappa */
     if( minus_tau_by_dtau > 0 && minus_tau_by_dtau < alpha )
@@ -387,26 +376,6 @@ pfloat lineSearch(pfloat* lambda, pfloat* ds, pfloat* dz, pfloat tau, pfloat dta
 		/* indices */
 		conesize = C->soc[i].p;
 		lk = lambda + cone_start;  dsk = ds + cone_start;  dzk = dz + cone_start;
-        
-        
-        /* DEBUG
-        PRINTTEXT("Cone #%d: s = [", i);
-        for (int ii=0; ii<conesize; ii++) {
-            PRINTTEXT("%6.4f  ",dsk[ii]);
-        }
-        PRINTTEXT("];\n");
-        PRINTTEXT("       : z = [");
-        for (int ii=0; ii<conesize; ii++) {
-            PRINTTEXT("%6.4f  ",dzk[ii]);
-        }
-        PRINTTEXT("];\n");
-        PRINTTEXT("       : l = [");
-        for (int ii=0; ii<conesize; ii++) {
-            PRINTTEXT("%6.4f  ",lk[ii]);
-        }
-        PRINTTEXT("];\n\n");
-         */
-        
 		
 		/* normalize */
 		lknorm = sqrt( lk[0]*lk[0] - ddot(conesize-1, lk+1, lk+1) );
@@ -442,21 +411,14 @@ pfloat lineSearch(pfloat* lambda, pfloat* ds, pfloat* dz, pfloat tau, pfloat dta
 		cone_start += C->soc[i].p;
 		
 	}	
-	
-    /* DEBUG
-    PRINTTEXT("After SO cone line search: alpha = %8.6f\n", alpha);
-     */
     
-    /* saturate between 0 and 10 */
-    if( alpha > 10.0 ) alpha = 10.0;
+    /* saturate between 0 and 1 */
+    if( alpha > 1.0 ) alpha = 1.0;
     if( alpha < 0.0 ) alpha = 0.0;
     
     /* return alpha */
 	return alpha;
 }
-
-
-
 
 
 
@@ -474,19 +436,19 @@ void backscale(pwork *w)
 }
 
 
+
 /*
  * Main solver routine.
  */
 idxint ECOS_solve(pwork* w)
 {
 	idxint i, initcode;
-	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap, mu, muaff; // deltacurrent, itreferr, itreferr_prev, muaff, mu;
+	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap, mu, muaff;
 	idxint exitcode = ECOS_FATAL;	
 	timer tsolve, tfactor, tkktsolve;
-    idxint backtracking;
-    pfloat delta;
-		
-	tic(&tsolve);
+    
+    /* start timer */
+    tic(&tsolve);
 	
 	/* Initialize solver */
     initcode = init(w);
@@ -511,8 +473,6 @@ idxint ECOS_solve(pwork* w)
     dumpDenseMatrix(w->z, 1, w->m, "z_init.txt");
     dumpDenseMatrix(w->s, 1, w->m, "s_init.txt");
 #endif
-    
-    delta = w->stgs->delta;
 
 	/* Interior point loop */
 	for( w->info->iter = 0; w->info->iter <= w->stgs->maxit; w->info->iter++ ){
@@ -522,10 +482,6 @@ idxint ECOS_solve(pwork* w)
 
 		/* Update statistics */
 		updateStatistics(w);
-        
-        //PRINTTEXT("norm(x) = %6.4e\n", norm2(w->x, w->n));
-        
-        
 
 #if PRINTLEVEL > 1
 		/* Print info */
@@ -588,83 +544,36 @@ idxint ECOS_solve(pwork* w)
             return ECOS_OUTCONE;
         }
         
-        
-       
-        
-
 		/* Update KKT matrix with scalings */
 		kkt_update(w->KKT->PKPt, w->KKT->PK, w->C);
-        
-        
         
 #if DEBUG > 0
         dumpSparseMatrix(w->KKT->PKPt, "K.txt");
 #endif
         
         
-		
-		/* Adjust size of regularization depending on accuracy of solution */
-        //deltacurrent = w->stgs->delta > w->info->mu ? 10*w->info->mu : w->stgs->delta;
         
-        
-		/* Factor KKT matrix for subsequent solves */
-        /*
-        PRINTTEXT("ANTIWINDUP: delta before saturation: %6.4e\n", w->stgs->delta);
-        if( w->stgs->delta < 1e-9 ) w->stgs->delta = 1e-9;
-        if( w->stgs->delta > 1e-4 ) w->stgs->delta = 1e-4;
-        PRINTTEXT("ANTIWINDUP: delta  after saturation: %6.4e\n", w->stgs->delta);
-        
-        
-        deltacurrent = w->stgs->delta;
-        PRINTTEXT("*** Regularization parameter set to %6.4e *** \n", deltacurrent);
-        */
-        
-        /*delta = w->stgs->delta;
-    REFACTOR:
-         */
+        //PRINTTEXT("delta = %6.4e\n",w->stgs->delta);
 		tic(&tfactor);
-        if( kkt_factor(w->KKT, delta) != KKT_OK ){
+        if( kkt_factor(w->KKT, w->stgs->eps, w->stgs->delta) != KKT_OK ){
 #if PRINTLEVEL > 0
             PRINTTEXT("\nElement of D zero during factorization of KKT system, aborting.");
 #endif
             w->info->tfactor += toc(&tfactor);
             exitcode = ECOS_KKTZERO;
             break;
-            
-            /* BACKTRACKING */
-            /* Update variables */
-            /*
-            for( i=0; i < w->n; i++ ){ w->x[i] -= 0.5*w->info->step * w->KKT->dx2[i] ; }
-            for( i=0; i < w->p; i++ ){ w->y[i] -= 0.5*w->info->step * w->KKT->dy2[i]; }
-            for( i=0; i < w->m; i++ ){ w->z[i] -= 0.5*w->info->step * w->KKT->dz2[i]; }
-            for( i=0; i < w->m; i++ ){ w->s[i] -= 0.5*w->info->step * w->dsaff_by_W[i]; }
-            w->kap -= 0.5*w->info->step * dkap;
-            w->tau -= 0.5*w->info->step * dtau;
-            
-            PRINTTEXT("ZERO PIVOT ENCOUNTERED, BACKTRACKING\n");
-            continue;
-             */
         }
 		w->info->tfactor += toc(&tfactor);
         
-        /* DEBUG
-        dumpDenseMatrix("RHS1.mat", w->KKT->RHS1, 1, w->KKT->PKPt->n);
-        */
+        //w->stgs->delta *= 0.7;
+        //if( w->stgs->delta < 1e-8 ) w->stgs->delta = 1e-8;
 
 		/* Solve for RHS1, which is used later also in combined direction */
 		tic(&tkktsolve);
 		w->info->nitref1 = kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS1, w->KKT->dx1, w->KKT->dy1, w->KKT->dz1, w->n, w->p, w->m, w->C, 0, w->stgs->nitref);
 		w->info->tkktsolve += toc(&tkktsolve);
-        /*
-        if (w->info->nitref1 == w->stgs->nitref) {
-            delta *= 0.5;
-            backtracking = 1;
-            PRINTTEXT("IR failed, backtracking with delta = %3.1e\n", delta);
-            goto REFACTOR;
-        }
-         */
         
-        
+
 #if DEBUG > 0
         dumpDenseMatrix(w->KKT->dx1, 1, w->n, "x1_00.txt");
         dumpDenseMatrix(w->KKT->dy1, 1, w->p, "y1_00.txt");
@@ -691,21 +600,12 @@ idxint ECOS_solve(pwork* w)
 		/* dtauaff = (dt + c'*x2 + by2 + h'*z2) / dtau_denom; */
 		dtauaff = (w->rt - w->kap + ddot(w->n, w->c, w->KKT->dx2) + ddot(w->p, w->b, w->KKT->dy2) + ddot(w->m, w->h, w->KKT->dz2)) / dtau_denom;
         
-		
 		/* dzaff = dz2 + dtau_aff*dz1 */
 		for( i=0; i<w->m; i++ ){ w->W_times_dzaff[i] = w->KKT->dz2[i] + dtauaff*w->KKT->dz1[i]; } 
 		scale(w->W_times_dzaff, w->C, w->W_times_dzaff);
-        
-        /* DEBUG
-        dumpDenseMatrix("Wdzaff.mat", w->W_times_dzaff, w->m, 1);
-        */
 
 		/* W\dsaff = -W*dzaff -lambda; */		
 		for( i=0; i<w->m; i++ ){ w->dsaff_by_W[i] = -w->W_times_dzaff[i] - w->lambda[i]; }
-        
-        /* DEBUG
-        dumpDenseMatrix("dsaff_by_W.mat", w->dsaff_by_W, w->m, 1);
-         */
 		
 		/* dkapaff = -(bkap + kap*dtauaff)/tau; bkap = kap*tau*/
 		dkapaff = -w->kap - w->kap/w->tau*dtauaff;
@@ -715,38 +615,21 @@ idxint ECOS_solve(pwork* w)
         PRINTTEXT("dtauaff = %16.14f\n",dtauaff);
 #endif
         
-        
-        
-
 		/* Line search on W\dsaff and W*dzaff */
 		w->info->step_aff = lineSearch(w->lambda, w->dsaff_by_W, w->W_times_dzaff, w->tau, dtauaff, w->kap, dkapaff, w->C, w->KKT);
         
-        //DEBUG
-        //PRINTTEXT("Affine step length: %10.8f\n", w->info->step_aff);
-        
-      
-      
-
 		/* Centering parameter */
-		//sigma = (1 - w->info->step_aff);
         unscale(w->W_times_dzaff, w->C, w->dzaff);
         scale(w->dsaff_by_W, w->C, w->dsaff);
         for( i=0; i<w->m; i++) { w->saff[i] = w->s[i] + w->info->step_aff*w->dsaff[i]; }
         for( i=0; i<w->m; i++) { w->zaff[i] = w->z[i] + w->info->step_aff*w->dzaff[i]; }
-        //printDenseMatrix(w->s, 1, w->m, "s");
-        //printDenseMatrix(w->z, 1, w->m, "z");
-        //return(-1);
         
         muaff = conicProduct(w->saff, w->zaff, w->C, w->KKT->work1) + (w->kap + w->info->step_aff*dkapaff)*(w->tau + w->info->step_aff*dtauaff);
         mu = conicProduct(w->s, w->z, w->C, w->KKT->work2) + w->kap*w->tau;
-        //PRINTTEXT("Muaff: %10.8f\n", muaff);
-        //PRINTTEXT("Mu: %10.8f\n", mu);
         sigma = muaff/mu;
         sigma = sigma*sigma*sigma;
         if( sigma > 1.0 ) sigma = 1.0;
-        w->info->sigma = sigma;
-        //PRINTTEXT("Centering parameter: %10.8f\n", w->info->sigma);
-						
+        w->info->sigma = sigma;						
 		
 		/* COMBINED SEARCH DIRECTION */
 		RHS_combined(w);
@@ -754,25 +637,7 @@ idxint ECOS_solve(pwork* w)
 		w->info->nitref3 = kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS2, w->KKT->dx2, w->KKT->dy2, w->KKT->dz2, w->n, w->p, w->m, w->C, 0, w->stgs->nitref);
 		w->info->tkktsolve += toc(&tkktsolve);
         
-        /*
-        PRINTTEXT("DELTA adjusted from %6.4e to ", w->stgs->delta);
-        w->stgs->delta += DELTA_TI*(log10(itreferr) - ITREFERR);
-        PRINTTEXT("%6.4e\n", w->stgs->delta);
-         */
-        
-        /*
-        PRINTTEXT("DELTAP adjusted from %6.4e to ", w->stgs->deltaP);
-        w->stgs->deltaP = (w->stgs->itreferr - itreferr)/3;
-        PRINTTEXT("%6.4e\n", w->stgs->deltaP);
-         */
-        
-        /* DEBUG
-        dumpDenseMatrix("dx2.mat", w->KKT->dx2, w->n, 1);
-        dumpDenseMatrix("dy2.mat", w->KKT->dy2, w->p, 1);
-        dumpDenseMatrix("dz2.mat", w->KKT->dz2, w->m, 1);
-        */
-
-		/* bkap = kap*tau + dkapaff*dtauaff - sigma*info.mu; */
+  		/* bkap = kap*tau + dkapaff*dtauaff - sigma*info.mu; */
 		bkap = w->kap*w->tau + dkapaff*dtauaff - sigma*w->info->mu;
 
 		/* dtau = ((1-sigma)*rt - bkap/tau + c'*x2 + by2 + h'*z2) / dtau_denom; */		
@@ -793,11 +658,6 @@ idxint ECOS_solve(pwork* w)
 
 		/* Line search on combined direction */
 		w->info->step = lineSearch(w->lambda, w->dsaff_by_W, w->W_times_dzaff, w->tau, dtau, w->kap, dkap, w->C, w->KKT) * w->stgs->gamma;
-        //PRINTTEXT("Combined step length: %10.8f\n", w->info->step);
-        
-        /* DEBUG
-        PRINTTEXT("Combined step length: %10.8f\n", w->info->step);
-        */
 		
 		/* ds = W*ds_by_W */
 		scale(w->dsaff_by_W, w->C, w->dsaff_by_W);
@@ -809,18 +669,6 @@ idxint ECOS_solve(pwork* w)
 		for( i=0; i < w->m; i++ ){ w->s[i] += w->info->step * w->dsaff_by_W[i]; }
 		w->kap += w->info->step * dkap;
 		w->tau += w->info->step * dtau;
-        
-        /* DEBUG
-        dumpDenseMatrix("x.mat", w->x, w->n, 1);
-        dumpDenseMatrix("y.mat", w->y, w->p, 1);
-        dumpDenseMatrix("z.mat", w->z, w->m, 1);
-        dumpDenseMatrix("s.mat", w->s, w->m, 1);
-        PRINTTEXT("kappa = %10.8f\n", w->kap);
-        PRINTTEXT("tau = %10.8f\n", w->tau);
-         */
-        
-       
-        
 	}
 
 	/* scale variables back */

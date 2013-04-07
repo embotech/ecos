@@ -165,8 +165,8 @@ if( nargin == 5 )
                
                 
             case 'ldlsparse'
-                u0_lower = c^2/(1/w+d);
-                u0_upper = a^2+w; %min([a^2+w, c^2/d]);
+%                 u0_lower = c^2/(1/w+d);
+%                 u0_upper = a^2+w; %min([a^2+w, c^2/d]);
                 %if( u0_upper - u0_lower <= 0 )
                 %    u0 = sqrt( u0_lower +  (u0_upper - u0_lower)/2);
                 %else
@@ -176,12 +176,12 @@ if( nargin == 5 )
                 %assert(u0_lower < u0_upper,'lower-upper proof does not hold');
                 
                 d1 = (a^2 + w - w*c^2/(1+w*d))/2;
-                d1eps = 0;%1e-4;
-                if( d1 < d1eps )
-                    d1 = d1eps;
+%                 d1eps = 0;%1e-4;
+%                 if( d1 < d1eps )
+%                     d1 = d1eps;
 %                     fprintf('d1 < %3.1e, setting to %3.1e\n',d1eps,d1eps);
-                end
-                assert(d1 >= 0,'d1 <= 0');
+%                 end
+%                 assert(d1 >= 0,'d1 <= 0');
                 %d1 = EPS;
                 u0_2 = a^2 + w - d1;%u0_lower + EPS;%(u0_upper - u0_lower)/2;
                 if( u0_2 <= 0 )
