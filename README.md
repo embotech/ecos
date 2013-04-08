@@ -33,3 +33,39 @@ Features of ECOS
   sparse representation of scaling matrices, millions of problem instances are solved reliably.
 + *ECOS comes with a MATLAB and CVX 2.0 interface*. This way, you can prototype, simulate and verify the performance
   of ECOS before you implement the very same code on your embedded hardware.
++ *ECOS is library-free*. No need to link any external library to ECOS, apart from `AMD` and `sparseLDL`, both 
+  from Timothy A. Davis, which are included in this project.
+
+
+Using ECOS in MATLAB
+====
+
+
+Compiling ECOS for MATLAB
+----
+
+ECOS comes with a makefile which resides in the `matlab` subdirectory of the code. To build ECOS for MATLAB:
+```matlab
+cd <ecos-directory>/matlab
+makemex
+```
+You should now have a binary file `ecos.[ending]`, with a platform-specific ending. This is the solver binary. 
+Add the directory `<ecos-directory>/matlab` to your path to be able to call ECOS from any place. The command
+```matlab 
+makemex clean
+```
+deletes unecessary files that were produced during compilation.
+
+Calling ECOS from MATLAB
+----
+
+You can directly call ECOS from Matlab using its native interface, that basically takes the problem data `c,G,h,A,b`
+and some dimension information that is given in the struct `dims`. This structure has the following fields:
+```
+dims.l - scalar, dimension of positive orthant (LP-cone) R_+
+dims.q - vector with dimensions of second order cones
+```
+The length of `dims.q` determines the number of second order cones. If you do not have a cone in your problem, use
+the empty matrix `[ ]` instead.
+
+### Example
