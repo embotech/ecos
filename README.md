@@ -68,4 +68,81 @@ dims.q - vector with dimensions of second order cones
 The length of `dims.q` determines the number of second order cones. If you do not have a cone in your problem, use
 the empty matrix `[ ]` instead.
 
-### Example
+### Example: L1 minimization (Linear Programming)
+
+In the following, we show how to solve a L1 minimization problem, which arises for example in sparse signal
+reconstruction problems (compressed sensing):
+```
+    minimize  ||x||_1         (L1)
+  subject to  Ax = b
+```
+where `x` is in `R^n`, `A` in `R^{m x n}` with `m <= n`. We use the epigraph reformulation to express the L1-norm of `x`, 
+```
+    x <= u
+   -x <= v
+```
+where `u,v` are in `R^n`, and we minimize `sum(u) + sum(v)`. Hence the optimization variables are stacked as follows:
+```
+   z = [x; u; v]
+```
+With this reformulation, (L1) can be written as linear program (LP),
+``` 
+  minimize   c'*z
+  subject to Atilde*z = b;    (LP)
+             Gx <= h
+```
+where the inequality is w.r.t. the positive orthant. The following MATLAB code generates a random instance of this problem
+and calls ECOS to solve the problem:
+```
+% set dimensions and sparsity of A
+n = 1000; 
+m = 10;
+density = 0.01;
+
+% linear term
+c = [zeros(n,1); ones(2*n,1)];
+
+% equality constraints
+A = sprandn(m,n,density);
+Atilde = [A, zeros(m,2*n)];
+b = randn(m,1);
+
+% linear inequality constraints
+I = speye(n); O = zeros(n);
+G = [  I -I  O;
+      -I  O -I];
+h = zeros(2*n,1);
+
+% cone dimensions (LP cone only)
+dims.l = 2*n;
+dims.q = [];
+
+% call solver
+fprintf('Calling solver...');
+z = ecos(c,G,h,dims,Atilde,b);
+x = z(1:n);
+u = z(n+1:2*n);
+v = z(2*n+1:3*n);
+nnzx = sum(abs(x) > 1e-8);
+
+% print sparsity info
+fprintf('Optimal x has %d/%d (%4.2f%%) non-zero (>1e-8 in abs. value) entries.\n', nnzx , n,  nnzx/n*100);
+```
+
+### Example: Quadratic Programming
+
+In this example, we consider problems of form
+```
+  minimize 0.5*x'*H*x + f'*x
+subject to A*x <= b                (QP)
+           Aeq*x = beq
+           lb <= x <= ub
+```
+where we assume that `H` is positive definite. This is the standard formulation that also MATLAB's built-in solver
+`quadprog` uses. To deal with the quadratic objective, you have to reformulate it into a second-order cone constraint to
+directly call ECOS. We do provide a MATLAB interface called `ecosqp` that automatically does this transformation for you,
+and has the exact same interface as `quadprog`. Hence you can just use
+```
+[x,fval,exitflag,output,lambda,t] = ecosqp(H,f,A,b,Aeq,beq,lb,ub)
+```
+to solve (QP). See `help ecosqp` for more details. The last output argument, `t`, gives the solution time.
