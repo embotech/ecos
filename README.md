@@ -59,14 +59,45 @@ deletes unecessary files that were produced during compilation.
 Calling ECOS from MATLAB
 ----
 
-You can directly call ECOS from Matlab using its native interface, that basically takes the problem data `c,G,h,A,b`
-and some dimension information that is given in the struct `dims`. This structure has the following fields:
+You can directly call ECOS from Matlab using its native interface: 
+```
+[x,y,info,s,z] = ecos(c,G,h,dims,A,b)
+```
+It takes the problem data `c,G,h,A,b` and some dimension information that is given in the struct `dims`. Note that 
+`A` and `G` have to be given in sparse format. The equality constraints defined by `A` and `b` are optional and can be 
+omitted. The `dims` structure has the following fields:
 ```
 dims.l - scalar, dimension of positive orthant (LP-cone) R_+
 dims.q - vector with dimensions of second order cones
 ```
 The length of `dims.q` determines the number of second order cones. If you do not have a cone in your problem, use
-the empty matrix `[ ]` instead.
+the empty matrix `[ ]` instead, for example `dims.q = [ ]` if you do not have second-order cones. After a solve, 
+ECOS returns the following variables
+```
+  x: primal variables
+  y: dual variables for equality constraints
+  s: slacks for Gx + s <= h, s \in K
+  z: dual variables for inequality constraints s \in K
+```
+In addition, the struct `info` is returned which contains the following fields:
+```
+    exitflag: 0=OPTIMAL, 1=PRIMAL INFEASIBLE, 2=DUAL INFEASIBLE, -1=MAXIT REACHED
+  infostring: gives information about the status of solution
+       pcost: value of primal objective
+       dcost: value of dual objective
+        pres: primal residual on inequalities and equalities
+        dres: dual residual
+        pinf: primal infeasibility measure
+        dinf: dual infeasibility measure
+     pinfres: NaN
+     dinfres: 3.9666e+15
+         gap: duality gap
+      relgap: relative duality gap
+          r0: ???
+      numerr: numerical error?
+        iter: number of iterations
+      timing: struct with timing information
+```
 
 ### Example: L1 minimization (Linear Programming)
 
