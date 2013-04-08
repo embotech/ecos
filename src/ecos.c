@@ -517,7 +517,7 @@ idxint ECOS_solve(pwork* w)
 		/* Dual infeasible? */
 		else if( (w->info->dinfres != NAN) && (w->info->dinfres < w->stgs->feastol) ){
 #if PRINTLEVEL > 0
-			PRINTTEXT("\nDUAL INFEASIBLE (within feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", w->stgs->feastol, w->stgs->reltol, w->stgs->abstol);
+			PRINTTEXT("\nUNBOUNDED (within feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", w->stgs->feastol, w->stgs->reltol, w->stgs->abstol);
 #endif
 			w->info->pinf = 0;  
 			w->info->dinf = 1;        

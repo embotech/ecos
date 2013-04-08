@@ -376,7 +376,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	spmat *At, *Gt, *KU;
 
 #if PROFILING > 0
-	timer tsetup;	
+	timer tsetup;
 #endif
 
 #if PROFILING > 1
@@ -729,16 +729,16 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->ry = (pfloat *)MALLOC(p*sizeof(pfloat));
 	mywork->rz = (pfloat *)MALLOC(m*sizeof(pfloat));
 	
-#if PROFILING > 1
-	mywork->info->tsetup = toc(&tsetup);
-#endif
-	
-	/* clean up */
+    /* clean up */
     mywork->KKT->P = P;
 	FREE(Sign);
     freeSparseMatrix(At);
 	freeSparseMatrix(Gt);
-	freeSparseMatrix(KU);	
+	freeSparseMatrix(KU);
+    
+#if PROFILING > 0
+	mywork->info->tsetup = toc(&tsetup);
+#endif
 
     return mywork;
 }

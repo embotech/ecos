@@ -1,7 +1,7 @@
 % Self-dual homogeneous embedding interior point method for optimization
 % over linear or second-order cones. No SDP cones supported!
 %
-%  [x,y,info,s,z] = PARIS(c,G,h,dims,A,b)
+%  [x,y,info,s,z] = ECOS(c,G,h,dims,A,b)
 %    Solves a pair of primal and dual cone programs
 % 
 %        minimize    c'*x
