@@ -53,13 +53,16 @@ static PyObject *ecos(PyObject* self, PyObject *args)
   matrix *c, *h, *b = NULL;
   spmatrix *G, *A = NULL;
   PyObject *dims;
-  idxint m,n;
+  idxint n;      // number or variables
+  idxint m;      // number of conic variables
   idxint p = 0;  // number of equality constraints
+  idxint ncones; // number of cones
+  idxint numConicVariables = 0;
   
   /* ECOS data structures */
   idxint l = 0;
   idxint *q = NULL;
-  idxint ncones = 0;   
+
   
   pfloat *Gpr = NULL;
   idxint *Gjc = NULL;
@@ -132,7 +135,7 @@ static PyObject *ecos(PyObject* self, PyObject *args)
   PyObject *linearObj = PyDict_GetItemString(dims, "l");
   if(linearObj) {
     if(PyInt_Check(linearObj) && ((l = (idxint) PyInt_AsLong(linearObj)) >= 0)) {
-      // do nothing
+        numConicVariables += l;
     } else {
       PyErr_SetString(PyExc_TypeError, "dims['l'] ought to be a nonnegative integer");
       return NULL;
@@ -148,7 +151,7 @@ static PyObject *ecos(PyObject* self, PyObject *args)
       for (i = 0; i < ncones; ++i) {
           PyObject *qi = PyList_GetItem(socObj, i);
           if(PyInt_Check(qi) && ((q[i] = (idxint) PyInt_AsLong(qi)) > 0)) {
-            // do nothing
+              numConicVariables += q[i];
           } else {
             PyErr_SetString(PyExc_TypeError, "dims['q'] ought to be a list of positive integers");
             return NULL;
@@ -201,6 +204,15 @@ static PyObject *ecos(PyObject* self, PyObject *args)
     return NULL;
   }
   
+    
+  /* check that sum(q) + l = m */
+    if( numConicVariables != m ){
+        PyErr_SetString(PyExc_ValueError, "Number of rows of G does not match dims.l+sum(dims.q)");
+        if(q) free(q);
+        return NULL;
+    }
+    
+    
   /* This calls ECOS setup function. */
   mywork = ECOS_setup(n, m, p, l, ncones, q, Gpr, Gjc, Gir, Apr, Ajc, Air, cpr, hpr, bpr);
   if( mywork == NULL ){

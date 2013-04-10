@@ -69,9 +69,10 @@ hh = matrix(0.0, (n+8,n))
 hh[:n,:] = matrix([i>=j for i in range(n) for j in range(n)], 
     (n,n), 'd')  # upper triangular matrix of ones
 #l = [-blas.dot(cc, solvers.lp(cc, GG, hh[:,k])['x']) for k in range(n)
-myx = ecos.ecos(cc, GG, hh[:,k], {'l': G.size[0], 'q': []})['x']
-l = [-blas.dot(cc, myx) for k in range(n)]
-u = [blas.dot(cc, solvers.lp(cc, GG, -hh[:,k])['x']) for k in range(n)]
+l = [-blas.dot(cc, ecos.ecos(cc, GG, hh[:,k], {'l': GG.size[0], 'q': []})['x']) for k in range(n)]
+#u = [blas.dot(cc, solvers.lp(cc, GG, -hh[:,k])['x']) for k in range(n)]
+u = [blas.dot(cc, ecos.ecos(cc, GG, -hh[:,k], {'l': GG.size[0], 'q': []})['x']) for k in range(n)]
+
 
 def f(x,y): return x+2*[y]
 def stepl(x): return reduce(f, x[1:], [x[0]])
