@@ -86,7 +86,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     idxint l;
     double *q;
     idxint *qint;
-    idxint ncones;   
+    idxint ncones;
+    idxint numConicVariables = 0;
     
     pfloat *Gpr = NULL;
     idxint *Gjc = NULL;
@@ -219,7 +220,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 #endif
 
     /* set up solver */
-    l = (idxint)(*mxGetPr(dims_l));
+    l = (idxint)(*mxGetPr(dims_l)); numConicVariables += l;
     q = mxGetPr(dims_q);
     ncones = size_q[1] > size_q[0] ? size_q[1] : size_q[0];
    
@@ -239,7 +240,13 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     /* we have to copy the number of cones since Matlab gives us double
      * values but the C version of ECOS expects idxint values */
     qint = (idxint *)malloc(ncones*sizeof(idxint));
-    for( i=0; i < ncones; i++ ){ qint[i] = (idxint)q[i]; }
+    for( i=0; i < ncones; i++ ){ qint[i] = (idxint)q[i]; numConicVariables += qint[i]; }
+    
+    
+    /* check that number of rows matches info defined in dims */
+    if ( numConicVariables != m ) {
+        mexErrMsgTxt("Number of rows does not match information given in dims");
+    }
     
     /* This calls ECOS setup function. */
     mywork = ECOS_setup(n, m, p, l, ncones, qint, Gpr, Gjc, Gir, Apr, Ajc, Air, cpr, hpr, bpr);
