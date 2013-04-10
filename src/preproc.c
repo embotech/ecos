@@ -75,7 +75,7 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, pfloat delta, idxint** S, spmat*
 	idxint i, j, k, l, r, row_stop, row, cone_strt, ks, conesize;
 	idxint n = Gt->m;
 	idxint m = Gt->n;
-	idxint p = At->n;
+	idxint p = At ? At->n : 0;
 	idxint nK, nnzK;
 	pfloat *Kpr;
 	idxint *Kjc, *Kir;
@@ -95,7 +95,7 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, pfloat delta, idxint** S, spmat*
      *     + C->lpc.p (nnz of LP cone)
      *     + 3*[sum(C->soc[i].p)+1] (nnz of expanded soc scalings)
      */
-	nnzK = At->nnz + Gt->nnz + C->lpc->p;
+	nnzK = (At ? At->nnz : 0) + Gt->nnz + C->lpc->p;
 	for( i=0; i<C->nsoc; i++ ){ 
 		nnzK += 3*C->soc[i].p+1;
 	}
@@ -163,7 +163,6 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, pfloat delta, idxint** S, spmat*
 			}
 		}
     }
-
 	/* (1,3) and (3,3) block: [G'; 0; -Vinit]
      * where 
      * 
@@ -189,7 +188,6 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, pfloat delta, idxint** S, spmat*
                 k++; i++;
 			}
 		}
-        
         /* -I for LP-cone */
 		C->lpc->kkt_idx[j] = k;
 		Kir[k] = n+p+j;		
@@ -520,13 +518,20 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #endif
     
 	/* Store problem data */
+  if(Apr && Ajc && Air) {
     mywork->A = createSparseMatrix(p, n, Ajc[n], Ajc, Air, Apr);
+  } else {
+    mywork->A = NULL;
+  }
 	mywork->G = createSparseMatrix(m, n, Gjc[n], Gjc, Gir, Gpr);	
 #if PROFILING > 1
 	mywork->info->ttranspose = 0;
 	tic(&tmattranspose);
 #endif
-	At = transposeSparseMatrix(mywork->A);
+  if(mywork->A)
+	  At = transposeSparseMatrix(mywork->A);
+  else
+    At = NULL;
 #if PROFILING > 1	
 	mywork->info->ttranspose += toc(&tmattranspose);
 #endif
@@ -574,8 +579,6 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
      */
     nK = KU->n;
     
-    
-
 #if DEBUG > 0
     dumpSparseMatrix(KU, "KU.txt");
 #endif
@@ -732,7 +735,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     /* clean up */
     mywork->KKT->P = P;
 	FREE(Sign);
-    freeSparseMatrix(At);
+  if(At) freeSparseMatrix(At);
 	freeSparseMatrix(Gt);
 	freeSparseMatrix(KU);
     

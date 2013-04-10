@@ -115,13 +115,13 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
         k=0; j=0;
         /* --> 1. ex = bx - A'*dy - G'*dz */
         for( i=0; i<n; i++ ){ ex[i] = Pb[Pinv[k++]]; }
-        sparseMtVm(A, dy, ex, 0, 0);
+        if(A) sparseMtVm(A, dy, ex, 0, 0);
         sparseMtVm(G, dz, ex, 0, 0);
         nex = norminf(ex,n);
         	
         /* --> 2. ey = by - A*dx */
         for( i=0; i<p; i++ ){ ey[i] = Pb[Pinv[k++]]; }
-        sparseMV(A, dx, ey, -1, 0);
+        if(A) sparseMV(A, dx, ey, -1, 0);
         ney = norminf(ey,p);
         
         /* --> 3. ez = bz - G*dx + V*dz_true */

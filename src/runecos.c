@@ -83,5 +83,6 @@ int main(void)
         
     }
 	
-	return exitflag;
+    /* explicitly truncate exit code */
+	return (int)exitflag;
 }

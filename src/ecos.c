@@ -168,13 +168,17 @@ idxint init(pwork* w)
 void computeResiduals(pwork *w)
 {
 	/* rx = -A'*y - G'*z - c.*tau */
-	sparseMtVm(w->A, w->y, w->rx, 1, 0);
-	sparseMtVm(w->G, w->z, w->rx, 0, 0);
+	if(w->A) {
+    sparseMtVm(w->A, w->y, w->rx, 1, 0);
+	  sparseMtVm(w->G, w->z, w->rx, 0, 0);
+  } else {
+	  sparseMtVm(w->G, w->z, w->rx, 1, 0);
+  }
 	w->hresx = norm2(w->rx, w->n);
 	vsubscale(w->n, w->tau, w->c, w->rx);
 		
 	/* ry = A*x - b.*tau */
-	sparseMV(w->A, w->x, w->ry, 1, 1);
+	if(w->A) sparseMV(w->A, w->x, w->ry, 1, 1);
 	w->hresy = norm2(w->ry, w->p);
 	vsubscale(w->p, w->tau, w->b, w->ry);
 	

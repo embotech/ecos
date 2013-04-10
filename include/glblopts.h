@@ -45,7 +45,9 @@ typedef double pfloat;              /* for numerical values  */
                            /* (flag used only for development)           */
 
 /* NAN ----------------------------------------------------------------- */
+#ifndef NAN
 #define NAN ((double)0x7ff8000000000000)
+#endif
 
 /* use this if pfloat is float: */
 /* #define NAN ((float)0x7fc00000) */
