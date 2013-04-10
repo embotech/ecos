@@ -2,49 +2,6 @@
 #include "ecos.h"
 #include "cvxopt.h"
 
-/* WARNING: this code uses numpy array types
- *
- * WARNING: this code also does not check that the data for the matrix A is
- * actually column compressed storage for a sparse matrix. if it's not, the
- * code will just crash inelegantly. support for cvxopt matrix or scipy sparse
- * is planned, but not likely to be implemented soon.
- */
-
-//static PyObject *PDOSError;
- 
-// static inline int getIntType() {
-//   switch(NPY_SIZEOF_INT) {
-//     case 1: return NPY_INT8;
-//     case 2: return NPY_INT16;
-//     case 4: return NPY_INT32;
-//     case 8: return NPY_INT64;
-//     default: return NPY_INT32;  // defaults to 4 byte int
-//   }
-// }
-// 
-// static inline int getDoubleType() {
-//   return NPY_DOUBLE;
-// }
-// 
-// static inline void freeDataAndConeOnly(Data *d, Cone *k) {
-//   // this function is useful since the Data and Cone "structs" do not own the
-//   // memory for the arrays; numpy does.
-//   if(d) free(d);
-//   if(k) free(k);
-//   d = NULL; k = NULL;
-// }
-// 
-// // TODO: use PyObject * to keep track of whether or not two objects are equivalent (for warm-starting)
-// // static const double *prev_Ax, *prev_b, *prev_c;
-// // static const int *prev_Ai, *prev_Ap, *prev_q;
-// 
-// static Sol *solution = NULL;
-// 
-// static void cleanup()
-// {
-//   free_sol(solution);
-// }
-
 static PyObject *ecos(PyObject* self, PyObject *args)
 {
   /* Expects a function call 
@@ -248,7 +205,10 @@ static PyObject *ecos(PyObject* self, PyObject *args)
   mywork = ECOS_setup(n, m, p, l, ncones, q, Gpr, Gjc, Gir, Apr, Ajc, Air, cpr, hpr, bpr);
   if( mywork == NULL ){
       PyErr_SetString(PyExc_RuntimeError, "Internal problem occurred in ECOS while setting up the problem.\nPlease send a bug report with data to Alexander Domahidi.\nEmail: domahidi@control.ee.ethz.ch");
+      if(q) free(q);
+      return NULL;
   }
+  
   
   /* Solve! */    
   idxint exitcode = ECOS_solve(mywork);
