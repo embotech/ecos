@@ -33,6 +33,7 @@ Features of ECOS
   sparse representation of scaling matrices, millions of problem instances are solved reliably.
 + *ECOS comes with a MATLAB and CVX 2.0 interface*. This way, you can prototype, simulate and verify the performance
   of ECOS before you implement the very same code on your embedded hardware.
++ *ECOS comes with a Python interface*. This interface is built on top of [CVXOPT](http://abel.ee.ucla.edu/cvxopt/) and uses its sparse data structures.
 + *ECOS is library-free*. No need to link any external library to ECOS, apart from `AMD` and `sparseLDL`, both 
   from Timothy A. Davis, which are included in this project.
 
@@ -177,3 +178,31 @@ and has the exact same interface as `quadprog`. Hence you can just use
 [x,fval,exitflag,output,lambda,t] = ecosqp(H,f,A,b,Aeq,beq,lb,ub)
 ```
 to solve (QP). See `help ecosqp` for more details. The last output argument, `t`, gives the solution time.
+
+Using ECOS in Python
+====
+
+Compiling ECOS for Python
+----
+To create the Python interface, the following lines of code should work:
+```
+cd <ecos-directory>/python
+python setup.py install
+```
+You may need `sudo` privileges for a global installation. 
+
+**Important note**: Even if you do not have CVXOPT installed, this code will likely compile without errors. However, you will run into dynamic link issues when attempting to use the module.
+
+Calling ECOS from Python
+----
+After installing the ECOS interface, you must import the module with
+```
+import ecos
+```
+This module provides a single function `ecos` with the following calling sequence:
+```
+solution = ecos.ecos(c,G,h,dims,[A,b])
+```
+The arguments `c`, `h`, and `b` are CVXOPT *dense* column vectors (i.e., matrices with a single column). The arguments `G` and `A` are CVXOPT *sparse* matrices. The argument `dims` is a dictionary with two fields, `dims['l']` and `dims['q']`. These are the same fields as in the Matlab case. If the fields are omitted or empty, they default to 0. The arguments `A` and `b` are optional.
+
+The returned object is a dictionary containing the fields `solution['x']`, `solution['y']`, `solution['s']`, `solution['z']`, and `solution['info']`. The first four are CVXOPT *dense* column vectors containing the relevant solution. The last field contains a dictionary with the same fields as the `info` struct in the MATLAB interface.
