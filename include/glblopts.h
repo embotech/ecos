@@ -63,11 +63,14 @@ typedef SuiteSparse_long idxint;
 /* SYSTEM INCLUDES FOR PRINTING ---------------------------------------- */
 #if PRINTLEVEL > 0
 #include <stdio.h>
-#ifndef MATLAB_MEX_FILE
-#define PRINTTEXT printf
-#else
+#ifdef MATLAB_MEX_FILE
 #include "mex.h"
 #define PRINTTEXT mexPrintf
+#elif defined PYTHON
+#include <Python.h>
+#define PRINTTEXT PySys_WriteStdout
+#else
+#define PRINTTEXT printf
 #endif
 #endif
 
