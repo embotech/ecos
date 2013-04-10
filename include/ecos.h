@@ -35,7 +35,7 @@
 #define MAXIT     (30)           /* maximum number of iterations         */
 #define GAMMA     (0.985)        /* scaling the final step length        */
 #define DELTA     (7E-7)         /* regularization parameter             */
-#define EPS       (1E-14)        /* regularization threshold             */
+#define EPS       (1E-14)        /* regularization threshold (do not 0!) */
 #define NITREF    (9)       	 /* number of iterative refinement steps */
 #define LINSYSACC (1E-14)        /* rel. accuracy of search direction    */
 #define FEASTOL   (1E-6)         /* primal/dual infeasibility tolerance  */

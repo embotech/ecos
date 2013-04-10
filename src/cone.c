@@ -275,7 +275,7 @@ void unscale(pfloat* lambda, cone* C, pfloat* z)
 	pfloat zeta, factor;
 
 	/* LP cone */
-	for( i=0; i < C->lpc->p; i++ ){ z[i] = lambda[i] / C->lpc->w[i]; }
+	for( i=0; i < C->lpc->p; i++ ){ z[i] = C->lpc->w[i] > 0 ? lambda[i] / C->lpc->w[i] : lambda[i]/EPS; }
 
 	/* Second-order cone */
 	cone_start = C->lpc->p;	
@@ -347,7 +347,7 @@ void conicDivision(pfloat* u, pfloat* w, cone* C, pfloat* v)
 	pfloat rho, zeta, u0, w0, factor;
 	
 	/* LP cone */
-	for( i=0; i < C->lpc->p; i++ ){ v[i] = w[i] / u[i]; }
+	for( i=0; i < C->lpc->p; i++ ){ v[i] = u[i] > 0 ? w[i] / u[i] : w[i]/EPS; }
 
 	/* Second-order cone */
 	cone_start = C->lpc->p;

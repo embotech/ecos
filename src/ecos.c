@@ -360,9 +360,9 @@ pfloat lineSearch(pfloat* lambda, pfloat* ds, pfloat* dz, pfloat tau, pfloat dta
 		}
 
 		if( -sigmamin > -rhomin ){ 
-			alpha = 1.0 / (-sigmamin); 
+			alpha = sigmamin < 0 ? 1.0 / (-sigmamin) : 1.0 / EPS;
 		} else {
-			alpha = 1.0 / (-rhomin); 
+			alpha = rhomin < 0 ? 1.0 / (-rhomin) : 1.0 / EPS;
 		}
     } else {
         alpha = 10;
@@ -596,9 +596,9 @@ idxint ECOS_solve(pwork* w)
 #endif
         
 		/* dtau_denom = kap/tau - (c'*x1 + by1 + h'*z1); */
-		dtau_denom = w->kap/w->tau - ddot(w->n, w->c, w->KKT->dx1) - ddot(w->p, w->b, w->KKT->dy1) - ddot(w->m, w->h, w->KKT->dz1);		
-
-		/* dtauaff = (dt + c'*x2 + by2 + h'*z2) / dtau_denom; */
+		dtau_denom = w->kap/w->tau - ddot(w->n, w->c, w->KKT->dx1) - ddot(w->p, w->b, w->KKT->dy1) - ddot(w->m, w->h, w->KKT->dz1);
+		
+        /* dtauaff = (dt + c'*x2 + by2 + h'*z2) / dtau_denom; */
 		dtauaff = (w->rt - w->kap + ddot(w->n, w->c, w->KKT->dx2) + ddot(w->p, w->b, w->KKT->dy2) + ddot(w->m, w->h, w->KKT->dz2)) / dtau_denom;
         
 		/* dzaff = dz2 + dtau_aff*dz1 */
@@ -617,6 +617,7 @@ idxint ECOS_solve(pwork* w)
 		/* Centering parameter */
         unscale(w->W_times_dzaff, w->C, w->dzaff);
         scale(w->dsaff_by_W, w->C, w->dsaff);
+        
         for( i=0; i<w->m; i++) { w->saff[i] = w->s[i] + w->info->step_aff*w->dsaff[i]; }
         for( i=0; i<w->m; i++) { w->zaff[i] = w->z[i] + w->info->step_aff*w->dzaff[i]; }
         muaff = conicProduct(w->saff, w->zaff, w->C, w->KKT->work1) + (w->kap + w->info->step_aff*dkapaff)*(w->tau + w->info->step_aff*dtauaff);
@@ -625,8 +626,8 @@ idxint ECOS_solve(pwork* w)
         sigma = sigma*sigma*sigma;
         if( sigma > 1.0 ) sigma = 1.0;
         if( sigma < 0.0 ) sigma = 0.0;
-        w->info->sigma = sigma;
-        
+        w->info->sigma = sigma;        
+     
 		
 		/* COMBINED SEARCH DIRECTION */
 		RHS_combined(w);
@@ -643,7 +644,7 @@ idxint ECOS_solve(pwork* w)
 
 		/* dtau = ((1-sigma)*rt - bkap/tau + c'*x2 + by2 + h'*z2) / dtau_denom; */		
 		dtau = ((1-sigma)*w->rt - bkap/w->tau + ddot(w->n, w->c, w->KKT->dx2) + ddot(w->p, w->b, w->KKT->dy2) + ddot(w->m, w->h, w->KKT->dz2)) / dtau_denom;
-		
+      	
 		/* dx = x2 + dtau*x1;     dy = y2 + dtau*y1;       dz = z2 + dtau*z1; */
 		for( i=0; i < w->n; i++ ){ w->KKT->dx2[i] += dtau*w->KKT->dx1[i]; }
 		for( i=0; i < w->p; i++ ){ w->KKT->dy2[i] += dtau*w->KKT->dy1[i]; }

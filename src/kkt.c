@@ -101,8 +101,13 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
 	LDL_ltsolve(nK, Px, KKT->L->jc, KKT->L->ir, KKT->L->pr);
     
 #if PRINTLEVEL > 2
-    PRINTTEXT("\nIR: it  ||ex||   ||ey||   ||ez|| (threshold: %4.2e\n", error_threshold);
-    PRINTTEXT("    -------------------------------------------------\n");
+    if( p > 0 ){
+        PRINTTEXT("\nIR: it  ||ex||   ||ey||   ||ez|| (threshold: %4.2e)\n", error_threshold);
+        PRINTTEXT("    --------------------------------------------------\n");
+    } else {
+        PRINTTEXT("\nIR: it  ||ex||   ||ez|| (threshold: %4.2e)\n", error_threshold);
+        PRINTTEXT("    -----------------------------------------\n");
+    }
 #endif
     
 	/* iterative refinement */
@@ -120,9 +125,11 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
         nex = norminf(ex,n);
         	
         /* --> 2. ey = by - A*dx */
-        for( i=0; i<p; i++ ){ ey[i] = Pb[Pinv[k++]]; }
-        if(A) sparseMV(A, dx, ey, -1, 0);
-        ney = norminf(ey,p);
+        if( p > 0 ){
+            for( i=0; i<p; i++ ){ ey[i] = Pb[Pinv[k++]]; }
+            sparseMV(A, dx, ey, -1, 0);
+            ney = norminf(ey,p);
+        }
         
         /* --> 3. ez = bz - G*dx + V*dz_true */
         kk = 0;
@@ -150,11 +157,15 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
         
         
 #if PRINTLEVEL > 2
-        PRINTTEXT("    %2d  %3.1e  %3.1e  %3.1e\n", (int)kItRef, nex/bnorm, ney/bnorm, nez/bnorm);
+        if( p > 0 ){
+            PRINTTEXT("    %2d  %3.1e  %3.1e  %3.1e\n", (int)kItRef, nex, ney, nez);
+        } else {
+            PRINTTEXT("    %2d  %3.1e  %3.1e\n", (int)kItRef, nex, nez);
+        }
 #endif
         
         /* continue with refinement only if errors are small enough */
-        if( nex < error_threshold && ney < error_threshold && nez < error_threshold){
+        if( nex < error_threshold && (p==0 || ney < error_threshold) && nez < error_threshold){
             kItRef--;
             break;
         }
