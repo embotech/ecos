@@ -317,6 +317,8 @@ static PyObject *ecos(PyObject* self, PyObject *args)
     "timing", tinfos,
 #endif
     "numerr",numerr);
+  // give reference to infoDict 
+  Py_DECREF(tinfos);
 
   /* s */
   matrix *s;
@@ -342,7 +344,9 @@ static PyObject *ecos(PyObject* self, PyObject *args)
     "z",z,
     "s",s,
     "info",infoDict);
-    
+  // give up ownership to the return dictionary
+  Py_DECREF(x); Py_DECREF(y); Py_DECREF(z); Py_DECREF(s); Py_DECREF(infoDict);
+  
   return returnDict;
 }
 
