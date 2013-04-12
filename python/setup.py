@@ -1,7 +1,12 @@
 from distutils.core import setup, Extension
 from glob import glob
+from platform import system
 
-ecos = Extension('ecos',
+lib = []
+if system() == 'Linux':
+    lib += ['rt']
+
+ecos = Extension('ecos', libraries = lib,
                     # define LDL and AMD to use long ints
                     # also define that we are building a python module
                     define_macros = [
