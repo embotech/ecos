@@ -56,7 +56,7 @@ static PyObject *ecos(PyObject* self, PyObject *args)
   idxint n;      // number or variables
   idxint m;      // number of conic variables
   idxint p = 0;  // number of equality constraints
-  idxint ncones; // number of cones
+  idxint ncones = 0; // number of cones
   idxint numConicVariables = 0;
   
   /* ECOS data structures */
@@ -212,7 +212,6 @@ static PyObject *ecos(PyObject* self, PyObject *args)
         return NULL;
     }
     
-    
   /* This calls ECOS setup function. */
   mywork = ECOS_setup(n, m, p, l, ncones, q, Gpr, Gjc, Gir, Apr, Ajc, Air, cpr, hpr, bpr);
   if( mywork == NULL ){
@@ -220,7 +219,6 @@ static PyObject *ecos(PyObject* self, PyObject *args)
       if(q) free(q);
       return NULL;
   }
-  
   
   /* Solve! */    
   idxint exitcode = ECOS_solve(mywork);
@@ -231,15 +229,14 @@ static PyObject *ecos(PyObject* self, PyObject *args)
   matrix *x;
   if(!(x = Matrix_New(n,1,DOUBLE)))
     return PyErr_NoMemory();
-  for(i = 0; i < n; ++i)
-    MAT_BUFD(x)[i] = mywork->x[i];
+  memcpy(MAT_BUFD(x), mywork->x, n*sizeof(double));
         
   /* y */
   matrix *y;
   if(!(y = Matrix_New(p,1,DOUBLE)))
     return PyErr_NoMemory();
-  for(i = 0; i < p; ++i)
-    MAT_BUFD(y)[i] = mywork->y[i];
+  memcpy(MAT_BUFD(y), mywork->y, p*sizeof(double));
+
   
   /* info dict */
   // infostring
@@ -324,15 +321,14 @@ static PyObject *ecos(PyObject* self, PyObject *args)
   matrix *s;
   if(!(s = Matrix_New(m,1,DOUBLE)))
     return PyErr_NoMemory();
-  for(i = 0; i < m; ++i)
-    MAT_BUFD(s)[i] = mywork->s[i];
-    
+  memcpy(MAT_BUFD(s), mywork->s, m*sizeof(double));
+  
   /* z */
   matrix *z;
   if(!(z = Matrix_New(m,1,DOUBLE)))
     return PyErr_NoMemory();
-  for(i = 0; i < m; ++i)
-    MAT_BUFD(z)[i] = mywork->z[i];
+  memcpy(MAT_BUFD(z), mywork->z, m*sizeof(double));
+
     
   /* cleanup */
   ECOS_cleanup(mywork, 0);
