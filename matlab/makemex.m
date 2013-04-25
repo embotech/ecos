@@ -22,7 +22,7 @@ end
 % ldl solver
 if( any(strcmpi(what,'ldl')) || any(strcmpi(what,'all')) )
     fprintf('Compiling LDL...');
-    cmd = sprintf('mex -c -O %s -I../external/ldl/include -I../external/SuiteSparse_config ../external/ldl/src/ldl.c', d);
+    cmd = sprintf('mex -c -v -O %s -I../external/ldl/include -I../external/SuiteSparse_config ../external/ldl/src/ldl.c', d);
     eval(cmd);
     fprintf('\t\t\t[done]\n');
 end

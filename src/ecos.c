@@ -253,6 +253,15 @@ void printProgress(stats* info)
 		PRINTTEXT("%2d  %c%+5.3e%c  %+5.3e %c %+2.0e%c  %2.0e%c  %2.0e%c  %2.0e%c  %2.0e  %6.4f  %d %d %d\n",(int)info->iter, 32,info->pcost, 32,info->dcost, 32, info->gap, 32, info->pres, 32, info->dres, 32, info->kapovert, 32, info->mu, info->step, (int)info->nitref1, (int)info->nitref2, (int)info->nitref3);
 #endif
 	}
+
+/* enable to flush printf in Matlab immediately */
+#if PRINTLEVEL > 0
+#ifdef MATLAB_MEX_FILE && defined MATLAB_FLUSH_PRINTS
+    mexEvalString("drawnow;");
+#endif
+#endif
+ 
+    
 }
 #endif
 
@@ -310,7 +319,7 @@ void RHS_combined(pwork* w)
 		for( j=1; j < w->C->soc[i].p; j++ ){ ds1[k] += ds2[k]; k++; }
 	}
 
-	/* dz = -(1-sigma) + W*(lambda \ ds) */
+	/* dz = -(1-sigma)*rz + W*(lambda \ ds) */
 	conicDivision(w->lambda, ds1, w->C, w->dsaff_by_W);
 	scale(w->dsaff_by_W, w->C, ds1);
 	
