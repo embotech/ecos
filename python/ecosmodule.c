@@ -171,8 +171,8 @@ static PyObject *ecos(PyObject* self, PyObject *args)
         if(q) free(q);
         return NULL;
     } 
-    if ((p = SP_NROWS(A)) <= 0) {
-        PyErr_SetString(PyExc_ValueError, "m must be a positive integer");
+    if ((p = SP_NROWS(A)) < 0) {
+        PyErr_SetString(PyExc_ValueError, "p must be a nonnegative integer");
         if(q) free(q);
         return NULL;
     }
@@ -181,9 +181,11 @@ static PyObject *ecos(PyObject* self, PyObject *args)
         if(q) free(q);
         return NULL;
     }
-    Apr = SP_VALD(A);
-    Air = SP_ROW(A);
-    Ajc = SP_COL(A);
+    if (p != 0) {
+      Apr = SP_VALD(A);
+      Air = SP_ROW(A);
+      Ajc = SP_COL(A);
+    }
      
     /* set b */
     if (!Matrix_Check(b) || MAT_NCOLS(b) != 1 || MAT_ID(b) != DOUBLE) {
@@ -196,7 +198,9 @@ static PyObject *ecos(PyObject* self, PyObject *args)
         if(q) free(q);
         return NULL;
     }
-    bpr = MAT_BUFD(b);
+    if (p != 0) {
+      bpr = MAT_BUFD(b);
+    }
   } else if (A || b) {
     // check that A and b are both supplied
     PyErr_SetString(PyExc_ValueError, "A and b arguments must be supplied together");
