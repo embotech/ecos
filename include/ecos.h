@@ -32,15 +32,15 @@
 
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
-#define MAXIT     (30)           /* maximum number of iterations         */
-#define GAMMA     (0.985)        /* scaling the final step length        */
-#define DELTA     (7E-7)         /* regularization parameter             */
+#define MAXIT     (50)           /* maximum number of iterations         */
+#define GAMMA     (0.96)         /* scaling the final step length        */
+#define DELTA     (3E-8)         /* regularization parameter             */
 #define EPS       (1E-14)        /* regularization threshold (do not 0!) */
-#define NITREF    (9)       	 /* number of iterative refinement steps */
+#define NITREF    (8)       	 /* number of iterative refinement steps */
 #define LINSYSACC (1E-14)        /* rel. accuracy of search direction    */
-#define FEASTOL   (1E-6)         /* primal/dual infeasibility tolerance  */
-#define ABSTOL    (1E-6)         /* absolute tolerance on duality gap    */
-#define RELTOL    (1E-6)         /* relative tolerance on duality gap    */
+#define FEASTOL   (5E-6)         /* primal/dual infeasibility tolerance  */
+#define ABSTOL    (5E-7)         /* absolute tolerance on duality gap    */
+#define RELTOL    (5E-7)         /* relative tolerance on duality gap    */
 
 typedef struct settings{		
 	pfloat gamma;                /* scaling the final step length        */	

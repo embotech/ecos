@@ -73,24 +73,25 @@ function [x,y,info,s,z] = conelp(c,G,h,dims,A,b,LINSOLVER)
 tic;
 
 %% Parameters
-MAXIT = 30;                       % maximum number of iterations
-GAMMA = 0.98;                     % scaling the final step length
-EPS = 0;   % regularization parameter
-NITREF = 10000;                      % number of iterative refinement steps
-FEASTOL = 1e-6;                   % primal infeasibility tolerance
-ABSTOL  = 1e-6;                   % absolute tolerance on duality gap
-RELTOL  = 1e-6;                   % relative tolerance on duality gap
-DOPRINTS = 1;                     % toggle printing
+MAXIT = 30;           % maximum number of iterations
+GAMMA = 0.985;        % scaling the final step length
+EPS = 0;              % regularization parameter
+NITREF = 5;           % number of iterative refinement steps
+FEASTOL = 1e-6;       % primal infeasibility tolerance
+ABSTOL  = 1e-6;       % absolute tolerance on duality gap
+RELTOL  = 1e-6;       % relative tolerance on duality gap
+DOPRINTS = 1;         % toggle printing
+LINSYSACC = 1e-15;    % desired accuracy of linear system            
 
-% EXITCODES ------------------------------------------------------------ */
-CONELP_DINF     = 2;   % Found certificate of dual infeasibility   */
-CONELP_PINF     = 1;   % Found certificate of primal infeasibility */
-CONELP_OPTIMAL  = 0;    % Problem solved to optimality              */
-CONELP_MAXIT    = -1;    % Maximum number of iterations reached      */
-CONELP_NUMERICS = -2;    % Line search gave step length 0: numerics? */
-CONELP_KKTZERO  = -3;   % Element of D zero during factorization    */
-CONELP_OUTCONE  = -5;   % s or z got outside the cone, numerics?    */
-CONELP_FATAL    = -7;   % Unknown problem in solver                 */
+% EXITCODES ---------------------------------------------------------------
+CONELP_DINF     = 2;  % Found certificate of dual infeasibility   
+CONELP_PINF     = 1;  % Found certificate of primal infeasibility 
+CONELP_OPTIMAL  = 0;  % Problem solved to optimality              
+CONELP_MAXIT    = -1; % Maximum number of iterations reached      
+CONELP_NUMERICS = -2; % Line search gave step length 0: numerics?
+CONELP_KKTZERO  = -3; % Element of D zero during factorization   
+CONELP_OUTCONE  = -5; % s or z got outside the cone, numerics?   
+CONELP_FATAL    = -7; % Unknown problem in solver                 
 
 % Choose linear solver or method for obtaining search directions. Options:
 % 'backslash' (MATLAB)  
@@ -142,7 +143,7 @@ switch( LINSOLVER )
 end
 
 % init variables
-[P,x,y,s,z,tau,kap] = conelp_init(c,G,Gtilde,h,dims,A,b,LINSOLVER,EPS,NITREF);
+[P,x,y,s,z,tau,kap] = conelp_init(c,G,Gtilde,h,dims,A,b,LINSOLVER,EPS,NITREF,LINSYSACC);
 
 % scaling
 [scaling,lambda,Vreg,Vtrue] = conelp_scaling(s,z,dims,LINSOLVER,EPS);
@@ -286,7 +287,7 @@ for nIt = 0:MAXIT+1
 %     end
     
     % first solve for x1 y1 z1
-    [x1,y1,z1,info.nitref1] = conelp_solve(L,D,P,PL,QL, -c,b,h, A,G,Vtrue, dims, NITREF,LINSOLVER);
+    [x1,y1,z1,info.nitref1] = conelp_solve(L,D,P,PL,QL, -c,b,h, A,G,Vtrue, dims, NITREF,LINSOLVER,LINSYSACC);
     assert( all( ~isnan(x1) ), 'Linear solver returned NaN');
     assert( all( ~isnan(y1) ), 'Linear solver returned NaN');
     assert( all( ~isnan(z1) ), 'Linear solver returned NaN');
@@ -299,7 +300,7 @@ for nIt = 0:MAXIT+1
     
     % second solve for x2 y2 z2
     bx = rx;  by = ry;  bz = -rz + s; dt = rt - kap;  bkap = kap*tau;            
-    [x2,y2,z2,info.nitref2] = conelp_solve(L,D,P,PL,QL, bx,by,bz, A,G,Vtrue, dims, NITREF,LINSOLVER);
+    [x2,y2,z2,info.nitref2] = conelp_solve(L,D,P,PL,QL, bx,by,bz, A,G,Vtrue, dims, NITREF,LINSOLVER,LINSYSACC);
     if( p > 0 ), by1 = b'*y1; else by1 = 0; end    
     if( p > 0 ), by2 = b'*y2; else by2 = 0; end  
     dtau_denom = kap/tau - (c'*x1 + by1 + h'*z1);
@@ -337,7 +338,7 @@ for nIt = 0:MAXIT+1
     bkap = kap*tau - sigma*info.mu + dkapaff*dtauaff;
     lambda_raute_bs = conelp_raute(lambda,bs,dims);    
     W_times_lambda_raute_bs = conelp_timesW(scaling,lambda_raute_bs,dims,LINSOLVER);
-    [x2, y2, z2,info.nitref3] = conelp_solve(L,D,P,PL,QL, (1-sigma)*rx,(1-sigma)*ry,-(1-sigma)*rz + W_times_lambda_raute_bs, A,G,Vtrue, dims, NITREF,LINSOLVER); 
+    [x2, y2, z2,info.nitref3] = conelp_solve(L,D,P,PL,QL, (1-sigma)*rx,(1-sigma)*ry,-(1-sigma)*rz + W_times_lambda_raute_bs, A,G,Vtrue, dims, NITREF,LINSOLVER,LINSYSACC); 
     if( p > 0 ), by2 = b'*y2; else by2 = 0; end
     dtau = ((1-sigma)*rt - bkap/tau + c'*x2 + by2 + h'*z2) / dtau_denom;
     dx = x2 + dtau*x1;     dy = y2 + dtau*y1;       dz = z2 + dtau*z1;

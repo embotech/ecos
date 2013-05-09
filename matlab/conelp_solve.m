@@ -1,4 +1,4 @@
-function [x,y,z,nitref] = conelp_solve(L,D,P,PL,QL, bx,by,bz, A,G,V, dims, nItref, LINSOLVER) %A,G,Gtilde,V,dims, K, Dreg, nItref, ppp)%,W,G,scaling,Gtilde,Winv,A,V)
+function [x,y,z,nitref] = conelp_solve(L,D,P,PL,QL, bx,by,bz, A,G,V, dims, nItref, LINSOLVER, LINSYSACC) %A,G,Gtilde,V,dims, K, Dreg, nItref, ppp)%,W,G,scaling,Gtilde,Winv,A,V)
 % Solve KKT system using the cached factors L,D and permutation matrix P.
 %
 % (c) Alexander Domahidi, IfA, ETH Zurich, 2013.
@@ -50,10 +50,10 @@ for i = 1:nItref
     eztilde = conelp_stretch(bz - G*x,dims,2) + V*ztilde;
 %     e = [ex; ey; conelp_stretch(ez,dims,Nstretch)];
     e = [ex; ey; eztilde];
-        fprintf('||ex||=%4.2e  ||ey||=%4.2e  ||ez||=%4.2e  (k=%d)\n', norm(ex)/bnorm, norm(ey)/bnorm, norm(eztilde)/bnorm, i);
-        if(norm(ex,inf)/bnorm < 1e-15 && ...
-           norm(ey,inf)/bnorm < 1e-15 && ...
-           norm(eztilde,inf)/bnorm < 1e-15 ), break; end
+%         fprintf('||ex||=%4.2e  ||ey||=%4.2e  ||ez||=%4.2e  (k=%d)\n', norm(ex)/bnorm, norm(ey)/bnorm, norm(eztilde)/bnorm, i);
+        if(norm(ex,inf)/bnorm < LINSYSACC && ...
+           norm(ey,inf)/bnorm < LINSYSACC && ...
+           norm(eztilde,inf)/bnorm < LINSYSACC ), break; end
 
 %         fprintf('*');
     
@@ -73,7 +73,7 @@ for i = 1:nItref
         otherwise, error('Unknown linear solver');
     end
 end
-fprintf('---\n');
+% fprintf('---\n');
 % copy out variables
 x = dx(1:n);
 y = dx(n+1:n+p);
