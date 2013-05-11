@@ -28,15 +28,19 @@ for i = 1:length(dims.q)
     % fake variables.
     if( thisconesize < CONESIZE )
         padding = CONESIZE - thisconesize;
-        Gnew = [Gnew; Gi; zeros(padding,n)];
+        Gnew = [Gnew; 
+                Gi, zeros(thisconesize,newvar);
+                zeros(padding,n+newvar)];
         hnew = [hnew; hi; zeros(padding,1)];
         dimsnew.q(k) = CONESIZE;
         k = k+1;
     end
     
-    % CASE 2: current cone size equals CONESIZE - just copy
+    % CASE 2: current cone size equals CONESIZE - just copy new cone in
     if( thisconesize == CONESIZE )
-        Gnew = [Gnew; Gi]; hnew = [hnew; hi];
+        Gnew = [Gnew;
+                Gi, zeros(thisconesize,newvar)]; 
+        hnew = [hnew; hi];
         dimsnew.q(k) = CONESIZE;
         k = k+1;
     end
@@ -59,7 +63,8 @@ for i = 1:length(dims.q)
         end
         
         % a new cone gets anything that didn't get cast into new ones
-        Gnew = [Gnew; Gi(1,:), zeros(1,newvar);
+        Gnew = [Gnew; 
+                Gi(1,:), zeros(1,newvar);
                 zeros(newvar,n), -eye(newvar)];
         hnew = [hnew; hi(1); zeros(newvar,1)];
         dimsnew.q(k) = 1 + newvar;        

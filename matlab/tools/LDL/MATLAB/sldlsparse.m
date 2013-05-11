@@ -1,4 +1,4 @@
-function [arg1, arg2, arg3, arg4] = ldlsparse (A, P, S, b)			    %#ok
+function [arg1, arg2, arg3, arg4] = ldlsparse (A, P, S, eps, delta)			    %#ok
 %LDLSPARSE LDL' factorization of a real, sparse, symmetric matrix with
 %regularization.
 %

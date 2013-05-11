@@ -1,6 +1,11 @@
-function [Ve,eta,D,u,v] = generateScalings(n)
+function [Ve,W] = randomScaling(n)
 % Generates a random scaling matrix (actually the square of it)
 % with sparse expansion.
+%
+%   [Ve,V,W] = generateScalings(n) generates a random scaling matrix W, and
+%   returns its square V = W^2, and the sparse expansion of V, Ve.
+%
+
 
 ok = 0;
 while( ok == 0 )
