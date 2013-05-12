@@ -7,7 +7,7 @@ oldpath = addpath('./tools', './tools/LDL/MATLAB');
 eps = 1e-14;
 delta = 7e-14;
 
-spyplot = 1;
+spyplot = 0;
 
 %% 1. what ecos does
 Gtilde = conelp_stretch(G,dims,2);
@@ -35,7 +35,6 @@ S = [ones(n,1); -ones(p,1); -ones(dims.l,1)];
 for k = 1:length(dims.q)
     S = [S; -ones(dims.q(k),1); -1; 1];
 end
-
 % factor
 [L,D] = sldlsparse(sparse(K),P,S,eps,delta);
 assert( all(all(~isnan(L))),'L contains NaNs' );
@@ -58,6 +57,7 @@ if( spyplot )
 end
 
 nnzs(1) = nnzK;
+nnzLs(1) = nnzL;
 
 %% this would happen if we used the non-expanded version
 m = size(G,1);
@@ -96,8 +96,10 @@ if( spyplot )
 end
 
 nnzs(2) = nnzK;
+nnzLs(2) = nnzL;
 
 result.fillin = fillin;
-result.nnz = nnzs;
+result.nnzK = nnzs;
+result.nnzL = nnzLs;
 
 addpath(oldpath)    % restore

@@ -6,6 +6,7 @@ parser = argparse.ArgumentParser(description="generate code for testing")
 parser.add_argument('-m', nargs=1, default=[1],type=int,dest='m', help="problem dimension")
 parser.add_argument('-n', nargs=1, default=[1],type=int,dest='n', help="size of variable")
 parser.add_argument('-q', nargs=1, default=[None],type=int,dest='q', help="cone size")
+parser.add_argument('--cvx', help="solve the problem using CVX", action="store_true")
 
 group = parser.add_mutually_exclusive_group()
 group.add_argument("--svm", help="solve the SVM problem", action="store_true")
@@ -32,7 +33,10 @@ if args.svm:
     """)
     
     p.rewrite()
-    p.codegen("matlab",cone_size=q,m=m,n=n)
+    if args.cvx:
+        p.codegen("cvx")
+    else:
+        p.codegen("matlab",cone_size=q,m=m,n=n)
     p.prettyprint()
 
 elif args.portfolio:
@@ -50,7 +54,10 @@ elif args.portfolio:
     """)
     
     p.rewrite()
-    p.codegen("matlab",cone_size=q,m=m,n=n)
+    if args.cvx:
+        p.codegen("cvx")
+    else:
+        p.codegen("matlab",cone_size=q,m=m,n=n)
     p.prettyprint()
     
 
