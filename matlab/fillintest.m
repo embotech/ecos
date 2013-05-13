@@ -19,8 +19,9 @@ V = eye(dims.l);
 W = eye(dims.l);
 for i = 1:length(dims.q)
     [Vi,Wi] = randomScaling(dims.q(i));
-    V = blkdiag(V,Vi);
-    W = blkdiag(W,Wi);
+    V = blkdiag(V,sparse(Vi));
+    W = blkdiag(W,sparse(Wi));
+    i
 end
 
 % build KKT matrix

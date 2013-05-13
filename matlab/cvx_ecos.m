@@ -1,4 +1,4 @@
-function shim = cvx_sedumi( shim )
+function shim = cvx_ecos( shim )
 
 % CVX_SOLVER_SHIM	ECOS interface for CVX.
 %   This procedure returns a 'shim': a structure containing the necessary

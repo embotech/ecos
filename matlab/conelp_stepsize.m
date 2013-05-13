@@ -56,5 +56,5 @@ for k = 1:length(dims.q)
     alpha = min([alpha, alphak]);
 end
 
-if alpha > 10, alpha = 10; end
+if alpha > 1, alpha = 1; end
 if alpha < 0, alpha = 0; end

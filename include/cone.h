@@ -25,6 +25,10 @@
 
 #include "glblopts.h"
 
+#define CONEMODE (0) /* 0: expand to sparse cones (ECOS standard)       */
+                     /* 1: dense cones (slow for big cones) */
+                     /* 2: dense of fixed size */
+
 
 /* LP CONE ------------------------------------------------------------- */
 typedef struct lpcone{
@@ -42,16 +46,25 @@ typedef struct socone{
 	pfloat* skbar;      /* temporary variables to work with              */
 	pfloat* zkbar;      /* temporary variables to work with              */
     pfloat a;           /* = wbar(1)                                     */
-    pfloat atilde;      /* = a^2 + w                                     */
+    //pfloat atilde;      /* = a^2 + w                                     */
     pfloat d1;          /* first element of D                            */
-    pfloat w;           /* = q'*q                                        */
-    pfloat u0;          /* eta                                           */
-    pfloat u1;          /* u = [u0; u1*q]                                */
-    pfloat v1;          /* v = [0; v1*q]                                 */
+    pfloat w;           /* = q'*q                                        */  
     pfloat eta;         /* eta = (sres / zres)^(1/4)                     */
     pfloat eta_square;  /* eta^2 = (sres / zres)^(1/2)                   */
     pfloat* q;          /* = wbar(2:end)                                 */
+#if CONEMODE == 0
     idxint* Didx;       /* indices for D                                 */
+    pfloat u0;          /* eta                                           */
+    pfloat u1;          /* u = [u0; u1*q]                                */
+    pfloat v1;          /* v = [0; v1*q]                                 */
+#endif
+#if CONEMODE > 0
+    idxint* colstart;   /* colstart[n] gives index in KKT matrix where
+                           the nth column of this scaling matrix in (3,3)
+                           block starts                                  */
+    pfloat c;           /* = 1 + a + w/(1+a)                             */
+    pfloat d;           /* = 1 + 2/(1+a) + w/(1+a)^2                     */
+#endif
     
 } socone;
 

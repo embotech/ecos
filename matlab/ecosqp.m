@@ -1,4 +1,4 @@
-function [X,fval,exitflag,output,lambda,Tsolve] = ecosqp(H,f,A,B,Aeq,Beq,lb,ub)
+function [X,fval,exitflag,output,lambda,Tsolve,c,G,h,dims,Aeq,beq] = ecosqp(H,f,A,B,Aeq,Beq,lb,ub,dosolve)
 %QUADPROG Quadratic programming. 
 %   X = ECOSQP(H,f,A,b) attempts to solve the quadratic programming 
 %   problem:
@@ -37,6 +37,10 @@ function [X,fval,exitflag,output,lambda,Tsolve] = ecosqp(H,f,A,B,Aeq,Beq,lb,ub)
 %
 % (c) Alexander Domahidi, Automatic Control Laboratory, ETH Zurich, 2013.
 
+if( ~exist('dosolve','var') )
+    dosolve = 1;
+end
+
 %% check if Cholesky decomposition of H exists.
 assert( ~isempty(H),'Quadratic programming requires a Hessian.');
 W = chol(H,'upper');
@@ -49,8 +53,8 @@ n = max([size(H,1), length(f)]);
 c = [f; 0; 0; 1];
 
 % upper/lower bounds
-if( exist('ub','var') ), A = [A; speye(n)]; B = [B; ub]; end
-if( exist('lb','var') ), A = [A; -speye(n)]; B = [B; -lb]; end
+if( exist('ub','var') && ~isempty(ub) ), A = [A; speye(n)]; B = [B; ub]; end
+if( exist('lb','var') && ~isempty(lb) ), A = [A; -speye(n)]; B = [B; -lb]; end
 
 % a = 0.5*t - 0.5, 
 % b = 0.5*t + 0.5
@@ -85,7 +89,16 @@ G = sparse(G);
 Aeq = sparse(Aeq);
 
 %% solve
+if( dosolve )
 [x,y,info,~,z] = ecos(c,G,h,dims,Aeq,beq);
+else
+    x = NaN(size(c,1),1);
+    y = NaN(size(Aeq,1),1);
+    info.infostring = 'Did not call ECOS yet';
+    info.exitflag = -100;
+    info.timing.runtime = -1;
+    z = NaN(size(G,1),1);
+end
 
 %% prepare return variables
 X = x(1:n);
@@ -94,6 +107,7 @@ switch( info.exitflag )
     case 1, exitflag = -2;
     case 2, exitflag = -3;
     case 0, exitflag = 1;
+    otherwise, exitflag = -100;
 end
 output = info.infostring;
 lambda = [z(1:dims.l); y]; 

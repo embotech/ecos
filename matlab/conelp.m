@@ -75,13 +75,13 @@ tic;
 %% Parameters
 MAXIT = 30;           % maximum number of iterations
 GAMMA = 0.985;        % scaling the final step length
-EPS = 0;              % regularization parameter
-NITREF = 5;           % number of iterative refinement steps
-FEASTOL = 1e-6;       % primal infeasibility tolerance
-ABSTOL  = 1e-6;       % absolute tolerance on duality gap
-RELTOL  = 1e-6;       % relative tolerance on duality gap
+EPS = 5e-9;              % regularization parameter
+NITREF = 3;           % number of iterative refinement steps
+FEASTOL = 5e-6;       % primal infeasibility tolerance
+ABSTOL  = 5e-7;       % absolute tolerance on duality gap
+RELTOL  = 5e-7;       % relative tolerance on duality gap
 DOPRINTS = 1;         % toggle printing
-LINSYSACC = 1e-15;    % desired accuracy of linear system            
+LINSYSACC = 1e-14;    % desired accuracy of linear system            
 
 % EXITCODES ---------------------------------------------------------------
 CONELP_DINF     = 2;  % Found certificate of dual infeasibility   
@@ -162,7 +162,7 @@ presprior = inf;
 % Note: we omit the "hat" for all variables for brevity
 for nIt = 0:MAXIT+1
     
-    
+    %GAMMA = GAMMA*0.999;
     %% 1a. Evaluate residuals, gap and stopping criteria.  
     % [ rx ]   [   0   ]   [  0   A'  G' c ] [  x  ]
     % [ ry ]   [   0   ]   [ -A   0   0  b ] [  y  ]

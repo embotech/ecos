@@ -3,14 +3,20 @@ clear;
 dirs = dir;
 k = 1;
 
+excludedir = {'docuex'};
+
 for dd = 1:length(dirs)
     if( ~isempty(strfind(dirs(dd).name,'.')) )
         continue;
     end
     
-    if( isempty(strfind(dirs(dd).name,'least_squares')) )
+    if( any(strcmpi(excludedir,dirs(dd).name)) )
         continue;
-    end 
+    end
+    
+%     if( isempty(strfind(dirs(dd).name,'least_squares')) )
+%         continue;
+%     end 
     
     fprintf('Testing ''%s'' ', dirs(dd).name);
     cd(dirs(dd).name);

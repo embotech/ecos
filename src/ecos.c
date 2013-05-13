@@ -99,6 +99,14 @@ idxint init(pwork* w)
 #if PROFILING > 1
 	w->info->tkktsolve += toc(&tkktsolve);
 #endif
+    
+#if DEBUG > 0
+#if PRINTLEVEL > 3
+    printDenseMatrix(w->KKT->dx1, w->n, 1, "dx1_init");
+    printDenseMatrix(w->KKT->dy1, w->p, 1, "dy1_init");
+    printDenseMatrix(w->KKT->dz1, w->m, 1, "dz1_init");
+#endif
+#endif
 
 	/* Copy out initial value of x */
 	for( i=0; i<w->n; i++ ){ w->x[i] = w->KKT->dx1[i]; }
@@ -131,8 +139,16 @@ idxint init(pwork* w)
 #if PROFILING > 1
 	w->info->tkktsolve += toc(&tkktsolve);
 #endif
-	
-	/* Copy out initial value of y */
+    
+#if DEBUG > 0
+#if PRINTLEVEL > 3
+    printDenseMatrix(w->KKT->dx2, w->n, 1, "dx2_init");
+    printDenseMatrix(w->KKT->dy2, w->p, 1, "dy2_init");
+    printDenseMatrix(w->KKT->dz2, w->m, 1, "dz2_init");
+#endif
+#endif
+    
+    /* Copy out initial value of y */
 	for( i=0; i<w->p; i++ ){ w->y[i] = w->KKT->dy2[i]; }
 	
 	/* Bring variable to cone */
@@ -225,8 +241,14 @@ void updateStatistics(pwork* w)
 	info->dres = norm2(w->rx, w->n)/w->resx0 / w->tau;
     
 	/* infeasibility measures */
+    
 	info->pinfres = w->hz + w->by < 0 ? w->hresx / w->resx0 / (-w->hz - w->by) : NAN;
 	info->dinfres = w->cx < 0 ? MAX(w->hresy/w->resy0, w->hresz/w->resz0) / (-w->cx) : NAN;
+    
+#if PRINTLEVEL > 2
+    PRINTTEXT("TAU=%6.4e  KAP=%6.4e  PINFRES=%6.4e  DINFRES=%6.4e\n",w->tau,w->kap,info->pinfres, info->dinfres );
+#endif
+    
 }
 
 
@@ -256,8 +278,10 @@ void printProgress(stats* info)
 
 /* enable to flush printf in Matlab immediately */
 #if PRINTLEVEL > 0
-#ifdef MATLAB_MEX_FILE && defined MATLAB_FLUSH_PRINTS
+#ifdef MATLAB_MEX_FILE
+#if defined MATLAB_FLUSH_PRINTS
     mexEvalString("drawnow;");
+#endif
 #endif
 #endif
  
@@ -290,8 +314,10 @@ void RHS_affine(pwork* w)
 		for( i=0; i < w->C->soc[l].p; i++ ){ 
 			RHS[Pinv[j++]] = w->s[k] - w->rz[k]; k++;			
 		}
+#if CONEMODE == 0
 		RHS[Pinv[j++]] = 0;
         RHS[Pinv[j++]] = 0;
+#endif
 	}	
 }
 
@@ -334,8 +360,10 @@ void RHS_combined(pwork* w)
 			w->KKT->RHS2[Pinv[j++]] = -one_minus_sigma*w->rz[k] + ds1[k];
 			k++;
 		}
+#if CONEMODE == 0
 		w->KKT->RHS2[Pinv[j++]] = 0;
         w->KKT->RHS2[Pinv[j++]] = 0;
+#endif
 	}	
 }
 
@@ -518,7 +546,8 @@ idxint ECOS_solve(pwork* w)
 			break;
 		}            
 		/* Primal infeasible? */
-		else if( (w->info->pinfres != NAN) && (w->info->pinfres < w->stgs->feastol) ){
+		else if( ((w->info->pinfres != NAN) && (w->info->pinfres < w->stgs->feastol)) ||
+                 ((w->tau < w->stgs->feastol) && (w->kap < w->stgs->feastol && w->info->pinfres < w->stgs->feastol*10)) ){
 #if PRINTLEVEL > 0
 			PRINTTEXT("\nPRIMAL INFEASIBLE (within feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", w->stgs->feastol, w->stgs->reltol, w->stgs->abstol);
 #endif
@@ -558,13 +587,17 @@ idxint ECOS_solve(pwork* w)
 		/* Compute scalings */
 		if( updateScalings(w->C, w->s, w->z, w->lambda) == OUTSIDE_CONE ){
 #if PRINTLEVEL > 0
-            PRINTTEXT("\nSlacks or multipliers leaving the positive orthant, aborting (numerics ?).\n");
+            PRINTTEXT("\nSlacks or multipliers leaving the positive orthant (- numerics ?), exiting.\n");
 #endif
             return ECOS_OUTCONE;
         }
         
 		/* Update KKT matrix with scalings */
 		kkt_update(w->KKT->PKPt, w->KKT->PK, w->C);
+        
+#if DEBUG > 0
+        dumpSparseMatrix(w->KKT->PKPt,"PKPt_updated.txt");
+#endif
         
 #if PROFILING > 1
 		tic(&tfactor);
@@ -593,6 +626,13 @@ idxint ECOS_solve(pwork* w)
 		w->info->tkktsolve += toc(&tkktsolve);
 #endif
         
+#if DEBUG > 0
+#if PRINTLEVEL > 3
+        printDenseMatrix(w->KKT->dx1, w->n, 1, "dx1_i");
+        printDenseMatrix(w->KKT->dy1, w->p, 1, "dy1_i");
+        printDenseMatrix(w->KKT->dz1, w->m, 1, "dz1_i");
+#endif
+#endif
             
 		/* AFFINE SEARCH DIRECTION (predictor, need dsaff and dzaff only) */
 		RHS_affine(w);
@@ -629,8 +669,16 @@ idxint ECOS_solve(pwork* w)
         
         for( i=0; i<w->m; i++) { w->saff[i] = w->s[i] + w->info->step_aff*w->dsaff[i]; }
         for( i=0; i<w->m; i++) { w->zaff[i] = w->z[i] + w->info->step_aff*w->dzaff[i]; }
+        
+        /*
         muaff = conicProduct(w->saff, w->zaff, w->C, w->KKT->work1) + (w->kap + w->info->step_aff*dkapaff)*(w->tau + w->info->step_aff*dtauaff);
         mu = conicProduct(w->s, w->z, w->C, w->KKT->work2) + w->kap*w->tau;
+        */
+        
+        muaff = ddot( w->m, w->saff, w->zaff) + (w->kap + w->info->step_aff*dkapaff)*(w->tau + w->info->step_aff*dtauaff);
+        mu = ddot( w->m, w->s, w->z) + w->kap*w->tau;
+        
+         
         sigma = muaff/mu;
         sigma = sigma*sigma*sigma;
         if( sigma > 1.0 ) sigma = 1.0;

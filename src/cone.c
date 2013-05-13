@@ -105,7 +105,10 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
 	pfloat sres, zres, snorm, znorm, gamma, one_over_2gamma;
 	pfloat* sk;
 	pfloat* zk;
-    pfloat a, b, c, d, w, temp, u0, u0_square, u1, v1, d1, c2byu02;
+    pfloat a, b, c, d, w, temp;
+#if CONEMODE == 0
+    pfloat u0, u0_square, u1, v1, d1, c2byu02;
+#endif
 
 	/* LP cone */
 	for( i=0; i < C->lpc->p; i++ ){
@@ -150,6 +153,11 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
         b = 1.0/temp;
         c = 1.0 + a + w / temp;
         d = 1 + 2/temp + w/(temp*temp);
+#if CONEMODE > 0
+        C->soc[l].c = c;
+        C->soc[l].d = d;
+#endif
+#if CONEMODE == 0
         d1 = 0.5*(a*a + w*(1.0 - (c*c)/(1.0 + w*d)));  if( d1 < 0 ){ d1 = 0; }
         u0_square = a*a + w - d1;
         u0 = sqrt(u0_square);
@@ -159,7 +167,8 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
         C->soc[l].d1 = d1;
         C->soc[l].u0 = u0;
         C->soc[l].u1 = u1;
-        C->soc[l].v1 = v1;        
+        C->soc[l].v1 = v1;
+#endif
         
 		/* increase offset for next cone */
 		k += C->soc[l].p;
@@ -216,17 +225,23 @@ void scale(pfloat* z, cone* C, pfloat* lambda)
 void scale2add(pfloat *x, pfloat* y, cone* C)
 {
     idxint i, l, cone_start, conesize, conesize_m1;
-    pfloat *x1, *x2, *x3, *x4;
-    pfloat *y1, *y2, *y3, *y4;
-    pfloat eta_square, d1, u0, u1, v1, *q;
+    pfloat *x1, *x2, *y1, *y2, eta_square, *q;
+#if CONEMODE == 0
+    pfloat *x3, *x4, *y3, *y4;
+    pfloat d1, u0, u1, v1;
     pfloat v1x3_plus_u1x4;
     pfloat qtx2;
+#else
+    pfloat zeta, temp, a, w, c, d;
+#endif
     
     /* LP cone */
 	for( i=0; i < C->lpc->p; i++ ){ y[i] += C->lpc->v[i] * x[i]; }
-    
-	/* Second-order cone */
+   
+    /* Second-order cone */
     cone_start = C->lpc->p;
+#if CONEMODE == 0
+    
 	for( l=0; l < C->nsoc; l++ ){
         
         getSOCDetails(&C->soc[l], &conesize, &eta_square, &d1, &u0, &u1, &v1, &q);
@@ -262,6 +277,45 @@ void scale2add(pfloat *x, pfloat* y, cone* C)
         /* prepare index for next cone */
         cone_start += conesize + 2;
     }
+    
+#else
+    
+	for( l=0; l < C->nsoc; l++ ){
+        
+        conesize = C->soc[l].p;
+        conesize_m1 = conesize - 1;
+        eta_square = C->soc[l].eta_square;
+        a = C->soc[l].a;
+        c = C->soc[l].c;
+        d = C->soc[l].d;
+        q = C->soc[l].q;
+        w = C->soc[l].w;
+        
+        x1 = x + cone_start;
+        x2 = x1 + 1;
+        
+        y1 = y + cone_start;
+        y2 = y1 + 1;
+        
+        /* zeta = q'*x2 */
+        zeta = 0;
+        for (i=0; i<conesize-1; i++) {
+            zeta += q[i]*x2[i];
+        }
+        
+        /* y1 += eta^2*[ (a^2 + w)x1 + c*zeta ] */
+        y1[0] += eta_square*( (a*a+w)*x1[0] + c*zeta );
+        
+        /* y2 += eta^2*[ (c*q*x1 + x2 + d*q*zeta ] */
+        temp = c*x1[0] + d*zeta;
+        for (i=0; i<conesize_m1; i++) {
+            y2[i] += eta_square*( temp*q[i] + x2[i] );
+        }
+        
+        /* prepare index for next cone */
+        cone_start += conesize;
+    }
+#endif
 }
 
 
@@ -376,6 +430,7 @@ void conicDivision(pfloat* u, pfloat* w, cone* C, pfloat* v)
  */
 void getSOCDetails(socone *soc, idxint *conesize, pfloat* eta_square, pfloat* d1, pfloat* u0, pfloat* u1, pfloat* v1, pfloat **q)
 {
+#if CONEMODE == 0
     *conesize = soc->p;
     *eta_square = soc->eta_square;
     *d1 = soc->d1;
@@ -383,6 +438,7 @@ void getSOCDetails(socone *soc, idxint *conesize, pfloat* eta_square, pfloat* d1
     *u1 = soc->u1;
     *v1 = soc->v1;
     *q = soc->q;
+#endif
 }
 
 
@@ -400,6 +456,8 @@ void unstretch(idxint n, idxint p, idxint m, cone *C, idxint *Pinv, pfloat *Px, 
     for( i=0; i<C->lpc->p; i++ ){ dz[j++] = Px[Pinv[k++]]; }
     for( l=0; l<C->nsoc; l++ ){
         for( i=0; i<C->soc[l].p; i++ ){ dz[j++] = Px[Pinv[k++]]; }
+#if CONEMODE == 0
         k += 2;
-    }    
+#endif
+    }
 }

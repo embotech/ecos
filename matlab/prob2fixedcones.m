@@ -24,13 +24,13 @@ for i = 1:length(dims.q)
     hi = h(coneidx,:);
     thisconesize = dims.q(i);
     
-    % CASE 1: current cone size is smaller than CONESIZE - introduce new 
+    % CASE 1: current cone size is smaller than CONESIZE - introduce new
     % fake variables.
     if( thisconesize < CONESIZE )
         padding = CONESIZE - thisconesize;
-        Gnew = [Gnew; 
-                Gi, zeros(thisconesize,newvar);
-                zeros(padding,n+newvar)];
+        Gnew = [Gnew;
+            Gi, zeros(thisconesize,newvar);
+            zeros(padding,n+newvar)];
         hnew = [hnew; hi; zeros(padding,1)];
         dimsnew.q(k) = CONESIZE;
         k = k+1;
@@ -39,7 +39,7 @@ for i = 1:length(dims.q)
     % CASE 2: current cone size equals CONESIZE - just copy new cone in
     if( thisconesize == CONESIZE )
         Gnew = [Gnew;
-                Gi, zeros(thisconesize,newvar)]; 
+            Gi, zeros(thisconesize,newvar)];
         hnew = [hnew; hi];
         dimsnew.q(k) = CONESIZE;
         k = k+1;
@@ -55,26 +55,25 @@ for i = 1:length(dims.q)
             newvar = newvar+1;
             newconeidx = 1 + (j-1)*(CONESIZE-1) + (1:(CONESIZE-1));
             Gnew = [Gnew, zeros(size(Gnew,1),1);
-                    zeros(1,size(Gnew,2)) , -1; 
-                    Gi(newconeidx,:), zeros(CONESIZE-1,newvar) ]; %#ok<*AGROW>
+                zeros(1,size(Gnew,2)) , -1;
+                Gi(newconeidx,:), zeros(CONESIZE-1,newvar) ]; %#ok<*AGROW>
             hnew = [hnew; 0; hi(newconeidx)];
             dimsnew.q(k) = CONESIZE;
             k = k+1;
         end
         
         % a new cone gets anything that didn't get cast into new ones
-        Gnew = [Gnew; 
-                Gi(1,:), zeros(1,newvar);
-                zeros(newvar,n), -eye(newvar)];
-        hnew = [hnew; hi(1); zeros(newvar,1)];
-        dimsnew.q(k) = 1 + newvar;        
-        if( ~isempty(j) )
-            remainder = newconeidx(end)+1:thisconesize;
+        Gnew = [Gnew;
+            Gi(1,:), zeros(1,newvar);
+            zeros(newcones,n+newvar-newcones), -eye(newcones)];
+        hnew = [hnew; hi(1); zeros(newcones,1)];
+        dimsnew.q(k) = 1 + newcones;
+        
+        remainder = newconeidx(end)+1:thisconesize;
         if( ~isempty(remainder) )
             Gnew = [Gnew; Gi(remainder,:), zeros(length(remainder),newvar)];
             hnew = [hnew; hi(remainder)];
-        end 
-        dimsnew.q(k) = dimsnew.q(k) + length(remainder);       
+            dimsnew.q(k) = dimsnew.q(k) + length(remainder);
         end
         k = k+1;
     end

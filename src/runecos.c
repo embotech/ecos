@@ -58,6 +58,7 @@ int main(void)
 #endif
 
 #if PRINTLEVEL > 2
+#if PROFILING > 1
 	printf("ECOS timings (all times in milliseconds):\n\n");
 	printf("1. Setup: %7.3f (%4.1f%%)\n", tsetup,  tsetup / ttotal*100);
 	printf("2. Solve: %7.3f (%4.1f%%)\n", tsolve,  tsolve / ttotal*100);
@@ -76,6 +77,7 @@ int main(void)
 	printf("       KKT solves: %7.3f (%4.1f%% of tsolve / %4.1f%% of ttotal)\n", tkktsolve, tkktsolve / tsolve*100, tfactor / ttotal*100);
 	printf("            Other: %7.3f (%4.1f%% of tsolve / %4.1f%% of ttotal)\n", tsolve-tkktsolve-tfactor, (tsolve-tkktsolve-tfactor) / tsolve*100, (tsolve-tkktsolve-tfactor) / ttotal*100);
 	printf("\n");
+#endif
 #endif
 	
     /* clean up memory */

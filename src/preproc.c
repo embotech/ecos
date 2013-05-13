@@ -87,7 +87,10 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, pfloat delta, idxint** S, spmat*
      *     + m (number of inequality constraints)
      *     + 2*C->nsoc (expansion of SOC scalings)
      */
-    nK = n + p + m + 2*C->nsoc;
+    nK = n + p + m;
+#if CONEMODE == 0
+    nK += 2*C->nsoc;
+#endif
     
     /* Number of non-zeros in KKT matrix 
      *   =   At->nnz (nnz of equality constraint matrix A)
@@ -96,8 +99,15 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, pfloat delta, idxint** S, spmat*
      *     + 3*[sum(C->soc[i].p)+1] (nnz of expanded soc scalings)
      */
 	nnzK = (At ? At->nnz : 0) + Gt->nnz + C->lpc->p;
-	for( i=0; i<C->nsoc; i++ ){ 
+#if STATICREG == 1
+    nnzK += n+p;
+#endif
+	for( i=0; i<C->nsoc; i++ ){
+#if CONEMODE == 0
 		nnzK += 3*C->soc[i].p+1;
+#else
+        nnzK += (C->soc[i].p*(C->soc[i].p+1))/2;
+#endif
 	}
 #if PRINTLEVEL > 2
     PRINTTEXT("Non-zeros in KKT matrix: %d\n", (int) nnzK);
@@ -121,6 +131,7 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, pfloat delta, idxint** S, spmat*
     for( ks=n; ks < n+p; ks++){
         Sign[ks] = -1; /* (2,2) block */
     }
+#if CONEMODE == 0
     for( ks=n+p; ks < n+p+C->lpc->p; ks++){
         Sign[ks] = -1; /* (3,3) block: LP cone */
     }
@@ -132,6 +143,11 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, pfloat delta, idxint** S, spmat*
         Sign[ks++] = -1;     /* (3,3) block: SOC, v */
         Sign[ks++] = +1;     /* (3,3) block: SOC, u */
     }
+#else
+    for (ks=n+p; ks < n+p+m; ks++) {
+        Sign[ks] = -1;      /* (3,3) block has -1 sign if all dense */
+    }
+#endif
 #if DEBUG > 0
     if (ks!=nK) {
         PRINTTEXT("ks = %d, whereas nK = %d - exiting.", (int)ks, (int)nK);
@@ -143,9 +159,17 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, pfloat delta, idxint** S, spmat*
     k = 0;
     
     /* (1,1) block: the first n columns are empty */
+#if STATICREG == 0
     for (j=0; j<n; j++) {
         Kjc[j] = 0;
-    }	
+    }
+#else
+    for (j=0; j<n; j++) {
+        Kjc[j] = j;
+        Kir[j] = j;
+        Kpr[k++] = DELTASTAT;
+    }
+#endif
     
     /* Fill upper triangular part of K with values */
     /* (1,2) block: A' */
@@ -162,6 +186,10 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, pfloat delta, idxint** S, spmat*
                 k++; i++;
 			}
 		}
+#if STATICREG == 1
+        Kir[k] = n+j;
+        Kpr[k++] = -DELTASTAT;
+#endif
     }
 	/* (1,3) and (3,3) block: [G'; 0; -Vinit]
      * where 
@@ -194,7 +222,8 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, pfloat delta, idxint** S, spmat*
 		Kpr[k] = -1.0;
         k++;
 	}    
-    
+
+#if CONEMODE == 0
 	/* Second-order cones - copy in G' and set up the scaling matrix
      * which has the following structure:
      *
@@ -265,6 +294,57 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, pfloat delta, idxint** S, spmat*
         /* prepare index for next cone */
 		cone_strt += C->soc[l].p;
 	}
+#else
+    /* Second-order cones - copy in G' and set up the scaling matrix
+     * which has a dense structure (only upper half part is shown):
+     *
+     *                     [ a        b*q'     ]
+     *  - W^2 = -V = eta^2 [ b*q  I + c*(q*q') ]
+     *
+     * where    I: identity of size conesize
+     *          q: vector of size consize - 1
+     *      a,b,c: scalars
+     *
+     * NOTE: only the upper triangular part (with the diagonal elements)
+     *       is copied in here.
+     */
+	cone_strt = C->lpc->p;
+    for( l=0; l < C->nsoc; l++ ){
+        
+        /* size of the cone */
+        conesize = C->soc[l].p;
+        
+        /* go column-wise about it */
+		for( j=0; j < conesize; j++ ){
+           	
+            row = Gt->jc[cone_strt+j];
+            row_stop = Gt->jc[cone_strt+j+1];
+            if( row <= row_stop ){
+                Kjc[n+p+cone_strt+j] = k;
+                while( row++ < row_stop ){
+                    Kir[k] = Gt->ir[i];
+                    Kpr[k++] = Gt->pr[i++];
+                }
+            }
+            
+            /* first elements - record where this column starts */
+            Kir[k] = n+p+cone_strt;
+            Kpr[k] = -1.0;
+            C->soc[l].colstart[j] = k;
+            k++;
+            
+            /* the rest of the column */
+            for (r=1; r<=j; r++) {
+                Kir[k] = n+p+cone_strt+r;
+                Kpr[k] = -1.0;
+                k++;
+            }
+        }
+        
+        /* prepare index for next cone */
+		cone_strt += C->soc[l].p;
+	}
+#endif
 
 #if PRINTLEVEL > 2
     PRINTTEXT("CREATEKKT: Written %d KKT entries\n", (int)k);
@@ -328,7 +408,12 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 		FREE(w->C->soc[i].q);
 		FREE(w->C->soc[i].skbar);
 		FREE(w->C->soc[i].zkbar);
+#if CONEMODE == 0
 		FREE(w->C->soc[i].Didx);
+#endif
+#if CONEMODE > 0
+        FREE(w->C->soc[i].colstart);
+#endif
 	}
 	if( w->C->nsoc > 0 ){
 		FREE(w->C->soc);
@@ -482,11 +567,16 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
         mywork->C->soc[i].p = conesize;
         mywork->C->soc[i].a = 0;
 		mywork->C->soc[i].eta = 0;
-		mywork->C->soc[i].atilde = 0;
+	//	mywork->C->soc[i].atilde = 0;
         mywork->C->soc[i].q = (pfloat *)MALLOC((conesize-1)*sizeof(pfloat));
 		mywork->C->soc[i].skbar = (pfloat *)MALLOC((conesize)*sizeof(pfloat));
 		mywork->C->soc[i].zkbar = (pfloat *)MALLOC((conesize)*sizeof(pfloat));
+#if CONEMODE == 0
         mywork->C->soc[i].Didx = (idxint *)MALLOC((conesize)*sizeof(idxint));
+#endif 
+#if CONEMODE > 0
+        mywork->C->soc[i].colstart = (idxint *)MALLOC((conesize)*sizeof(idxint));
+#endif
         cidx += conesize;
     }
 #if PRINTLEVEL > 2
@@ -580,7 +670,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     nK = KU->n;
     
 #if DEBUG > 0
-    dumpSparseMatrix(KU, "KU.txt");
+    dumpSparseMatrix(KU, "KU0.txt");
 #endif
 #if PRINTLEVEL > 2
     PRINTTEXT("Dimension of KKT matrix: %d\n", (int)nK);
@@ -703,6 +793,23 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 
 	/* permute KKT matrix - we work on this one from now on */
 	permuteSparseSymmetricMatrix(KU, mywork->KKT->Pinv, mywork->KKT->PKPt, NULL);
+#if DEBUG > 0
+    dumpSparseMatrix(mywork->KKT->PKPt, "PKPt.txt");
+#endif
+    
+#if CONEMODE > 0
+    /* zero any off-diagonal elements in (permuted) scalings in KKT matrix */
+    for (i=0; i<mywork->C->nsoc; i++) {
+        for (j=1; j<mywork->C->soc[i].p; j++) {
+            for (k=0; k<j; k++) {
+                mywork->KKT->PKPt->pr[mywork->KKT->PK[mywork->C->soc[i].colstart[j]+k]] = 0;
+            }
+        }
+    }
+#endif
+#if DEBUG > 0
+     dumpSparseMatrix(mywork->KKT->PKPt, "PKPt0.txt");
+#endif
 
 	/* set up RHSp for initialization */
 	k = 0; j = 0;
@@ -711,8 +818,10 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	for( i=0; i<l; i++ ){ mywork->KKT->RHS1[Pinv[k++]] = h[i]; j++; }
 	for( l=0; l<ncones; l++ ){ 
 		for( i=0; i < mywork->C->soc[l].p; i++ ){ mywork->KKT->RHS1[Pinv[k++]] = h[j++]; }
+#if CONEMODE == 0
 		mywork->KKT->RHS1[Pinv[k++]] = 0;
         mywork->KKT->RHS1[Pinv[k++]] = 0;
+#endif
 	}
 #if PRINTLEVEL > 2
     PRINTTEXT("Written %d entries of RHS1\n", (int)k);
