@@ -78,8 +78,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 #endif            
     
 #if PROFILING == 2    
-#define NTFIELDS 8
-    const char *tinfo[NTFIELDS] = {"runtime", "tsolve", "tsetup", "tkktcreate", "tkktfactor", "tkktsolve", "torder", "ttranspose"};
+#define NTFIELDS 10
+    const char *tinfo[NTFIELDS] = {"runtime", "tsolve", "tsetup", "tkktcreate", "tkktfactor", "tkktsolve", "torder", "ttranspose","tfactor_t1","tfactor_t2"};
 #endif
                                    
             
@@ -412,6 +412,16 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		outvar = mxCreateDoubleMatrix(1, 1, mxREAL);
 		*mxGetPr(outvar) = (double)mywork->info->ttranspose;
 		mxSetField(tinfos, 0, "ttranspose", outvar);
+        
+        /* 14.9 time for factoring, part 1 */
+		outvar = mxCreateDoubleMatrix(1, 1, mxREAL);
+		*mxGetPr(outvar) = (double)mywork->info->tfactor_t1;
+		mxSetField(tinfos, 0, "tfactor_t1", outvar);
+        
+        /* 14.10 time for transposes */
+		outvar = mxCreateDoubleMatrix(1, 1, mxREAL);
+		*mxGetPr(outvar) = (double)mywork->info->tfactor_t2;
+		mxSetField(tinfos, 0, "tfactor_t2", outvar);
 #endif       
         
         mxSetField(plhs[2], 0, "timing", tinfos);        

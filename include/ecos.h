@@ -88,6 +88,8 @@ typedef struct stats{
 	pfloat tkktcreate;
 	pfloat ttranspose;
 	pfloat tperm;
+    pfloat tfactor_t1;
+    pfloat tfactor_t2;
 #endif
     
 } stats;

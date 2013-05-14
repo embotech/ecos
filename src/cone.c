@@ -446,7 +446,7 @@ void getSOCDetails(socone *soc, idxint *conesize, pfloat* eta_square, pfloat* d1
  * Returns dx, dy and dz from the expanded and permuted version of 
  * a search direction vector.
  */
-void unstretch(idxint n, idxint p, idxint m, cone *C, idxint *Pinv, pfloat *Px, pfloat *dx, pfloat *dy, pfloat *dz)
+void unstretch(idxint n, idxint p, cone *C, idxint *Pinv, pfloat *Px, pfloat *dx, pfloat *dy, pfloat *dz)
 {
     idxint i,j,k,l;
     k = 0;    

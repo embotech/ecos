@@ -35,7 +35,11 @@
 #include <math.h>
 
 /* Factorization of KKT matrix. Just a wrapper for some LDL code */
+#if PROFILING > 1
+idxint kkt_factor(kkt* KKT, pfloat eps, pfloat delta, pfloat *t1, pfloat* t2)
+#else
 idxint kkt_factor(kkt* KKT, pfloat eps, pfloat delta)
+#endif
 {
 	idxint nd;
     
@@ -56,7 +60,10 @@ idxint kkt_factor(kkt* KKT, pfloat eps, pfloat delta)
 				KKT->D,			/* output of size n, not defined on input */
 				KKT->work1,		/* workspace of size n, not defn. on input or output */
 				KKT->Pattern,   /* workspace of size n, not defn. on input or output */
-				KKT->Flag	    /* workspace of size n, not defn. on input or output */				
+				KKT->Flag	    /* workspace of size n, not defn. on input or output */
+#if PROFILING > 1
+                      , t1, t2
+#endif
     );
 
 	return nd == KKT->PKPt->n ? KKT_OK : KKT_PROBLEM;
@@ -121,7 +128,7 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
 	for( kItRef=1; kItRef <= nitref; kItRef++ ){
         
         /* unpermute x & copy into arrays */
-        unstretch(n, p, m, C, Pinv, Px, dx, dy, dz);
+        unstretch(n, p, C, Pinv, Px, dx, dy, dz);
         
 		/* compute error term */
         k=0; j=0;
@@ -196,7 +203,7 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
 #endif
     
 	/* copy solution out into the different arrays, permutation included */
-	unstretch(n, p, m, C, Pinv, Px, dx, dy, dz);
+	unstretch(n, p, C, Pinv, Px, dx, dy, dz);
     
     return kItRef == nitref+1 ? nitref : kItRef;
 }

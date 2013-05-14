@@ -65,12 +65,11 @@
  * INPUT:      spmat* Gt - pointer to G'
  *             spmat* At - pointer to A'
  *               cone* C - pointer to cone struct
- *                 delta - static regularization parameter
  *
  * OUTPUT:  idxint* Sign - pointer to vector of signs for regularization
  *              spmat* K - pointer to unpermuted upper triangular part of KKT matrix
  */
-void createKKT_U(spmat* Gt, spmat* At, cone* C, pfloat delta, idxint** S, spmat** K)
+void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 {
 	idxint i, j, k, l, r, row_stop, row, cone_strt, ks, conesize;
 	idxint n = Gt->m;
@@ -567,7 +566,6 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
         mywork->C->soc[i].p = conesize;
         mywork->C->soc[i].a = 0;
 		mywork->C->soc[i].eta = 0;
-	//	mywork->C->soc[i].atilde = 0;
         mywork->C->soc[i].q = (pfloat *)MALLOC((conesize-1)*sizeof(pfloat));
 		mywork->C->soc[i].skbar = (pfloat *)MALLOC((conesize)*sizeof(pfloat));
 		mywork->C->soc[i].zkbar = (pfloat *)MALLOC((conesize)*sizeof(pfloat));
@@ -588,6 +586,8 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #if PROFILING > 1
 	mywork->info->tfactor = 0;
 	mywork->info->tkktsolve = 0;
+    mywork->info->tfactor_t1 = 0;
+    mywork->info->tfactor_t2 = 0;
 #endif
 #if PRINTLEVEL > 2
     PRINTTEXT("Memory allocated for info struct\n");
@@ -654,7 +654,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #if PROFILING > 1
 	tic(&tcreatekkt);
 #endif
-	createKKT_U(Gt, At, mywork->C, mywork->stgs->delta, &Sign, &KU);
+	createKKT_U(Gt, At, mywork->C, &Sign, &KU);
 #if PROFILING > 1
 	mywork->info->tkktcreate = toc(&tcreatekkt);
 #endif

@@ -281,12 +281,25 @@ LDL_int LDL_numeric2	/* returns n if successful, k if D (k,k) is zero */
     double Y [ ],	     /* workspace of size n, not defn. on input or output */
     LDL_int Pattern [ ], /* workspace of size n, not defn. on input or output */
     LDL_int Flag [ ]	 /* workspace of size n, not defn. on input or output */
+#if PROFILING > 1
+    ,double *t1,           /* time for non-zero pattern computation */
+    double *t2           /* time for back-solves */
+#endif
 )
 {
     double yi, l_ki;
     LDL_int i, k, p, p2, len, top;
+        
+#if PROFILING > 1
+    timer clock;
+#endif
     
+    /* go row-wise about this */
     for (k = 0 ; k < n ; k++){
+        
+#if PROFILING > 1
+        tic(&clock);
+#endif
 		/* compute nonzero Pattern of kth row of L, in topological order */
 		Y [k] = 0.0 ;		    /* Y(0:k) is now all zero */
 		top = n ;		        /* stack for pattern is empty */
@@ -302,6 +315,12 @@ LDL_int LDL_numeric2	/* returns n if successful, k if D (k,k) is zero */
 			}
 			while (len > 0) Pattern [--top] = Pattern [--len] ;	    
 		}
+#if PROFILING > 1
+        *t1 += toc(&clock);
+
+        
+        tic(&clock);
+#endif
 		/* compute numerical values kth row of L (a sparse triangular solve) */		
 		D [k] = Y [k] ;		    /* get D(k,k) and clear Y(k) */	
 		Y [k] = 0.0 ;
@@ -323,7 +342,10 @@ LDL_int LDL_numeric2	/* returns n if successful, k if D (k,k) is zero */
         /* Dynamic regularization */
         D[k] = Sign[k]*D[k] <= eps ? Sign[k]*delta : D[k];
         
-        /* FOR DEBUG 
+#if PROFILING > 1
+        *t2 += toc(&clock);
+#endif
+        /* FOR DEBUG
         if( Sign[k]*D[k] <= eps )
         {
             PRINTTEXT( "Sign[%d]=%d, D[%d] = %6.4e, regularizing to %4.2e\n", (int)k, (int)Sign[k], (int)k, D[k], Sign[k]*delta);

@@ -58,14 +58,13 @@ idxint init(pwork* w)
 
 	w->KKT->delta = w->stgs->delta;
 
-	
+	/* Factor KKT matrix - this is needed in all 3 linear system solves */
 #if PROFILING > 1
 	tic(&tfactor);
-#endif
-    /* Factor KKT matrix - this is needed in all 3 linear system solves */
-    KKT_FACTOR_RETURN_CODE = kkt_factor(w->KKT, w->stgs->eps, w->stgs->delta);
-#if PROFILING > 1
+    KKT_FACTOR_RETURN_CODE = kkt_factor(w->KKT, w->stgs->eps, w->stgs->delta, &w->info->tfactor_t1, &w->info->tfactor_t2);
 	w->info->tfactor += toc(&tfactor);
+#else
+    KKT_FACTOR_RETURN_CODE = kkt_factor(w->KKT, w->stgs->eps, w->stgs->delta);
 #endif
     
     /* check if factorization was successful, exit otherwise */
@@ -598,14 +597,13 @@ idxint ECOS_solve(pwork* w)
 #if DEBUG > 0
         dumpSparseMatrix(w->KKT->PKPt,"PKPt_updated.txt");
 #endif
-        
+        /* factor KKT matrix */
 #if PROFILING > 1
 		tic(&tfactor);
-#endif
-        /* factor KKT matrix */
-        KKT_FACTOR_RETURN_CODE = kkt_factor(w->KKT, w->stgs->eps, w->stgs->delta);
-#if PROFILING > 1
+        KKT_FACTOR_RETURN_CODE = kkt_factor(w->KKT, w->stgs->eps, w->stgs->delta, &w->info->tfactor_t1, &w->info->tfactor_t2);
         w->info->tfactor += toc(&tfactor);
+#else
+        KKT_FACTOR_RETURN_CODE = kkt_factor(w->KKT, w->stgs->eps, w->stgs->delta);
 #endif
         
         /* check if factorization was successful, quit otherwise */

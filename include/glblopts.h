@@ -34,14 +34,14 @@ typedef double pfloat;              /* for numerical values  */
                            /* 2: progress print per iteration            */
 						   /* 3: debug level, enables print & dump fcns. */
 
-#define MATLAB_FLUSH_PRINTS
+/*#define MATLAB_FLUSH_PRINTS */
                             /* print each iteration directly to Matlab.  */
                             /* this options considerably slows down the  */
                             /* solver, but is useful if you solve big    */
                             /* problems.                                 */
 
 /* SET PROFILING LEVEL ------------------------------------------------- */
-#define PROFILING (1)      /* 0: no timing information				     */
+#define PROFILING (2)      /* 0: no timing information				     */
                            /* 1: runtime (divided in setup and solve)    */
                            /* 2: detailed profiling                      */
 
