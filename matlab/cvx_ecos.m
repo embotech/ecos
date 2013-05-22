@@ -7,7 +7,7 @@ if ~isempty( shim.solve ),
     return
 end
 if isempty( shim.name ),
-    [ ver, isoctave, fs, ps ] = cvx_version; %#ok
+    [ fs, ps ] = cvx_version; %#ok
     temp = strfind( shim.spath, fs );
     shim.name    = 'ecos';
     shim.dualize = true;
