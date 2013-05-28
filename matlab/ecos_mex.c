@@ -127,7 +127,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     /* determine sizes */
     n = (idxint)size_c[0];
     m = (idxint)size_G[0];
-    p = nrhs == 6 ? (idxint)size_A[0] : 0;
+    p = (nrhs == 6) ? (idxint)size_A[0] : 0;
     
     /* argument checking */
 #ifdef MEXARGMUENTCHECKS     
@@ -234,8 +234,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         Air = (idxint *)mxGetIr(A);  
     }    
     cpr = (pfloat *)mxGetPr(c);
-    hpr = (pfloat *)mxGetPr(h);    
-    bpr = (pfloat *)mxGetPr(b);
+    hpr = (pfloat *)mxGetPr(h);
+    if ( p > 0 ) {
+      bpr = (pfloat *)mxGetPr(b);
+    }
     
     /* we have to copy the number of cones since Matlab gives us double
      * values but the C version of ECOS expects idxint values */
