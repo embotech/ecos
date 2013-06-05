@@ -110,18 +110,28 @@ if add_row,
     c = [ 0 ; c ];
 end
 
-% Re-write SeDuMi format into ECOS format
-m = K.l + sum(K.q);
-if( K.f > 0 )
-    G = [zeros(m,K.f), -speye(m)];
-else
-    G = -speye(m);
-end
-h = zeros(m,1);
-dims = K;
-c = full(c); b = full(b);
+% % Re-write SeDuMi format into ECOS format
+% m = K.l + sum(K.q);
+% if( K.f > 0 )
+%     G = [zeros(m,K.f), -speye(m)];
+% else
+%     G = -speye(m);
+% end
+% h = zeros(m,1);
 
-A = At';
+% transpose the cone if needed, since ecos assumes cone is a column
+% vector argument
+[m1,n1] = size(K.q);
+if m1 == 1,
+    K.q = K.q';
+end
+dims = K;
+
+ecos_c = -full(b);
+ecos_G = At(K.f+1:end,:);
+ecos_h = full(c(K.f+1:end));
+ecos_A = At(1:K.f,:);
+ecos_b = full(c(1:K.f));
 
 
 if( ~isreal(At) || ~isreal(c) || ~isreal(b) )
@@ -129,7 +139,9 @@ if( ~isreal(At) || ~isreal(c) || ~isreal(b) )
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-[ xx, yy, info ] = cvx_run_solver( @ecos, c, G, h, dims, A, b, 'xx', 'yy', 'info', settings, 5 );
+[ yy, xx, info, zz ] = cvx_run_solver( @ecos, ecos_c, ecos_G, ecos_h, dims, ecos_A, ecos_b, 'xx', 'yy', 'zz', 'info', settings, 5 );
+
+xx = [xx; zz];
 
 %fprintf('%c(Setup time: %5.3f seconds)\n\n',8,info.timing.tsetup);
 if add_row,
