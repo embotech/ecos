@@ -272,10 +272,13 @@ for nIt = 0:MAXIT+1
         
     % build & factor KKT matrix
     K = conelp_KKTmatrix(A, Gtilde, Vreg, EPS);
+    
+    
          
 % fprintf('cond(K) = %4.2e\n', condest(K));
 
-    [L,D,PL,QL,P] = conelp_factor(K,P,LINSOLVER,n,p,dims,scaling);    
+    [L,D,PL,QL,P] = conelp_factor(K,P,LINSOLVER,n,p,dims,scaling, c,b,h,kap,tau);
+    
     assert( all( ~isnan(L(:)) ), 'Factorization returned NaN');
     assert( all( ~isnan(D(:)) ), 'Factorization returned NaN');
     
@@ -346,6 +349,9 @@ for nIt = 0:MAXIT+1
     ds = conelp_timesW(scaling, ds_by_W, dims,LINSOLVER);
     dkap = -(bkap + kap*dtau)/tau;    
     
+    temp = conelp_kringel(s,dz,dims) + conelp_kringel(ds,z,dims) + conelp_kringel(s,z,dims)+ conelp_kringel(dsaff,dzaff,dims) - sigma*mu;
+    fprintf('||s o dz  +  ds o z  +  s o z + dsa o dza - sigma*mu*e = %e||\n',temp); 
+    
     %% 5. Line search for combined search direction.    
     W_times_dz = conelp_timesW(scaling,dz,dims,LINSOLVER); % = W*dz
     alpha = conelp_stepsize(lambda,ds_by_W,W_times_dz,dims,tau,dtau,kap,dkap)*GAMMA;
@@ -353,6 +359,7 @@ for nIt = 0:MAXIT+1
 %     alpha = conelp_linesearch(s,z,tau,kap,ds,dz,dtau,dkap,dims,lambda)*GAMMA;          
     
     %% 6. Update variables and scaling.    
+    fprintf('ds''*dz + dkap*dtau = %e\n', ds'*dz + dkap*dtau);
     x = x + alpha*dx; y = y + alpha*dy; s = s + alpha*ds; z = z + alpha*dz;
     kap = kap + alpha*dkap;     tau = tau + alpha*dtau;
     assert( tau > 0, 'tau <= 0, exiting.');

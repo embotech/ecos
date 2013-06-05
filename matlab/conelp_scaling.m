@@ -76,7 +76,7 @@ if( nargin == 3 )
             otherwise, error('Unknown linear solver');
         end
         
-        Vpattern = blkdiag(Vpattern,Vk_pattern);
+        Vpattern = blkdiag(Vpattern,sparse(Vk_pattern));
     end
     
     varargout{1} = Vpattern;

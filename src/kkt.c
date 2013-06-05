@@ -136,12 +136,22 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
         for( i=0; i<n; i++ ){ ex[i] = Pb[Pinv[k++]]; }
         if(A) sparseMtVm(A, dy, ex, 0, 0);
         sparseMtVm(G, dz, ex, 0, 0);
+        /* EXPERIMENTAL
+#if STATICREG == 1
+        vsubscale(n, DELTASTAT, dx, ex);
+#endif
+         */
         nex = norminf(ex,n);
         	
         /* --> 2. ey = by - A*dx */
         if( p > 0 ){
             for( i=0; i<p; i++ ){ ey[i] = Pb[Pinv[k++]]; }
             sparseMV(A, dx, ey, -1, 0);
+            /* EXPERIMENTAL 
+#if STATICREG == 1
+            vsubscale(p, -DELTASTAT, dy, ey);
+#endif
+             */
             ney = norminf(ey,p);
         }
         

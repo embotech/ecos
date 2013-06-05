@@ -25,7 +25,7 @@ objval = struct(...
 );
 
 
-for i = 1:length(tests),
+for i = 1:1%length(tests),
     clear A At b c K
     test_name = tests(i).name;
     test_name = test_name(1:end-4); % strip .mat
@@ -41,16 +41,25 @@ for i = 1:length(tests),
     if m2 == 1,
         c = c';
     end
-    if (exist('A','var'))
-        data = struct('A', sparse(A'), 'b', full(c), 'c', -full(b));
-    else
-        data = struct('A', sparse(At), 'b', full(c), 'c', -full(b));
+%     if (exist('A','var'))
+%         data = struct('A', sparse(A'), 'b', full(c), 'c', -full(b));
+%     else
+%         data = struct('A', sparse(At), 'b', full(c), 'c', -full(b));
+%     end
+%     cone = struct('f', 0, 'q', K.q', 'l', K.l);
+    
+    % convert to ECOS format
+    G = -speye(length(c)); h = zeros(length(c),1);
+    if( ~exist('A','var') )
+        A = At';
     end
-    cone = struct('f', 0, 'q', K.q', 'l', K.l);
+%     [x_m, y_m, info] = ecos(data.c, G,h,cone,data.A, data.b);
+% [x_m, y_m, info,s,z] = conelp(full(c), G, h, K, A, full(b));
+    [x_m, y_m, info,s,z] = ecos(full(c), G, h, K, A, full(b));
     
-    [x_m, y_m, info] = ecos(data.c, data.A, data.b, cone);
-    
-    err.(test_name) = abs( data.c'*x_m + objval.(test_name) ) ;
+    err.(test_name) = abs( (c'*x_m - objval.(test_name))/objval.(test_name) );
+    objval.(test_name)
+    c'*x_m
     test_info.(test_name) = info;
 
     

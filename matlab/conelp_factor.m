@@ -1,4 +1,4 @@
-function [L,D,PL,QL,P] = conelp_factor(K,P,LINSOLVER,n,p,dims,scaling)
+function [L,D,PL,QL,P] = conelp_factor(K,P,LINSOLVER,n,p,dims,scaling, c,b,h,kap,tau)
 % LDL Factorization routine for CONELP solver.
 %
 % (c) Alexander Domahidi, IfA, ETH Zurich, 2012.
@@ -24,6 +24,8 @@ switch( LINSOLVER )
         end
         [L,D] = sldlsparse(sparse(K), P, S, 1e-14, 7e-7);
         L = L + eye(size(L));
+        
+        keyboard
         
     otherwise, error('Unknown linear solver');
 end

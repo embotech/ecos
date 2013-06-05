@@ -33,18 +33,23 @@
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
 #define MAXIT     (30)           /* maximum number of iterations         */
-#define GAMMA     (0.98)        /* scaling the final step length        */
-#define DELTA     (5E-7)        /* regularization parameter             */
-#define EPS       (1E-14)        /* regularization threshold (do not 0!) */
-#define NITREF    (3)       	 /* number of iterative refinement steps */
-#define LINSYSACC (1E-14)        /* rel. accuracy of search direction    */
-#define FEASTOL   (5E-6)         /* primal/dual infeasibility tolerance  */
-#define ABSTOL    (5E-7)         /* absolute tolerance on duality gap    */
-#define RELTOL    (5E-7)         /* relative tolerance on duality gap    */
-#define STATICREG (1)            /* static regularization: 0:off, 1:on   */
-#define DELTASTAT (1E-9)         /* regularization parameter             */
+#define FEASTOL   (2E-5)         /* primal/dual infeasibility tolerance  */
+#define ABSTOL    (1E-6)         /* absolute tolerance on duality gap    */
+#define RELTOL    (1E-6)         /* relative tolerance on duality gap    */
 
-typedef struct settings{		
+#define GAMMA     (0.99)         /* scaling the final step length        */
+#define STATICREG (1)            /* static regularization: 0:off, 1:on   */
+#define DELTASTAT (5E-9)         /* regularization parameter             */
+#define DELTA     (5E-7)         /* dyn. regularization parameter        */
+#define EPS       (1E-14)   /* dyn. regularization threshold (do not 0!) */
+#define NITREF    (2)       	 /* number of iterative refinement steps */
+#define LINSYSACC (1E-14)        /* rel. accuracy of search direction    */
+#define SIGMAMIN  (0.01)         /* always do some centering             */
+#define SIGMAMAX  (0.99)         /* never fully center                   */
+#define STEPMIN   (1E-6)         /* smallest step that we want to make   */
+#define STEPMAX   (1.0)          /* biggest step allowed                 */
+
+typedef struct settings{
 	pfloat gamma;                /* scaling the final step length        */	
 	pfloat delta;                /* regularization parameter             */
     pfloat eps;                  /* regularization threshold             */
