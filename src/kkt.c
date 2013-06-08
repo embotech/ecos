@@ -1,6 +1,6 @@
 /*
  * ECOS - Embedded Conic Solver.
- * Copyright (C) 2011-12 Alexander Domahidi [domahidi@control.ee.ethz.ch],
+ * Copyright (C) 2012-13 Alexander Domahidi [domahidi@control.ee.ethz.ch],
  * Automatic Control Laboratory, ETH Zurich.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -136,22 +136,12 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
         for( i=0; i<n; i++ ){ ex[i] = Pb[Pinv[k++]]; }
         if(A) sparseMtVm(A, dy, ex, 0, 0);
         sparseMtVm(G, dz, ex, 0, 0);
-        /* EXPERIMENTAL
-#if STATICREG == 1
-        vsubscale(n, DELTASTAT, dx, ex);
-#endif
-         */
         nex = norminf(ex,n);
         	
         /* --> 2. ey = by - A*dx */
         if( p > 0 ){
             for( i=0; i<p; i++ ){ ey[i] = Pb[Pinv[k++]]; }
             sparseMV(A, dx, ey, -1, 0);
-            /* EXPERIMENTAL 
-#if STATICREG == 1
-            vsubscale(p, -DELTASTAT, dy, ey);
-#endif
-             */
             ney = norminf(ey,p);
         }
         

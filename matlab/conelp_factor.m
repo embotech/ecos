@@ -25,7 +25,7 @@ switch( LINSOLVER )
         [L,D] = sldlsparse(sparse(K), P, S, 1e-14, 7e-7);
         L = L + eye(size(L));
         
-        keyboard
+%         keyboard
         
     otherwise, error('Unknown linear solver');
 end

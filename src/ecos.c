@@ -1,6 +1,6 @@
 /*
  * ECOS - Embedded Conic Solver.
- * Copyright (C) 2011-12 Alexander Domahidi [domahidi@control.ee.ethz.ch],
+ * Copyright (C) 2012-13 Alexander Domahidi [domahidi@control.ee.ethz.ch],
  * Automatic Control Laboratory, ETH Zurich.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -189,23 +189,11 @@ void computeResiduals(pwork *w)
     } else {
         sparseMtVm(w->G, w->z, w->rx, 1, 0);
     }
-    /* EXPERIMENTAL
-#if STATICREG == 1
-    vsubscale(w->n, DELTASTAT, w->x, w->rx);
-#endif
-    */
-    //printDenseMatrix(w->z, w->m, 1, "Z_IN_COMPUTERESIDUALS");
-    //printDenseMatrix(w->rx, w->n, 1, "RX_IN_COMPUTERESIDUALS");
 	w->hresx = norm2(w->rx, w->n);
 	vsubscale(w->n, w->tau, w->c, w->rx);
 		
 	/* ry = A*x - b.*tau */
 	if(w->A) sparseMV(w->A, w->x, w->ry, 1, 1);
-    /* EXPERIMENTAL
-#if STATICREG == 1
-    vsubscale(w->p, DELTASTAT, w->y, w->ry);
-#endif
-     */
 	w->hresy = norm2(w->ry, w->p);
 	vsubscale(w->p, w->tau, w->b, w->ry);
 	
@@ -233,9 +221,9 @@ void updateStatistics(pwork* w)
 	
 	stats* info = w->info;
 	
-	/* mu = (s'*z + kap*tau) / (m+1) where s'*z is the duality gap */
+	/* mu = (s'*z + kap*tau) / (D+1) where s'*z is the duality gap */
 	info->gap = ddot(w->m, w->s, w->z);
-	info->mu = (info->gap + w->kap*w->tau) / (w->m + 1);	
+	info->mu = (info->gap + w->kap*w->tau) / (w->D + 1);
 
 	info->kapovert = w->kap / w->tau;
 	info->pcost = w->cx / w->tau;
@@ -317,17 +305,8 @@ void RHS_affine(pwork* w)
 	idxint* Pinv = w->KKT->Pinv;
 
 	j = 0;
-    /* EXPERIMENTAL 
-#if STATICREG == 1
-    for( i=0; i < n; i++ ){ RHS[Pinv[j++]] = w->rx[i] - DELTASTAT*w->x[i]; }
-	for( i=0; i < p; i++ ){ RHS[Pinv[j++]] = w->ry[i] - DELTASTAT*w->y[i]; }
-#else
-     */
 	for( i=0; i < n; i++ ){ RHS[Pinv[j++]] = w->rx[i]; }
 	for( i=0; i < p; i++ ){ RHS[Pinv[j++]] = w->ry[i]; }
-    /*
-#endif
-     */
 	for( i=0; i < w->C->lpc->p; i++ ){ RHS[Pinv[j++]] = w->s[i] - w->rz[i]; }
 	k = w->C->lpc->p;
 	for( l=0; l < w->C->nsoc; l++ ){
@@ -373,15 +352,7 @@ void RHS_combined(pwork* w)
 	j = 0;
 	for( i=0; i < w->n; i++ ){ w->KKT->RHS2[Pinv[j++]] *= one_minus_sigma; }
 	for( i=0; i < w->p; i++ ){ w->KKT->RHS2[Pinv[j++]] *= one_minus_sigma; }
-    
-    /* EXPERIMENTAL 
-#if STATICREG == 1
-    for( i=0; i < w->n; i++ ){ w->KKT->RHS2[Pinv[i]] -= w->info->sigma*DELTASTAT*w->x[i]; }
-	for( i=0; i < w->p; i++ ){ w->KKT->RHS2[Pinv[w->n+i]] -= w->info->sigma*DELTASTAT*w->y[i]; }
-#endif
-     */
-    
-	for( i=0; i < w->C->lpc->p; i++) { w->KKT->RHS2[Pinv[j++]] = -one_minus_sigma*w->rz[i] + ds1[i]; }
+    for( i=0; i < w->C->lpc->p; i++) { w->KKT->RHS2[Pinv[j++]] = -one_minus_sigma*w->rz[i] + ds1[i]; }
 	k = w->C->lpc->p;
 	for( l=0; l < w->C->nsoc; l++ ){
 		for( i=0; i < w->C->soc[l].p; i++ ){ 
@@ -431,15 +402,6 @@ pfloat lineSearch(pfloat* lambda, pfloat* ds, pfloat* dz, pfloat tau, pfloat dta
     } else {
         alpha = 10;
     }
-    
-    /*
-    alpha = 1.0;
-    for (i=0; i<C->lpc->p; i++) {
-        while( s[i]+alpha*ds[i] <= 0 || z[i]+alpha*dz[i] <= 0 ){
-            alpha *= 0.9;
-        }
-    }
-     */
 
     /* tau and kappa */
     if( minus_tau_by_dtau > 0 && minus_tau_by_dtau < alpha )
@@ -526,7 +488,7 @@ void backscale(pwork *w)
 idxint ECOS_solve(pwork* w)
 {
 	idxint i, initcode, KKT_FACTOR_RETURN_CODE;
-	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap, mu, muaff;
+	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap;
 	idxint exitcode = ECOS_FATAL;
 #if PROFILING > 0
 	timer tsolve;
@@ -655,21 +617,6 @@ idxint ECOS_solve(pwork* w)
             exitcode = ECOS_KKTZERO;
             break;
         }
-        
-        /* EXPERIMENTAL
-#if STATICREG == 1
-        for( i=0; i < w->n; i++ ){ w->KKT->RHS1[ w->KKT->Pinv[i] ] = -w->c[i] - DELTASTAT*w->x[i]; }
-        for( i=0; i < w->p; i++ ){ w->KKT->RHS1[ w->KKT->Pinv[w->n+i] ] = w->b[i] - DELTASTAT*w->y[i]; }
-#endif
-         */
-        
-#if DEBUG > 0
-#if PRINTLEVEL > 1
-        printDenseMatrix(w->KKT->RHS1, w->n+w->p+w->m+2*w->C->nsoc, 1, "RHS1");
-        //printDenseMatrix(w->KKT->dy1, w->p, 1, "dy1_i");
-        //printDenseMatrix(w->KKT->dz1, w->m, 1, "dz1_i");
-#endif
-#endif
 
 		/* Solve for RHS1, which is used later also in combined direction */
 #if PROFILING > 1
@@ -680,16 +627,6 @@ idxint ECOS_solve(pwork* w)
 		w->info->tkktsolve += toc(&tkktsolve);
 #endif
   
-        /*
-#if DEBUG > 0
-#if PRINTLEVEL > 2
-        printDenseMatrix(w->KKT->dx1, w->n, 1, "dx1_i");
-        printDenseMatrix(w->KKT->dy1, w->p, 1, "dy1_i");
-        printDenseMatrix(w->KKT->dz1, w->m, 1, "dz1_i");
-#endif
-#endif
-         */
-            
 		/* AFFINE SEARCH DIRECTION (predictor, need dsaff and dzaff only) */
 		RHS_affine(w);
 #if PROFILING > 1
@@ -720,27 +657,6 @@ idxint ECOS_solve(pwork* w)
 		w->info->step_aff = lineSearch(w->lambda, w->dsaff_by_W, w->W_times_dzaff, w->tau, dtauaff, w->kap, dkapaff, w->C, w->KKT, w->s, w->z);
         
 		/* Centering parameter */
-        /*
-        unscale(w->W_times_dzaff, w->C, w->dzaff);
-        scale(w->dsaff_by_W, w->C, w->dsaff);
-        
-        PRINTTEXT("dsaff'*dzaff = %6.4e\n", ddot(w->m, w->dsaff, w->dzaff) + dkapaff*dtauaff);
-        
-        for( i=0; i<w->m; i++) { w->saff[i] = w->s[i] + w->info->step_aff*w->dsaff[i]; }
-        for( i=0; i<w->m; i++) { w->zaff[i] = w->z[i] + w->info->step_aff*w->dzaff[i]; }
-        
-        /*
-        muaff = conicProduct(w->saff, w->zaff, w->C, w->KKT->work1) + (w->kap + w->info->step_aff*dkapaff)*(w->tau + w->info->step_aff*dtauaff);
-        mu = conicProduct(w->s, w->z, w->C, w->KKT->work2) + w->kap*w->tau;
-        */
-        
-        /*
-        muaff = ddot( w->m, w->saff, w->zaff) + (w->kap + w->info->step_aff*dkapaff)*(w->tau + w->info->step_aff*dtauaff);
-        mu = ddot( w->m, w->s, w->z) + w->kap*w->tau;
-        
-         
-        sigma = muaff/mu;
-         */
         sigma = 1.0 - w->info->step_aff;
         sigma = sigma*sigma*sigma;
         if( sigma > SIGMAMAX ) sigma = SIGMAMAX;
@@ -790,12 +706,6 @@ idxint ECOS_solve(pwork* w)
 		for( i=0; i < w->m; i++ ){ w->s[i] += w->info->step * w->dsaff[i]; }
 		w->kap += w->info->step * dkap;
 		w->tau += w->info->step * dtau;
-        
-        PRINTTEXT("ds'*dz + dkap*dtau = %6.4e\n", ddot(w->m, w->dsaff, w->KKT->dz2) + dkap*dtau);
-        
-        /*
-        PRINTTEXT("z[1]=%6.4f\tz[2]=%6.4f\tz[3]=%6.4f\tz[4]=%6.4f\n",w->z[0],w->z[1],w->z[2],w->z[3]);
-         */
 	}
 
 	/* scale variables back */    

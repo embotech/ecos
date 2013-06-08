@@ -1,6 +1,6 @@
 /*
  * ECOS - Embedded Conic Solver.
- * Copyright (C) 2011-12 Alexander Domahidi [domahidi@control.ee.ethz.ch],
+ * Copyright (C) 2012-13 Alexander Domahidi [domahidi@control.ee.ethz.ch],
  * Automatic Control Laboratory, ETH Zurich.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -33,21 +33,21 @@
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
 #define MAXIT     (30)           /* maximum number of iterations         */
-#define FEASTOL   (2E-5)         /* primal/dual infeasibility tolerance  */
+#define FEASTOL   (1E-5)         /* primal/dual infeasibility tolerance  */
 #define ABSTOL    (1E-6)         /* absolute tolerance on duality gap    */
 #define RELTOL    (1E-6)         /* relative tolerance on duality gap    */
 
-#define GAMMA     (0.99)         /* scaling the final step length        */
+#define GAMMA     (0.98)         /* scaling the final step length        */
 #define STATICREG (1)            /* static regularization: 0:off, 1:on   */
 #define DELTASTAT (5E-9)         /* regularization parameter             */
 #define DELTA     (5E-7)         /* dyn. regularization parameter        */
 #define EPS       (1E-14)   /* dyn. regularization threshold (do not 0!) */
 #define NITREF    (2)       	 /* number of iterative refinement steps */
 #define LINSYSACC (1E-14)        /* rel. accuracy of search direction    */
-#define SIGMAMIN  (0.01)         /* always do some centering             */
-#define SIGMAMAX  (0.99)         /* never fully center                   */
+#define SIGMAMIN  (0.001)        /* always do some centering             */
+#define SIGMAMAX  (0.999)        /* never fully center                   */
 #define STEPMIN   (1E-6)         /* smallest step that we want to make   */
-#define STEPMAX   (1.0)          /* biggest step allowed                 */
+#define STEPMAX   (0.999)        /* biggest step allowed                 */
 
 typedef struct settings{
 	pfloat gamma;                /* scaling the final step length        */	
@@ -106,6 +106,7 @@ typedef struct pwork{
 	idxint n;	/* number of primal variables x */
 	idxint m;   /* number of conically constrained variables s */
 	idxint p;   /* number of equality constraints */
+    idxint D;   /* degree of the cone */
 	    
     /* variables */
     pfloat* x;  /* primal variables                    */
