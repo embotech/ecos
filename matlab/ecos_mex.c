@@ -358,8 +358,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
             case ECOS_DINF:
                 outvar = mxCreateString("Dual infeasible");
                 break;
-            case ECOS_KKTZERO:
-                outvar = mxCreateString("Element of D zero during KKT factorization");
+            case ECOS_NUMERICS:
+                outvar = mxCreateString("Numerical problems");
                 break;
             case ECOS_OUTCONE:
                 outvar = mxCreateString("PROBLEM: Mulitpliers leaving the cone");

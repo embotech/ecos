@@ -1,6 +1,6 @@
 /*
  * ECOS - Embedded Conic Solver.
- * Copyright (C) 2011-12 Alexander Domahidi [domahidi@control.ee.ethz.ch],
+ * Copyright (C) 2012-13 Alexander Domahidi [domahidi@control.ee.ethz.ch],
  * Automatic Control Laboratory, ETH Zurich.
  *
  * This program is free software: you can redistribute it and/or modify

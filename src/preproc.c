@@ -1,6 +1,6 @@
 /*
  * ECOS - Embedded Conic Solver.
- * Copyright (C) 2011-12 Alexander Domahidi [domahidi@control.ee.ethz.ch],
+ * Copyright (C) 2012-13 Alexander Domahidi [domahidi@control.ee.ethz.ch],
  * Automatic Control Laboratory, ETH Zurich.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -511,6 +511,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->n = n;
 	mywork->m = m;
 	mywork->p = p;
+    mywork->D = l + ncones;
 #if PRINTLEVEL > 2
     PRINTTEXT("Set dimensions\n");
 #endif
@@ -745,7 +746,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 
 	/* permute sign vector */
     for( i=0; i<nK; i++ ){ mywork->KKT->Sign[Pinv[i]] = Sign[i]; }
-#if PRINTLEVEL > 2
+#if PRINTLEVEL > 3
     PRINTTEXT("P = [");
     for( i=0; i<nK; i++ ){ PRINTTEXT("%d ", (int)P[i]); }
     PRINTTEXT("];\n");

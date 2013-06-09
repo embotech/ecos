@@ -1,6 +1,6 @@
 /*
  * ECOS - Embedded Conic Solver.
- * Copyright (C) 2011-12 Alexander Domahidi [domahidi@control.ee.ethz.ch],
+ * Copyright (C) 2012-13 Alexander Domahidi [domahidi@control.ee.ethz.ch],
  * Automatic Control Laboratory, ETH Zurich.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -51,7 +51,7 @@ pfloat socres(pfloat* u, idxint p)
  */
 void bring2cone(cone* C, pfloat* r, pfloat* s)
 {
-	pfloat alpha = -1.0;		
+	pfloat alpha = -GAMMA;
 	pfloat cres, r1square;
 	idxint i, l, j;
 
@@ -61,7 +61,7 @@ void bring2cone(cone* C, pfloat* r, pfloat* s)
 
 	/* LP cone */	
 	for( i=0; i<C->lpc->p; i++ ){
-		if( r[i] < 0 && -r[i] > alpha ){ alpha = -r[i]; }
+		if( r[i] <= 0 && -r[i] > alpha ){ alpha = -r[i]; }
 	}
 	
 	/* Second-order cone */
@@ -69,7 +69,7 @@ void bring2cone(cone* C, pfloat* r, pfloat* s)
 		cres = r[i++]; r1square = 0;
 		for( j=1; j<C->soc[l].p; j++ ){ r1square += r[i]*r[i]; i++; }
 		cres -= sqrt(r1square);		
-		if( cres <= 1e-8 && -cres > alpha ){ alpha = -cres; }
+		if( cres <= 0 && -cres > alpha ){ alpha = -cres; }
 	} 
 
 	
@@ -105,14 +105,14 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
 	pfloat sres, zres, snorm, znorm, gamma, one_over_2gamma;
 	pfloat* sk;
 	pfloat* zk;
-    pfloat a, b, c, d, w, temp;
+    pfloat a, b, c, d, w, temp, divisor;
 #if CONEMODE == 0
-    pfloat u0, u0_square, u1, v1, d1, c2byu02;
+    pfloat u0, u0_square, u1, v1, d1, c2byu02, c_square;
 #endif
 
 	/* LP cone */
 	for( i=0; i < C->lpc->p; i++ ){
-		C->lpc->v[i] = s[i] / z[i];
+		C->lpc->v[i] = SAVEDIV_POS(s[i], z[i]);
 		C->lpc->w[i] = sqrt(C->lpc->v[i]);
 	}	
 
@@ -129,16 +129,16 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
 
 		/* normalize variables */
 		snorm = sqrt(sres);    znorm = sqrt(zres);   
-		for( i=0; i<p; i++ ){ C->soc[l].skbar[i] = sk[i] / snorm; }
-		for( i=0; i<p; i++ ){ C->soc[l].zkbar[i] = zk[i] / znorm; }		
-		C->soc[l].eta_square = snorm/znorm;
+		for( i=0; i<p; i++ ){ C->soc[l].skbar[i] = SAVEDIV_POS(sk[i],snorm); }
+		for( i=0; i<p; i++ ){ C->soc[l].zkbar[i] = SAVEDIV_POS(zk[i],znorm); }
+		C->soc[l].eta_square = SAVEDIV_POS(snorm,znorm);
 		C->soc[l].eta = sqrt(C->soc[l].eta_square);
 
 		/* Normalized Nesterov-Todd scaling point */
 		gamma = 1.0; 
 		for( i=0; i<p; i++){ gamma += C->soc[l].skbar[i]*C->soc[l].zkbar[i]; }
 		gamma = sqrt(0.5*gamma);		
-		one_over_2gamma = 0.5/gamma;
+		one_over_2gamma = SAVEDIV_POS(0.5,gamma);
 		a = one_over_2gamma*(C->soc[l].skbar[0] + C->soc[l].zkbar[0]);
 		w = 0;
 		for( i=1; i<p; i++ ){ 
@@ -150,18 +150,21 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
 
 		/* pre-compute variables needed for KKT matrix (kkt_update uses those) */
         temp = 1.0 + a;
-        b = 1.0/temp;
-        c = 1.0 + a + w / temp;
-        d = 1 + 2/temp + w/(temp*temp);
+        b = SAVEDIV_POS(1.0,temp);
+        c = 1.0 + a + SAVEDIV_POS(w,temp);
+        divisor = temp*temp;
+        d = 1 + SAVEDIV_POS(2,temp) + SAVEDIV_POS(w,divisor);
 #if CONEMODE > 0
         C->soc[l].c = c;
         C->soc[l].d = d;
 #endif
 #if CONEMODE == 0
-        d1 = 0.5*(a*a + w*(1.0 - (c*c)/(1.0 + w*d)));  if( d1 < 0 ){ d1 = 0; }
+        c_square = c*c;
+        divisor = 1.0 + w*d;
+        d1 = 0.5*(a*a + w*(1.0 - SAVEDIV_POS(c_square,divisor) ));  if( d1 < 0 ){ d1 = 0; }
         u0_square = a*a + w - d1;
         u0 = sqrt(u0_square);
-        c2byu02 = (c*c)/u0_square;
+        c2byu02 = SAVEDIV_POS((c*c),u0_square);
         v1 = sqrt(c2byu02 - d);
         u1 = sqrt(c2byu02);
         C->soc[l].d1 = d1;
@@ -202,7 +205,7 @@ void scale(pfloat* z, cone* C, pfloat* lambda)
 		for( i=1; i < C->soc[l].p; i++ ){ zeta += C->soc[l].q[i-1] * z[cone_start + i]; }
 
 		/* factor = z0 + zeta / (1+a); */
-		factor = z[cone_start] + zeta/(1+C->soc[l].a);
+		factor = z[cone_start] + SAVEDIV_POS(zeta,(1+C->soc[l].a));
 
 		/* second pass (on k): write out result */
 		lambda[cone_start] = C->soc[l].eta*(C->soc[l].a*z[cone_start] + zeta); /* lambda[0] */
@@ -329,7 +332,7 @@ void unscale(pfloat* lambda, cone* C, pfloat* z)
 	pfloat zeta, factor;
 
 	/* LP cone */
-	for( i=0; i < C->lpc->p; i++ ){ z[i] = C->lpc->w[i] > 0 ? lambda[i] / C->lpc->w[i] : lambda[i]/EPS; }
+	for( i=0; i < C->lpc->p; i++ ){ z[i] = SAVEDIV_POS(lambda[i], C->lpc->w[i]); }
 
 	/* Second-order cone */
 	cone_start = C->lpc->p;	
@@ -340,13 +343,13 @@ void unscale(pfloat* lambda, cone* C, pfloat* z)
 		for( i=1; i < C->soc[l].p; i++ ){ zeta += C->soc[l].q[i-1] * lambda[cone_start + i]; }
 
 		/* factor = -lambda0 + zeta / (1+a); */
-		factor = -lambda[cone_start] + zeta/(1+C->soc[l].a);
+		factor = -lambda[cone_start] + SAVEDIV_POS(zeta,(1+C->soc[l].a));
 
 		/* second pass (on k): write out result */
-		z[cone_start] = (C->soc[l].a*lambda[cone_start] - zeta) / C->soc[l].eta;
+		z[cone_start] = SAVEDIV_POS( (C->soc[l].a*lambda[cone_start] - zeta), C->soc[l].eta );
 		for( i=1; i < C->soc[l].p; i++ ){ 
 			j = cone_start+i; 
-			z[j] = (lambda[j] + factor*C->soc[l].q[i-1]) / C->soc[l].eta; 
+			z[j] = SAVEDIV_POS( (lambda[j] + factor*C->soc[l].q[i-1]), C->soc[l].eta );
 		}
 
 		cone_start += C->soc[l].p;
@@ -398,10 +401,10 @@ pfloat conicProduct(pfloat* u, pfloat* v, cone* C, pfloat* w)
 void conicDivision(pfloat* u, pfloat* w, cone* C, pfloat* v)
 {
 	idxint i, j, k, cone_start, conesize;
-	pfloat rho, zeta, u0, w0, factor;
+	pfloat rho, zeta, u0, w0, factor, temp;
 	
 	/* LP cone */
-	for( i=0; i < C->lpc->p; i++ ){ v[i] = u[i] > 0 ? w[i] / u[i] : w[i]/EPS; }
+	for( i=0; i < C->lpc->p; i++ ){ v[i] = SAVEDIV_POS(w[i],u[i]); }
 
 	/* Second-order cone */
 	cone_start = C->lpc->p;
@@ -413,12 +416,14 @@ void conicDivision(pfloat* u, pfloat* w, cone* C, pfloat* v)
 			k = cone_start+j;			
 			rho -= u[k]*u[k]; 
 			zeta += u[k]*w[k];
-		}		
-		factor = (zeta/u0 - w0)/rho;
-		v[cone_start] = (u0*w0 - zeta) / rho;
+		}
+        temp = SAVEDIV_POS(zeta,u0) - w0;
+        factor = SAVEDIV_POS(temp,rho);
+        temp = u0*w0 - zeta;
+		v[cone_start] = SAVEDIV_POS(temp,rho);
 		for( j=1; j < conesize; j++ ){ 
 			k = cone_start+j;
-			v[cone_start+j] = factor*u[k] + w[k]/u0;
+			v[cone_start+j] = factor*u[k] + SAVEDIV_POS(w[k],u0);
 		}
 		cone_start += C->soc[i].p;
 	}

@@ -1,4 +1,4 @@
-close all; clear all
+close all; clear;
 tests = dir('DIMACS/*.mat');
 
 % optvals taken from
@@ -25,8 +25,9 @@ objval = struct(...
     'sched_200_100_scaled', 51.812471 ...
 );
 
-
-for i = 1:length(tests),
+k=1;
+testnr = 1:length(tests)
+for i = testnr
     clear A At b c K
     test_name = tests(i).name;
     test_name = test_name(1:end-4); % strip .mat
@@ -42,36 +43,120 @@ for i = 1:length(tests),
     if m2 == 1,
         c = c';
     end
-    if (exist('A','var'))
-        data = struct('A', sparse(A'), 'b', full(c), 'c', -full(b));
-    else
-        data = struct('A', sparse(At), 'b', full(c), 'c', -full(b));
+    
+    if( ~exist('At','var') )
+        At = A';
     end
-    cone = struct('f', 0, 'q', K.q', 'l', K.l);
     
-    [x_m, y_m, info] = ecos(data.c, data.A, data.b, cone);
+    if( ~isfield(K,'f') ), K.f = 0; end
     
-    err.(test_name) = abs( data.c'*x_m + objval.(test_name) ) ;
-    test_info.(test_name) = info;
-
+    % map sedumi primal --> ecos dual (which we give as primal)
+    c_ecos = full(-b);
+    G_ecos = At;
+    h_ecos = full(c);
+    dims = K;
     
-%     [m,n] = size(data.A);
-%     
-%     ns_soc = cone.q;
-%     idxs = [cone.f+cone.l; cone.f+cone.l + cumsum(ns_soc)];
-%     
-%     cvx_begin
-%         cvx_solver sedumi
-%         variable xcvx(n)
-%         variable scvx(m)
-% 
-% 
-%         minimize (data.c'*xcvx)
-%             data.A*xcvx + scvx == data.b
-%             scvx(1:cone.f) == 0
-%             scvx(cone.f+1:cone.f+cone.l) >= 0
-%             for kk =1:cone.k_soc
-%                 norm(scvx(idxs(kk) + 2: idxs(kk) + ns_soc(kk))) <= scvx(idxs(kk)+1)
-%             end
-%     cvx_end
+    % solve dual with ecos
+    [y_d, s_d, info_dd, z_d, x_d] = ecos(c_ecos, G_ecos, h_ecos, dims);
+    ecos_fval_d = -info_dd.pcost;
+    relerr_d = abs((ecos_fval_d - objval.(test_name))/objval.(test_name));
+    err_d.(test_name) = relerr_d;
+    iter_d.(test_name) = info_dd.iter;
+    time_d.(test_name) = info_dd.timing.runtime;
+    info_d.(test_name) = info_dd;
+    exitflag_d.(test_name) = info_dd.exitflag;
+    ecos_x_d.(test_name) = x_d;
+    ecos_y_d.(test_name) = y_d;
+    ecos_z_d.(test_name) = z_d;
+    ecos_s_d.(test_name) = s_d;
+    derr = dimacs_errors(At',b,c,K,x_d,y_d,z_d);
+    pres_d.(test_name) = derr(1);
+    dres_d.(test_name) = derr(2);
+    if( info_dd.exitflag == 0 ), success_d(k) = 1; else success_d(k) = 0; end
+    if( info_dd.exitflag == 0 )
+        statstr_d.(test_name) = 'OK';
+    else
+        statstr_d.(test_name) = 'numerr';
+    end
+    fprintf('--------------------------------------------------------------------------------------------------\n');
+    fprintf('DIMACS TEST ''%s'': ECOS DUAL fval: %f, true fval: %f, rel. error: %e\n', test_name, ecos_fval_d, objval.(test_name), relerr_d);
+    fprintf('--------------------------------------------------------------------------------------------------\n\n\n');
+    
+    
+    
+    % solve with sedumi
+    pars.fid = 0; % switch off printing
+    pars.eps = 1e-6;
+    pars.bigeps = 1e-6/10;
+    pars.errors = 1;
+    if( 1 )
+        [x_s,y_s,info_ss] = sedumi(At',b,c,K,pars);
+        sedumi_fval = c'*x_s;
+        relerr_s = abs((sedumi_fval - objval.(test_name))/objval.(test_name));
+        err_s.(test_name) = relerr_s;
+        iter_s.(test_name) = info_ss.iter;
+        time_s.(test_name) = sum(info_ss.timing);
+        info_s.(test_name) = info_ss;
+        exitflag_s.(test_name) = info_ss.numerr;
+        sedumi_x_s.(test_name) = x_s;
+        sedumi_y_s.(test_name) = y_s;
+        derr = dimacs_errors(At',b,c,K,x_s,y_s);
+        pres_s.(test_name) = derr(1);
+        dres_s.(test_name) = derr(2);
+%         for j = 1:length(K.q)
+%             coneidx = K.f + K.l + (1:K.q(j));
+%             dres_s.(test_name) = max([dres_s.(test_name), norm(ineqres(coneidx(1)) - norm(ineqres(coneidx(2:end)),2),inf)]);
+%         end
+        if( info_ss.numerr == 0 )
+            statstr_s.(test_name) = 'OK';
+        else
+            statstr_s.(test_name) = 'numerr';
+        end
+        
+    end
+    
+    numvar.(test_name) = size(At,1);
+    numRows.(test_name) = size(At,2);
+    
+    k=k+1;
+    
+    %     [m,n] = size(data.A);
+    %
+    %     ns_soc = cone.q;
+    %     idxs = [cone.f+cone.l; cone.f+cone.l + cumsum(ns_soc)];
+    %
+    %     cvx_begin
+    %         cvx_solver sedumi
+    %         variable xcvx(n)
+    %         variable scvx(m)
+    %
+    %
+    %         minimize (data.c'*xcvx)
+    %             data.A*xcvx + scvx == data.b
+    %             scvx(1:cone.f) == 0
+    %             scvx(cone.f+1:cone.f+cone.l) >= 0
+    %             for kk =1:cone.k_soc
+    %                 norm(scvx(idxs(kk) + 2: idxs(kk) + ns_soc(kk))) <= scvx(idxs(kk)+1)
+    %             end
+    %     cvx_end
 end
+
+
+%% print summary in tex format
+disp('DIMACS SUMMARY:');
+% fprintf('Primal formulation solved %d / %d problems\n', sum(success_p), length(success_p));
+fprintf('  Dual formulation solved %d / %d problems\n\n', sum(success_d), length(success_d));
+
+for i = testnr
+    test_name = tests(i).name;
+    test_name = test_name(1:end-4);
+    fprintf('%d & %s & %d & %d & %s & %s & %4.2e & %4.2e & %4.2e & %4.2e & %3d & %3d & %4.2f & %4.2f \\\\\n',...
+        i, strrep(test_name,'_','\_'), numvar.(test_name), numRows.(test_name), ...
+        statstr_s.(test_name), statstr_d.(test_name), ...
+        err_s.(test_name), err_d.(test_name), ...
+        pres_s.(test_name), pres_d.(test_name), ...
+        iter_s.(test_name), iter_d.(test_name),...
+        time_s.(test_name), time_d.(test_name) );
+end
+
+

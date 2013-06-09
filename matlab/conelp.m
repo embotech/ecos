@@ -181,10 +181,6 @@ for nIt = 0:MAXIT+1
     ry = hry - b.*tau;     hresy = norm(hry,2);     hz = h'*z;
     rz = hrz - h.*tau;     hresz = norm(hrz,2);     sz = s'*z;
     
-%     fprintf('norm(rx) = %6.4e\n', norm(rx));
-%     fprintf('norm(ry) = %6.4e\n', norm(ry));
-%     fprintf('norm(rz) = %6.4e\n', norm(rz));
-    
     if( p > 0 ), by = b'*y; else by = 0; end  % only in presense of eq. constr.
     rt = kap + cx + by + hz;
     % 
@@ -254,50 +250,21 @@ for nIt = 0:MAXIT+1
     end        
     
     %% 2. Affine search direction.
-    
-%     % BACKTRACKING-HACK
-%     gamma = 0.999998;
-%     if( presprior < info.pres / 100 )
-%         x = x - gamma*alpha*dx; 
-%         y = y - gamma*alpha*dy; 
-%         s = s - gamma*alpha*ds; 
-%         z = z - gamma*alpha*dz;
-%         kap = kap - gamma*alpha*dkap;     
-%         tau = tau - gamma*alpha*dtau;
-%         fprintf('BACKTRACKING...\n');
-%         NITREF = NITREF*2;
-%         continue
-%     end    
-%     presprior = info.pres;
-        
-    % build & factor KKT matrix
-    K = conelp_KKTmatrix(A, Gtilde, Vreg, EPS);
-         
-% fprintf('cond(K) = %4.2e\n', condest(K));
 
-    [L,D,PL,QL,P] = conelp_factor(K,P,LINSOLVER,n,p,dims,scaling);    
+    % build KKT matrix 
+    K = conelp_KKTmatrix(A, Gtilde, Vreg, EPS);
+  
+    % factor KKT matrix
+    [L,D,PL,QL,P] = conelp_factor(K,P,LINSOLVER,n,p,dims,scaling, c,b,h,kap,tau);    
     assert( all( ~isnan(L(:)) ), 'Factorization returned NaN');
     assert( all( ~isnan(D(:)) ), 'Factorization returned NaN');
-    
-    % rank1-update of Cholesky factors
-%     for k=1:length(dims.q)
-%         v = zeros(n+p+mtilde,1);
-%         v(n+p+dims.l+sum(dims.q(1:k-1))+k) = 1;
-%         [L,D] = rank1update(L,D,scaling.q(k).beta,v(P));
-%     end
     
     % first solve for x1 y1 z1
     [x1,y1,z1,info.nitref1] = conelp_solve(L,D,P,PL,QL, -c,b,h, A,G,Vtrue, dims, NITREF,LINSOLVER,LINSYSACC);
     assert( all( ~isnan(x1) ), 'Linear solver returned NaN');
     assert( all( ~isnan(y1) ), 'Linear solver returned NaN');
     assert( all( ~isnan(z1) ), 'Linear solver returned NaN');
-    
-%     rowprint(x1,sprintf('x1_%02d',nIt));
-%     rowprint(y1,sprintf('y1_%02d',nIt));
-%     rowprint(z1,sprintf('z1_%02d',nIt));
-    
-%     break;
-    
+        
     % second solve for x2 y2 z2
     bx = rx;  by = ry;  bz = -rz + s; dt = rt - kap;  bkap = kap*tau;            
     [x2,y2,z2,info.nitref2] = conelp_solve(L,D,P,PL,QL, bx,by,bz, A,G,Vtrue, dims, NITREF,LINSOLVER,LINSYSACC);
@@ -346,6 +313,9 @@ for nIt = 0:MAXIT+1
     ds = conelp_timesW(scaling, ds_by_W, dims,LINSOLVER);
     dkap = -(bkap + kap*dtau)/tau;    
     
+    temp = conelp_kringel(s,dz,dims) + conelp_kringel(ds,z,dims) + conelp_kringel(s,z,dims)+ conelp_kringel(dsaff,dzaff,dims) - sigma*mu;
+    fprintf('||s o dz  +  ds o z  +  s o z + dsa o dza - sigma*mu*e = %e||\n',temp); 
+    
     %% 5. Line search for combined search direction.    
     W_times_dz = conelp_timesW(scaling,dz,dims,LINSOLVER); % = W*dz
     alpha = conelp_stepsize(lambda,ds_by_W,W_times_dz,dims,tau,dtau,kap,dkap)*GAMMA;
@@ -353,6 +323,7 @@ for nIt = 0:MAXIT+1
 %     alpha = conelp_linesearch(s,z,tau,kap,ds,dz,dtau,dkap,dims,lambda)*GAMMA;          
     
     %% 6. Update variables and scaling.    
+    fprintf('ds''*dz + dkap*dtau = %e\n', ds'*dz + dkap*dtau);
     x = x + alpha*dx; y = y + alpha*dy; s = s + alpha*ds; z = z + alpha*dz;
     kap = kap + alpha*dkap;     tau = tau + alpha*dtau;
     assert( tau > 0, 'tau <= 0, exiting.');
