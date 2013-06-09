@@ -542,7 +542,7 @@ idxint ECOS_solve(pwork* w)
          */
         if( w->info->iter > 0 && w->info->pres > SAFEGUARD*pres_prev ){
 #if PRINTLEVEL > 1
-            PRINTTEXT("\nNUMERICAL PROBLEMS, recovering iterate %d and stopping.\n", w->info->iter-1);
+            PRINTTEXT("\nNUMERICAL PROBLEMS, recovering iterate %d and stopping.\n", (int)w->info->iter-1);
 #endif
             /* Backtrack */
             for( i=0; i < w->n; i++ ){ w->x[i] -= w->info->step * w->KKT->dx2[i]; }
