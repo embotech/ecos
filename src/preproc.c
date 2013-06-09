@@ -746,7 +746,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 
 	/* permute sign vector */
     for( i=0; i<nK; i++ ){ mywork->KKT->Sign[Pinv[i]] = Sign[i]; }
-#if PRINTLEVEL > 2
+#if PRINTLEVEL > 3
     PRINTTEXT("P = [");
     for( i=0; i<nK; i++ ){ PRINTTEXT("%d ", (int)P[i]); }
     PRINTTEXT("];\n");

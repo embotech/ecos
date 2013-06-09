@@ -32,9 +32,6 @@
 #include <math.h>
 
 
-/* OWN SIMPLE MACROS --------------------------------------------------- */
-#define MAX(X, Y)  ((X) < (Y) ? (Y) : (X))
-
 /*
  * Initializes the solver.
  *
@@ -70,9 +67,9 @@ idxint init(pwork* w)
     /* check if factorization was successful, exit otherwise */
 	if(  KKT_FACTOR_RETURN_CODE != KKT_OK ){
 #if PRINTLEVEL > 0
-        PRINTTEXT("\nElement of D zero during factorization of KKT system, aborting.");
+        PRINTTEXT("\nProblem in factoring KKT system, aborting.");
 #endif
-        return ECOS_KKTZERO;
+        return ECOS_FATAL;
     }
 
 	
@@ -183,7 +180,7 @@ idxint init(pwork* w)
 void computeResiduals(pwork *w)
 {
 	/* rx = -A'*y - G'*z - c.*tau */
-	if(w->A) {
+	if( w->p > 0 ) {
         sparseMtVm(w->A, w->y, w->rx, 1, 0);
         sparseMtVm(w->G, w->z, w->rx, 0, 0);
     } else {
@@ -193,10 +190,15 @@ void computeResiduals(pwork *w)
 	vsubscale(w->n, w->tau, w->c, w->rx);
 		
 	/* ry = A*x - b.*tau */
-	if(w->A) sparseMV(w->A, w->x, w->ry, 1, 1);
-	w->hresy = norm2(w->ry, w->p);
-	vsubscale(w->p, w->tau, w->b, w->ry);
-	
+	if( w->p > 0 ){
+        sparseMV(w->A, w->x, w->ry, 1, 1);
+        w->hresy = norm2(w->ry, w->p);
+        vsubscale(w->p, w->tau, w->b, w->ry);
+    } else {
+        w->hresy = 0;
+        w->ry = NULL;
+	}
+    
 	/* rz = s + G*x - h.*tau */
 	sparseMV(w->G, w->x, w->rz, 1, 1);
 	vadd(w->m, w->s, w->rz);
@@ -205,7 +207,7 @@ void computeResiduals(pwork *w)
 
 	/* rt = kappa + c'*x + b'*y + h'*z; */
 	w->cx = ddot(w->n, w->c, w->x);
-	w->by = ddot(w->p, w->b, w->y);
+	w->by = w->p > 0 ? ddot(w->p, w->b, w->y) : 0.0;
 	w->hz = ddot(w->m, w->h, w->z);
 	w->rt = w->kap + w->cx + w->by + w->hz;    
 }
@@ -235,14 +237,20 @@ void updateStatistics(pwork* w)
 	else info->relgap = NAN;
 
 	/* residuals */
-	nry = norm2(w->ry, w->p)/w->resy0;  nrz = norm2(w->rz, w->m)/w->resz0;
+    nry = w->p > 0 ? norm2(w->ry, w->p)/w->resy0 : 0.0;
+    nrz = norm2(w->rz, w->m)/w->resz0;
 	info->pres = MAX(nry, nrz) / w->tau;
 	info->dres = norm2(w->rx, w->n)/w->resx0 / w->tau;
     
-	/* infeasibility measures */
-    
-	info->pinfres = w->hz + w->by < 0 ? w->hresx / w->resx0 / (-w->hz - w->by) : NAN;
-	info->dinfres = w->cx < 0 ? MAX(w->hresy/w->resy0, w->hresz/w->resz0) / (-w->cx) : NAN;
+	/* infeasibility measures
+     *
+	 * CVXOPT uses the following:
+     * info->pinfres = w->hz + w->by < 0 ? w->hresx / w->resx0 / (-w->hz - w->by) : NAN;
+     * info->dinfres = w->cx < 0 ? MAX(w->hresy/w->resy0, w->hresz/w->resz0) / (-w->cx) : NAN;
+     */
+    info->pinfres = w->hz + w->by < 0 ? w->hresx/w->resx0 : NAN;
+    info->dinfres = w->cx < 0 ? MAX(w->hresy/w->resy0, w->hresz/w->resz0) : NAN;
+	
     
 #if PRINTLEVEL > 2
     PRINTTEXT("TAU=%6.4e  KAP=%6.4e  PINFRES=%6.4e  DINFRES=%6.4e\n",w->tau,w->kap,info->pinfres, info->dinfres );
@@ -371,7 +379,7 @@ void RHS_combined(pwork* w)
 /*
  * Line search according to Vandenberghe (cf. §8 in his manual).
  */
-pfloat lineSearch(pfloat* lambda, pfloat* ds, pfloat* dz, pfloat tau, pfloat dtau, pfloat kap, pfloat dkap, cone* C, kkt* KKT, pfloat* s, pfloat* z)
+pfloat lineSearch(pfloat* lambda, pfloat* ds, pfloat* dz, pfloat tau, pfloat dtau, pfloat kap, pfloat dkap, cone* C, kkt* KKT)
 {
 	idxint i, j, cone_start, conesize;
 	pfloat rhomin, sigmamin, alpha, lknorm, lknorminv, rhonorm, sigmanorm, conic_step, temp;
@@ -488,7 +496,7 @@ void backscale(pwork *w)
 idxint ECOS_solve(pwork* w)
 {
 	idxint i, initcode, KKT_FACTOR_RETURN_CODE;
-	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap;
+	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap, pres_prev;
 	idxint exitcode = ECOS_FATAL;
 #if PROFILING > 0
 	timer tsolve;
@@ -511,19 +519,9 @@ idxint ECOS_solve(pwork* w)
         return ECOS_FATAL;
     }
     
-    /*
-    PRINTTEXT("z[1]=%6.4f\tz[2]=%6.4f\tz[3]=%6.4f\tz[4]=%6.4f\n",w->z[0],w->z[1],w->z[2],w->z[3]);
-     */
     
-    if( initcode == ECOS_KKTZERO ){
-#if PRINTLEVEL > 0
-        PRINTTEXT("\nElement of D zero during KKT factorization in initialization routine, aborting.");
-#endif
-        return ECOS_KKTZERO;
-    }
     
-
-	/* MAIN INTERIOR POINT LOOP */
+	/* MAIN INTERIOR POINT LOOP ---------------------------------------------------------------------- */
 	for( w->info->iter = 0; w->info->iter <= w->stgs->maxit; w->info->iter++ ){
         
 		/* Compute residuals */
@@ -536,10 +534,35 @@ idxint ECOS_solve(pwork* w)
 		/* Print info */
 		printProgress(w->info);
 #endif		
+        
+        
+        /* SAFEGUARD: Backtrack to old iterate if the update was bad such that the primal residual PRES has
+         *            increased by a factor of SAFEGUARD.
+         * If the safeguard is activated, the solver quits with the flag ECOS_NUMERICS.
+         */
+        if( w->info->iter > 0 && w->info->pres > SAFEGUARD*pres_prev ){
+#if PRINTLEVEL > 1
+            PRINTTEXT("\nNUMERICAL PROBLEMS, recovering iterate %d and stopping.\n", w->info->iter-1);
+#endif
+            /* Backtrack */
+            for( i=0; i < w->n; i++ ){ w->x[i] -= w->info->step * w->KKT->dx2[i]; }
+            for( i=0; i < w->p; i++ ){ w->y[i] -= w->info->step * w->KKT->dy2[i]; }
+            for( i=0; i < w->m; i++ ){ w->z[i] -= w->info->step * w->KKT->dz2[i]; }
+            for( i=0; i < w->m; i++ ){ w->s[i] -= w->info->step * w->dsaff[i]; }
+            w->kap -= w->info->step * dkap;
+            w->tau -= w->info->step * dtau;
+            exitcode = ECOS_NUMERICS;
+            computeResiduals(w);
+            updateStatistics(w);
+            break;
+        }
+        pres_prev = w->info->pres;
+        
 
 		/* Check termination criteria and exit if necessary */
 		/* Optimal? */
-		if( w->info->pres < w->stgs->feastol && w->info->dres < w->stgs->feastol &&
+		if( ( ( -w->cx > 0 ) || ( -w->by - w->hz > 0) ) &&
+            w->info->pres < w->stgs->feastol && w->info->dres < w->stgs->feastol &&
 			( w->info->gap < w->stgs->abstol || w->info->relgap < w->stgs->reltol ) ){
 #if PRINTLEVEL > 0
 			PRINTTEXT("\nOPTIMAL (within feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", w->stgs->feastol, w->stgs->reltol, w->stgs->abstol);
@@ -549,7 +572,7 @@ idxint ECOS_solve(pwork* w)
 		}            
 		/* Primal infeasible? */
 		else if( ((w->info->pinfres != NAN) && (w->info->pinfres < w->stgs->feastol)) ||
-                 ((w->tau < w->stgs->feastol) && (w->kap < w->stgs->feastol && w->info->pinfres < w->stgs->feastol*10)) ){
+                 ((w->tau < w->stgs->feastol) && (w->kap < w->stgs->feastol && w->info->pinfres < w->stgs->feastol)) ){
 #if PRINTLEVEL > 0
 			PRINTTEXT("\nPRIMAL INFEASIBLE (within feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", w->stgs->feastol, w->stgs->reltol, w->stgs->abstol);
 #endif
@@ -608,15 +631,6 @@ idxint ECOS_solve(pwork* w)
 #else
         KKT_FACTOR_RETURN_CODE = kkt_factor(w->KKT, w->stgs->eps, w->stgs->delta);
 #endif
-        
-        /* check if factorization was successful, quit otherwise */
-        if( KKT_FACTOR_RETURN_CODE != KKT_OK ){
-#if PRINTLEVEL > 0
-            PRINTTEXT("\nElement of D zero during factorization of KKT system, aborting.");
-#endif
-            exitcode = ECOS_KKTZERO;
-            break;
-        }
 
 		/* Solve for RHS1, which is used later also in combined direction */
 #if PROFILING > 1
@@ -654,7 +668,7 @@ idxint ECOS_solve(pwork* w)
 		dkapaff = -w->kap - w->kap/w->tau*dtauaff;
         
         /* Line search on W\dsaff and W*dzaff */
-		w->info->step_aff = lineSearch(w->lambda, w->dsaff_by_W, w->W_times_dzaff, w->tau, dtauaff, w->kap, dkapaff, w->C, w->KKT, w->s, w->z);
+		w->info->step_aff = lineSearch(w->lambda, w->dsaff_by_W, w->W_times_dzaff, w->tau, dtauaff, w->kap, dkapaff, w->C, w->KKT);
         
 		/* Centering parameter */
         sigma = 1.0 - w->info->step_aff;
@@ -694,7 +708,7 @@ idxint ECOS_solve(pwork* w)
 		dkap = -(bkap + w->kap*dtau)/w->tau;
 
 		/* Line search on combined direction */
-		w->info->step = lineSearch(w->lambda, w->dsaff_by_W, w->W_times_dzaff, w->tau, dtau, w->kap, dkap, w->C, w->KKT, w->s, w->z) * w->stgs->gamma;
+		w->info->step = lineSearch(w->lambda, w->dsaff_by_W, w->W_times_dzaff, w->tau, dtau, w->kap, dkap, w->C, w->KKT) * w->stgs->gamma;
 		
 		/* ds = W*ds_by_W */
 		scale(w->dsaff_by_W, w->C, w->dsaff);

@@ -203,7 +203,7 @@ spmat* copySparseMatrix(spmat* A)
 
 
 /* ================================= DEBUG FUNCTIONS ======================= */
-#if DEBUG > 0
+#if PRINTLEVEL > 2
 /**
  * Prints a dense matrix.
  */

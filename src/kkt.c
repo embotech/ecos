@@ -105,7 +105,11 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
     pfloat* ey = e + n;
     pfloat* ez = e + n+p;
     pfloat bnorm = 1.0 + norminf(Pb, n+p+MTILDE);
-    pfloat nex, ney, nez;
+    pfloat nex = 0;
+    pfloat ney = 0;
+    pfloat nez = 0;
+    pfloat nerr;
+    pfloat nerr_prev;
     pfloat error_threshold = bnorm*LINSYSACC;
     idxint nK = KKT->PKPt->n;
 
@@ -125,7 +129,7 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
 #endif
     
 	/* iterative refinement */
-	for( kItRef=1; kItRef <= nitref; kItRef++ ){
+	for( kItRef=0; kItRef <= nitref; kItRef++ ){
         
         /* unpermute x & copy into arrays */
         unstretch(n, p, C, Pinv, Px, dx, dy, dz);
@@ -142,7 +146,7 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
         if( p > 0 ){
             for( i=0; i<p; i++ ){ ey[i] = Pb[Pinv[k++]]; }
             sparseMV(A, dx, ey, -1, 0);
-            ney = norminf(ey,p);
+            ney = norminf(ey,p);            
         }
         
         /* --> 3. ez = bz - G*dx + V*dz_true */
@@ -174,17 +178,29 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
         
 #if PRINTLEVEL > 2
         if( p > 0 ){
-            PRINTTEXT("    %2d  %3.1e  %3.1e  %3.1e\n", (int)kItRef-1, nex, ney, nez);
+            PRINTTEXT("    %2d  %3.1e  %3.1e  %3.1e\n", (int)kItRef, nex, ney, nez);
         } else {
-            PRINTTEXT("    %2d  %3.1e  %3.1e\n", (int)kItRef-1, nex, nez);
+            PRINTTEXT("    %2d  %3.1e  %3.1e\n", (int)kItRef, nex, nez);
         }
 #endif
         
-        /* continue with refinement only if errors are small enough */
-        if( nex < error_threshold && (p==0 || ney < error_threshold) && nez < error_threshold){
+        /* maximum error (infinity norm of e) */
+        nerr = MAX( nex, nez);
+        if( p > 0 ){ nerr = MAX( nerr, nez ); }
+        
+        /* CHECK WHETHER REFINEMENT BROUGHT DECREASE - if not undo and quit! */
+        if( kItRef > 0 && nerr > nerr_prev ){
+            /* undo refinement */
+            for( i=0; i<nK; i++ ){ Px[i] -= dPx[i]; }
             kItRef--;
             break;
         }
+        
+        /* CHECK WHETHER TO REFINE AGAIN */
+        if( kItRef == nitref || ( nerr < error_threshold ) || ( kItRef > 0 && nerr_prev < IRERRFACT*nerr ) ){
+            break;
+        }
+        nerr_prev = nerr;
         
         /* permute */
         for( i=0; i<nK; i++) { Pe[Pinv[i]] = e[i]; }
@@ -205,7 +221,7 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
 	/* copy solution out into the different arrays, permutation included */
 	unstretch(n, p, C, Pinv, Px, dx, dy, dz);
     
-    return kItRef == nitref+1 ? nitref : kItRef;
+    return kItRef;
 }
 
 

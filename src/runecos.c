@@ -23,7 +23,9 @@
 #include <stdio.h>
 
 #include "ecos.h"
-#include "data.h"
+/* #include "problems/rsvm.h" */
+ #include "problems/dimacs_nb.h"
+//#include "problems/dimacs_nb_L1.h"
 
 int main(void)
 {

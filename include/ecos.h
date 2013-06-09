@@ -32,23 +32,37 @@
 
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
-#define MAXIT     (30)           /* maximum number of iterations         */
-#define FEASTOL   (1E-5)         /* primal/dual infeasibility tolerance  */
+#define MAXIT     (50)           /* maximum number of iterations         */
+#define FEASTOL   (5E-5)         /* primal/dual infeasibility tolerance  */
 #define ABSTOL    (1E-6)         /* absolute tolerance on duality gap    */
 #define RELTOL    (1E-6)         /* relative tolerance on duality gap    */
-
 #define GAMMA     (0.98)         /* scaling the final step length        */
 #define STATICREG (1)            /* static regularization: 0:off, 1:on   */
 #define DELTASTAT (5E-9)         /* regularization parameter             */
 #define DELTA     (5E-7)         /* dyn. regularization parameter        */
 #define EPS       (1E-14)   /* dyn. regularization threshold (do not 0!) */
 #define NITREF    (2)       	 /* number of iterative refinement steps */
+#define IRERRFACT (2)            /* factor by which IR should reduce err */
 #define LINSYSACC (1E-14)        /* rel. accuracy of search direction    */
 #define SIGMAMIN  (0.001)        /* always do some centering             */
 #define SIGMAMAX  (0.999)        /* never fully center                   */
-#define STEPMIN   (1E-6)         /* smallest step that we want to make   */
-#define STEPMAX   (0.999)        /* biggest step allowed                 */
+#define STEPMIN   (1E-8)         /* smallest step that we do take        */
+#define STEPMAX   (0.999)  /* biggest step allowed, also in affine dir.  */
+#define SAFEGUARD (500)     /* Maximum increase in PRES before
+                                                ECOS_NUMERICS is thrown. */
 
+
+/* EXITCODES ----------------------------------------------------------- */
+#define ECOS_OPTIMAL  (0)   /* Problem solved to optimality              */
+#define ECOS_PINF     (1)   /* Found certificate of primal infeasibility */
+#define ECOS_DINF     (2)   /* Found certificate of dual infeasibility   */
+#define ECOS_MAXIT    (-1)  /* Maximum number of iterations reached      */
+#define ECOS_NUMERICS (-2)  /* Line search gave step length 0: numerics? */
+#define ECOS_OUTCONE  (-3)  /* s or z got outside the cone, numerics?    */
+#define ECOS_FATAL    (-7)  /* Unknown problem in solver                 */
+
+
+/* SETTINGS STRUCT ----------------------------------------------------- */
 typedef struct settings{
 	pfloat gamma;                /* scaling the final step length        */	
 	pfloat delta;                /* regularization parameter             */
@@ -153,16 +167,10 @@ typedef struct pwork{
 } pwork;
 
 
-/* EXITCODES ----------------------------------------------------------- */
-#define ECOS_OPTIMAL  (0)   /* Problem solved to optimality              */
-#define ECOS_PINF     (1)   /* Found certificate of primal infeasibility */
-#define ECOS_DINF     (2)   /* Found certificate of dual infeasibility   */
-
-#define ECOS_MAXIT    (-1)  /* Maximum number of iterations reached      */
-#define ECOS_NUMERICS (-2)  /* Line search gave step length 0: numerics? */
-#define ECOS_KKTZERO  (-3)  /* Element of D zero during factorization    */
-#define ECOS_OUTCONE  (-5)  /* s or z got outside the cone, numerics?    */
-#define ECOS_FATAL    (-7)  /* Unknown problem in solver                 */
+/* SOME USEFUL MACROS -------------------------------------------------- */
+#define MAX(X,Y)  ((X) < (Y) ? (Y) : (X))  /* maximum of 2 expressions   */
+/* save division x/y where y is assumed to be positive! */
+#define SAVEDIV_POS(X,Y)  ( (Y) < EPS ? ((X)/EPS) : (X)/(Y) ) 
 
 
 /* METHODS */
