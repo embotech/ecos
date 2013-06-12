@@ -26,7 +26,7 @@ objval = struct(...
 );
 
 k=1;
-testnr = 1:length(tests)
+testnr = 10:2:16%:length(tests)
 for i = testnr
     clear A At b c K
     test_name = tests(i).name;

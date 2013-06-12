@@ -36,16 +36,16 @@
 #define FEASTOL   (1E-5)         /* primal/dual infeasibility tolerance  */
 #define ABSTOL    (1E-6)         /* absolute tolerance on duality gap    */
 #define RELTOL    (1E-6)         /* relative tolerance on duality gap    */
-#define GAMMA     (0.985)        /* scaling the final step length        */
+#define GAMMA     (0.98)         /* scaling the final step length        */
 #define STATICREG (1)            /* static regularization: 0:off, 1:on   */
-#define DELTASTAT (1E-9)         /* regularization parameter             */
+#define DELTASTAT (5E-9)         /* regularization parameter             */
 #define DELTA     (5E-7)         /* dyn. regularization parameter        */
 #define EPS       (1E-14)   /* dyn. regularization threshold (do not 0!) */
-#define NITREF    (2)       	 /* number of iterative refinement steps */
+#define NITREF    (3)       	 /* number of iterative refinement steps */
 #define IRERRFACT (2)            /* factor by which IR should reduce err */
 #define LINSYSACC (1E-14)        /* rel. accuracy of search direction    */
-#define SIGMAMIN  (0.01)         /* always do some centering             */
-#define SIGMAMAX  (0.99)         /* never fully center                   */
+#define SIGMAMIN  (0.001)         /* always do some centering             */
+#define SIGMAMAX  (0.999)         /* never fully center                   */
 #define STEPMIN   (1E-8)         /* smallest step that we do take        */
 #define STEPMAX   (0.999)  /* biggest step allowed, also in affine dir.  */
 #define SAFEGUARD (500)     /* Maximum increase in PRES before
