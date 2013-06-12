@@ -21,7 +21,7 @@ K = R_+ x Q_n1 x ... x Q_nN
 Features of ECOS
 ----
  
-+ *ECOS runs on embedded platforms*. Written in ANSI C, 
++ *ECOS runs on embedded platforms*. Written in ANSI C (except for the timing code), 
   it can be compiled for any platform for which a C compiler is available. Excluding the problem setup
   part, no memory manager is needed for solving problem instances of same structure. 
 + *ECOS is efficient*. Using sparse linear algebra routines, it computes only what is really necessary.
@@ -31,12 +31,36 @@ Features of ECOS
    code).
 + *ECOS is numerically robust*. Using regularization and iterative refinement coupled with a carefully chosen 
   sparse representation of scaling matrices, millions of problem instances are solved reliably.
-+ *ECOS comes with a MATLAB and CVX 2.0 interface*. This way, you can prototype, simulate and verify the performance
++ *ECOS comes with a MATLAB and CVX 2.0 interface*. With [CVX](http://cvxr.com) you can prototype, simulate and verify the performance
   of ECOS before you implement the very same code on your embedded hardware.
 + *ECOS comes with a Python interface*. This interface is built on top of [CVXOPT](http://abel.ee.ucla.edu/cvxopt/) and uses its sparse data structures.
 + *ECOS is library-free*. No need to link any external library to ECOS, apart from `AMD` and `sparseLDL`, both 
   from Timothy A. Davis, which are included in this project.
 
+Using ECOS with CVX
+====
+
+The simplest way to use ECOS is to install a CVX 2.0 shim. For this to work, you must have the latest version of 
+[CVX](http://cvxr.com) installed in MATLAB. Once CVX is installed, open MATLAB and run,
+
+     cd <ecos-directory>/matlab
+     cvx_install_ecos
+
+This will automatically build ECOS and install the CVX shim. Please report any error messages to us.
+
+Once the ECOS shim is installed, the CVX solver can be switeched using the `cvx_solver` command. For instance,
+
+     cvx_begin
+          cvx_solver ecos     % without this line, CVX will use its default solver
+          variable x(n)
+          
+          minimize sum_square(A*x - b)
+          subject to
+               x >= 0
+     cvx_end
+     
+*IMPORTANT*: Not all of CVX's atoms are SOCP-representable. Some of the atoms implemented in CVX require the use of SDP cones. Additionally, other atoms that could be implemented with a second-order cone are instead implemented as SDPs. See 
+[Issue #8](https://github.com/ifa-ethz/ecos/issues/8) for more information.
 
 Using ECOS in MATLAB
 ====
