@@ -384,6 +384,7 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 	FREE(w->KKT->Pattern);          /* mywork->KKT->Pattern = (idxint *)MALLOC(nK*sizeof(idxint));    */
 	FREE(w->KKT->Sign);             /* mywork->KKT->Sign = (idxint *)MALLOC(nK*sizeof(idxint));       */
 	FREE(w->KKT->Pinv);             /* mywork->KKT->Pinv = (idxint *)MALLOC(nK*sizeof(idxint));       */
+    FREE(w->KKT->P);                
 	FREE(w->KKT->PK);               /* mywork->KKT->PK = (idxint *)MALLOC(KU->nnz*sizeof(idxint));    */
 	freeSparseMatrix(w->KKT->PKPt); /* mywork->KKT->PKPt = newSparseMatrix(nK, nK, KU->nnz);          */
 	FREE(w->KKT->RHS1);             /* mywork->KKT->RHS1 = (pfloat *)MALLOC(nK*sizeof(pfloat));       */
