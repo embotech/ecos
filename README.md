@@ -48,7 +48,7 @@ The simplest way to use ECOS is to install a CVX 2.0 shim. For this to work, you
 
 This will automatically build ECOS and install the CVX shim. Please report any error messages to us.
 
-Once the ECOS shim is installed, the CVX solver can be switeched using the `cvx_solver` command. For instance,
+Once the ECOS shim is installed, the CVX solver can be switched using the `cvx_solver` command. For instance,
 
      cvx_begin
           cvx_solver ecos     % without this line, CVX will use its default solver
