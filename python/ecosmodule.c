@@ -2,9 +2,6 @@
 #include "ecos.h"
 #include "cvxopt.h"
 
-/* module_state introduced to allow Python3.x and Python2.x.
- * see this: http://docs.python.org/3/howto/cporting.html.
-
 /* The PyInt variable is a PyLong in Python3.x.
  */
 #if PY_MAJOR_VERSION >= 3
