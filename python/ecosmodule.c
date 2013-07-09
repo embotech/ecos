@@ -249,7 +249,7 @@ static PyObject *ecos(PyObject* self, PyObject *args)
   memcpy(MAT_BUFD(y), mywork->y, p*sizeof(double));
 
   
-  /* info dict */
+  /* info dict */  
   // infostring
   const char* infostring;
   switch( exitcode ){
@@ -265,9 +265,9 @@ static PyObject *ecos(PyObject* self, PyObject *args)
       case ECOS_DINF:
           infostring = "Dual infeasible";
           break;
-//      case ECOS_KKTZERO:
-//          infostring = "Element of D zero during KKT factorization";
-//          break;
+      case ECOS_NUMERICS:
+          infostring = "Run into numerical problems";
+          break;
       case ECOS_OUTCONE:
           infostring = "PROBLEM: Multipliers leaving the cone";
           break;
