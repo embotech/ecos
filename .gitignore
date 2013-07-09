@@ -17,3 +17,6 @@
 *.app
 
 */.svn
+
+# Temp files cretated by text editors
+*~
