@@ -119,7 +119,7 @@ if m1 == 1,
 end
 dims = K;
 
-ecos_c = -full(b); % PHLI: Empirically this was needed to match SeDuMi output
+ecos_c = -full(b); % PHLI: Empirically this needed to be negated to match SeDuMi output
 ecos_G = At((K.f+1):end,:);
 ecos_h = full(c((K.f+1):end));
 ecos_A = At(1:K.f,:);
