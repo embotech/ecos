@@ -31,8 +31,9 @@ Features of ECOS
    code).
 + *ECOS is numerically robust*. Using regularization and iterative refinement coupled with a carefully chosen 
   sparse representation of scaling matrices, millions of problem instances are solved reliably.
-+ *ECOS comes with a MATLAB and CVX 2.0 interface*. With [CVX](http://cvxr.com) you can prototype, simulate and verify the performance
-  of ECOS before you implement the very same code on your embedded hardware.
++ *ECOS comes with a MATLAB and CVX 2.0 interface*, and *it is supported by YALMIP*. With [CVX](http://cvxr.com) and
+  [YALMIP](http://users.isy.liu.se/johanl/yalmip/) you can prototype, simulate and verify the performance of ECOS before you implement the very same code on 
+your embedded hardware.  
 + *ECOS comes with a Python interface*. This interface is built on top of [CVXOPT](http://abel.ee.ucla.edu/cvxopt/) and uses its sparse data structures.
 + *ECOS is library-free*. No need to link any external library to ECOS, apart from `AMD` and `sparseLDL`, both 
   from Timothy A. Davis, which are included in this project.
@@ -61,6 +62,22 @@ Once the ECOS shim is installed, the CVX solver can be switched using the `cvx_s
      
 *IMPORTANT*: Not all of CVX's atoms are SOCP-representable. Some of the atoms implemented in CVX require the use of SDP cones. Additionally, other atoms that could be implemented with a second-order cone are instead implemented as SDPs. See 
 [Issue #8](https://github.com/ifa-ethz/ecos/issues/8) for more information.
+
+Using ECOS with YALMIP
+====
+As of release R20130628, [YALMIP](http://users.isy.liu.se/johanl/yalmip/) supports ECOS as a solver - simply use the command
+```
+sdpsettings('solver','ecos');
+```
+to select ECOS as the solver for your problem. Below is a toy example:
+```
+% Solve 1000 SOCPs
+x = sdpvar(3,1);
+Ufo= [norm(x) <= 2, norm(x+1) <= 2];
+plot(Ufo,x,'y',1000,sdpsettings('solver','ecos'))
+```
+
+
 
 Using ECOS in MATLAB
 ====
