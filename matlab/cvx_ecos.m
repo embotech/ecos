@@ -119,9 +119,9 @@ if m1 == 1,
 end
 dims = K;
 
-ecos_c = full(b);
-ecos_G = At(K.f+(1:end),:);
-ecos_h = full(c(K.f+(1:end)));
+ecos_c = -full(b); % PHLI: Empirically this needed to be negated to match SeDuMi output
+ecos_G = At((K.f+1):end,:);
+ecos_h = full(c((K.f+1):end));
 ecos_A = At(1:K.f,:);
 ecos_b = full(c(1:K.f));
 
@@ -130,7 +130,8 @@ if( ~isreal(At) || ~isreal(c) || ~isreal(b) )
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-[ yy, xf, info, zz, xK ] = cvx_run_solver( @ecos, ecos_c, ecos_G, ecos_h, dims, ecos_A, ecos_b, 'xx', 'yy', 'zz', 'info', settings, 5 );
+varnames = {'x', 'y', 'info', 's', 'z'};
+[ yy, xf, info, zz, xK ] = cvx_run_solver( @ecos, ecos_c, ecos_G, ecos_h, dims, ecos_A, ecos_b, varnames{:}, settings, 5 );
 
 xx = [xf; xK];
 if add_row,
