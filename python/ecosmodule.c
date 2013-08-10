@@ -2,6 +2,13 @@
 #include "ecos.h"
 #include "cvxopt.h"
 
+/* The PyInt variable is a PyLong in Python3.x.
+ */
+#if PY_MAJOR_VERSION >= 3
+#define PyInt_AsLong PyLong_AsLong
+#define PyInt_Check PyLong_Check
+#endif
+
 static PyObject *ecos(PyObject* self, PyObject *args)
 {
   /* Expects a function call 
@@ -262,7 +269,7 @@ static PyObject *ecos(PyObject* self, PyObject *args)
           infostring = "Run into numerical problems";
           break;
       case ECOS_OUTCONE:
-          infostring = "PROBLEM: Mulitpliers leaving the cone";
+          infostring = "PROBLEM: Multipliers leaving the cone";
           break;
       default:
           infostring = "UNKNOWN PROBLEM IN SOLVER";
@@ -357,16 +364,38 @@ static PyMethodDef ECOSMethods[] =
   {NULL, NULL, 0, NULL} // sentinel
 };
 
-PyMODINIT_FUNC initecos(void)  
-{
-  PyObject *m;
+/* Module initialization */
+#if PY_MAJOR_VERSION >= 3
+  static struct PyModuleDef moduledef = {
+          PyModuleDef_HEAD_INIT,
+          "ecos",     /* m_name */
+          "Solve an SOCP using ECOS.",  /* m_doc */
+          -1,                  /* m_size */
+          ECOSMethods,         /* m_methods */
+          NULL,                /* m_reload */
+          NULL,                /* m_traverse */
+          NULL,                /* m_clear */
+          NULL,                /* m_free */
+  };
+#endif
 
+static PyObject* moduleinit(void)
+{
+  PyObject* m;
+  
+#if PY_MAJOR_VERSION >= 3
+  m = PyModule_Create(&moduledef);
+#else
   m = Py_InitModule("ecos", ECOSMethods);
+#endif
   
   if (import_cvxopt() < 0) return; // for cvxopt support
-  
-  if(m == NULL) return;
 
+  if (m == NULL)
+    return NULL;
+
+/* Rob: Not sure what the below is trying to do. It is also commented out in 
+   previous version and so is preserved here. */
 // #ifdef INDIRECT
 //   PDOSError = PyErr_NewException("pdos_indirect.error", NULL, NULL);
 // #else
@@ -377,4 +406,18 @@ PyMODINIT_FUNC initecos(void)
 //   PyModule_AddObject(m, "error", PDOSError);
   
 //  Py_AtExit(&cleanup);
-}
+
+  return m;
+};
+
+#if PY_MAJOR_VERSION >= 3
+  PyMODINIT_FUNC PyInit_ecos(void)
+  {
+    return moduleinit();
+  }
+#else
+  PyMODINIT_FUNC initecos(void)
+  {
+    moduleinit();
+  }
+#endif
