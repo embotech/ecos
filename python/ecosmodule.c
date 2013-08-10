@@ -11,7 +11,7 @@
 
 static PyObject *ecos(PyObject* self, PyObject *args)
 {
-  /* Expects a function call 
+  /* Expects a function call
    *     sol = ecos(c,G,h,dims,A,b)
    * where
    *
@@ -32,7 +32,7 @@ static PyObject *ecos(PyObject* self, PyObject *args)
    *
    * The code returns a Python dictionary with five keys, 'x', 'y', 'info', 's',
    * and 'z'. These correspond to the following:
-   * 
+   *
    * `x`: primal variables
    * `y`: dual variables for equality constraints
    * `s`: slacks for Gx + s <= h, s \in K
@@ -65,29 +65,29 @@ static PyObject *ecos(PyObject* self, PyObject *args)
   idxint p = 0;  // number of equality constraints
   idxint ncones = 0; // number of cones
   idxint numConicVariables = 0;
-  
+
   /* ECOS data structures */
   idxint l = 0;
   idxint *q = NULL;
 
-  
+
   pfloat *Gpr = NULL;
   idxint *Gjc = NULL;
   idxint *Gir = NULL;
- 
-  pfloat *Apr = NULL;    
+
+  pfloat *Apr = NULL;
   idxint *Ajc = NULL;
-  idxint *Air = NULL;   
-  
+  idxint *Air = NULL;
+
   pfloat *cpr = NULL;
   pfloat *hpr = NULL;
   pfloat *bpr = NULL;
-  
+
   pwork* mywork;
-  
+
   idxint i;
 
-  // parse the arguments and ensure they are the correct type 
+  // parse the arguments and ensure they are the correct type
   if( !PyArg_ParseTuple(args, "OOOO!|OO",
       &c,
       &G,
@@ -96,7 +96,7 @@ static PyObject *ecos(PyObject* self, PyObject *args)
       &A,
       &b)
     ) { return NULL; }
-  
+
   /* set G */
   if ((SpMatrix_Check(G) && SP_ID(G) != DOUBLE)){
       PyErr_SetString(PyExc_TypeError, "G must be a sparse 'd' matrix");
@@ -113,13 +113,13 @@ static PyObject *ecos(PyObject* self, PyObject *args)
   Gpr = SP_VALD(G);
   Gir = SP_ROW(G);
   Gjc = SP_COL(G);
-  
+
   /* set c */
   if (!Matrix_Check(c) || MAT_NCOLS(c) != 1 || MAT_ID(c) != DOUBLE) {
       PyErr_SetString(PyExc_TypeError, "c must be a dense 'd' matrix with one column");
       return NULL;
   }
-  
+
   if (MAT_NROWS(c) != n){
       PyErr_SetString(PyExc_ValueError, "c has incompatible dimension with G");
       return NULL;
@@ -131,13 +131,13 @@ static PyObject *ecos(PyObject* self, PyObject *args)
     PyErr_SetString(PyExc_TypeError, "h must be a dense 'd' matrix with one column");
     return NULL;
   }
-  
+
   if (MAT_NROWS(h) != m){
       PyErr_SetString(PyExc_ValueError, "h has incompatible dimension with G");
       return NULL;
   }
   hpr = MAT_BUFD(h);
-  
+
   /* get dims['l'] */
   PyObject *linearObj = PyDict_GetItemString(dims, "l");
   if(linearObj) {
@@ -148,7 +148,7 @@ static PyObject *ecos(PyObject* self, PyObject *args)
       return NULL;
     }
   }
-  
+
   /* get dims['q'] */
   PyObject *socObj = PyDict_GetItemString(dims, "q");
   if(socObj) {
@@ -170,14 +170,14 @@ static PyObject *ecos(PyObject* self, PyObject *args)
       return NULL;
     }
   }
-  
+
   if(A && b) {
     /* set A */
     if ((SpMatrix_Check(A) && SP_ID(A) != DOUBLE)){
         PyErr_SetString(PyExc_TypeError, "A must be a sparse 'd' matrix");
         if(q) free(q);
         return NULL;
-    } 
+    }
     if ((p = SP_NROWS(A)) < 0) {
         PyErr_SetString(PyExc_ValueError, "p must be a nonnegative integer");
         if(q) free(q);
@@ -193,7 +193,7 @@ static PyObject *ecos(PyObject* self, PyObject *args)
       Air = SP_ROW(A);
       Ajc = SP_COL(A);
     }
-     
+
     /* set b */
     if (!Matrix_Check(b) || MAT_NCOLS(b) != 1 || MAT_ID(b) != DOUBLE) {
         PyErr_SetString(PyExc_TypeError, "b must be a dense 'd' matrix with one column");
@@ -214,15 +214,15 @@ static PyObject *ecos(PyObject* self, PyObject *args)
     if(q) free(q);
     return NULL;
   }
-  
-    
+
+
   /* check that sum(q) + l = m */
     if( numConicVariables != m ){
         PyErr_SetString(PyExc_ValueError, "Number of rows of G does not match dims.l+sum(dims.q)");
         if(q) free(q);
         return NULL;
     }
-    
+
   /* This calls ECOS setup function. */
   mywork = ECOS_setup(n, m, p, l, ncones, q, Gpr, Gjc, Gir, Apr, Ajc, Air, cpr, hpr, bpr);
   if( mywork == NULL ){
@@ -230,10 +230,10 @@ static PyObject *ecos(PyObject* self, PyObject *args)
       if(q) free(q);
       return NULL;
   }
-  
-  /* Solve! */    
+
+  /* Solve! */
   idxint exitcode = ECOS_solve(mywork);
-  
+
   /* create output (all data is *deep copied*) */
   // TODO: request CVXOPT API for constructing from existing pointer
   /* x */
@@ -241,15 +241,15 @@ static PyObject *ecos(PyObject* self, PyObject *args)
   if(!(x = Matrix_New(n,1,DOUBLE)))
     return PyErr_NoMemory();
   memcpy(MAT_BUFD(x), mywork->x, n*sizeof(double));
-        
+
   /* y */
   matrix *y;
   if(!(y = Matrix_New(p,1,DOUBLE)))
     return PyErr_NoMemory();
   memcpy(MAT_BUFD(y), mywork->y, p*sizeof(double));
 
-  
-  /* info dict */  
+
+  /* info dict */
   // infostring
   const char* infostring;
   switch( exitcode ){
@@ -273,16 +273,16 @@ static PyObject *ecos(PyObject* self, PyObject *args)
           break;
       default:
           infostring = "UNKNOWN PROBLEM IN SOLVER";
-  }		
-  
+  }
+
   // numerical errors
   idxint numerr = 0;
   if( (exitcode == ECOS_NUMERICS) || (exitcode == ECOS_OUTCONE) || (exitcode == ECOS_FATAL) ){
       numerr = 1;
   }
-  
+
   // timings
-#if PROFILING > 0        
+#if PROFILING > 0
 	PyObject *tinfos = Py_BuildValue(
 #if PROFILING > 1
     "{s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d}",
@@ -307,8 +307,8 @@ static PyObject *ecos(PyObject* self, PyObject *args)
 #else
     "{s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:l,s:s,s:l}",
 #endif
-    "exitFlag", exitcode, 
-    "pcost", (double)mywork->info->pcost, 
+    "exitFlag", exitcode,
+    "pcost", (double)mywork->info->pcost,
     "dcost", (double)mywork->info->dcost,
     "pres", (double)mywork->info->pres,
     "dres", (double)mywork->info->dres,
@@ -325,7 +325,7 @@ static PyObject *ecos(PyObject* self, PyObject *args)
     "timing", tinfos,
 #endif
     "numerr",numerr);
-  // give reference to infoDict 
+  // give reference to infoDict
   Py_DECREF(tinfos);
 
   /* s */
@@ -333,17 +333,17 @@ static PyObject *ecos(PyObject* self, PyObject *args)
   if(!(s = Matrix_New(m,1,DOUBLE)))
     return PyErr_NoMemory();
   memcpy(MAT_BUFD(s), mywork->s, m*sizeof(double));
-  
+
   /* z */
   matrix *z;
   if(!(z = Matrix_New(m,1,DOUBLE)))
     return PyErr_NoMemory();
   memcpy(MAT_BUFD(z), mywork->z, m*sizeof(double));
 
-    
+
   /* cleanup */
   ECOS_cleanup(mywork, 0);
-  
+
   PyObject *returnDict = Py_BuildValue(
     "{s:O,s:O,s:O,s:O,s:O}",
     "x",x,
@@ -353,13 +353,13 @@ static PyObject *ecos(PyObject* self, PyObject *args)
     "info",infoDict);
   // give up ownership to the return dictionary
   Py_DECREF(x); Py_DECREF(y); Py_DECREF(z); Py_DECREF(s); Py_DECREF(infoDict);
-  
+
   return returnDict;
 }
 
 static PyMethodDef ECOSMethods[] =
 {
-  {"ecos", (PyCFunction)ecos, METH_VARARGS, 
+  {"ecos", (PyCFunction)ecos, METH_VARARGS,
     "Solve an SOCP using ECOS."},
   {NULL, NULL, 0, NULL} // sentinel
 };
@@ -382,14 +382,14 @@ static PyMethodDef ECOSMethods[] =
 static PyObject* moduleinit(void)
 {
   PyObject* m;
-  
+
 #if PY_MAJOR_VERSION >= 3
   m = PyModule_Create(&moduledef);
 #else
   m = Py_InitModule("ecos", ECOSMethods);
 #endif
-  
-  if (import_cvxopt() < 0) return; // for cvxopt support
+
+  if (import_cvxopt() < 0) return NULL; // for cvxopt support
 
   if (m == NULL)
     return NULL;

@@ -102,6 +102,7 @@ end
 
 %%
 
+print_figs = 0;
 
 s = [];
 e = [];
@@ -127,18 +128,21 @@ ylabel('fill in');
 legend('expanded', 'dense', 'Location', 'BestOutside', 'Orientation', 'horizontal');
 title('SVM Problem');
 
-
+if print_figs
 print -depsc svm_fillin.eps
+end
 
 figure(2)
 h = bar(ennz);
 set(h, 'BarWidth', 1);
 set(gca, 'XTickLabel', s);
 ylabel('nnz');
-legend('expanded KKT', 'dense KKT', 'expanded L', 'dense L', 'Location', 'BestOutside', 'Orientation', 'horizontal');
+legend('K', 'K', 'K', 'dense K', 'AMD', 'SYMAMD', 'METIS', 'dense METIS', 'Location', 'BestOutside', 'Orientation', 'horizontal');
 title('SVM Problem');
 
+if print_figs
 print -depsc svm_nnz.eps
+end
 
 figure(3)
 h = stem(e_iter);
@@ -147,7 +151,9 @@ ylabel('iters');
 %legend('expanded KKT', 'dense KKT', 'expanded L', 'dense L', 'Location', 'BestOutside', 'Orientation', 'horizontal');
 title('SVM Problem');
 
+if print_figs
 print -depsc svm_iter.eps
+end
 
 figure(4)
 h = stem(e_time);
@@ -156,9 +162,9 @@ ylabel('time (s)');
 %legend('expanded KKT', 'dense KKT', 'expanded L', 'dense L', 'Location', 'BestOutside', 'Orientation', 'horizontal');
 title('SVM Problem');
 
-
+if print_figs
 print -depsc svm_time.eps
-
+end
 
 s = [];
 e = [];
@@ -184,19 +190,21 @@ ylabel('fill in');
 legend('expanded', 'dense', 'Location', 'BestOutside', 'Orientation', 'horizontal');
 title('Portfolio Problem');
 
-
+if print_figs
 print -depsc port_fillin.eps
-
+end
 
 figure(6)
 h = bar(ennz);
 set(h, 'BarWidth', 1);
 set(gca, 'XTickLabel', s);
 ylabel('nnz');
-legend('expanded KKT', 'dense KKT', 'expanded L', 'dense L', 'Location', 'BestOutside', 'Orientation', 'horizontal');
+legend('K', 'K', 'K', 'dense K', 'AMD', 'SYMAMD', 'METIS', 'dense METIS', 'Location', 'BestOutside', 'Orientation', 'horizontal');
 title('Portfolio Problem');
 
+if print_figs
 print -depsc port_nnz.eps
+end
 
 figure(7)
 h = stem(e_iter);
@@ -205,8 +213,9 @@ ylabel('iters');
 %legend('expanded KKT', 'dense KKT', 'expanded L', 'dense L', 'Location', 'BestOutside', 'Orientation', 'horizontal');
 title('Portfolio Problem');
 
-
+if print_figs
 print -depsc port_iter.eps
+end
 
 figure(8)
 h = stem(e_time);
@@ -215,5 +224,6 @@ ylabel('time (s)');
 %legend('expanded KKT', 'dense KKT', 'expanded L', 'dense L', 'Location', 'BestOutside', 'Orientation', 'horizontal');
 title('Portfolio Problem');
 
+if print_figs
 print -depsc port_time.eps
-
+end
