@@ -394,19 +394,6 @@ static PyObject* moduleinit(void)
   if (m == NULL)
     return NULL;
 
-/* Rob: Not sure what the below is trying to do. It is also commented out in 
-   previous version and so is preserved here. */
-// #ifdef INDIRECT
-//   PDOSError = PyErr_NewException("pdos_indirect.error", NULL, NULL);
-// #else
-//   PDOSError = PyErr_NewException("pdos_direct.error", NULL, NULL);
-// #endif
-// 
-//   Py_INCREF(PDOSError);
-//   PyModule_AddObject(m, "error", PDOSError);
-  
-//  Py_AtExit(&cleanup);
-
   return m;
 };
 
