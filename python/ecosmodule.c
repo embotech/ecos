@@ -9,7 +9,7 @@
 #define PyInt_Check PyLong_Check
 #endif
 
-static PyObject *ecos(PyObject* self, PyObject *args)
+static PyObject *ecos(PyObject* self, PyObject *args, PyObject *kwargs)
 {
   /* Expects a function call
    *     sol = ecos(c,G,h,dims,A,b)
@@ -86,9 +86,10 @@ static PyObject *ecos(PyObject* self, PyObject *args)
   pwork* mywork;
 
   idxint i;
+  static char *kwlist[] = {"c", "G", "h", "dims", "A", "b", NULL};
 
   // parse the arguments and ensure they are the correct type
-  if( !PyArg_ParseTuple(args, "OOOO!|OO",
+  if( !PyArg_ParseTupleAndKeywords(args, kwargs, "OOOO!|OO", kwlist,
       &c,
       &G,
       &h,
@@ -359,7 +360,7 @@ static PyObject *ecos(PyObject* self, PyObject *args)
 
 static PyMethodDef ECOSMethods[] =
 {
-  {"ecos", (PyCFunction)ecos, METH_VARARGS,
+  {"ecos", (PyCFunction)ecos, METH_VARARGS | METH_KEYWORDS,
     "Solve an SOCP using ECOS."},
   {NULL, NULL, 0, NULL} // sentinel
 };
