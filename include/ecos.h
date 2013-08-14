@@ -44,9 +44,9 @@
 #define NITREF    (3)       	 /* number of iterative refinement steps */
 #define IRERRFACT (2)            /* factor by which IR should reduce err */
 #define LINSYSACC (1E-14)        /* rel. accuracy of search direction    */
-#define SIGMAMIN  (0.001)         /* always do some centering             */
-#define SIGMAMAX  (0.999)         /* never fully center                   */
-#define STEPMIN   (1E-8)         /* smallest step that we do take        */
+#define SIGMAMIN  (0.001)        /* always do some centering             */
+#define SIGMAMAX  (0.999)        /* never fully center                   */
+#define STEPMIN   (0.001)        /* smallest step that we do take        */
 #define STEPMAX   (0.999)  /* biggest step allowed, also in affine dir.  */
 #define SAFEGUARD (500)     /* Maximum increase in PRES before
                                                 ECOS_NUMERICS is thrown. */

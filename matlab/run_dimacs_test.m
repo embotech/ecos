@@ -26,7 +26,7 @@ objval = struct(...
 );
 
 k=1;
-testnr = 10:2:16%:length(tests)
+testnr = 1:length(tests)
 for i = testnr
     clear A At b c K
     test_name = tests(i).name;
@@ -160,3 +160,17 @@ for i = testnr
 end
 
 
+%% evalaute timings
+k=0;
+totalt_d = 0;
+totalt_s = 0;
+for i = testnr
+    test_name = tests(i).name;
+    test_name = test_name(1:end-4);
+    if( strcmp(statstr_d.(test_name),'OK') && strcmp(statstr_s.(test_name),'OK') )
+       totalt_d = totalt_d + time_d.(test_name);
+       totalt_s = totalt_s + time_s.(test_name);
+       k = k+1;
+    end
+end
+fprintf('Total time SEDUMI: %4.2f seconds, ECOS: %4.2f seconds (%4.2fx)\n', totalt_s, totalt_d, totalt_s/totalt_d);

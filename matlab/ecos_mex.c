@@ -241,7 +241,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
     /* we have to copy the number of cones since Matlab gives us double
      * values but the C version of ECOS expects idxint values */
-    qint = (idxint *)malloc(ncones*sizeof(idxint));
+    qint = (idxint *)mxMalloc(ncones*sizeof(idxint));
     for( i=0; i < ncones; i++ ){ qint[i] = (idxint)q[i]; numConicVariables += qint[i]; }
     
     
@@ -456,5 +456,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
     /* cleanup */
     ECOS_cleanup(mywork, nlhs > 2? nlhs-1 : nlhs);
+    mxFree(qint);
 
 }

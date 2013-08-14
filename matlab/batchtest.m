@@ -39,7 +39,7 @@ for dd = 1:length(dirs)
     
     delStr = '';
     for i = 1:N
-        data; ecos_solver;
+        data; evalc('ecos_solver');
         exitflags(k,i) = info_.exitflag;
         
         bar = repmat(sprintf('='),1,round(i/N*30));
