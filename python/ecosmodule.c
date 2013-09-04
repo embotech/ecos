@@ -360,7 +360,7 @@ static PyObject *ecos(PyObject* self, PyObject *args, PyObject *kwargs)
 
 static PyMethodDef ECOSMethods[] =
 {
-  {"ecos", (PyCFunction)ecos, METH_VARARGS | METH_KEYWORDS,
+  {"csolve", (PyCFunction)ecos, METH_VARARGS | METH_KEYWORDS,
     "Solve an SOCP using ECOS."},
   {NULL, NULL, 0, NULL} // sentinel
 };
@@ -369,7 +369,7 @@ static PyMethodDef ECOSMethods[] =
 #if PY_MAJOR_VERSION >= 3
   static struct PyModuleDef moduledef = {
           PyModuleDef_HEAD_INIT,
-          "ecos",     /* m_name */
+          "csolve",     /* m_name */
           "Solve an SOCP using ECOS.",  /* m_doc */
           -1,                  /* m_size */
           ECOSMethods,         /* m_methods */
@@ -387,7 +387,7 @@ static PyObject* moduleinit(void)
 #if PY_MAJOR_VERSION >= 3
   m = PyModule_Create(&moduledef);
 #else
-  m = Py_InitModule("ecos", ECOSMethods);
+  m = Py_InitModule("_ecos", ECOSMethods);
 #endif
 
   if (import_cvxopt() < 0) return NULL; // for cvxopt support
@@ -404,7 +404,7 @@ static PyObject* moduleinit(void)
     return moduleinit();
   }
 #else
-  PyMODINIT_FUNC initecos(void)
+  PyMODINIT_FUNC init_ecos(void)
   {
     moduleinit();
   }

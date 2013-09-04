@@ -240,10 +240,10 @@ After installing the ECOS interface, you must import the module with
 ```
 import ecos
 ```
-This module provides a single function `ecos` with one of the following calling sequences:
+This module provides a single function `solve` with one of the following calling sequences:
 ```
-solution = ecos.ecos(c,G,h,dims)
-solution = ecos.ecos(c,G,h,dims,A,b)
+solution = ecos.solve(c,G,h,dims)
+solution = ecos.solve(c,G,h,dims,A,b)
 ```
 The arguments `c`, `h`, and `b` are CVXOPT *dense* column vectors (i.e., matrices with a single column). The arguments `G` and `A` are CVXOPT *sparse* matrices. The argument `dims` is a dictionary with two fields, `dims['l']` and `dims['q']`. These are the same fields as in the Matlab case. If the fields are omitted or empty, they default to 0. The arguments `A` and `b` are optional.
 

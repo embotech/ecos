@@ -6,7 +6,7 @@ lib = []
 if system() == 'Linux':
     lib += ['rt']
 
-ecos = Extension('ecos', libraries = lib,
+_ecos = Extension('_ecos', libraries = lib,
                     # define LDL and AMD to use long ints
                     # also define that we are building a python module
                     define_macros = [
@@ -26,5 +26,6 @@ ecos = Extension('ecos', libraries = lib,
 setup(  name = 'ecos',
         version = '1.0',
         description = 'This is Python package for ECOS: Embedded Cone Solver.',
-        ext_modules = [ecos],
-        requires = ["cvxopt (>= 1.1.5)"])
+        py_modules = ['ecos'],
+        ext_modules = [_ecos],
+        requires = ["cvxopt (>= 1.1.6)"])

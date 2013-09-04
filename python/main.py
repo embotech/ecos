@@ -12,7 +12,7 @@ dims = {'l': 2}
 print c
 print h
 
-sol = ecos.ecos(c,G,h,dims,A,b)
+sol = ecos.solve(c,G,h,dims,A,b)
 print sol
 print sol['x']
 # Ai = numpy.matrix([0,1])
