@@ -513,8 +513,11 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     "timing", tinfos,
 #endif
     "numerr",numerr);
+
+#if PROFILING > 0
   // give reference to infoDict
   Py_DECREF(tinfos);
+#endif
 
   /* s */
   // matrix *s;
