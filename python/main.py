@@ -12,9 +12,9 @@ import ecos
 import numpy as np
 from scipy import sparse
 ij = np.array([[0,1],[0,1]])
-A = sparse.csr_matrix(([1.,1.], ij), (2,2))
+A = sparse.csc_matrix(([1.,1.], ij), (2,2))
 b = np.array([1.,1.])
-G = sparse.csr_matrix(([-1.,-1.], ij), (2,2))
+G = sparse.csc_matrix(([-1.,-1.], ij), (2,2))
 h = np.array([0.,0.])
 c = np.array([1.,1.])
 dims = {'l': 2}

@@ -13,23 +13,24 @@ def solve(c,G,h,dims,A=None,b=None):
         array types.
     """
     if not sparse.issparse(G):
-        raise "G is required to be a sparse matrix"
+        raise TypeError("G is required to be a sparse matrix")
     if A is not None and not sparse.issparse(A):
-        raise "A is required to be a sparse matrix"
+        raise TypeError("A is required to be a sparse matrix")
     
-    if not sparse.isspmatrix_csr(G):
-        warn("Converting G to a CSR matrix; may take a while.")
-        G = G.tocsr()
-    if A is not None and not sparse.isspmatrix_csr(A):
-        warn("Converting A to a CSR matrix; may take a while.")
-        A = A.tocsr()
+    if not sparse.isspmatrix_csc(G):
+        warn("Converting G to a CSC matrix; may take a while.")
+        G = G.tocsc()
+    if A is not None and not sparse.isspmatrix_csc(A):
+        warn("Converting A to a CSC matrix; may take a while.")
+        A = A.tocsc()
         
     m,n1 = G.shape
     if A is None: p,n2 = 0,n1
     else: p,n2 = A.shape
     
     if n1 != n2:
-        raise "Columns of A and G don't match"
+        raise TypeError("Columns of A and G don't match")
+        
         
     # G.sort_indices() # ECHU: performance hit? do we need this?
     # if A is not None: A.sort_indices()

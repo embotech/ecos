@@ -155,7 +155,13 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   static char *kwlist[] = {"shape", "c", "Gx", "Gi", "Gp", "h", "dims", "Ax", "Ai", "Ap", "b", NULL};
   // parse the arguments and ensure they are the correct type
   // TODO: (ECHU) allow a "settings" struct
-  if( !PyArg_ParseTupleAndKeywords(args, kwargs, "(iii)O!O!O!O!O!O!|O!O!O!O!", kwlist,
+#ifdef DLONG
+  static char *argparse_string = "(lll)O!O!O!O!O!O!|O!O!O!O!";
+#else
+  static char *argparse_string = "(iii)O!O!O!O!O!O!|O!O!O!O!";
+#endif
+    
+  if( !PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist,
       &m, &n, &p,
       &PyArray_Type, &c,
       &PyArray_Type, &Gx,
@@ -214,7 +220,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
       return NULL;
   }
-
+  
   if (PyArray_DIM(c,0) != n){
       PyErr_SetString(PyExc_ValueError, "c has incompatible dimension with G");
       Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
