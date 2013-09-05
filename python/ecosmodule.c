@@ -180,7 +180,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     return NULL;
   }
 
-  if (n <= 0) {
+  if (n < 0) {
     PyErr_SetString(PyExc_ValueError, "n must be a positive integer");
     return NULL;
   }

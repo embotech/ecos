@@ -1,7 +1,7 @@
 import ecos
 #import cvxopt as o
 
-#from guppy import hpy
+from guppy import hpy
 # A = o.spmatrix([1.,1.], [0,1],[0,1])
 # b = o.matrix([1.,1.])
 # G = o.spmatrix([-1.,-1.], [0,1], [0,1])
@@ -37,5 +37,5 @@ print sol['x']
 # 
 # print getrefcount(solution['x'])
 
-# h = hpy()
-# print h.heap()
+h = hpy()
+print h.heap()
