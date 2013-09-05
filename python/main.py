@@ -1,12 +1,22 @@
 import ecos
-import cvxopt as o
+#import cvxopt as o
 
 #from guppy import hpy
-A = o.spmatrix([1.,1.], [0,1],[0,1])
-b = o.matrix([1.,1.])
-G = o.spmatrix([-1.,-1.], [0,1], [0,1])
-h = o.matrix([0.,0.])
-c = o.matrix([1.,1.])
+# A = o.spmatrix([1.,1.], [0,1],[0,1])
+# b = o.matrix([1.,1.])
+# G = o.spmatrix([-1.,-1.], [0,1], [0,1])
+# h = o.matrix([0.,0.])
+# c = o.matrix([1.,1.])
+# dims = {'l': 2}
+
+import numpy as np
+from scipy import sparse
+ij = np.array([[0,1],[0,1]])
+A = sparse.csr_matrix(([1.,1.], ij), (2,2))
+b = np.array([1.,1.])
+G = sparse.csr_matrix(([-1.,-1.], ij), (2,2))
+h = np.array([0.,0.])
+c = np.array([1.,1.])
 dims = {'l': 2}
 
 print c
