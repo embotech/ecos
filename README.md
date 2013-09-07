@@ -34,7 +34,8 @@ Features of ECOS
 + *ECOS comes with a MATLAB and CVX 2.0 interface*, and *it is supported by YALMIP*. With [CVX](http://cvxr.com) and
   [YALMIP](http://users.isy.liu.se/johanl/yalmip/) you can prototype, simulate and verify the performance of ECOS before you implement the very same code on 
 your embedded hardware.  
-+ *ECOS comes with a Python interface*. This interface is built on top of [CVXOPT](http://abel.ee.ucla.edu/cvxopt/) and uses its sparse data structures.
++ *ECOS comes with a Python interface*. This interface is built on top of 
+  [NUMPY](http://numpy.org) and [SCIPY](http://scipy.org/) and uses its sparse data structures.
 + *ECOS is library-free*. No need to link any external library to ECOS, apart from `AMD` and `sparseLDL`, both 
   from Timothy A. Davis, which are included in this project.
 
@@ -240,11 +241,15 @@ After installing the ECOS interface, you must import the module with
 ```
 import ecos
 ```
-This module provides a single function `solve` with one of the following calling sequences:
+This module provides a single function `ecos` with one of the following calling sequences:
 ```
 solution = ecos.solve(c,G,h,dims)
 solution = ecos.solve(c,G,h,dims,A,b)
 ```
-The arguments `c`, `h`, and `b` are CVXOPT *dense* column vectors (i.e., matrices with a single column). The arguments `G` and `A` are CVXOPT *sparse* matrices. The argument `dims` is a dictionary with two fields, `dims['l']` and `dims['q']`. These are the same fields as in the Matlab case. If the fields are omitted or empty, they default to 0. The arguments `A` and `b` are optional.
+The arguments `c`, `h`, and `b` are NUMPY arrays (i.e., matrices with a single column). 
+The arguments `G` and `A` are SCIPY *sparse* matrices in CSR format; if they are
+not of the proper format, ECOS will attempt to convert them. 
+The argument `dims` is a dictionary with two fields, `dims['l']` and `dims['q']`. These are the same fields as in the Matlab case. If the fields are omitted or empty, they default to 0. The arguments `A` and `b` are optional.
 
-The returned object is a dictionary containing the fields `solution['x']`, `solution['y']`, `solution['s']`, `solution['z']`, and `solution['info']`. The first four are CVXOPT *dense* column vectors containing the relevant solution. The last field contains a dictionary with the same fields as the `info` struct in the MATLAB interface.
+The returned object is a dictionary containing the fields `solution['x']`, `solution['y']`, `solution['s']`, `solution['z']`, and `solution['info']`. 
+The first four are NUMPY arrays containing the relevant solution. The last field contains a dictionary with the same fields as the `info` struct in the MATLAB interface.
