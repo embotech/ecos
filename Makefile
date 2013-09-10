@@ -16,7 +16,7 @@ amd:
 	( cd external/amd    ; $(MAKE) )
 
 # build ECOS
-ecos: ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o
+ecos: ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o external/amd/libamd.a external/ldl/libldl.a
 	$(ARCHIVE) libecos.a $^
 	- $(RANLIB) libecos.a
 
@@ -43,7 +43,7 @@ timer.o: src/timer.c include/timer.h
 
 # ECOS demo
 demo: ldl amd ecos src/runecos.c 
-	$(C) -o runecos src/runecos.c libecos.a external/amd/libamd.a external/ldl/libldl.a $(LIBS)
+	$(C) -o runecos src/runecos.c libecos.a $(LIBS)
 	echo ECOS successfully built. Type ./runecos to run demo problem.
 	
 
