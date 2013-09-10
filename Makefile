@@ -16,7 +16,7 @@ amd:
 	( cd external/amd    ; $(MAKE) )
 
 # build ECOS
-ecos: ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o
+ecos: ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o external/amd/libamd.a external/ldl/libldl.a
 	$(ARCHIVE) libecos.a $^
 	- $(RANLIB) libecos.a
 

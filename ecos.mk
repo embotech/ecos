@@ -22,7 +22,7 @@ endif
 
 ## AR and RANLIB FOR GENERATING LIBRARIES
 AR = ar
-ARFLAGS = rv
+ARFLAGS = rcs
 ARCHIVE = $(AR) $(ARFLAGS)
 RANLIB = ranlib
 
