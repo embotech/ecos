@@ -21,8 +21,8 @@ endif
 
 
 ## AR and RANLIB FOR GENERATING LIBRARIES
-AR = libtool 
-ARFLAGS = -static -o
+AR = ar
+ARFLAGS = rcs
 ARCHIVE = $(AR) $(ARFLAGS)
 RANLIB = ranlib
 

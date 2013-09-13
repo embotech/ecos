@@ -10,14 +10,16 @@ all: ldl amd ecos demo
 # build Tim Davis' sparse LDL package
 ldl: 
 	( cd external/ldl    ; $(MAKE) )
-
+	$(AR) -x external/ldl/libldl.a
+	
 # build Tim Davis' AMD package
 amd: 
 	( cd external/amd    ; $(MAKE) )
+	$(AR) -x external/amd/libamd.a
 
 # build ECOS
-ecos: ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o external/amd/libamd.a external/ldl/libldl.a
-	$(ARCHIVE) libecos.a $^
+ecos: ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o
+	$(ARCHIVE) libecos.a *.o
 	- $(RANLIB) libecos.a
 
 ecos.o: src/ecos.c include/ecos.h
