@@ -573,7 +573,7 @@ static PyMethodDef ECOSMethods[] =
 #if PY_MAJOR_VERSION >= 3
   static struct PyModuleDef moduledef = {
           PyModuleDef_HEAD_INIT,
-          "csolve",     /* m_name */
+          "_ecos",             /* m_name */
           "Solve an SOCP using ECOS.",  /* m_doc */
           -1,                  /* m_size */
           ECOSMethods,         /* m_methods */
@@ -604,13 +604,13 @@ static PyObject* moduleinit(void)
 };
 
 #if PY_MAJOR_VERSION >= 3
-  PyMODINIT_FUNC PyInit_ecos(void)
+  PyMODINIT_FUNC PyInit__ecos(void)
   {
     import_array(); // for numpy arrays
     return moduleinit();
   }
 #else
-  PyMODINIT_FUNC init_ecos(void)
+  PyMODINIT_FUNC init__ecos(void)
   {
     import_array(); // for numpy arrays
     moduleinit();
