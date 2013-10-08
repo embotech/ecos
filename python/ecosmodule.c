@@ -610,7 +610,7 @@ static PyObject* moduleinit(void)
     return moduleinit();
   }
 #else
-  PyMODINIT_FUNC init__ecos(void)
+  PyMODINIT_FUNC init_ecos(void)
   {
     import_array(); // for numpy arrays
     moduleinit();
