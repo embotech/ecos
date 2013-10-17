@@ -61,6 +61,9 @@
 #define ECOS_OUTCONE  (-3)  /* s or z got outside the cone, numerics?    */
 #define ECOS_FATAL    (-7)  /* Unknown problem in solver                 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* SETTINGS STRUCT ----------------------------------------------------- */
 typedef struct settings{
@@ -195,5 +198,9 @@ idxint ECOS_solve(pwork* w);
  * do not want to free x,y,s,z (depending on the number of LHS).
  */
 void ECOS_cleanup(pwork* w, idxint keepvars);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
