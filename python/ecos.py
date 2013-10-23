@@ -3,7 +3,7 @@ from warnings import warn
 import numpy as np
 from scipy import sparse
 
-def solve(c,G,h,dims,A=None,b=None):
+def solve(c,G,h,dims,A=None,b=None,verbose=True):
     """ This Python routine "unpacks" scipy sparse matrices G and A into the
         data structures that we need for calling ECOS' csolve routine.
         
@@ -51,6 +51,6 @@ def solve(c,G,h,dims,A=None,b=None):
     
     if A is None:
         if b is not None: raise TypeError("A and b must be supplied together")
-        return _ecos.csolve((m,n1,p), c, data, indices, colptr, h, dims)
+        return _ecos.csolve((m,n1,p), c, data, indices, colptr, h, dims, verbose=verbose)
     else:
-        return _ecos.csolve((m,n1,p), c, data, indices, colptr, h, dims, A.data, A.indices, A.indptr, b)
+        return _ecos.csolve((m,n1,p), c, data, indices, colptr, h, dims, A.data, A.indices, A.indptr, b, verbose)

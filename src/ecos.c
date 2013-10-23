@@ -67,7 +67,7 @@ idxint init(pwork* w)
     /* check if factorization was successful, exit otherwise */
 	if(  KKT_FACTOR_RETURN_CODE != KKT_OK ){
 #if PRINTLEVEL > 0
-        PRINTTEXT("\nProblem in factoring KKT system, aborting.");
+    if( w->stgs->verbose ) PRINTTEXT("\nProblem in factoring KKT system, aborting.");
 #endif
         return ECOS_FATAL;
     }
@@ -514,7 +514,7 @@ idxint ECOS_solve(pwork* w)
     initcode = init(w);
 	if( initcode == ECOS_FATAL ){
 #if PRINTLEVEL > 0
-        PRINTTEXT("\nFatal error during initialization, aborting.");
+        if( w->stgs->verbose ) PRINTTEXT("\nFatal error during initialization, aborting.");
 #endif
         return ECOS_FATAL;
     }
@@ -532,7 +532,7 @@ idxint ECOS_solve(pwork* w)
 
 #if PRINTLEVEL > 1
 		/* Print info */
-		printProgress(w->info);
+		if( w->stgs->verbose ) printProgress(w->info);
 #endif		
         
         
@@ -542,7 +542,7 @@ idxint ECOS_solve(pwork* w)
          */
         if( w->info->iter > 0 && w->info->pres > SAFEGUARD*pres_prev ){
 #if PRINTLEVEL > 1
-            PRINTTEXT("\nNUMERICAL PROBLEMS, recovering iterate %d and stopping.\n", (int)w->info->iter-1);
+            if( w->stgs->verbose ) PRINTTEXT("\nNUMERICAL PROBLEMS, recovering iterate %d and stopping.\n", (int)w->info->iter-1);
 #endif
             /* Backtrack */
             for( i=0; i < w->n; i++ ){ w->x[i] -= w->info->step * w->KKT->dx2[i]; }
@@ -565,7 +565,7 @@ idxint ECOS_solve(pwork* w)
             w->info->pres < w->stgs->feastol && w->info->dres < w->stgs->feastol &&
 			( w->info->gap < w->stgs->abstol || w->info->relgap < w->stgs->reltol ) ){
 #if PRINTLEVEL > 0
-			PRINTTEXT("\nOPTIMAL (within feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", w->stgs->feastol, w->stgs->reltol, w->stgs->abstol);
+			if( w->stgs->verbose ) PRINTTEXT("\nOPTIMAL (within feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", w->stgs->feastol, w->stgs->reltol, w->stgs->abstol);
 #endif
 	        exitcode = ECOS_OPTIMAL;
 			break;
@@ -574,7 +574,7 @@ idxint ECOS_solve(pwork* w)
 		else if( ((w->info->pinfres != NAN) && (w->info->pinfres < w->stgs->feastol)) ||
                  ((w->tau < w->stgs->feastol) && (w->kap < w->stgs->feastol && w->info->pinfres < w->stgs->feastol)) ){
 #if PRINTLEVEL > 0
-			PRINTTEXT("\nPRIMAL INFEASIBLE (within feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", w->stgs->feastol, w->stgs->reltol, w->stgs->abstol);
+			if( w->stgs->verbose ) PRINTTEXT("\nPRIMAL INFEASIBLE (within feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", w->stgs->feastol, w->stgs->reltol, w->stgs->abstol);
 #endif
 			w->info->pinf = 1;
 			w->info->dinf = 0;
@@ -584,7 +584,7 @@ idxint ECOS_solve(pwork* w)
 		/* Dual infeasible? */
 		else if( (w->info->dinfres != NAN) && (w->info->dinfres < w->stgs->feastol) ){
 #if PRINTLEVEL > 0
-			PRINTTEXT("\nUNBOUNDED (within feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", w->stgs->feastol, w->stgs->reltol, w->stgs->abstol);
+			if( w->stgs->verbose ) PRINTTEXT("\nUNBOUNDED (within feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", w->stgs->feastol, w->stgs->reltol, w->stgs->abstol);
 #endif
 			w->info->pinf = 0;  
 			w->info->dinf = 1;        
@@ -594,7 +594,7 @@ idxint ECOS_solve(pwork* w)
 		/* Did the line search cock up? (zero step length) */
 		else if( w->info->iter > 0 && w->info->step == STEPMIN*GAMMA ){
 #if PRINTLEVEL > 0
-			PRINTTEXT("\nNo further progress possible (- numerics?), exiting.");
+			if( w->stgs->verbose ) PRINTTEXT("\nNo further progress possible (- numerics?), exiting.");
 #endif
 			exitcode = ECOS_NUMERICS;
 			break;
@@ -602,7 +602,7 @@ idxint ECOS_solve(pwork* w)
 		/* MAXIT reached? */
 		else if( w->info->iter == w->stgs->maxit ){
 #if PRINTLEVEL > 0
-			PRINTTEXT("\nMaximum number of iterations reached, exiting.");
+			if( w->stgs->verbose ) PRINTTEXT("\nMaximum number of iterations reached, exiting.");
 #endif
 			exitcode = ECOS_MAXIT;
 			break;
@@ -612,7 +612,7 @@ idxint ECOS_solve(pwork* w)
 		/* Compute scalings */
 		if( updateScalings(w->C, w->s, w->z, w->lambda) == OUTSIDE_CONE ){
 #if PRINTLEVEL > 0
-            PRINTTEXT("\nSlacks or multipliers leaving the positive orthant (- numerics ?), exiting.\n");
+            if( w->stgs->verbose ) PRINTTEXT("\nSlacks or multipliers leaving the positive orthant (- numerics ?), exiting.\n");
 #endif
             return ECOS_OUTCONE;
         }
@@ -732,9 +732,9 @@ idxint ECOS_solve(pwork* w)
 
 #if PRINTLEVEL > 0
 #if PROFILING > 0
-	PRINTTEXT("\nRuntime: %f seconds.", w->info->tsetup + w->info->tsolve);
+	if( w->stgs->verbose ) PRINTTEXT("\nRuntime: %f seconds.", w->info->tsetup + w->info->tsolve);
 #endif
-	PRINTTEXT("\n\n");
+	if( w->stgs->verbose ) PRINTTEXT("\n\n");
 #endif
 
 	return exitcode;

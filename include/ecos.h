@@ -41,6 +41,7 @@
 #define DELTASTAT (5E-9)         /* regularization parameter             */
 #define DELTA     (5E-7)         /* dyn. regularization parameter        */
 #define EPS       (1E-14)   /* dyn. regularization threshold (do not 0!) */
+#define VERBOSE   (1)            /* bool for verbosity; PRINTLEVEL < 3   */
 #define NITREF    (3)       	 /* number of iterative refinement steps */
 #define IRERRFACT (2)            /* factor by which IR should reduce err */
 #define LINSYSACC (1E-14)        /* rel. accuracy of search direction    */
@@ -69,12 +70,13 @@ extern "C" {
 typedef struct settings{
 	pfloat gamma;                /* scaling the final step length        */	
 	pfloat delta;                /* regularization parameter             */
-    pfloat eps;                  /* regularization threshold             */
+  pfloat eps;                  /* regularization threshold             */
 	pfloat feastol;              /* primal/dual infeasibility tolerance  */
 	pfloat abstol;               /* absolute tolerance on duality gap    */
 	pfloat reltol;               /* relative tolerance on duality gap    */
-	idxint nitref;				 /* number of iterative refinement steps */
+	idxint nitref;				       /* number of iterative refinement steps */
 	idxint maxit;                /* maximum number of iterations         */
+  idxint verbose;              /* verbosity bool for PRINTLEVEL < 3    */
 } settings;
 
 

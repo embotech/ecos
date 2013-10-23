@@ -59,7 +59,7 @@ static inline PyArrayObject *getContiguous(PyArrayObject *array, int typenum) {
 static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
 {
   /* Expects a function call
-   *     sol = csolve((m,n,p),c,Gx,Gi,Gp,h,dims,Ax,Ai,Ap,b)
+   *     sol = csolve((m,n,p),c,Gx,Gi,Gp,h,dims,Ax,Ai,Ap,b,verbose)
    * where
    *
    * the triple (m,n,p) corresponds to:
@@ -83,6 +83,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    * `Ai` is a Numpy array of ints
    * `Ap` is a Numpy array of ints
    * `b` is an optional argument, which is a Numpy array of doubles
+   * `verbose` is an optional bool signaling whether to print info
    *
    * This call will solve the problem
    *
@@ -125,7 +126,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   PyArrayObject *Ai = NULL;
   PyArrayObject *Ap = NULL;
   PyArrayObject *b = NULL;
-  PyObject *dims;
+  PyObject *dims, *verbose = NULL;
   idxint n;      // number or variables
   idxint m;      // number of conic variables
   idxint p = 0;  // number of equality constraints
@@ -152,13 +153,12 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   pwork* mywork;
 
   idxint i;
-  static char *kwlist[] = {"shape", "c", "Gx", "Gi", "Gp", "h", "dims", "Ax", "Ai", "Ap", "b", NULL};
+  static char *kwlist[] = {"shape", "c", "Gx", "Gi", "Gp", "h", "dims", "Ax", "Ai", "Ap", "b", "verbose", NULL};
   // parse the arguments and ensure they are the correct type
-  // TODO: (ECHU) allow a "settings" struct
 #ifdef DLONG
-  static char *argparse_string = "(lll)O!O!O!O!O!O!|O!O!O!O!";
+  static char *argparse_string = "(lll)O!O!O!O!O!O!|O!O!O!O!O!";
 #else
-  static char *argparse_string = "(iii)O!O!O!O!O!O!|O!O!O!O!";
+  static char *argparse_string = "(iii)O!O!O!O!O!O!|O!O!O!O!O!";
 #endif
     
   if( !PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist,
@@ -172,7 +172,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       &PyArray_Type, &Ax,
       &PyArray_Type, &Ai,
       &PyArray_Type, &Ap,
-      &PyArray_Type, &b)
+      &PyArray_Type, &b,
+      &PyBool_Type, &verbose)
     ) { return NULL; }
   
   if (m < 0) {
@@ -386,11 +387,12 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     Py_DECREF(c_arr); Py_DECREF(h_arr);
     return NULL;
   }
-
+  
 
   /* check that sum(q) + l = m */
   if( numConicVariables != m ){
       PyErr_SetString(PyExc_ValueError, "Number of rows of G does not match dims.l+sum(dims.q)");
+      if (q) free(q);
       Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
       Py_DECREF(c_arr); Py_DECREF(h_arr); 
       if (b_arr) Py_DECREF(b_arr);
@@ -413,6 +415,12 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       if (Ap_arr) Py_DECREF(Ap_arr);
       return NULL;
   }
+  
+  /* Set settings for ECOS. */
+  if(verbose) {
+    mywork->stgs->verbose = (idxint) PyObject_IsTrue(verbose);
+  }
+  
   
   /* Solve! */
   idxint exitcode = ECOS_solve(mywork);

@@ -600,11 +600,12 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->stgs->maxit = MAXIT;
 	mywork->stgs->gamma = GAMMA;	
 	mywork->stgs->delta = DELTA;
-    mywork->stgs->eps = EPS;
+  mywork->stgs->eps = EPS;
 	mywork->stgs->nitref = NITREF;
 	mywork->stgs->abstol = ABSTOL;	
 	mywork->stgs->feastol = FEASTOL;
 	mywork->stgs->reltol = RELTOL;
+  mywork->stgs->verbose = VERBOSE;
 #if PRINTLEVEL > 2
     PRINTTEXT("Written settings\n");
 #endif
