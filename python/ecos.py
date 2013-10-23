@@ -43,7 +43,7 @@ def solve(c,G,h,dims,A=None,b=None,verbose=True):
         if h is not None: raise TypeError("G and h must be supplied together")
         data = np.zeros((0,),dtype=np.double)
         indices = np.zeros((0,),dtype=np.int)
-        colptr = np.zeros((1,),dtype=np.int)
+        colptr = np.zeros((n1+1,),dtype=np.int)
         h = np.zeros((0,))
     else:
         data, indices, colptr = G.data, G.indices, G.indptr

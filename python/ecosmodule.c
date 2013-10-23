@@ -421,7 +421,6 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     mywork->stgs->verbose = (idxint) PyObject_IsTrue(verbose);
   }
   
-  
   /* Solve! */
   idxint exitcode = ECOS_solve(mywork);
 
