@@ -43,7 +43,10 @@ void sparseMV(spmat* A, pfloat* x, pfloat* y, idxint a, idxint newVector)
 	idxint i, j;
 	/* fill y with zeros in case A happens to not have any zero rows */
 	if( newVector > 0 ){ for( i=0; i<A->m; i++ ){ y[i] = 0; } }
-		
+	
+  /* if there are no entries in A, just do nothing */
+  if( A->nnz == 0 ) return;
+  
 	if( a > 0 ){
 		/* Add A*x */
 		for( j=0; j<A->n; j++ ){
@@ -80,6 +83,9 @@ void sparseMtVm(spmat* A, pfloat* x, pfloat* y, idxint newVector, idxint skipDia
 	idxint i, j, k;
 	/* fill y with zeros in case A happens to not have any zero rows */
 	if( newVector > 0 ){ for( j=0; j<A->n; j++ ){ y[j] = 0; } }
+  
+  /* if there are no entries in A, just do nothing */
+  if( A->nnz == 0 ) return;
 	
 	if( skipDiagonal ){
 		/* Subtract A'*x */	
