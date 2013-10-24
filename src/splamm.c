@@ -62,11 +62,13 @@ void pinv(idxint n, idxint* p, idxint* pinv)
  */
 spmat* transposeSparseMatrix(spmat* M)
 {	
-	spmat* A = newSparseMatrix(M->n, M->m, M->nnz);
+	idxint j, i, k, q;    
+	idxint* w;
+  
+  spmat* A = newSparseMatrix(M->n, M->m, M->nnz);
   if (M->nnz == 0) return A;
   
-	idxint j, i, k, q;    
-	idxint* w = (idxint *)MALLOC(M->m*sizeof(idxint));
+	w = (idxint *)MALLOC(M->m*sizeof(idxint));
 
 	/* row count: how often does row k occur in M? */
 	for( i=0; i < M->m; i++ ) { w[i] = 0; }
