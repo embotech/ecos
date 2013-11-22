@@ -24,7 +24,7 @@
 
 /* THE mex-function */
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )  
-{
+{  
     idxint i, n, m, p;
     idxint exitcode;
     idxint numerr = 0;
@@ -36,6 +36,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     const mxArray* dims;
     const mxArray* dims_l;
     const mxArray* dims_q;
+    const mxArray* opts = NULL;
+    const mxArray* opts_verbose = NULL;
     const mwSize *size_c;
     const mwSize *size_G;
     const mwSize *size_h;
@@ -89,6 +91,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     idxint ncones;
     idxint numConicVariables = 0;
     
+    idxint verbose;
+    
     pfloat *Gpr = NULL;
     idxint *Gjc = NULL;
     idxint *Gir = NULL;
@@ -105,12 +109,12 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
 
 #ifdef MEXARGMUENTCHECKS     
-    if( !(nrhs == 4 || nrhs == 6) )
+    if( !(nrhs >= 4 && nrhs <= 7) )
     {
-        mexErrMsgTxt("ECOS takes 4 or 6 arguments: ECOS(c,G,h,dims) or ECOS(c,G,h,dims,A,b)");
+        mexErrMsgTxt("ECOS takes 4 to 7 arguments: ECOS(c,G,h,dims), ECOS(c,G,h,dims,opts), ECOS(c,G,h,dims,A,b), or ECOS(c,G,h,dims,A,b,opts)");
     }
 #endif    
-
+  
     /* get pointers to data */
     c = prhs[0];      size_c = mxGetDimensions(c);
     G = prhs[1];      size_G = mxGetDimensions(G);
@@ -118,16 +122,26 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     dims = prhs[3];    
     dims_l = mxGetField(dims, 0, "l");
     dims_q = mxGetField(dims, 0, "q"); size_q = mxGetDimensions(dims_q);
-    if( nrhs == 6 )
+    if( nrhs >= 6 )
     {
         A = prhs[4];  size_A = mxGetDimensions(A);
         b = prhs[5];  size_b = mxGetDimensions(b);
+        if ( nrhs == 7 )
+        {
+          opts = prhs[6];
+          opts_verbose = mxGetField(opts, 0, "verbose");
+        }
+    } 
+    if ( nrhs == 5 )
+    { 
+      opts = prhs[4];
+      opts_verbose = mxGetField(opts, 0, "verbose");
     }
     
     /* determine sizes */
     n = (idxint)size_c[0];
     m = (idxint)size_G[0];
-    p = (nrhs == 6) ? (idxint)size_A[0] : 0;
+    p = (nrhs >= 6) ? (idxint)size_A[0] : 0;
     
     /* argument checking */
 #ifdef MEXARGMUENTCHECKS     
@@ -180,7 +194,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
        mexErrMsgTxt("h must be a dense vector");
     } 
 
-    if( nrhs == 6 )
+    if( nrhs >= 6 )
     {
         if( size_A[1] != n )
         {
@@ -211,7 +225,18 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         {
             mexErrMsgTxt("b must be a dense vector");
         } 
+    }
+    
+    if( nrhs == 7 || nrhs == 5 )
+    {
+      if( !mxIsStruct(opts) )
+      {
+          mexErrMsgTxt("Struct opts expected as last argument");
+      }
 
+      if( opts_verbose == NULL )	{
+          mexErrMsgTxt("opts.verbose does not exist");
+      } 
     }
 
     if( nlhs > 5 ){
@@ -254,6 +279,12 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     mywork = ECOS_setup(n, m, p, l, ncones, qint, Gpr, Gjc, Gir, Apr, Ajc, Air, cpr, hpr, bpr);
     if( mywork == NULL ){
         mexErrMsgTxt("Internal problem occurred in ECOS while setting up the problem.\nPlease send a bug report with data to Alexander Domahidi.\nEmail: domahidi@control.ee.ethz.ch");
+    }
+    
+    /* Set verbose */
+    if( opts != NULL && opts_verbose != NULL )
+    {
+      mywork->stgs->verbose = (idxint)(*mxGetPr(opts_verbose));
     }
         
     /* Solve! */    
@@ -457,5 +488,4 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     /* cleanup */
     ECOS_cleanup(mywork, nlhs > 2? nlhs-1 : nlhs);
     mxFree(qint);
-
 }

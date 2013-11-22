@@ -1,7 +1,7 @@
 % Self-dual homogeneous embedding interior point method for optimization
 % over linear or second-order cones. No SDP cones supported!
 %
-%  [x,y,info,s,z] = ECOS(c,G,h,dims,A,b)
+%  [x,y,info,s,z] = ECOS(c,G,h,dims,A,b,opts)
 %    Solves a pair of primal and dual cone programs
 % 
 %        minimize    c'*x
@@ -57,6 +57,9 @@
 %         is [].
 % 
 %         b is a dense matrix of size (p,1).   The default value is [].
+%
+%         opts is a struct with a single field
+%         - opts.verbose, whether to be verbose (defaults to true)
 % 
 %         It is assumed that rank(A) = p and rank([A; G]) = n.
 % 

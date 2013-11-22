@@ -96,11 +96,15 @@ reord = sparse( ...
 
 At = reord' * At;
 c  = reord' * c;
-pars.free = K.f > 1 && nnz( K.q );
-pars.eps     = prec(1);
-pars.bigeps  = prec(3);
+% pars.free = K.f > 1 && nnz( K.q );
+% pars.eps     = prec(1);
+% pars.bigeps  = prec(3);
+% if quiet,
+%     pars.fid = 0;
+% end
+opts.verbose = 1;
 if quiet,
-    pars.fid = 0;
+    opts.verbose = 0;
 end
 add_row = isempty( At );
 if add_row,
@@ -131,7 +135,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 varnames = {'x', 'y', 'info', 's', 'z'};
-[ yy, xf, info, zz, xK ] = cvx_run_solver( @ecos, ecos_c, ecos_G, ecos_h, dims, ecos_A, ecos_b, varnames{:}, settings, 5 );
+[ yy, xf, info, zz, xK ] = cvx_run_solver( @ecos, ecos_c, ecos_G, ecos_h, dims, ecos_A, ecos_b, opts, varnames{:}, settings, 7 );
 
 xx = [xf; xK];
 if add_row,
