@@ -45,6 +45,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     const mwSize *size_b;
     const mwSize *size_q;
     
+    const mwSize ZERO[2] = {0, 0};
+    
     mxArray* outvar;
     mxArray* tinfos;
 
@@ -116,26 +118,27 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 #endif    
   
     /* get pointers to data */
-    c = prhs[0];      size_c = mxGetDimensions(c);
-    G = prhs[1];      size_G = mxGetDimensions(G);
-    h = prhs[2];      size_h = mxGetDimensions(h);
+    c = prhs[0];      size_c = c ? mxGetDimensions(c) : (const mwSize *) &ZERO;
+    G = prhs[1];      size_G = G ? mxGetDimensions(G) : (const mwSize *) &ZERO;
+    h = prhs[2];      size_h = h ? mxGetDimensions(h) : (const mwSize *) &ZERO;
     dims = prhs[3];    
-    dims_l = mxGetField(dims, 0, "l");
-    dims_q = mxGetField(dims, 0, "q"); size_q = mxGetDimensions(dims_q);
+    dims_l = dims ? mxGetField(dims, 0, "l") : NULL;
+    dims_q = dims ? mxGetField(dims, 0, "q") : NULL; 
+    size_q = dims_q ? mxGetDimensions(dims_q) : (const mwSize *) &ZERO;
     if( nrhs >= 6 )
     {
-        A = prhs[4];  size_A = mxGetDimensions(A);
-        b = prhs[5];  size_b = mxGetDimensions(b);
+        A = prhs[4];  size_A = A ? mxGetDimensions(A) : (const mwSize *) &ZERO;
+        b = prhs[5];  size_b = b ? mxGetDimensions(b) : (const mwSize *) &ZERO;
         if ( nrhs == 7 )
         {
           opts = prhs[6];
-          opts_verbose = mxGetField(opts, 0, "verbose");
+          opts_verbose = opts ? mxGetField(opts, 0, "verbose") : 0;
         }
     } 
     if ( nrhs == 5 )
     { 
       opts = prhs[4];
-      opts_verbose = mxGetField(opts, 0, "verbose");
+      opts_verbose = opts ? mxGetField(opts, 0, "verbose") : 0;
     }
     
     /* determine sizes */
