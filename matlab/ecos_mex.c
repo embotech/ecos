@@ -287,7 +287,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     /* Set verbose */
     if( opts != NULL && opts_verbose != NULL )
     {
-      mywork->stgs->verbose = (idxint)(*mxGetPr(opts_verbose));
+      mywork->stgs->verbose = mxIsLogical(opts_verbose) ? (idxint) (*mxGetLogicals(opts_verbose)) : (idxint)(*mxGetPr(opts_verbose));
     }
         
     /* Solve! */    
