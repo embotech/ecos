@@ -37,7 +37,7 @@
 %           C_N.  (N >= 0 and mq[k] >= 1.)
 %         The default value of dims is dims.l = size(G,2) and dims.q = [].
 % 
-%         G is a dense or sparse matrix of size (K,n), where
+%         G is a sparse matrix of size (K,n), where
 % 
 %             K = ml + mq[1] + ... + mq[N].
 % 
@@ -53,7 +53,7 @@
 %         h is a dense matrix of size (K,1), representing a vector in V,
 %         in the same format as the columns of G.
 % 
-%         A is a dense or sparse matrix of size (p,n).  The default value
+%         A is a sparse matrix of size (p,n).  The default value
 %         is [].
 % 
 %         b is a dense matrix of size (p,1).   The default value is [].
