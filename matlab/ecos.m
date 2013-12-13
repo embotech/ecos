@@ -35,7 +35,6 @@
 %         - dims.q = mq = [ mq[1], mq[2], ..., mq[N] ], a row vector of N
 %           integers with the dimensions of the second order cones C_1, ...,
 %           C_N.  (N >= 0 and mq[k] >= 1.)
-%         The default value of dims is dims.l = size(G,2) and dims.q = [].
 % 
 %         G is a sparse matrix of size (K,n), where
 % 
