@@ -175,7 +175,7 @@ typedef struct pwork{
 /* SOME USEFUL MACROS -------------------------------------------------- */
 #define MAX(X,Y)  ((X) < (Y) ? (Y) : (X))  /* maximum of 2 expressions   */
 /* save division x/y where y is assumed to be positive! */
-#define SAVEDIV_POS(X,Y)  ( (Y) < EPS ? ((X)/EPS) : (X)/(Y) ) 
+#define SAFEDIV_POS(X,Y)  ( (Y) < EPS ? ((X)/EPS) : (X)/(Y) ) 
 
 
 /* METHODS */
