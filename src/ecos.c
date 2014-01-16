@@ -1,6 +1,6 @@
 /*
  * ECOS - Embedded Conic Solver.
- * Copyright (C) 2012-13 Alexander Domahidi [domahidi@control.ee.ethz.ch],
+ * Copyright (C) 2012-14 Alexander Domahidi [domahidi@control.ee.ethz.ch],
  * Automatic Control Laboratory, ETH Zurich.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -267,16 +267,17 @@ void printProgress(stats* info)
 	{
 		/* print header at very first iteration */		
 #if PRINTLEVEL == 2
-		PRINTTEXT("\nECOS - (c) A. Domahidi, Automatic Control Laboratory, ETH Zurich, 2012-13.\n\n");		
+		PRINTTEXT("\nECOS - (c) A. Domahidi, Automatic Control Laboratory, ETH Zurich, 2012-2014.\n\n");		
 #endif
-		PRINTTEXT("It     pcost         dcost      gap     pres    dres     k/t     mu     step    IR\n");
-#if defined WIN32 || defined _WIN64		
+#if defined _WIN32 || defined _WIN64		
+		PRINTTEXT("It     pcost       dcost      gap   pres   dres    k/t    mu     step    IR\n");
 		PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e   N/A    %d %d -\n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, (int)info->nitref1, (int)info->nitref2);
 #else
+		PRINTTEXT("It     pcost         dcost      gap     pres    dres     k/t     mu     step    IR\n");
 		PRINTTEXT("%2d  %c%+5.3e  %c%+5.3e  %c%+2.0e  %c%2.0e  %c%2.0e  %c%2.0e  %c%2.0e   N/A    %d %d -\n",(int)info->iter, 32, info->pcost, 32, info->dcost, 32, info->gap, 32, info->pres, 32, info->dres, 32, info->kapovert, 32, info->mu, (int)info->nitref1, (int)info->nitref2);
 #endif	
 	}  else {
-#if defined WIN32 || defined _WIN64
+#if defined _WIN32 || defined _WIN64
 		PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e  %6.4f  %d %d %d\n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, info->step, (int)info->nitref1, (int)info->nitref2, (int)info->nitref3);
 #else
 		PRINTTEXT("%2d  %c%+5.3e%c  %+5.3e %c %+2.0e%c  %2.0e%c  %2.0e%c  %2.0e%c  %2.0e  %6.4f  %d %d %d\n",(int)info->iter, 32,info->pcost, 32,info->dcost, 32, info->gap, 32, info->pres, 32, info->dres, 32, info->kapovert, 32, info->mu, info->step, (int)info->nitref1, (int)info->nitref2, (int)info->nitref3);
@@ -498,6 +499,12 @@ idxint ECOS_solve(pwork* w)
 	idxint i, initcode, KKT_FACTOR_RETURN_CODE;
 	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap, pres_prev;
 	idxint exitcode = ECOS_FATAL;
+
+#if (defined _WIN32 || defined _WIN64 )
+	/* sets width of exponent for floating point numbers to 2 instead of 3 */
+	unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);
+#endif
+
 #if PROFILING > 0
 	timer tsolve;
 #endif

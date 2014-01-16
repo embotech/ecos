@@ -1,6 +1,6 @@
 /*
  * ECOS - Embedded Conic Solver.
- * Copyright (C) 2012-13 Alexander Domahidi [domahidi@control.ee.ethz.ch],
+ * Copyright (C) 2012-14 Alexander Domahidi [domahidi@control.ee.ethz.ch],
  * Automatic Control Laboratory, ETH Zurich.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,7 +27,7 @@
 
 #if PROFILING > 0
 
-#if (defined WIN32 || defined _WIN64)
+#if (defined _WIN32 || defined _WIN64 || defined _WINDLL )
 
 /* Use Windows QueryPerformanceCounter for timing */
 #include <Windows.h>
