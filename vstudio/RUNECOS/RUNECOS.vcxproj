@@ -78,16 +78,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="..\vstudio\ECOS\ECOS.vcxproj">
-      <Project>{bd19d8a4-021f-440d-9c95-5cb13f20cbd9}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="..\..\src\runecos.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\data.h" />
     <ClInclude Include="..\..\include\ecos.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ECOS\ECOS.vcxproj">
+      <Project>{bd19d8a4-021f-440d-9c95-5cb13f20cbd9}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
