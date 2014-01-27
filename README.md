@@ -39,6 +39,35 @@ your embedded hardware.
 + *ECOS is library-free*. No need to link any external library to ECOS, apart from `AMD` and `sparseLDL`, both 
   from Timothy A. Davis, which are included in this project.
 
+
+Credits
+----
+
+The solver is essentially based on Lieven Vandenberghe's [CVXOPT](http://cvxopt.org) [ConeLP](http://www.ee.ucla.edu/~vandenbe/publications/coneprog.pdf) solver, although it differs in the particular way the linear systems are treated.
+
+The following people have been, and are, involved in the development and maintenance of ECOS:
+
++ Alexander Domahidi (principal developer)
++ Eric Chu (Python interface, testing, testing, testing)
++ Stephen Boyd (methods and maths)
++ Michael Grant (CVX interface)
++ Johan Löfberg (YALMIP interface)
+
+There is a paper describing the main technical idea behind ECOS [here](http://www.stanford.edu/~boyd/papers/ecos.html). Much more details are given in Alexander Domahidi's PhD Thesis, which can be downloaded [here](http://e-collection.library.ethz.ch/view/eth:7611?q=domahidi).
+
+If you find ECOS useful, you can cite it using the following BibTex entry:
+
+```
+@INPROCEEDINGS{bib:Domahidi2013ecos, 
+author={Domahidi, A. and Chu, E. and Boyd, S.}, 
+booktitle={European Control Conference (ECC)}, 
+title={{ECOS}: {A}n {SOCP} solver for embedded systems}, 
+year={2013}, 
+pages={3071-3076}
+}
+```
+
+
 Using ECOS with CVX
 ====
 
