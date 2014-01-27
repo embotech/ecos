@@ -53,7 +53,7 @@ The following people have been, and are, involved in the development and mainten
 + Michael Grant (CVX interface)
 + Johan Löfberg (YALMIP interface)
 
-The main technical idea behind ECOS is described in a short [paper](http://www.stanford.edu/~boyd/papers/ecos.html). More details are given in Alexander Domahidi's [PhD Thesis](http://e-collection.library.ethz.ch/view/eth:7611?q=domahidi).
+The main technical idea behind ECOS is described in a short [paper](http://www.stanford.edu/~boyd/papers/ecos.html). More details are given in Alexander Domahidi's [PhD Thesis](http://e-collection.library.ethz.ch/view/eth:7611?q=domahidi) in Chapter 9.
 
 If you find ECOS useful, you can cite it using the following BibTex entry:
 
