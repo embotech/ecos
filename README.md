@@ -48,7 +48,7 @@ The solver is essentially based on Lieven Vandenberghe's [CVXOPT](http://cvxopt.
 The following people have been, and are, involved in the development and maintenance of ECOS:
 
 + Alexander Domahidi (principal developer)
-+ Eric Chu (Python interface, testing, testing, testing)
++ Eric Chu (Python interface, unit tests)
 + Stephen Boyd (methods and maths)
 + Michael Grant (CVX interface)
 + Johan Löfberg (YALMIP interface)
