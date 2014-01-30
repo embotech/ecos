@@ -182,11 +182,11 @@ reconstruction problems (compressed sensing):
 where `x` is in `R^n`, `A` in `R^{m x n}` with `m <= n`. We use the epigraph reformulation to express the L1-norm of `x`, 
 ```
     x <= u
-   -x <= v
+   -x <= u
 ```
-where `u,v` are in `R^n`, and we minimize `sum(u) + sum(v)`. Hence the optimization variables are stacked as follows:
+where `u` is in `R^n`, and we minimize `sum(u)`. Hence the optimization variables are stacked as follows:
 ```
-   z = [x; u; v]
+   z = [x; u]
 ```
 With this reformulation, (L1) can be written as linear program (LP),
 ``` 
@@ -203,17 +203,17 @@ m = 10;
 density = 0.01;
 
 % linear term
-c = [zeros(n,1); ones(2*n,1)];
+c = [zeros(n,1); ones(n,1)];
 
 % equality constraints
 A = sprandn(m,n,density);
-Atilde = [A, zeros(m,2*n)];
+Atilde = [A, zeros(m,n)];
 b = randn(m,1);
 
 % linear inequality constraints
-I = speye(n); O = zeros(n);
-G = [  I -I  O;
-      -I  O -I];
+I = speye(n);
+G = [  I -I;
+      -I -I];
 h = zeros(2*n,1);
 
 % cone dimensions (LP cone only)
@@ -225,7 +225,6 @@ fprintf('Calling solver...');
 z = ecos(c,G,h,dims,Atilde,b);
 x = z(1:n);
 u = z(n+1:2*n);
-v = z(2*n+1:3*n);
 nnzx = sum(abs(x) > 1e-8);
 
 % print sparsity info
