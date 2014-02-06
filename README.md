@@ -284,11 +284,15 @@ The first four are NUMPY arrays containing the relevant solution. The last field
 
 Exitcodes
 ====
-ECOS defines the following exitcodes (subject to change in future versions)
+ECOS defines a number of exitcodes that indicate the quality of the returned solution. In general, positive values indicate that convergence of the algorithm below given tolerances has occured. More specifically,
 + 0: optimal
 + 1: primal infeasible
 + 2: dual infeasible
+
+Negative numbers indicate that the problem could not be solved to the required accuracy (the returned iterate might still be satisfactory - please do check the duality gap etc.)
 + -1: maximum number of iterations reached
 + -2: numerical problems (unreliable search direction)
 + -3: numerical problems (slacks or multipliers became exterior)
 + -7: unknown problem in solver 
+
+It is good practice to always check the exitcode when solving the optimization problem in automated fashion. Please report optimization problems for which ECOS struggles to converge to one of the authors.
