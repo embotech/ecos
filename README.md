@@ -153,7 +153,7 @@ ECOS returns the following variables
 ```
 In addition, the struct `info` is returned which contains the following fields:
 ```
-    exitflag: 0=OPTIMAL, 1=PRIMAL INFEASIBLE, 2=DUAL INFEASIBLE, -1=MAXIT REACHED
+    exitflag: 0=OPTIMAL, 1=PRIMAL INFEASIBLE, etc. (see exitcodes section in this readme)
   infostring: gives information about the status of solution
        pcost: value of primal objective
        dcost: value of dual objective
@@ -281,3 +281,14 @@ The argument `dims` is a dictionary with two fields, `dims['l']` and `dims['q']`
 
 The returned object is a dictionary containing the fields `solution['x']`, `solution['y']`, `solution['s']`, `solution['z']`, and `solution['info']`. 
 The first four are NUMPY arrays containing the relevant solution. The last field contains a dictionary with the same fields as the `info` struct in the MATLAB interface.
+
+Exitcodes
+====
+ECOS defines the following exitcodes (subject to change in future versions)
++ 0: optimal
++ 1: primal infeasible
++ 2: dual infeasible
++ -1: maximum number of iterations reached
++ -2: numerical problems (unreliable search direction)
++ -3: numerical problems (slacks or multipliers became exterior)
++ -7: unknown problem in solver 
