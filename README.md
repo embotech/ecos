@@ -284,10 +284,12 @@ The first four are NUMPY arrays containing the relevant solution. The last field
 
 Exitcodes
 ====
-ECOS defines a number of exitcodes that indicate the quality of the returned solution. In general, positive values indicate that convergence of the algorithm below given tolerances has occured. More specifically,
+ECOS defines a number of exitcodes that indicate the quality of the returned solution. In general, positive values indicate that the solver has converged within the given tolerance. More specifically,
 + 0: optimal
 + 1: primal infeasible
 + 2: dual infeasible
+
+An exact definition of when these flags are returned can be found in Alexander Domahidi's [PhD Thesis](http://e-collection.library.ethz.ch/view/eth:7611?q=domahidi) in Chapter 9.4.2. (pp. 163).
 
 Negative numbers indicate that the problem could not be solved to the required accuracy (the returned iterate might still be satisfactory - please do check the duality gap etc.)
 + -1: maximum number of iterations reached
@@ -295,4 +297,4 @@ Negative numbers indicate that the problem could not be solved to the required a
 + -3: numerical problems (slacks or multipliers became exterior)
 + -7: unknown problem in solver 
 
-It is good practice to always check the exitcode when solving the optimization problem in automated fashion. Please report optimization problems for which ECOS struggles to converge to one of the authors.
+It is in general good practice to check the exitcode, in particular when solving optimization problems in an unsupervised, automated fashion (in a batch job, for example). Please report optimization problems for which ECOS struggles to converge to one of the authors.
