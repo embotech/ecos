@@ -282,6 +282,47 @@ The argument `dims` is a dictionary with two fields, `dims['l']` and `dims['q']`
 The returned object is a dictionary containing the fields `solution['x']`, `solution['y']`, `solution['s']`, `solution['z']`, and `solution['info']`. 
 The first four are NUMPY arrays containing the relevant solution. The last field contains a dictionary with the same fields as the `info` struct in the MATLAB interface.
 
+
+Using ECOS in C
+====
+ECOS exports 3 functions, see ecos.h. You need to call these in the following sequence:
+
+1. Setup
+----
+
+Setup allocates memory for ECOS, computes the fill-in reducing ordering and provides other initialization necessary before solve can start. Use the following function to initialize ECOS:
+```
+pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint* q,
+                   pfloat* Gpr, idxint* Gjc, idxint* Gir,
+                   pfloat* Apr, idxint* Ajc, idxint* Air,
+                   pfloat* c, pfloat* h, pfloat* b);
+```
+where you have to pass the following arguments:
+* `n` is the number of variables,
+* `m` is the number of inequality constraints (dimension 1 of the matrix `G` and the length of the vector `h`), 
+* `p` is the number of equality constraints (can be 0)
+* `l` is the dimension of the positive orthant, i.e. in `Gx+s=h, s in K`, the first `l` elements of `s` are `>=0`
+* `ncones` is the number of second-order cones present in `K`
+* `q` is an array of integers of length `ncones`, where each element defines the dimension of the cone 
+* `Gpr`, `Gjc`, `Gir` are the the data, the column index, and the row index arrays, respectively, for the matrix `G` represented in column compressed storage (CCS) format (Google it if you need more information on this format, it is one of the standard sparse matrix representations)
+* `Apr`, `Ajc`, `Air` is the CCS representation of the matrix `A` (can be all `NULL` if no equalities are present)
+* `c` is an array of type `pfloat` of size `n`
+* `h` is an array of type `pfloat` of size `m`
+* `b` is an array of type `pfloat` of size `p` (can be `NULL` if no equalities are present) 
+The setup function returns a struct of type ```pwork```, which you need to define first.
+
+2. Solve
+----
+After the initialization is done, you can call the solve function, which contains the actual interior point method, by
+```idxint ECOS_solve(pwork* w);```
+The return value is an integer, see below.
+
+3. Cleanup
+----
+Call 
+```void ECOS_cleanup(pwork* w, idxint keepvars);```
+to free all allocated memory.
+
 Exitcodes
 ====
 ECOS defines a number of exitcodes that indicate the quality of the returned solution. In general, positive values indicate that the solver has converged within the given tolerance. More specifically,
