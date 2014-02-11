@@ -1,12 +1,10 @@
 function shim = cvx_ecos( shim )
 
-global cvx___ %#ok
 if ~isempty( shim.solve ),
     return
 end
 if isempty( shim.name ),
-    [ fs, ps, int_path, mext ] = cvx_version; %#ok
-    fname = [ 'ecos.', mext ];
+    fname = [ 'ecos.', mexext ];
     shim.name = 'ECOS';
     shim.dualize = true;
     flen = length(fname);
@@ -33,7 +31,7 @@ if isempty( shim.name ),
             tshim.solve = @solve;
             tshim.eargs = {};
             if k ~= 1,
-                tshim.path = [ new_dir, ps ];
+                tshim.path = [ new_dir, pathsep ];
             end
         end
         shim = [ shim, tshim ]; %#ok
@@ -64,9 +62,9 @@ function [ x, status, tol, iters, y, z ] = solve( At, b, c, nonls, quiet, prec, 
 
 n = length( c );
 m = length( b );
-K = struct( 'f', 0, 'l', 0, 'q', [], 'r', [] );
+K = struct( 'f', 0, 'l', 0, 'q', [] );
 reord = struct( 'n', 0, 'r', [], 'c', [], 'v', [] );
-reord = struct( 'f', reord, 'l', reord, 'a', reord, 'q', reord, 'r', reord );
+reord = struct( 'f', reord, 'l', reord, 'a', reord, 'q', reord );
 reord.f.n = n;
 zinv = [];
 for k = 1 : length( nonls ),
