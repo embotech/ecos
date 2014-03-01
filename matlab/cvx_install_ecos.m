@@ -1,9 +1,9 @@
 makemex
-[ ver, isoctave, fs, ps ] = cvx_version;
+fs = cvx_where;
 
 copyfile('cvx_ecos.m',strcat(fs,'/shims'));
 mkdir(strcat(fs,'/ecos'));
-copyfile(strcat('ecos.',ps),strcat(fs,'/ecos'));
+copyfile(strcat('ecos.',mexext),strcat(fs,'/ecos'));
 cvx_setup
 
 % mini test script
