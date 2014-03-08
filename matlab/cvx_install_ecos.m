@@ -1,9 +1,9 @@
 makemex
 fs = cvx_where;
 
-copyfile('cvx_ecos.m',strcat(fs,'/shims'));
-mkdir(strcat(fs,'/ecos'));
-copyfile(strcat('ecos.',mexext),strcat(fs,'/ecos'));
+copyfile('cvx_solver_shim.m',strcat(fs,filesep, 'shims', filesep, 'cvx_ecos.m'));
+mkdir(strcat(fs,filesep,'ecos'));
+copyfile(strcat('ecos.',mexext),strcat(fs,filesep,'ecos'));
 cvx_setup
 
 % mini test script
