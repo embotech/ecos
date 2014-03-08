@@ -27,7 +27,8 @@
 
 int main(void)
 {
-	idxint exitflag = ECOS_FATAL;
+	/*char ver[7];*/
+    idxint exitflag = ECOS_FATAL;
 	pwork* mywork;
 #if PROFILING > 0
 	double ttotal, tsolve, tsetup;
@@ -84,6 +85,11 @@ int main(void)
 	ECOS_cleanup(mywork, 0);
         
     }
+    
+    /* test version number
+    ECOS_ver(ver);
+    printf("This test has been run on ECOS version %s\n", ver);
+     */
 	
     /* explicitly truncate exit code */
 	return (int)exitflag;

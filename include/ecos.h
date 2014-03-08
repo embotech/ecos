@@ -211,6 +211,16 @@ idxint ECOS_solve(pwork* w);
  * do not want to free x,y,s,z (depending on the number of LHS).
  */
 void ECOS_cleanup(pwork* w, idxint keepvars);
+    
+    
+/** 
+ * Version: returns the current version number
+ * Use a character array of length 7 to obtain the version number
+ * in the format 
+ *      x.y.zzz
+ * where x is the major, y the minor and zzz the build number
+ */
+void ECOS_ver(char* versionString);
 
 #ifdef __cplusplus
 }

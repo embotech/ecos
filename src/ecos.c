@@ -32,6 +32,21 @@
 #include <math.h>
 
 
+
+/**
+ * Version: returns the current version number
+ * Use a character array of length 7 to obtain the version number
+ * in the format
+ *      x.y.zzz
+ * where x is the major, y the minor and zzz the build number
+ */
+void ECOS_ver(char* versionString)
+{
+    char thisversion[7] = ECOS_VERSION;
+    idxint i;
+    for( i=0; i<7; i++) versionString[i] = thisversion[i];
+}
+
 /*
  * Initializes the solver.
  *
@@ -267,7 +282,7 @@ void printProgress(stats* info)
 	{
 		/* print header at very first iteration */		
 #if PRINTLEVEL == 2
-		PRINTTEXT("\nECOS %s - (c) A. Domahidi, Automatic Control Lab, ETH Zurich, 2012-2014.\n\n", ECOS_VERSION);
+		PRINTTEXT("\nECOS %s - (c) A. Domahidi, Automatic Control Laboratory, ETH Zurich, 2012-2014.\n\n", ECOS_VERSION);
 #endif
 #if defined _WIN32 || defined _WIN64		
 		PRINTTEXT("It     pcost       dcost      gap   pres   dres    k/t    mu     step    IR\n");
