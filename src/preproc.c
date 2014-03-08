@@ -356,6 +356,85 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 	*K = createSparseMatrix(nK, nK, nnzK, Kjc, Kir, Kpr);
 }
 
+void get_equilibration(pfloat *E, const spmat *A, const spmat *G)
+{
+    idxint i, j;
+    idxint num_cols = A ? A->n : G->n;
+    /* initialize equilibration vector to 0 */
+    for(i = 0; i < num_cols; i++) {
+        E[i] = 0.0;
+    }
+
+    for(i = 0; i < num_cols; i++) {
+        /* sum all the columns of A */
+        if(A) {
+            for(j = A->jc[i]; j < A->jc[i+1]; j++) {
+                E[i] += (A->pr[j] * A->pr[j]);
+            }
+        }
+
+        /* sum all the columns of G */
+        for(j = G->jc[i]; j < G->jc[i+1]; j++) {
+            E[i] += (G->pr[j] * G->pr[j]);
+        }
+    }
+
+    /* get the inverse norm */
+    for(i = 0; i < num_cols; i++) {
+        E[i] = sqrt(E[i]);
+    }
+}
+
+/* equilibrate */
+void equilibrate(pwork *w)
+{
+    idxint i, j;
+    idxint num_cols = w->A ? w->A->n : w->G->n;
+
+    for(i = 0; i < num_cols; i++) {
+        /* equilibrate the columns of A */
+        if(w->A) {
+            for(j = w->A->jc[i]; j < w->A->jc[i+1]; j++) {
+                w->A->pr[j] /= w->E[i];
+            }
+        }
+
+        /* equilibrate the columns of G */
+        for(j = w->G->jc[i]; j < w->G->jc[i+1]; j++) {
+            w->G->pr[j] /= w->E[i];
+        }
+
+        /* equilibrate the c vector */
+        if(w->c)
+            w->c[i] /= w->E[i];
+    }
+}
+
+/* invert the equilibration job */
+void restore(pwork *w)
+{
+    idxint i, j;
+    idxint num_cols = w->A ? w->A->n : w->G->n;
+
+    for(i = 0; i < num_cols; i++) {
+        /* unequilibrate the columns of A */
+        if(w->A) {
+            for(j = w->A->jc[i]; j < w->A->jc[i+1]; j++) {
+                w->A->pr[j] *= w->E[i];
+            }
+        }
+
+        /* unequilibrate the columns of G */
+        for(j = w->G->jc[i]; j < w->G->jc[i+1]; j++) {
+            w->G->pr[j] *= w->E[i];
+        }
+
+        /* unequilibrate the c vector */
+        if(w->c)
+            w->c[i] *= w->E[i];
+    }
+}
+
 
 /**
  * Cleanup: free memory (not used for embedded solvers, only standalone)
@@ -368,6 +447,8 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 void ECOS_cleanup(pwork* w, idxint keepvars)
 {
 	idxint i;
+    /* restore the equilibration */
+    restore(w);
 	
 	/* Free KKT related memory      ---            below are the corresponding MALLOCs                */
 	FREE(w->KKT->D);                /* mywork->KKT->D = (pfloat *)MALLOC(nK*sizeof(pfloat));          */
@@ -595,19 +676,32 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     PRINTTEXT("Memory allocated for info struct\n");
 #endif
 
+    /* equilibration vector */
+    mywork->E = (pfloat *)MALLOC(n*sizeof(pfloat));
+    /* compute equilibration vector */
+
+#if PRINTLEVEL > 2
+    PRINTTEXT("Memory allocated for equilibration vector\n");
+#endif
+
 	/* settings */
 	mywork->stgs = (settings *)MALLOC(sizeof(settings));
 	mywork->stgs->maxit = MAXIT;
 	mywork->stgs->gamma = GAMMA;	
 	mywork->stgs->delta = DELTA;
-  mywork->stgs->eps = EPS;
+    mywork->stgs->eps = EPS;
 	mywork->stgs->nitref = NITREF;
 	mywork->stgs->abstol = ABSTOL;	
 	mywork->stgs->feastol = FEASTOL;
 	mywork->stgs->reltol = RELTOL;
-  mywork->stgs->verbose = VERBOSE;
+    mywork->stgs->verbose = VERBOSE;
 #if PRINTLEVEL > 2
     PRINTTEXT("Written settings\n");
+#endif
+
+    mywork->c = c;
+#if PRINTLEVEL > 2
+    PRINTTEXT("Hung pointer for c into WORK struct\n");
 #endif
     
 	/* Store problem data */
@@ -619,9 +713,13 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
   if (Gpr && Gjc && Gir) {
 	  mywork->G = createSparseMatrix(m, n, Gjc[n], Gjc, Gir, Gpr);
   } else {
-    // create an empty sparse matrix
-	  mywork->G = createSparseMatrix(m, n, 0, Gjc, Gir, Gpr);
-  }	
+    /* create an empty sparse matrix */
+	mywork->G = createSparseMatrix(m, n, 0, Gjc, Gir, Gpr);
+  }
+
+  get_equilibration(mywork->E, mywork->A, mywork->G);
+  equilibrate(mywork);
+
 #if PROFILING > 1
 	mywork->info->ttranspose = 0;
 	tic(&tmattranspose);
@@ -649,11 +747,10 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     PRINTTEXT("Transposed G\n");
 #endif
     
-    mywork->c = c;
     mywork->h = h;
     mywork->b = b;
 #if PRINTLEVEL > 2
-    PRINTTEXT("Hung pointers for c, h and b into WORK struct\n");
+    PRINTTEXT("Hung pointers for h and b into WORK struct\n");
 #endif
 
      

@@ -25,7 +25,7 @@ _ecos = Extension('_ecos', libraries = lib,
 
 
 setup(  name = 'ecos',
-        version = '1.0.1',
+        version = '1.0.2',
         description = 'This is the Python package for ECOS: Embedded Cone Solver. See Github page for more information.',
         py_modules = ['ecos'],
         ext_modules = [_ecos],

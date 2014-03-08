@@ -187,7 +187,7 @@ void computeResiduals(pwork *w)
         sparseMtVm(w->G, w->z, w->rx, 1, 0);
     }
 	w->hresx = norm2(w->rx, w->n);
-	vsubscale(w->n, w->tau, w->c, w->rx);
+	vsubscale(w->n, w->tau, w->c, w->rx);    
 		
 	/* ry = A*x - b.*tau */
 	if( w->p > 0 ){
@@ -483,7 +483,8 @@ pfloat lineSearch(pfloat* lambda, pfloat* ds, pfloat* dz, pfloat tau, pfloat dta
 void backscale(pwork *w)
 {
 	idxint i;
-	for( i=0; i < w->n; i++ ){ w->x[i] /= w->tau; }
+    /* We performed a change of variables on x so this recovers it also */
+	for( i=0; i < w->n; i++ ){ w->x[i] /= (w->E[i] * w->tau); }
 	for( i=0; i < w->p; i++ ){ w->y[i] /= w->tau; }
 	for( i=0; i < w->m; i++ ){ w->z[i] /= w->tau; }
 	for( i=0; i < w->m; i++ ){ w->s[i] /= w->tau; }

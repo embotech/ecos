@@ -52,7 +52,6 @@
 #define SAFEGUARD (500)     /* Maximum increase in PRES before
                                                 ECOS_NUMERICS is thrown. */
 
-
 /* EXITCODES ----------------------------------------------------------- */
 #define ECOS_OPTIMAL  (0)   /* Problem solved to optimality              */
 #define ECOS_PINF     (1)   /* Found certificate of primal infeasibility */
@@ -70,13 +69,13 @@ extern "C" {
 typedef struct settings{
 	pfloat gamma;                /* scaling the final step length        */	
 	pfloat delta;                /* regularization parameter             */
-  pfloat eps;                  /* regularization threshold             */
+    pfloat eps;                  /* regularization threshold             */
 	pfloat feastol;              /* primal/dual infeasibility tolerance  */
 	pfloat abstol;               /* absolute tolerance on duality gap    */
 	pfloat reltol;               /* relative tolerance on duality gap    */
-	idxint nitref;				       /* number of iterative refinement steps */
+	idxint nitref;				 /* number of iterative refinement steps */
 	idxint maxit;                /* maximum number of iterations         */
-  idxint verbose;              /* verbosity bool for PRINTLEVEL < 3    */
+    idxint verbose;              /* verbosity bool for PRINTLEVEL < 3    */
 } settings;
 
 
@@ -149,6 +148,9 @@ typedef struct pwork{
     
     /* problem data */
     spmat* A;  spmat* G;  pfloat* c;  pfloat* b;  pfloat* h;
+
+    /* equilibration vector */
+    pfloat *E;
 
 	/* scalings of problem data */
 	pfloat resx0;  pfloat resy0;  pfloat resz0;
