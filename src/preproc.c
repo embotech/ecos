@@ -444,7 +444,7 @@ void set_equilibration(pwork *w)
     sum_sq_rows(w->Gequil, w->G);
 
     /* now collapse cones together by taking average norm square */
-    ind = 0;
+    ind = w->C->lpc->p;
     for(i = 0; i < w->C->nsoc; i++) {
       sum = 0.0;
       for(j = 0; j < w->C->soc[i].p; j++) {
@@ -458,10 +458,10 @@ void set_equilibration(pwork *w)
 
     /* get the norm */
     for(i = 0; i < num_A_rows; i++) {
-      w->Aequil[i] = sqrt(w->Aequil[i]);
+      w->Aequil[i] = fabs(w->Aequil[i]) < 1e-6 ? 1.0 : sqrt(w->Aequil[i]);
     }
     for(i = 0; i < num_G_rows; i++) {
-      w->Gequil[i] = sqrt(w->Gequil[i]);
+      w->Gequil[i] = fabs(w->Gequil[i]) < 1e-6 ? 1.0 : sqrt(w->Gequil[i]);
     }
     
     /* now scale A */
@@ -475,7 +475,7 @@ void set_equilibration(pwork *w)
 
     /* get the norm */
     for(i = 0; i < num_cols; i++) {
-        w->xequil[i] = sqrt(w->xequil[i]);
+        w->xequil[i] = fabs(w->xequil[i]) < 1e-6 ? 1.0 : sqrt(w->xequil[i]);
     }
     if(w->A)
         equilibrate_cols(w->xequil, w->A);
@@ -810,6 +810,16 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
   }
 
   set_equilibration(mywork);
+    /* initialize equilibration vector to 0 */
+    // for(i = 0; i < n; i++) {
+    //     mywork->xequil[i] = 10.0;
+    // }
+    // for(i = 0; i < p; i++) {
+    //     mywork->Aequil[i] = 0.1;
+    // }
+    // for(i = 0; i < m; i++) {
+    //     mywork->Gequil[i] = 0.1;
+    // }
 
 #if PROFILING > 1
 	mywork->info->ttranspose = 0;
