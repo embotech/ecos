@@ -72,12 +72,24 @@ Using ECOS with CVX
 ====
 
 The simplest way to use ECOS is to install a CVX 2.0 shim. For this to work, you must have the latest version of 
-[CVX](http://cvxr.com) installed in MATLAB. Once CVX is installed, open MATLAB and run,
+[CVX](http://cvxr.com) installed in MATLAB. Once CVX is installed, add your ECOS directory to your MATLAB install path and run `cvx_setup`.
 
-     cd <ecos-directory>/matlab
-     cvx_install_ecos
+     addpath <ecos-directory>/matlab
+     cvx_setup
 
-This will automatically build ECOS and install the CVX shim. Please report any error messages to us.
+This will automatically detect the ECOS shim and add it to CVX. If you want to ensure you have the latest binary for ECOS, instead run
+    
+    cd <ecos-directory>/matlab 
+    makemex
+    addpath <ecos-directory>/matlab
+    cvx_setup
+
+This will build ECOS and install the CVX shim. Please report any error messages to us. The old method also works:
+
+    cd <ecos-directory>/matlab
+    cvx_install_ecos
+
+This is maintained for compatibility issues (i.e., for users who have not upgraded to CVX 2.0).
 
 Once the ECOS shim is installed, the CVX solver can be switched using the `cvx_solver` command. For instance,
 
@@ -90,7 +102,7 @@ Once the ECOS shim is installed, the CVX solver can be switched using the `cvx_s
                x >= 0
      cvx_end
      
-*IMPORTANT*: Not all of CVX's atoms are SOCP-representable. Some of the atoms implemented in CVX require the use of SDP cones. Additionally, other atoms that could be implemented with a second-order cone are instead implemented as SDPs. See 
+*IMPORTANT*: Not all of CVX's atoms are SOCP-representable. Some of the atoms implemented in CVX require the use of SDP cones. Some atoms that could be implemented with a second-order cone are instead implemented as SDPs, but these are automatically converted to SOC cones. See 
 [Issue #8](https://github.com/ifa-ethz/ecos/issues/8) for more information.
 
 Using ECOS with YALMIP
@@ -254,14 +266,12 @@ Using ECOS in Python
 
 Compiling ECOS for Python
 ----
-To create the Python interface, the following lines of code should work:
+To create the Python interface, you need [Numpy](http://www.numpy.org/) and [Scipy](http://www.scipy.org/). For installation instructions, see their respective pages. Once those are installed, the following lines of code should work:
 ```
 cd <ecos-directory>/python
 python setup.py install
 ```
 You may need `sudo` privileges for a global installation. 
-
-**Important note**: Even if you do not have CVXOPT installed, this code will likely compile without errors. However, you will run into dynamic link issues when attempting to use the module.
 
 Calling ECOS from Python
 ----
@@ -274,13 +284,15 @@ This module provides a single function `ecos` with one of the following calling 
 solution = ecos.solve(c,G,h,dims)
 solution = ecos.solve(c,G,h,dims,A,b)
 ```
-The arguments `c`, `h`, and `b` are NUMPY arrays (i.e., matrices with a single column). 
-The arguments `G` and `A` are SCIPY *sparse* matrices in CSR format; if they are
-not of the proper format, ECOS will attempt to convert them. 
-The argument `dims` is a dictionary with two fields, `dims['l']` and `dims['q']`. These are the same fields as in the Matlab case. If the fields are omitted or empty, they default to 0. The arguments `A` and `b` are optional.
+The arguments `c`, `h`, and `b` are Numpy arrays (i.e., matrices with a single
+column).  The arguments `G` and `A` are Scipy *sparse* matrices in CSR format;
+if they are not of the proper format, ECOS will attempt to convert them.  The
+argument `dims` is a dictionary with two fields, `dims['l']` and `dims['q']`.
+These are the same fields as in the Matlab case. If the fields are omitted or
+empty, they default to 0. The arguments `A` and `b` are optional.
 
 The returned object is a dictionary containing the fields `solution['x']`, `solution['y']`, `solution['s']`, `solution['z']`, and `solution['info']`. 
-The first four are NUMPY arrays containing the relevant solution. The last field contains a dictionary with the same fields as the `info` struct in the MATLAB interface.
+The first four are Numpy arrays containing the relevant solution. The last field contains a dictionary with the same fields as the `info` struct in the MATLAB interface.
 
 
 Using ECOS in C
