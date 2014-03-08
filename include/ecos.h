@@ -31,6 +31,13 @@
 #endif
 
 
+/* ECOS VERSION NUMBER --------------------------------------------------
+ * in the format
+ *                  x.y.zzz
+ * where x is the major, y the minor and zzz the build number ---------- */
+#define ECOS_VERSION ("1.0.201")
+
+
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
 #define MAXIT     (50)           /* maximum number of iterations         */
 #define FEASTOL   (1E-5)         /* primal/dual infeasibility tolerance  */

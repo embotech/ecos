@@ -267,7 +267,7 @@ void printProgress(stats* info)
 	{
 		/* print header at very first iteration */		
 #if PRINTLEVEL == 2
-		PRINTTEXT("\nECOS - (c) A. Domahidi, Automatic Control Laboratory, ETH Zurich, 2012-2014.\n\n");		
+		PRINTTEXT("\nECOS %s - (c) A. Domahidi, Automatic Control Lab, ETH Zurich, 2012-2014.\n\n", ECOS_VERSION);
 #endif
 #if defined _WIN32 || defined _WIN64		
 		PRINTTEXT("It     pcost       dcost      gap   pres   dres    k/t    mu     step    IR\n");
