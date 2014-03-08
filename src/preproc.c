@@ -356,82 +356,169 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 	*K = createSparseMatrix(nK, nK, nnzK, Kjc, Kir, Kpr);
 }
 
-void get_equilibration(pfloat *E, const spmat *A, const spmat *G)
+void sum_sq_rows(pfloat *E, const spmat *mat)
 {
-    idxint i, j;
-    idxint num_cols = A ? A->n : G->n;
-    /* initialize equilibration vector to 0 */
-    for(i = 0; i < num_cols; i++) {
-        E[i] = 0.0;
-    }
-
-    for(i = 0; i < num_cols; i++) {
-        /* sum all the columns of A */
-        if(A) {
-            for(j = A->jc[i]; j < A->jc[i+1]; j++) {
-                E[i] += (A->pr[j] * A->pr[j]);
-            }
-        }
-
-        /* sum all the columns of G */
-        for(j = G->jc[i]; j < G->jc[i+1]; j++) {
-            E[i] += (G->pr[j] * G->pr[j]);
-        }
-    }
-
-    /* get the inverse norm */
-    for(i = 0; i < num_cols; i++) {
-        E[i] = sqrt(E[i]);
+    /* assumes mat is not null */
+    idxint i, j, row;
+    for(i = 0; i < mat->n; i++) { /* cols */
+      for(j = mat->jc[i]; j < mat->jc[i+1]; j++) {
+        row = mat->ir[j];
+        E[row] += (mat->pr[j] * mat->pr[j]);
+      }
     }
 }
 
-/* equilibrate */
-void equilibrate(pwork *w)
+void sum_sq_cols(pfloat *E, const spmat *mat)
+{
+    /* assumes mat is not null */
+    idxint i, j;
+    for(i = 0; i < mat->n; i++) { /* cols */
+      for(j = mat->jc[i]; j < mat->jc[i+1]; j++) {
+        E[i] += (mat->pr[j] * mat->pr[j]);
+      }
+    }
+}
+
+void equilibrate_rows(const pfloat *E, spmat *mat)
+{
+    idxint i, j, row;
+
+    for(i = 0; i < mat->n; i++) {
+        /* equilibrate the rows of a matrix */
+        for(j = mat->jc[i]; j < mat->jc[i+1]; j++) {
+            row = mat->ir[j];
+            mat->pr[j] /= E[row];
+        }
+    }
+}
+
+void equilibrate_cols(const pfloat *E, spmat *mat)
 {
     idxint i, j;
+
+    for(i = 0; i < mat->n; i++) {
+        /* equilibrate the columns of a matrix */
+        for(j = mat->jc[i]; j < mat->jc[i+1]; j++) {
+            mat->pr[j] /= E[i];
+        }
+    }
+}
+
+void restore(const pfloat *D, const pfloat *E, spmat *mat)
+{
+    idxint i, j, row;
+
+    for(i = 0; i < mat->n; i++) {
+        /* equilibrate the rows of a matrix */
+        for(j = mat->jc[i]; j < mat->jc[i+1]; j++) {
+            row = mat->ir[j];
+            mat->pr[j] *= (D[row] * E[i]);
+        }
+    }
+}
+
+void set_equilibration(pwork *w)
+{
+    idxint i, j, ind;
     idxint num_cols = w->A ? w->A->n : w->G->n;
+    idxint num_A_rows = w->A ? w->A->m : 0;
+    idxint num_G_rows = w->G->m;
+    pfloat sum;
 
+    /* initialize equilibration vector to 0 */
     for(i = 0; i < num_cols; i++) {
-        /* equilibrate the columns of A */
-        if(w->A) {
-            for(j = w->A->jc[i]; j < w->A->jc[i+1]; j++) {
-                w->A->pr[j] /= w->E[i];
-            }
-        }
+        w->xequil[i] = 0.0;
+    }
+    for(i = 0; i < num_A_rows; i++) {
+        w->Aequil[i] = 0.0;
+    }
+    for(i = 0; i < num_G_rows; i++) {
+        w->Gequil[i] = 0.0;
+    }
 
-        /* equilibrate the columns of G */
-        for(j = w->G->jc[i]; j < w->G->jc[i+1]; j++) {
-            w->G->pr[j] /= w->E[i];
-        }
+    /* compute norm across rows of A */
+    if(w->A)
+        sum_sq_rows(w->Aequil, w->A);
 
-        /* equilibrate the c vector */
-        if(w->c)
-            w->c[i] /= w->E[i];
+    /* compute norm across rows of G */
+    sum_sq_rows(w->Gequil, w->G);
+
+    /* now collapse cones together by taking average norm square */
+    ind = 0;
+    for(i = 0; i < w->C->nsoc; i++) {
+      sum = 0.0;
+      for(j = 0; j < w->C->soc[i].p; j++) {
+        sum += w->Gequil[ind + j];
+      }
+      for(j = 0; j < w->C->soc[i].p; j++) {
+        w->Gequil[ind + j] = sum / w->C->soc[i].p;
+      }
+      ind += w->C->soc[i].p;
+    }
+
+    /* get the norm */
+    for(i = 0; i < num_A_rows; i++) {
+      w->Aequil[i] = sqrt(w->Aequil[i]);
+    }
+    for(i = 0; i < num_G_rows; i++) {
+      w->Gequil[i] = sqrt(w->Gequil[i]);
+    }
+    
+    /* now scale A */
+    if(w->A)
+        equilibrate_rows(w->Aequil, w->A);
+    equilibrate_rows(w->Gequil, w->G);
+
+    if(w->A)
+        sum_sq_cols(w->xequil, w->A);
+    sum_sq_cols(w->xequil, w->G);
+
+    /* get the norm */
+    for(i = 0; i < num_cols; i++) {
+        w->xequil[i] = sqrt(w->xequil[i]);
+    }
+    if(w->A)
+        equilibrate_cols(w->xequil, w->A);
+    equilibrate_cols(w->xequil, w->G);
+
+    /* equilibrate the c vector */
+    for(i = 0; i < num_cols; i++) {
+        w->c[i] /= w->xequil[i];
+    }
+    /* equilibrate the b vector */
+    for(i = 0; i < num_A_rows; i++) {
+        w->b[i] /= w->Aequil[i];
+    }
+    /* equilibrate the h vector */
+    for(i = 0; i < num_G_rows; i++) {
+        w->h[i] /= w->Gequil[i];
     }
 }
 
 /* invert the equilibration job */
-void restore(pwork *w)
+void recover(pwork *w)
 {
-    idxint i, j;
+    idxint i;
     idxint num_cols = w->A ? w->A->n : w->G->n;
+    idxint num_A_rows = w->A ? w->A->m : 0;
+    idxint num_G_rows = w->G->m;
 
+    if(w->A) {
+        restore(w->Aequil, w->xequil, w->A);
+    }
+    restore(w->Gequil, w->xequil, w->G);
+
+    /* unequilibrate the c vector */
     for(i = 0; i < num_cols; i++) {
-        /* unequilibrate the columns of A */
-        if(w->A) {
-            for(j = w->A->jc[i]; j < w->A->jc[i+1]; j++) {
-                w->A->pr[j] *= w->E[i];
-            }
-        }
-
-        /* unequilibrate the columns of G */
-        for(j = w->G->jc[i]; j < w->G->jc[i+1]; j++) {
-            w->G->pr[j] *= w->E[i];
-        }
-
-        /* unequilibrate the c vector */
-        if(w->c)
-            w->c[i] *= w->E[i];
+        w->c[i] *= w->xequil[i];
+    }
+    /* unequilibrate the b vector */
+    for(i = 0; i < num_A_rows; i++) {
+        w->b[i] *= w->Aequil[i];
+    }
+    /* unequilibrate the h vector */
+    for(i = 0; i < num_G_rows; i++) {
+        w->h[i] *= w->Gequil[i];
     }
 }
 
@@ -448,7 +535,7 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 {
 	idxint i;
     /* restore the equilibration */
-    restore(w);
+    recover(w);
 	
 	/* Free KKT related memory      ---            below are the corresponding MALLOCs                */
 	FREE(w->KKT->D);                /* mywork->KKT->D = (pfloat *)MALLOC(nK*sizeof(pfloat));          */
@@ -520,6 +607,9 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 	if( keepvars < 3 ) FREE(w->s);
 	if( keepvars < 2 ) FREE(w->y);
 	if( keepvars < 1 ) FREE(w->x);
+    FREE(w->xequil);
+    FREE(w->Aequil);
+    FREE(w->Gequil);
 	FREE(w);
 }
 
@@ -677,11 +767,11 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #endif
 
     /* equilibration vector */
-    mywork->E = (pfloat *)MALLOC(n*sizeof(pfloat));
-    /* compute equilibration vector */
-
+    mywork->xequil = (pfloat *)MALLOC(n*sizeof(pfloat));
+    mywork->Aequil = (pfloat *)MALLOC(p*sizeof(pfloat));
+    mywork->Gequil = (pfloat *)MALLOC(m*sizeof(pfloat));
 #if PRINTLEVEL > 2
-    PRINTTEXT("Memory allocated for equilibration vector\n");
+    PRINTTEXT("Memory allocated for equilibration vectors\n");
 #endif
 
 	/* settings */
@@ -700,11 +790,13 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #endif
 
     mywork->c = c;
+    mywork->h = h;
+    mywork->b = b;
 #if PRINTLEVEL > 2
-    PRINTTEXT("Hung pointer for c into WORK struct\n");
+    PRINTTEXT("Hung pointers for c, h and b into WORK struct\n");
 #endif
-    
-	/* Store problem data */
+
+    /* Store problem data */
   if(Apr && Ajc && Air) {
     mywork->A = createSparseMatrix(p, n, Ajc[n], Ajc, Air, Apr);
   } else {
@@ -717,8 +809,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->G = createSparseMatrix(m, n, 0, Gjc, Gir, Gpr);
   }
 
-  get_equilibration(mywork->E, mywork->A, mywork->G);
-  equilibrate(mywork);
+  set_equilibration(mywork);
 
 #if PROFILING > 1
 	mywork->info->ttranspose = 0;
@@ -747,11 +838,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     PRINTTEXT("Transposed G\n");
 #endif
     
-    mywork->h = h;
-    mywork->b = b;
-#if PRINTLEVEL > 2
-    PRINTTEXT("Hung pointers for h and b into WORK struct\n");
-#endif
+
 
      
   

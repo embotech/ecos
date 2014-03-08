@@ -150,7 +150,9 @@ typedef struct pwork{
     spmat* A;  spmat* G;  pfloat* c;  pfloat* b;  pfloat* h;
 
     /* equilibration vector */
-    pfloat *E;
+    pfloat *xequil;
+    pfloat *Aequil;
+    pfloat *Gequil;
 
 	/* scalings of problem data */
 	pfloat resx0;  pfloat resy0;  pfloat resz0;

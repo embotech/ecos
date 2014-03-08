@@ -484,10 +484,10 @@ void backscale(pwork *w)
 {
 	idxint i;
     /* We performed a change of variables on x so this recovers it also */
-	for( i=0; i < w->n; i++ ){ w->x[i] /= (w->E[i] * w->tau); }
-	for( i=0; i < w->p; i++ ){ w->y[i] /= w->tau; }
-	for( i=0; i < w->m; i++ ){ w->z[i] /= w->tau; }
-	for( i=0; i < w->m; i++ ){ w->s[i] /= w->tau; }
+	for( i=0; i < w->n; i++ ){ w->x[i] /= (w->xequil[i] * w->tau); }
+	for( i=0; i < w->p; i++ ){ w->y[i] /= (w->Aequil[i] * w->tau); }
+	for( i=0; i < w->m; i++ ){ w->z[i] /= (w->Gequil[i] * w->tau); }
+	for( i=0; i < w->m; i++ ){ w->s[i] /= (w->Gequil[i] * w->tau); }
 }
 
 
