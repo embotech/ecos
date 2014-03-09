@@ -58,7 +58,7 @@ static inline PyArrayObject *getContiguous(PyArrayObject *array, int typenum) {
 
 static PyObject *version(PyObject* self)
 {
-  return Py_BuildValue("s",ECOS_ver());
+  return Py_BuildValue("s",ECOS_VERSION);
 }
 
 static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
