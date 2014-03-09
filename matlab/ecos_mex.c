@@ -113,6 +113,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 #ifdef MEXARGMUENTCHECKS     
     if( !(nrhs >= 4 && nrhs <= 7) )
     {
+        mexPrintf("ECOS %s - (c) A. Domahidi, Automatic Control Laboratory, ETH Zurich, 2012-14.\n", ECOS_VERSION);
         mexErrMsgTxt("ECOS takes 4 to 7 arguments: ECOS(c,G,h,dims), ECOS(c,G,h,dims,opts), ECOS(c,G,h,dims,A,b), or ECOS(c,G,h,dims,A,b,opts)");
     }
 #endif    

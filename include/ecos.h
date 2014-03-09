@@ -31,11 +31,8 @@
 #endif
 
 
-/* ECOS VERSION NUMBER --------------------------------------------------
- * in the format
- *                  x.y.zzz
- * where x is the major, y the minor and zzz the build number ---------- */
-#define ECOS_VERSION ("1.0.201")
+/* ECOS VERSION NUMBER - FORMAT: X.Y.Z --------------------------------- */ 
+#define ECOS_VERSION ("1.0.2")
 
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */

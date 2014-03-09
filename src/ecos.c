@@ -35,16 +35,14 @@
 
 /**
  * Version: returns the current version number
- * Use a character array of length 7 to obtain the version number
- * in the format
- *      x.y.zzz
- * where x is the major, y the minor and zzz the build number
+ * Use a character array of length 5 to obtain the version number
+ * in the format X.Y.Z
  */
 void ECOS_ver(char* versionString)
 {
-    char thisversion[7] = ECOS_VERSION;
+    char thisversion[5] = ECOS_VERSION;
     idxint i;
-    for( i=0; i<7; i++) versionString[i] = thisversion[i];
+    for( i=0; i<5; i++) versionString[i] = thisversion[i];
 }
 
 /*
