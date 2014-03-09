@@ -217,7 +217,7 @@ void ECOS_cleanup(pwork* w, idxint keepvars);
  *      x.y.zzz
  * where x is the major, y the minor and zzz the build number
  */
-void ECOS_ver(char* versionString);
+const char* ECOS_ver(void);
 
 #ifdef __cplusplus
 }

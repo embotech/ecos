@@ -56,6 +56,11 @@ static inline PyArrayObject *getContiguous(PyArrayObject *array, int typenum) {
 #define PyInt_Check PyLong_Check
 #endif
 
+static PyObject *version(PyObject* self)
+{
+  return Py_BuildValue("s",ECOS_ver());
+}
+
 static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
 {
   /* Expects a function call
@@ -573,6 +578,7 @@ static PyMethodDef ECOSMethods[] =
 {
   {"csolve", (PyCFunction)csolve, METH_VARARGS | METH_KEYWORDS,
     "Solve an SOCP using ECOS."},
+  {"version", (PyCFunction)version, METH_NOARGS, "Version number for ECOS."},
   {NULL, NULL, 0, NULL} // sentinel
 };
 

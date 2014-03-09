@@ -31,18 +31,20 @@
 /* NEEDED FOR SQRT ----------------------------------------------------- */
 #include <math.h>
 
+/**
+ * Private static const char * for version numbering.
+ * All versions point to this string.
+ */
+static const char* thisVersion = ECOS_VERSION;
 
 
 /**
  * Version: returns the current version number
- * Use a character array of length 5 to obtain the version number
- * in the format X.Y.Z
+ * Returns the version number in the format X.Y.Z
  */
-void ECOS_ver(char* versionString)
+const char* ECOS_ver(void)
 {
-    char thisversion[5] = ECOS_VERSION;
-    idxint i;
-    for( i=0; i<5; i++) versionString[i] = thisversion[i];
+    return thisVersion;
 }
 
 /*
