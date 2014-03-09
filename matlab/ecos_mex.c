@@ -38,6 +38,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     const mxArray* dims_q;
     const mxArray* opts = NULL;
     const mxArray* opts_verbose = NULL;
+    const mxArray* opts_feastol = NULL;
+    const mxArray* opts_reltol = NULL;
+    const mxArray* opts_abstol = NULL;
+    const mxArray* opts_maxit = NULL;
     const mwSize *size_c;
     const mwSize *size_G;
     const mwSize *size_h;
@@ -93,7 +97,12 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     idxint ncones;
     idxint numConicVariables = 0;
     
+    /* options */
     idxint verbose;
+    pfloat abstol;
+    pfloat reltol;
+    pfloat feastol;
+    idxint maxit;
     
     pfloat *Gpr = NULL;
     idxint *Gjc = NULL;
@@ -130,17 +139,18 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     {
         A = prhs[4];  size_A = A ? mxGetDimensions(A) : (const mwSize *) &ZERO;
         b = prhs[5];  size_b = b ? mxGetDimensions(b) : (const mwSize *) &ZERO;
-        if ( nrhs == 7 )
-        {
-          opts = prhs[6];
-          opts_verbose = opts ? mxGetField(opts, 0, "verbose") : 0;
-        }
-    } 
-    if ( nrhs == 5 )
-    { 
-      opts = prhs[4];
-      opts_verbose = opts ? mxGetField(opts, 0, "verbose") : 0;
     }
+    if( nrhs == 5 || nrhs == 7 )
+    {
+      opts = nrhs==5 ? prhs[4] : prhs[6]; 
+      opts_verbose = opts ? mxGetField(opts, 0, "verbose") : 0;
+      opts_abstol = opts ? mxGetField(opts, 0, "abstol") : 0;
+      opts_feastol = opts ? mxGetField(opts, 0, "feastol") : 0;
+      opts_reltol = opts ? mxGetField(opts, 0, "reltol") : 0;
+      opts_maxit = opts ? mxGetField(opts, 0, "maxit") : 0;
+    }
+    
+    
     
     /* determine sizes */
     n = (idxint)size_c[0];
@@ -237,10 +247,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
       {
           mexErrMsgTxt("Struct opts expected as last argument");
       }
-
-      if( opts_verbose == NULL )	{
-          mexErrMsgTxt("opts.verbose does not exist");
-      } 
     }
 
     if( nlhs > 5 ){
@@ -285,12 +291,31 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         mexErrMsgTxt("Internal problem occurred in ECOS while setting up the problem.\nPlease send a bug report with data to Alexander Domahidi.\nEmail: domahidi@control.ee.ethz.ch");
     }
     
-    /* Set verbose */
-    if( opts != NULL && opts_verbose != NULL )
-    {
-      mywork->stgs->verbose = mxIsLogical(opts_verbose) ? (idxint) (*mxGetLogicals(opts_verbose)) : (idxint)(*mxGetPr(opts_verbose));
-    }
+    /* Set options */
+    if( opts != NULL ) {
+        if(opts_verbose != NULL )
+        {
+            mywork->stgs->verbose = mxIsLogical(opts_verbose) ? (idxint) (*mxGetLogicals(opts_verbose)) : (idxint)(*mxGetPr(opts_verbose));
+        }
+        if(opts_feastol != NULL )
+        {
+            mywork->stgs->feastol = (pfloat)(*mxGetPr(opts_feastol));
+        }
+        if(opts_abstol != NULL )
+        {
+            mywork->stgs->abstol = (pfloat)(*mxGetPr(opts_abstol));
+        }
+        if(opts_reltol != NULL )
+        {
+            mywork->stgs->reltol = (pfloat)(*mxGetPr(opts_reltol));
+        }
+        if(opts_maxit != NULL )
+        {
+            mywork->stgs->maxit = (idxint)(*mxGetPr(opts_maxit));
+        }
         
+    }
+      
     /* Solve! */    
     exitcode = ECOS_solve(mywork);
         
