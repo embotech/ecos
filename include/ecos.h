@@ -57,10 +57,10 @@
                                                 ECOS_NUMERICS is thrown. */
 
 /* EQUILIBRATION METHOD ------------------------------------------------ */
-#define EQUIL_ITERS     (5)     /* number of equilibration iterations   */
+#define EQUIL_ITERS     (5)     /* number of equilibration iterations    */
 /* Comment out both lines to turn off equilibration                      */
-#define RUIZ_EQUIL
-//#define ALTERNATING_EQUIL
+/* #define RUIZ_EQUIL */
+#define ALTERNATING_EQUIL
 
 
 /* EXITCODES ----------------------------------------------------------- */
