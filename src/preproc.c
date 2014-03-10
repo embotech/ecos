@@ -26,6 +26,7 @@
  */
 #include "ecos.h"
 #include "splamm.h"
+#include "equil.h"
 
 /* NEEDED FORM MEMORY ALLOCATION --------------------------------------- */
 #include <stdlib.h>
@@ -356,173 +357,6 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 	*K = createSparseMatrix(nK, nK, nnzK, Kjc, Kir, Kpr);
 }
 
-void sum_sq_rows(pfloat *E, const spmat *mat)
-{
-    /* assumes mat is not null */
-    idxint i, j, row;
-    for(i = 0; i < mat->n; i++) { /* cols */
-      for(j = mat->jc[i]; j < mat->jc[i+1]; j++) {
-        row = mat->ir[j];
-        E[row] += (mat->pr[j] * mat->pr[j]);
-      }
-    }
-}
-
-void sum_sq_cols(pfloat *E, const spmat *mat)
-{
-    /* assumes mat is not null */
-    idxint i, j;
-    for(i = 0; i < mat->n; i++) { /* cols */
-      for(j = mat->jc[i]; j < mat->jc[i+1]; j++) {
-        E[i] += (mat->pr[j] * mat->pr[j]);
-      }
-    }
-}
-
-void equilibrate_rows(const pfloat *E, spmat *mat)
-{
-    idxint i, j, row;
-
-    for(i = 0; i < mat->n; i++) {
-        /* equilibrate the rows of a matrix */
-        for(j = mat->jc[i]; j < mat->jc[i+1]; j++) {
-            row = mat->ir[j];
-            mat->pr[j] /= E[row];
-        }
-    }
-}
-
-void equilibrate_cols(const pfloat *E, spmat *mat)
-{
-    idxint i, j;
-
-    for(i = 0; i < mat->n; i++) {
-        /* equilibrate the columns of a matrix */
-        for(j = mat->jc[i]; j < mat->jc[i+1]; j++) {
-            mat->pr[j] /= E[i];
-        }
-    }
-}
-
-void restore(const pfloat *D, const pfloat *E, spmat *mat)
-{
-    idxint i, j, row;
-
-    for(i = 0; i < mat->n; i++) {
-        /* equilibrate the rows of a matrix */
-        for(j = mat->jc[i]; j < mat->jc[i+1]; j++) {
-            row = mat->ir[j];
-            mat->pr[j] *= (D[row] * E[i]);
-        }
-    }
-}
-
-void set_equilibration(pwork *w)
-{
-    idxint i, j, ind;
-    idxint num_cols = w->A ? w->A->n : w->G->n;
-    idxint num_A_rows = w->A ? w->A->m : 0;
-    idxint num_G_rows = w->G->m;
-    pfloat sum;
-
-    /* initialize equilibration vector to 0 */
-    for(i = 0; i < num_cols; i++) {
-        w->xequil[i] = 0.0;
-    }
-    for(i = 0; i < num_A_rows; i++) {
-        w->Aequil[i] = 0.0;
-    }
-    for(i = 0; i < num_G_rows; i++) {
-        w->Gequil[i] = 0.0;
-    }
-
-    /* compute norm across rows of A */
-    if(w->A)
-        sum_sq_rows(w->Aequil, w->A);
-
-    /* compute norm across rows of G */
-    sum_sq_rows(w->Gequil, w->G);
-
-    /* now collapse cones together by taking average norm square */
-    ind = w->C->lpc->p;
-    for(i = 0; i < w->C->nsoc; i++) {
-      sum = 0.0;
-      for(j = 0; j < w->C->soc[i].p; j++) {
-        sum += w->Gequil[ind + j];
-      }
-      for(j = 0; j < w->C->soc[i].p; j++) {
-        w->Gequil[ind + j] = sum / w->C->soc[i].p;
-      }
-      ind += w->C->soc[i].p;
-    }
-
-    /* get the norm */
-    for(i = 0; i < num_A_rows; i++) {
-      w->Aequil[i] = fabs(w->Aequil[i]) < 1e-6 ? 1.0 : sqrt(w->Aequil[i]);
-    }
-    for(i = 0; i < num_G_rows; i++) {
-      w->Gequil[i] = fabs(w->Gequil[i]) < 1e-6 ? 1.0 : sqrt(w->Gequil[i]);
-    }
-    
-    /* now scale A */
-    if(w->A)
-        equilibrate_rows(w->Aequil, w->A);
-    equilibrate_rows(w->Gequil, w->G);
-
-    if(w->A)
-        sum_sq_cols(w->xequil, w->A);
-    sum_sq_cols(w->xequil, w->G);
-
-    /* get the norm */
-    for(i = 0; i < num_cols; i++) {
-        w->xequil[i] = fabs(w->xequil[i]) < 1e-6 ? 1.0 : sqrt(w->xequil[i]);
-    }
-    if(w->A)
-        equilibrate_cols(w->xequil, w->A);
-    equilibrate_cols(w->xequil, w->G);
-
-    /* equilibrate the c vector */
-    for(i = 0; i < num_cols; i++) {
-        w->c[i] /= w->xequil[i];
-    }
-    /* equilibrate the b vector */
-    for(i = 0; i < num_A_rows; i++) {
-        w->b[i] /= w->Aequil[i];
-    }
-    /* equilibrate the h vector */
-    for(i = 0; i < num_G_rows; i++) {
-        w->h[i] /= w->Gequil[i];
-    }
-}
-
-/* invert the equilibration job */
-void recover(pwork *w)
-{
-    idxint i;
-    idxint num_cols = w->A ? w->A->n : w->G->n;
-    idxint num_A_rows = w->A ? w->A->m : 0;
-    idxint num_G_rows = w->G->m;
-
-    if(w->A) {
-        restore(w->Aequil, w->xequil, w->A);
-    }
-    restore(w->Gequil, w->xequil, w->G);
-
-    /* unequilibrate the c vector */
-    for(i = 0; i < num_cols; i++) {
-        w->c[i] *= w->xequil[i];
-    }
-    /* unequilibrate the b vector */
-    for(i = 0; i < num_A_rows; i++) {
-        w->b[i] *= w->Aequil[i];
-    }
-    /* unequilibrate the h vector */
-    for(i = 0; i < num_G_rows; i++) {
-        w->h[i] *= w->Gequil[i];
-    }
-}
-
-
 /**
  * Cleanup: free memory (not used for embedded solvers, only standalone)
  *
@@ -535,7 +369,7 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 {
 	idxint i;
     /* restore the equilibration */
-    recover(w);
+    unset_equilibration(w);
 	
 	/* Free KKT related memory      ---            below are the corresponding MALLOCs                */
 	FREE(w->KKT->D);                /* mywork->KKT->D = (pfloat *)MALLOC(nK*sizeof(pfloat));          */

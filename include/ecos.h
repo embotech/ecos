@@ -56,6 +56,13 @@
 #define SAFEGUARD (500)     /* Maximum increase in PRES before
                                                 ECOS_NUMERICS is thrown. */
 
+/* EQUILIBRATION METHOD ------------------------------------------------ */
+#define EQUIL_ITERS     (5)     /* number of equilibration iterations   */
+/* Comment out both lines to turn off equilibration                      */
+#define RUIZ_EQUIL
+//#define ALTERNATING_EQUIL
+
+
 /* EXITCODES ----------------------------------------------------------- */
 #define ECOS_OPTIMAL  (0)   /* Problem solved to optimality              */
 #define ECOS_PINF     (1)   /* Found certificate of primal infeasibility */

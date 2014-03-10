@@ -18,7 +18,7 @@ amd:
 	$(AR) -x external/amd/libamd.a
 
 # build ECOS
-ecos: ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o
+ecos: ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o equil.o
 	$(ARCHIVE) libecos.a *.o
 	- $(RANLIB) libecos.a
 
@@ -42,6 +42,9 @@ splamm.o: src/splamm.c include/splamm.h
 
 timer.o: src/timer.c include/timer.h
 	$(C) -c src/timer.c -o timer.o
+
+equil.o: src/equil.c include/equil.h
+	$(C) -c src/equil.c -o equil.o
 
 # ECOS demo
 demo: ldl amd ecos src/runecos.c 
