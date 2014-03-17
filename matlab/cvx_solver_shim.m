@@ -1,4 +1,4 @@
-function shim = cvx_ecos( shim )
+function shim = cvx_ecos( shim ) %#ok
 
 if ~isempty( shim.solve ),
     return
@@ -21,10 +21,18 @@ if isempty( shim.name ),
             continue
         end
         new_dir = fpath(1:end-flen-1);
-        cd( new_dir );
         tshim = oshim;
         tshim.fullpath = fpath;
         tshim.version = 'unknown';
+        if ~exist('OCTAVE_VERSION','builtin'),
+            cd( new_dir );
+            outp = evalc('ecos','[]'); %#ok
+            [tok,remain] = strtok(outp,' ' ); %#ok
+            tok = strtok(remain,' ' );
+            if ~isempty(tok),
+                tshim.version = tok;
+            end
+        end
         tshim.location = new_dir;
         if isempty( tshim.error ),
             tshim.check = @check;
