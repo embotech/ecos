@@ -368,8 +368,12 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 void ECOS_cleanup(pwork* w, idxint keepvars)
 {
 	idxint i;
+
+    
+#if defined EQUIL_ITERS && (defined RUIZ_EQUIL || defined ALTERNATING_EQUIL )
     /* restore the equilibration */
     unset_equilibration(w);
+#endif
 	
 	/* Free KKT related memory      ---            below are the corresponding MALLOCs                */
 	FREE(w->KKT->D);                /* mywork->KKT->D = (pfloat *)MALLOC(nK*sizeof(pfloat));          */
@@ -600,12 +604,16 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     PRINTTEXT("Memory allocated for info struct\n");
 #endif
 
+    
+#if defined EQUIL_ITERS && (defined RUIZ_EQUIL || defined ALTERNATING_EQUIL )
     /* equilibration vector */
     mywork->xequil = (pfloat *)MALLOC(n*sizeof(pfloat));
     mywork->Aequil = (pfloat *)MALLOC(p*sizeof(pfloat));
     mywork->Gequil = (pfloat *)MALLOC(m*sizeof(pfloat));
+    
 #if PRINTLEVEL > 2
     PRINTTEXT("Memory allocated for equilibration vectors\n");
+#endif
 #endif
 
 	/* settings */
@@ -643,6 +651,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->G = createSparseMatrix(m, n, 0, Gjc, Gir, Gpr);
   }
 
+#if defined EQUIL_ITERS && (defined RUIZ_EQUIL || defined ALTERNATING_EQUIL )
   set_equilibration(mywork);
     /* initialize equilibration vector to 0 */
     // for(i = 0; i < n; i++) {
@@ -654,6 +663,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     // for(i = 0; i < m; i++) {
     //     mywork->Gequil[i] = 0.1;
     // }
+#endif
 
 #if PROFILING > 1
 	mywork->info->ttranspose = 0;

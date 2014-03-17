@@ -17,10 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-
 /* Main solver module */
-
 
 
 /* ECOS HEADER FILE ---------------------------------------------------- */
@@ -515,6 +512,10 @@ idxint ECOS_solve(pwork* w)
 	idxint i, initcode, KKT_FACTOR_RETURN_CODE;
 	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap, pres_prev;
 	idxint exitcode = ECOS_FATAL;
+    
+#if DEBUG
+    char fn[20];
+#endif
 
 #if (defined _WIN32 || defined _WIN64 )
 	/* sets width of exponent for floating point numbers to 2 instead of 3 */
@@ -644,7 +645,9 @@ idxint ECOS_solve(pwork* w)
 		kkt_update(w->KKT->PKPt, w->KKT->PK, w->C);
         
 #if DEBUG > 0
-        dumpSparseMatrix(w->KKT->PKPt,"PKPt_updated.txt");
+        /* DEBUG: Store matrix to be factored */
+        sprintf(fn, "PKPt_updated_%02i.txt", (int)w->info->iter);
+        dumpSparseMatrix(w->KKT->PKPt, fn);
 #endif
         /* factor KKT matrix */
 #if PROFILING > 1
@@ -654,6 +657,12 @@ idxint ECOS_solve(pwork* w)
 #else
         KKT_FACTOR_RETURN_CODE = kkt_factor(w->KKT, w->stgs->eps, w->stgs->delta);
 #endif
+        
+#if DEBUG > 0
+        /* DEBUG: store factor */
+        sprintf(fn, "PKPt_factor_%02i.txt", (int)w->info->iter);
+        dumpSparseMatrix(w->KKT->L, fn);
+#endif
 
 		/* Solve for RHS1, which is used later also in combined direction */
 #if PROFILING > 1
@@ -662,6 +671,13 @@ idxint ECOS_solve(pwork* w)
 		w->info->nitref1 = kkt_solve(w->KKT, w->A, w->G, w->KKT->RHS1, w->KKT->dx1, w->KKT->dy1, w->KKT->dz1, w->n, w->p, w->m, w->C, 0, w->stgs->nitref);
 #if PROFILING > 1
 		w->info->tkktsolve += toc(&tkktsolve);
+#endif
+        
+#if DEBUG > 0 && PRINTLEVEL > 2
+        /* Print result of linear system solve */
+        printDenseMatrix(w->KKT->dx1, 1, 5, "dx1(1:5)");
+        printDenseMatrix(w->KKT->dy1, 1, 5, "dy1(1:5)");
+        printDenseMatrix(w->KKT->dz1, 1, 5, "dz1(1:5)");
 #endif
   
 		/* AFFINE SEARCH DIRECTION (predictor, need dsaff and dzaff only) */
@@ -762,9 +778,6 @@ idxint ECOS_solve(pwork* w)
 
 	return exitcode;
 }
-
-
-
 
 
 

@@ -316,9 +316,7 @@ LDL_int LDL_numeric2	/* returns n if successful, k if D (k,k) is zero */
 			while (len > 0) Pattern [--top] = Pattern [--len] ;	    
 		}
 #if PROFILING > 1
-        *t1 += toc(&clock);
-
-        
+        *t1 += toc(&clock);        
         tic(&clock);
 #endif
 		/* compute numerical values kth row of L (a sparse triangular solve) */		

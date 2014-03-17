@@ -17,11 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* Equilibration module (c) Eric Chu, March 2014 */
 
-/* equilibration module */
 /**
  * used predominantly in preproc.c
  */
+
+#include "ecos.h"
+
+#if defined EQUIL_ITERS && (defined RUIZ_EQUIL || defined ALTERNATING_EQUIL )
 
 #ifndef __EQUIL_H__
 #define __EQUIL_H__
@@ -42,4 +46,5 @@ void set_equilibration(pwork *w);
 void unset_equilibration(pwork *w);
 
 
+#endif
 #endif

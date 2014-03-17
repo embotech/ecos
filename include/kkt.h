@@ -37,7 +37,7 @@
 typedef struct kkt{	
 	spmat*  PKPt;    /* Permuted KKT matrix, upper part only      */	
 	spmat*  L;       /* LDL factor L                              */
-
+    
 	pfloat* D;       /* diagonal matrix D                         */	
 	pfloat* work1;   /* workspace needed for factorization        */
 	pfloat* work2;   /* workspace needed for factorization        */

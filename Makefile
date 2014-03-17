@@ -2,7 +2,7 @@
 # Configuration of make process in ecos.mk
 
 include ecos.mk
-C = $(CC) $(CFLAGS) -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config
+C = $(CC) $(CFLAGS) -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config -Itest
 
 # Compile all C code, including the C-callable routine
 all: ldl amd ecos demo	
@@ -51,6 +51,9 @@ demo: ldl amd ecos src/runecos.c
 	$(C) -o runecos src/runecos.c libecos.a $(LIBS)
 	echo ECOS successfully built. Type ./runecos to run demo problem.
 	
+# ECOS tester
+test: ldl amd ecos test/ecostester.c
+	$(C) -o ecostester test/ecostester.c libecos.a $(LIBS)
 
 # remove object files, but keep the compiled programs and library archives
 clean:

@@ -241,7 +241,7 @@ void kkt_update(spmat* PKP, idxint* P, cone *C)
 #endif
 	
 	/* LP cone */
-    for( i=0; i < C->lpc->p; i++ ){ PKP->pr[P[C->lpc->kkt_idx[i]]] = -C->lpc->v[i]; }
+    for( i=0; i < C->lpc->p; i++ ){ PKP->pr[P[C->lpc->kkt_idx[i]]] = -C->lpc->v[i] - DELTASTAT; }
 
 	/* Second-order cone */
 	for( i=0; i<C->nsoc; i++ ){
@@ -251,9 +251,9 @@ void kkt_update(spmat* PKP, idxint* P, cone *C)
         conesize_m1 = conesize - 1;
         
         /* D */
-        PKP->pr[P[C->soc[i].Didx[0]]] = -eta_square * d1;
+        PKP->pr[P[C->soc[i].Didx[0]]] = -eta_square * d1 - DELTASTAT;
         for (k=1; k < conesize; k++) {
-            PKP->pr[P[C->soc[i].Didx[k]]] = -eta_square;
+            PKP->pr[P[C->soc[i].Didx[k]]] = -eta_square - DELTASTAT;
         }
         
         /* v */
@@ -268,7 +268,7 @@ void kkt_update(spmat* PKP, idxint* P, cone *C)
         for (k=0; k < conesize_m1; k++) {
             PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = -eta_square * u1 * q[k];
         }
-        PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = +eta_square;
+        PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = +eta_square + DELTASTAT;
 #endif
         
 #if CONEMODE > 0
