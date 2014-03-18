@@ -120,6 +120,7 @@ void use_alternating_norm_equilibration(pwork *w)
     idxint num_G_rows = w->G->m;
     pfloat sum;
 
+    printf("a\n");
     /* initialize equilibration vector to 0 */
     for(i = 0; i < num_cols; i++) {
         w->xequil[i] = 0.0;
@@ -131,12 +132,16 @@ void use_alternating_norm_equilibration(pwork *w)
         w->Gequil[i] = 0.0;
     }
 
+    printf("b\n");
+
     /* compute norm across rows of A */
     if(w->A)
         sum_sq_rows(w->Aequil, w->A);
-
     /* compute norm across rows of G */
-    sum_sq_rows(w->Gequil, w->G);
+    if(num_G_rows > 0)
+        sum_sq_rows(w->Gequil, w->G);
+
+    printf("c\n");
 
     /* now collapse cones together by taking average norm square */
     ind = w->C->lpc->p;
@@ -162,11 +167,13 @@ void use_alternating_norm_equilibration(pwork *w)
     /* now scale A */
     if(w->A)
         equilibrate_rows(w->Aequil, w->A);
-    equilibrate_rows(w->Gequil, w->G);
+    if(num_G_rows > 0)
+        equilibrate_rows(w->Gequil, w->G);
 
     if(w->A)
         sum_sq_cols(w->xequil, w->A);
-    sum_sq_cols(w->xequil, w->G);
+    if(num_G_rows > 0)
+        sum_sq_cols(w->xequil, w->G);
 
     /* get the norm */
     for(i = 0; i < num_cols; i++) {
@@ -174,7 +181,8 @@ void use_alternating_norm_equilibration(pwork *w)
     }
     if(w->A)
         equilibrate_cols(w->xequil, w->A);
-    equilibrate_cols(w->xequil, w->G);
+    if(num_G_rows > 0)
+        equilibrate_cols(w->xequil, w->G);
 
     /* equilibrate the c vector */
     for(i = 0; i < num_cols; i++) {
@@ -230,14 +238,16 @@ void use_ruiz_equilibration(pwork *w)
         /* compute norm across columns of A, G */
         if(w->A)
             max_cols(xtmp, w->A);
-        max_cols(xtmp, w->G);
+        if(num_G_rows > 0)
+            max_cols(xtmp, w->G);
 
         /* compute norm across rows of A */
         if(w->A)
             max_rows(Atmp, w->A);
 
         /* compute norm across rows of G */
-        max_rows(Gtmp, w->G);
+        if(num_G_rows > 0)
+            max_rows(Gtmp, w->G);
 
         /* now collapse cones together by using total over the group */
         /* ECHU: not sure what the right thing to do here is */
@@ -267,11 +277,13 @@ void use_ruiz_equilibration(pwork *w)
         /* equilibrate the matrices */
         if(w->A)
             equilibrate_rows(Atmp, w->A);
-        equilibrate_rows(Gtmp, w->G);
+        if(num_G_rows > 0)
+            equilibrate_rows(Gtmp, w->G);
 
         if(w->A)
             equilibrate_cols(xtmp, w->A);
-        equilibrate_cols(xtmp, w->G);
+        if(num_G_rows > 0)
+            equilibrate_cols(xtmp, w->G);
 
         /* update the equilibration matrix */
         for(i = 0; i < num_cols; i++) {
@@ -337,10 +349,10 @@ void unset_equilibration(pwork *w)
     idxint num_A_rows = w->A ? w->A->m : 0;
     idxint num_G_rows = w->G->m;
 
-    if(w->A) {
+    if(w->A)
         restore(w->Aequil, w->xequil, w->A);
-    }
-    restore(w->Gequil, w->xequil, w->G);
+    if(num_G_rows > 0)
+        restore(w->Gequil, w->xequil, w->G);
 
     /* unequilibrate the c vector */
     for(i = 0; i < num_cols; i++) {
