@@ -2,7 +2,8 @@
 # Configuration of make process in ecos.mk
 
 include ecos.mk
-C = $(CC) $(CFLAGS) -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config -Itest
+C = $(CC) $(CFLAGS) -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config 
+TEST_INCLUDES = -Itest -Itest/quadratic
 
 # Compile all C code, including the C-callable routine
 all: ldl amd ecos demo	
@@ -52,8 +53,24 @@ demo: ldl amd ecos src/runecos.c
 	echo ECOS successfully built. Type ./runecos to run demo problem.
 	
 # ECOS tester
-test: ldl amd ecos test/ecostester.c
-	$(C) -o ecostester test/ecostester.c libecos.a $(LIBS)
+QUADRATIC_TEST_OBJS = qcml_utils.o norm.o sq_norm.o sum_sq.o quad_over_lin.o
+test: ldl amd ecos test/ecostester.c $(QUADRATIC_TEST_OBJS)
+	$(C) $(TEST_INCLUDES) -o ecostester test/ecostester.c libecos.a $(LIBS) $(QUADRATIC_TEST_OBJS)
+
+qcml_utils.o: test/quadratic/qcml_utils.c test/quadratic/qcml_utils.h
+	$(C) $(TEST_INCLUDES) -c test/quadratic/qcml_utils.c -o $@
+
+norm.o: test/quadratic/norm/norm.c test/quadratic/norm/norm.h
+	$(C) $(TEST_INCLUDES) -c test/quadratic/norm/norm.c -o $@
+
+quad_over_lin.o: test/quadratic/quad_over_lin/quad_over_lin.c test/quadratic/quad_over_lin/quad_over_lin.h
+	$(C) $(TEST_INCLUDES) -c test/quadratic/quad_over_lin/quad_over_lin.c -o $@
+
+sq_norm.o: test/quadratic/sq_norm/sq_norm.c test/quadratic/sq_norm/sq_norm.h
+	$(C) $(TEST_INCLUDES) -c test/quadratic/sq_norm/sq_norm.c -o $@
+
+sum_sq.o: test/quadratic/sum_sq/sum_sq.c test/quadratic/sum_sq/sum_sq.h
+	$(C) $(TEST_INCLUDES) -c test/quadratic/sum_sq/sum_sq.c -o $@
 
 # remove object files, but keep the compiled programs and library archives
 clean:

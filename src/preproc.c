@@ -652,17 +652,10 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
   }
 
 #if defined EQUIL_ITERS && (defined RUIZ_EQUIL || defined ALTERNATING_EQUIL )
-  set_equilibration(mywork);
-    /* initialize equilibration vector to 0 */
-    // for(i = 0; i < n; i++) {
-    //     mywork->xequil[i] = 10.0;
-    // }
-    // for(i = 0; i < p; i++) {
-    //     mywork->Aequil[i] = 0.1;
-    // }
-    // for(i = 0; i < m; i++) {
-    //     mywork->Gequil[i] = 0.1;
-    // }
+    set_equilibration(mywork);
+    #if PRINTLEVEL > 2
+        PRINTTEXT("Done equilibrating\n");
+    #endif
 #endif
 
 #if PROFILING > 1
