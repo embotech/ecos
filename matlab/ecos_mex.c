@@ -41,6 +41,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     const mxArray* opts_feastol = NULL;
     const mxArray* opts_reltol = NULL;
     const mxArray* opts_abstol = NULL;
+    const mxArray* opts_feastol_inacc = NULL;
+    const mxArray* opts_reltol_inacc = NULL;
+    const mxArray* opts_abstol_inacc = NULL;
     const mxArray* opts_maxit = NULL;
     const mwSize *size_c;
     const mwSize *size_G;
@@ -147,6 +150,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
       opts_abstol = opts ? mxGetField(opts, 0, "abstol") : 0;
       opts_feastol = opts ? mxGetField(opts, 0, "feastol") : 0;
       opts_reltol = opts ? mxGetField(opts, 0, "reltol") : 0;
+      opts_abstol_inacc = opts ? mxGetField(opts, 0, "abstol_inacc") : 0;
+      opts_feastol_inacc = opts ? mxGetField(opts, 0, "feastol_inacc") : 0;
+      opts_reltol_inacc = opts ? mxGetField(opts, 0, "reltol_inacc") : 0;
       opts_maxit = opts ? mxGetField(opts, 0, "maxit") : 0;
     }
     
@@ -309,6 +315,18 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         {
             mywork->stgs->reltol = (pfloat)(*mxGetPr(opts_reltol));
         }
+        if(opts_feastol_inacc != NULL )
+        {
+            mywork->stgs->feastol_inacc = (pfloat)(*mxGetPr(opts_feastol_inacc));
+        }
+        if(opts_abstol_inacc != NULL )
+        {
+            mywork->stgs->abstol_inacc = (pfloat)(*mxGetPr(opts_abstol_inacc));
+        }
+        if(opts_reltol_inacc != NULL )
+        {
+            mywork->stgs->reltol_inacc = (pfloat)(*mxGetPr(opts_reltol_inacc));
+        }
         if(opts_maxit != NULL )
         {
             mywork->stgs->maxit = (idxint)(*mxGetPr(opts_maxit));
@@ -409,14 +427,23 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
             case ECOS_OPTIMAL:
                 outvar = mxCreateString("Optimal solution found");
                 break;
+            case (ECOS_OPTIMAL + ECOS_INACC_OFFSET):
+                outvar = mxCreateString("Optimal solution found within reduced tolerances");
+                break;
             case ECOS_MAXIT:
                 outvar = mxCreateString("Maximum number of iterations reached");
                 break;
             case ECOS_PINF:
-                outvar = mxCreateString("Primal infeasible");
+                outvar = mxCreateString("Certificate of primal infeasibility found");
+                break;
+            case (ECOS_PINF + ECOS_INACC_OFFSET):
+                outvar = mxCreateString("Certificate of primal infeasibility found within reduced tolerances");
                 break;
             case ECOS_DINF:
-                outvar = mxCreateString("Dual infeasible");
+                outvar = mxCreateString("Certificate of dual infeasibility found");
+                break;
+            case (ECOS_DINF + ECOS_INACC_OFFSET):
+                outvar = mxCreateString("Certificate of dual infeasibility found within reduced tolerances");
                 break;
             case ECOS_NUMERICS:
                 outvar = mxCreateString("Numerical problems");

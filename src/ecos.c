@@ -28,6 +28,10 @@
 /* NEEDED FOR SQRT ----------------------------------------------------- */
 #include <math.h>
 
+
+/* Some internal defines */
+#define ECOS_NOT_CONVERGED_YET (-87)  /* indicates no convergence yet    */
+
 /**
  * Private static const char * for version numbering.
  * All versions point to this string.
@@ -43,6 +47,205 @@ const char* ECOS_ver(void)
 {
     return thisVersion;
 }
+
+
+/* Compares stats of two iterates with each other.
+ * Returns 1 if infoA is better than infoB, zero otherwise.
+ */
+idxint compareStatistics(stats* infoA, stats* infoB)
+{
+   
+    if ( infoA->pinfres != NAN && infoA->kapovert > 1){
+        if( infoB->pinfres != NAN ) {
+            /* A->pinfres != NAN, B->pinfres!=NAN */
+            if ( ( infoA->gap > 0 && infoB->gap > 0 && infoA->gap < infoB->gap ) &&
+                ( infoA->pinfres > 0 && infoA->pinfres < infoB->pres ) &&
+                ( infoA->mu > 0 && infoA->mu < infoB->mu ) ){
+                /* PRINTTEXT("BRANCH 1 "); */
+                return 1;
+            } else {
+                /* PRINTTEXT("BRANCH 1 not OK"); */
+                return 0;
+            }
+        } else {
+            /* A->pinfres != NAN, B->pinfres==NAN */
+            if ( ( infoA->gap > 0 && infoB->gap > 0 && infoA->gap < infoB->gap ) &&
+               ( infoA->mu > 0 && infoA->mu < infoB->mu ) ){
+                /* PRINTTEXT("BRANCH 2 "); */
+                return 1;
+            } else {
+                /* PRINTTEXT("BRANCH 2 not OK"); */
+                return 0;
+            }
+        }
+    } else {
+            /* A->pinfres == NAN or pinfres too large */
+        if ( ( infoA->gap > 0 && infoB->gap > 0 && infoA->gap < infoB->gap ) &&
+            ( infoA->pres > 0 && infoA->pres < infoB->pres ) &&
+            ( infoA->dres > 0 && infoA->dres < infoB->dres ) &&
+            ( infoA->kapovert > 0 && infoA->kapovert < infoB->kapovert) &&
+            ( infoA->mu > 0 && infoA->mu < infoB->mu ) ){
+            /* PRINTTEXT("BRANCH 3 OK "); */
+            return 1;
+        } else {
+            /* PRINTTEXT("BRANCH 3 not OK"); */
+            return 0;
+        }
+    }
+}
+
+
+/* Copy variables from current to best iterate */
+void saveIterateAsBest(pwork* w)
+{
+    idxint i;
+    for (i=0; i<w->n; i++) { w->best_x[i] = w->x[i]; }
+    for (i=0; i<w->p; i++) { w->best_y[i] = w->y[i]; }
+    for (i=0; i<w->m; i++) { w->best_z[i] = w->z[i]; }
+    for (i=0; i<w->m; i++) { w->best_s[i] = w->s[i]; }
+    w->best_kap = w->kap;
+    w->best_tau = w->tau;
+    w->best_cx = w->cx;
+    w->best_by = w->by;
+    w->best_hz = w->hz;
+    w->best_info->pcost = w->info->pcost;
+	w->best_info->dcost = w->info->dcost;
+    w->best_info->pres = w->info->pres;
+    w->best_info->dres = w->info->dres;
+	w->best_info->pinfres = w->info->pinfres;
+    w->best_info->dinfres = w->info->dinfres;
+    w->best_info->gap = w->info->gap;
+    w->best_info->relgap = w->info->relgap;
+    w->best_info->mu = w->info->mu;
+	w->best_info->kapovert = w->info->kapovert;
+    w->best_info->iter = w->info->iter;
+}
+
+
+/* Copy variables from best iterate to current
+ * Comapred to saveIterateAsBest, only the iteration number
+ * is not restored.
+ */
+void restoreBestIterate(pwork* w)
+{
+    idxint i;
+    for (i=0; i<w->n; i++) { w->x[i] = w->best_x[i]; }
+    for (i=0; i<w->p; i++) { w->y[i] = w->best_y[i]; }
+    for (i=0; i<w->m; i++) { w->z[i] = w->best_z[i]; }
+    for (i=0; i<w->m; i++) { w->s[i] = w->best_s[i]; }
+    w->kap = w->best_kap;
+    w->tau = w->best_tau;
+    w->cx = w->best_cx;
+    w->by = w->best_by;
+    w->hz = w->best_hz;
+    w->info->pcost = w->best_info->pcost;
+	w->info->dcost = w->best_info->dcost;
+    w->info->pres = w->best_info->pres;
+    w->info->dres = w->best_info->dres;
+	w->info->pinfres = w->best_info->pinfres;
+    w->info->dinfres = w->best_info->dinfres;
+    w->info->gap = w->best_info->gap;
+    w->info->relgap = w->best_info->relgap;
+    w->info->mu = w->best_info->mu;
+	w->info->kapovert = w->best_info->kapovert;
+}
+
+
+/* 
+ * This function is reponsible for checking the exit/convergence conditions of ECOS.
+ * If one of the exit conditions is met, ECOS displays an exit message and returns
+ * the corresponding exit code. The calling function must then make sure that ECOS
+ * is indeed correctly exited, so a call to this function should always be followed
+ * by a break statement.
+ *
+ *    If mode == 0, normal precisions are checked.
+ *
+ *    If mode != 0, reduced precisions are checked, and the exit display is augmented
+ *                  by "Close to". The exitcodes returned are increased by the value
+ *                  of mode.
+ * 
+ * The primal and dual infeasibility flags w->info->pinf and w->info->dinf are raised
+ * according to the outcome of the test.
+ *
+ * If none of the exit tests are met, the function returns ECOS_NOT_CONVERGED_YET.
+ * This should not be an exitflag that is ever returned to the outside world.
+ */
+idxint checkExitConditions(pwork* w, idxint mode)
+{
+    pfloat feastol;
+    pfloat abstol;
+    pfloat reltol;
+    
+    /* set accuracy against which to check */
+    if( mode == 0) {
+        /* check convergence against normal precisions */
+        feastol = w->stgs->feastol;
+        abstol = w->stgs->abstol;
+        reltol = w->stgs->reltol;
+    } else {
+        /* check convergence against reduced precisions */
+        feastol = w->stgs->feastol_inacc;
+        abstol = w->stgs->abstol_inacc;
+        reltol = w->stgs->reltol_inacc;
+    }
+    
+    /* Optimal? */
+    if( ( -w->cx > 0 || -w->by - w->hz >= -abstol ) &&
+        ( w->info->pres < feastol && w->info->dres < feastol ) &&
+        ( w->info->gap < abstol || w->info->relgap < reltol  ) ){
+#if PRINTLEVEL > 0
+        if( w->stgs->verbose ) {
+            if( mode == 0) {
+                PRINTTEXT("\nOPTIMAL (within feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", MAX(w->info->dres, w->info->pres), w->info->relgap, w->info->gap);
+            } else {
+                PRINTTEXT("\nClose to OPTIMAL (within feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", MAX(w->info->dres, w->info->pres), w->info->relgap, w->info->gap);
+            }
+        }
+#endif
+        w->info->pinf = 0;
+        w->info->dinf = 0;
+        return ECOS_OPTIMAL + mode;
+    }
+    
+    /* Primal infeasible? */
+    else if( (w->info->pinfres != NAN && w->info->pinfres < feastol) ||
+             ( w->tau < w->stgs->feastol && w->kap < w->stgs->feastol && w->info->pinfres < w->stgs->feastol) ){
+#if PRINTLEVEL > 0
+        if( w->stgs->verbose ) {
+            if( mode == 0) {
+                PRINTTEXT("\nPRIMAL INFEASIBLE (within feastol=%3.1e).", w->info->pinfres );
+            } else {
+                PRINTTEXT("\nClose to PRIMAL INFEASIBLE (within feastol=%3.1e).", w->info->pinfres );
+            }
+        }
+#endif
+        w->info->pinf = 1;
+        w->info->dinf = 0;
+        return ECOS_PINF + mode;
+    }
+    
+    /* Dual infeasible? */
+    else if( (w->info->dinfres != NAN) && (w->info->dinfres < feastol) ){
+#if PRINTLEVEL > 0
+        if( w->stgs->verbose ) {
+            if( mode == 0) {
+                PRINTTEXT("\nUNBOUNDED (within feastol=%3.1e).", w->info->dinfres );
+            } else {
+                PRINTTEXT("\nClose to UNBOUNDED (within feastol=%3.1e).", w->info->dinfres );
+            }
+        }
+#endif
+        w->info->pinf = 0;
+        w->info->dinf = 1;
+        return ECOS_DINF + mode;
+    }
+    
+    /* Indicate if none of the above criteria are met */
+    else {
+        return ECOS_NOT_CONVERGED_YET;
+    }
+}
+
 
 /*
  * Initializes the solver.
@@ -285,27 +488,40 @@ void printProgress(stats* info)
 		PRINTTEXT("It     pcost       dcost      gap   pres   dres    k/t    mu     step    IR\n");
 		PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e   N/A    %d %d -\n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, (int)info->nitref1, (int)info->nitref2);
 #else
-		PRINTTEXT("It     pcost         dcost      gap     pres    dres     k/t     mu     step    IR\n");
-		PRINTTEXT("%2d  %c%+5.3e  %c%+5.3e  %c%+2.0e  %c%2.0e  %c%2.0e  %c%2.0e  %c%2.0e   N/A    %d %d -\n",(int)info->iter, 32, info->pcost, 32, info->dcost, 32, info->gap, 32, info->pres, 32, info->dres, 32, info->kapovert, 32, info->mu, (int)info->nitref1, (int)info->nitref2);
+		PRINTTEXT("It     pcost         dcost      gap     pres    dres     k/t     mu      step     IR\n");
+		PRINTTEXT("%2d  %c%+5.3e  %c%+5.3e  %c%+2.0e  %c%2.0e  %c%2.0e  %c%2.0e  %c%2.0e    N/A     %d %d -\n",(int)info->iter, 32, info->pcost, 32, info->dcost, 32, info->gap, 32, info->pres, 32, info->dres, 32, info->kapovert, 32, info->mu, (int)info->nitref1, (int)info->nitref2);
 #endif	
 	}  else {
 #if defined _WIN32 || defined _WIN64
 		PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e  %6.4f  %d %d %d\n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, info->step, (int)info->nitref1, (int)info->nitref2, (int)info->nitref3);
 #else
-		PRINTTEXT("%2d  %c%+5.3e%c  %+5.3e %c %+2.0e%c  %2.0e%c  %2.0e%c  %2.0e%c  %2.0e  %6.4f  %d %d %d\n",(int)info->iter, 32,info->pcost, 32,info->dcost, 32, info->gap, 32, info->pres, 32, info->dres, 32, info->kapovert, 32, info->mu, info->step, (int)info->nitref1, (int)info->nitref2, (int)info->nitref3);
+		PRINTTEXT("%2d  %c%+5.3e%c  %+5.3e %c %+2.0e%c  %2.0e%c  %2.0e%c  %2.0e%c  %2.0e%c  %6.4f   %d %d %d\n",(int)info->iter, 32,info->pcost, 32,info->dcost, 32, info->gap, 32, info->pres, 32, info->dres, 32, info->kapovert, 32, info->mu, 32, info->step, (int)info->nitref1, (int)info->nitref2, (int)info->nitref3);
 #endif
 	}
 
 /* enable to flush printf in Matlab immediately */
-#if PRINTLEVEL > 0
 #ifdef MATLAB_MEX_FILE
 #if defined MATLAB_FLUSH_PRINTS
-    mexEvalString("drawnow;");
-#endif
+    mexEvalString("pause(0.0001)");
 #endif
 #endif
  
     
+}
+
+void deleteLastProgressLine( stats* info )
+{
+    idxint i;
+    idxint offset = 0;
+    
+    if( info->kapovert < 0 ) offset++;
+    if( info->mu < 0) offset++;
+    if( info->pres < 0 ) offset++;
+    if (info->dres < 0 ) offset++;
+    
+    for (i=0; i<82+offset; i++) {
+        PRINTTEXT("%c",8);
+    }
 }
 #endif
 
@@ -557,88 +773,137 @@ idxint ECOS_solve(pwork* w)
 #if PRINTLEVEL > 1
 		/* Print info */
 		if( w->stgs->verbose ) printProgress(w->info);
-#endif		
-        
-        
-        /* SAFEGUARD: Backtrack to old iterate if the update was bad such that the primal residual PRES has
-         *            increased by a factor of SAFEGUARD.
-         * If the safeguard is activated, the solver quits with the flag ECOS_NUMERICS.
-         */
-        if( w->info->iter > 0 && w->info->pres > SAFEGUARD*pres_prev ){
-#if PRINTLEVEL > 1
-            if( w->stgs->verbose ) PRINTTEXT("\nNUMERICAL PROBLEMS, recovering iterate %d and stopping.\n", (int)w->info->iter-1);
 #endif
-            /* Backtrack */
-            for( i=0; i < w->n; i++ ){ w->x[i] -= w->info->step * w->KKT->dx2[i]; }
-            for( i=0; i < w->p; i++ ){ w->y[i] -= w->info->step * w->KKT->dy2[i]; }
-            for( i=0; i < w->m; i++ ){ w->z[i] -= w->info->step * w->KKT->dz2[i]; }
-            for( i=0; i < w->m; i++ ){ w->s[i] -= w->info->step * w->dsaff[i]; }
-            w->kap -= w->info->step * dkap;
-            w->tau -= w->info->step * dtau;
-            exitcode = ECOS_NUMERICS;
-            computeResiduals(w);
-            updateStatistics(w);
-            break;
+        
+        /* SAFEGUARD: Backtrack to best previously seen iterate if
+         *
+         * - the update was bad such that the primal residual PRES has increased by a factor of SAFEGUARD, or
+         * - the gap became negative
+         *
+         * If the safeguard is activated, the solver tests if reduced precision has been reached, and reports
+         * accordingly. If not even reduced precision is reached, ECOS returns the flag ECOS_NUMERICS.
+         */
+        if( w->info->iter > 0 && (w->info->pres > SAFEGUARD*pres_prev || w->info->gap < 0) ){
+#if PRINTLEVEL > 1
+            if( w->stgs->verbose ) deleteLastProgressLine( w->info );
+            if( w->stgs->verbose ) PRINTTEXT("Unreliable search direction detected, recovering best iterate (%d) and stopping.\n", (int)w->best_info->iter);
+#endif
+            restoreBestIterate( w );
+            
+            /* Determine whether we have reached at least reduced accuracy */
+            exitcode = checkExitConditions( w, ECOS_INACC_OFFSET );
+            
+            /* if not, exit anyways */
+            if( exitcode == ECOS_NOT_CONVERGED_YET ){
+                exitcode = ECOS_NUMERICS;
+#if PRINTLEVEL > 0
+                if( w->stgs->verbose ) PRINTTEXT("\nNUMERICAL PROBLEMS (reached feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", MAX(w->info->dres, w->info->pres), w->info->relgap, w->info->gap);
+#endif
+                break;
+            } else {
+                break;
+            }
         }
         pres_prev = w->info->pres;
         
 
-		/* Check termination criteria and exit if necessary */
-		/* Optimal? */
-		if( ( ( -w->cx > 0 ) || ( -w->by - w->hz > 0) ) &&
-            w->info->pres < w->stgs->feastol && w->info->dres < w->stgs->feastol &&
-			( w->info->gap < w->stgs->abstol || w->info->relgap < w->stgs->reltol ) ){
+		/* Check termination criteria to full precision and exit if necessary */
+		exitcode = checkExitConditions( w, 0 );
+        if( exitcode == ECOS_NOT_CONVERGED_YET ){
+            
+            /*
+             * Full precision has not been reached yet. Check for two more cases of exit:
+             *  (i) min step size, in which case we assume we won't make progress any more, and
+             * (ii) maximum number of iterations reached
+             * If these two are not fulfilled, another iteration will be made.
+             */
+            
+            /* Did the line search cock up? (zero step length) */
+            if( w->info->iter > 0 && w->info->step == STEPMIN*GAMMA ){
 #if PRINTLEVEL > 0
-			if( w->stgs->verbose ) PRINTTEXT("\nOPTIMAL (within feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", w->stgs->feastol, w->stgs->reltol, w->stgs->abstol);
+                if( w->stgs->verbose ) deleteLastProgressLine( w->info );
+                if( w->stgs->verbose ) PRINTTEXT("No further progress possible, recovering best iterate (%d) and stopping.", (int)w->best_info->iter );
 #endif
-	        exitcode = ECOS_OPTIMAL;
-			break;
-		}            
-		/* Primal infeasible? */
-		else if( ((w->info->pinfres != NAN) && (w->info->pinfres < w->stgs->feastol)) ||
-                 ((w->tau < w->stgs->feastol) && (w->kap < w->stgs->feastol && w->info->pinfres < w->stgs->feastol)) ){
+                restoreBestIterate( w );
+                
+                /* Determine whether we have reached reduced precision */
+                exitcode = checkExitConditions( w, ECOS_INACC_OFFSET );
+                if( exitcode == ECOS_NOT_CONVERGED_YET ){
+                    exitcode = ECOS_NUMERICS;
 #if PRINTLEVEL > 0
-			if( w->stgs->verbose ) PRINTTEXT("\nPRIMAL INFEASIBLE (within feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", w->stgs->feastol, w->stgs->reltol, w->stgs->abstol);
+                    if( w->stgs->verbose ) PRINTTEXT("\nNUMERICAL PROBLEMS (reached feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", MAX(w->info->dres, w->info->pres), w->info->relgap, w->info->gap);
 #endif
-			w->info->pinf = 1;
-			w->info->dinf = 0;
-			exitcode = ECOS_PINF;
-			break;
-		}        
-		/* Dual infeasible? */
-		else if( (w->info->dinfres != NAN) && (w->info->dinfres < w->stgs->feastol) ){
+                }
+                break;
+            }
+            /* MAXIT reached? */
+            else if( w->info->iter == w->stgs->maxit ){
+                
+                /* Determine whether current iterate is better than what we had so far */
+                if( compareStatistics( w->info, w->best_info) ){
 #if PRINTLEVEL > 0
-			if( w->stgs->verbose ) PRINTTEXT("\nUNBOUNDED (within feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", w->stgs->feastol, w->stgs->reltol, w->stgs->abstol);
+                    if( w->stgs->verbose ) PRINTTEXT("Maximum number of iterations reached, stopping.\n");
 #endif
-			w->info->pinf = 0;  
-			w->info->dinf = 1;        
-			exitcode = ECOS_DINF;
-			break;
-		}   
-		/* Did the line search cock up? (zero step length) */
-		else if( w->info->iter > 0 && w->info->step == STEPMIN*GAMMA ){
+                } else
+                {
 #if PRINTLEVEL > 0
-			if( w->stgs->verbose ) PRINTTEXT("\nNo further progress possible (- numerics?), exiting.");
+                    if( w->stgs->verbose ) PRINTTEXT("Maximum number of iterations reached, recovering best iterate (%d) and stopping.\n", (int)w->best_info->iter);
 #endif
-			exitcode = ECOS_NUMERICS;
-			break;
-		}
-		/* MAXIT reached? */
-		else if( w->info->iter == w->stgs->maxit ){
+                    restoreBestIterate( w );
+                }
+                
+                /* Determine whether we have reached reduced precision */
+                exitcode = checkExitConditions( w, ECOS_INACC_OFFSET );
+                if( exitcode == ECOS_NOT_CONVERGED_YET ){
+                    exitcode = ECOS_MAXIT;
 #if PRINTLEVEL > 0
-			if( w->stgs->verbose ) PRINTTEXT("\nMaximum number of iterations reached, exiting.");
+                    if( w->stgs->verbose ) PRINTTEXT("\nRAN OUT OF ITERATIONS (reached feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", MAX(w->info->dres, w->info->pres), w->info->relgap, w->info->gap);
 #endif
-			exitcode = ECOS_MAXIT;
-			break;
-		}
-
+                }
+                break;
+            }
+        } else {
+            
+            /* Full precision has been reached, stop solver */
+            break;
+        }
+        
+		
+        
+        /* SAFEGUARD:
+         * Check whether current iterate is worth keeping as the best solution so far,
+         * before doing another iteration
+         */
+        if (w->info->iter == 0) {
+            /* we're at the first iterate, so there's nothing to compare yet */
+            saveIterateAsBest( w );
+        } else if( compareStatistics( w->info, w->best_info) ){
+            /* PRINTTEXT("Better solution found, saving as best so far \n"); */
+            saveIterateAsBest( w );
+        }
+        
 
 		/* Compute scalings */
 		if( updateScalings(w->C, w->s, w->z, w->lambda) == OUTSIDE_CONE ){
+            
+            /* SAFEGUARD: we have to recover here */
 #if PRINTLEVEL > 0
-            if( w->stgs->verbose ) PRINTTEXT("\nSlacks or multipliers leaving the positive orthant (- numerics ?), exiting.\n");
+            if( w->stgs->verbose ) deleteLastProgressLine( w->info );
+            if( w->stgs->verbose ) PRINTTEXT("Slacks/multipliers leaving the cone, recovering best iterate (%d) and stopping.\n", (int)w->best_info->iter);
 #endif
-            return ECOS_OUTCONE;
+            restoreBestIterate( w );
+            
+            /* Determine whether we have reached at least reduced accuracy */
+            exitcode = checkExitConditions( w, ECOS_INACC_OFFSET );
+            if( exitcode == ECOS_NOT_CONVERGED_YET ){
+#if PRINTLEVEL > 0
+                if( w->stgs->verbose ) PRINTTEXT("\nNUMERICAL PROBLEMS (reached feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", MAX(w->info->dres, w->info->pres), w->info->relgap, w->info->gap);
+#endif
+                return ECOS_OUTCONE;
+
+            } else {
+                break;
+            }
         }
         
 		/* Update KKT matrix with scalings */
@@ -778,9 +1043,3 @@ idxint ECOS_solve(pwork* w)
 
 	return exitcode;
 }
-
-
-
-
-
-

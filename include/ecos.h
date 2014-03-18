@@ -32,28 +32,31 @@
 
 
 /* ECOS VERSION NUMBER - FORMAT: X.Y.Z --------------------------------- */ 
-#define ECOS_VERSION ("1.0.2")
+#define ECOS_VERSION ("1.0.3")
 
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
-#define MAXIT     (30)           /* maximum number of iterations         */
-#define FEASTOL   (1E-5)         /* primal/dual infeasibility tolerance  */
-#define ABSTOL    (1E-6)         /* absolute tolerance on duality gap    */
-#define RELTOL    (1E-6)         /* relative tolerance on duality gap    */
-#define GAMMA     (0.98)         /* scaling the final step length        */
-#define STATICREG (1)            /* static regularization: 0:off, 1:on   */
-#define DELTASTAT (5E-9)         /* regularization parameter             */
-#define DELTA     (5E-7)         /* dyn. regularization parameter        */
-#define EPS       (1E-14)   /* dyn. regularization threshold (do not 0!) */
-#define VERBOSE   (1)            /* bool for verbosity; PRINTLEVEL < 3   */
-#define NITREF    (3)       	 /* number of iterative refinement steps */
-#define IRERRFACT (2)            /* factor by which IR should reduce err */
-#define LINSYSACC (1E-14)        /* rel. accuracy of search direction    */
-#define SIGMAMIN  (0.001)        /* always do some centering             */
-#define SIGMAMAX  (0.999)        /* never fully center                   */
-#define STEPMIN   (0.001)        /* smallest step that we do take        */
-#define STEPMAX   (0.999)  /* biggest step allowed, also in affine dir.  */
-#define SAFEGUARD (500)     /* Maximum increase in PRES before
+#define MAXIT      (30)          /* maximum number of iterations         */
+#define FEASTOL    (1E-6)        /* primal/dual infeasibility tolerance  */
+#define ABSTOL     (1E-7)        /* absolute tolerance on duality gap    */
+#define RELTOL     (1E-7)        /* relative tolerance on duality gap    */
+#define FTOL_INACC (1E-4)        /* inaccurate solution feasibility tol. */
+#define ATOL_INACC (1E-5)        /* inaccurate solution absolute tol.    */
+#define RTOL_INACC (1E-5)        /* inaccurate solution relative tol.    */
+#define GAMMA      (0.99)        /* scaling the final step length        */
+#define STATICREG  (1)           /* static regularization: 0:off, 1:on   */
+#define DELTASTAT  (5E-9)        /* regularization parameter             */
+#define DELTA      (5E-7)        /* dyn. regularization parameter        */
+#define EPS        (1E-14)  /* dyn. regularization threshold (do not 0!) */
+#define VERBOSE    (1)           /* bool for verbosity; PRINTLEVEL < 3   */
+#define NITREF     (3)       	 /* number of iterative refinement steps */
+#define IRERRFACT  (2)           /* factor by which IR should reduce err */
+#define LINSYSACC  (1E-14)       /* rel. accuracy of search direction    */
+#define SIGMAMIN   (0.001)       /* always do some centering             */
+#define SIGMAMAX   (0.999)       /* never fully center                   */
+#define STEPMIN    (0.001)       /* smallest step that we do take        */
+#define STEPMAX    (0.999)  /* iggest step allowed, also in affine dir.  */
+#define SAFEGUARD  (500)     /* Maximum increase in PRES before
                                                 ECOS_NUMERICS is thrown. */
 
 /* EQUILIBRATION METHOD ------------------------------------------------ */
@@ -67,10 +70,12 @@
 #define ECOS_OPTIMAL  (0)   /* Problem solved to optimality              */
 #define ECOS_PINF     (1)   /* Found certificate of primal infeasibility */
 #define ECOS_DINF     (2)   /* Found certificate of dual infeasibility   */
+#define ECOS_INACC_OFFSET (10)  /* Offset exitflag at inaccurate results */
 #define ECOS_MAXIT    (-1)  /* Maximum number of iterations reached      */
 #define ECOS_NUMERICS (-2)  /* Search direction unreliable               */
 #define ECOS_OUTCONE  (-3)  /* s or z got outside the cone, numerics?    */
 #define ECOS_FATAL    (-7)  /* Unknown problem in solver                 */
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -84,6 +89,9 @@ typedef struct settings{
 	pfloat feastol;              /* primal/dual infeasibility tolerance  */
 	pfloat abstol;               /* absolute tolerance on duality gap    */
 	pfloat reltol;               /* relative tolerance on duality gap    */
+    pfloat feastol_inacc; /* primal/dual infeasibility relaxed tolerance */
+	pfloat abstol_inacc;  /* absolute relaxed tolerance on duality gap   */
+	pfloat reltol_inacc;  /* relative relaxed tolerance on duality gap   */
 	idxint nitref;				 /* number of iterative refinement steps */
 	idxint maxit;                /* maximum number of iterations         */
     idxint verbose;              /* verbosity bool for PRINTLEVEL < 3    */
@@ -145,6 +153,19 @@ typedef struct pwork{
 	pfloat* lambda; /* scaled variable                 */
 	pfloat kap; /* kappa (homogeneous embedding)       */
 	pfloat tau; /* tau (homogeneous embedding)         */
+    
+    /* best iterate seen so far */
+    /* variables */
+    pfloat* best_x;  /* primal variables                    */
+    pfloat* best_y;  /* multipliers for equality constaints */
+    pfloat* best_z;  /* multipliers for conic inequalities  */
+    pfloat* best_s;  /* slacks for conic inequalities       */
+    pfloat best_kap; /* kappa (homogeneous embedding)       */
+	pfloat best_tau; /* tau (homogeneous embedding)         */
+    pfloat best_cx;
+    pfloat best_by;
+    pfloat best_hz;
+    stats* best_info; /* info of best iterate               */
 	
 	/* temporary stuff holding search direction etc. */
     pfloat* dsaff;

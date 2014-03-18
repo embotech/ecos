@@ -368,7 +368,6 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 void ECOS_cleanup(pwork* w, idxint keepvars)
 {
 	idxint i;
-
     
 #if defined EQUIL_ITERS && (defined RUIZ_EQUIL || defined ALTERNATING_EQUIL )
     /* restore the equilibration */
@@ -434,6 +433,7 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
     FREE(w->zaff);
     FREE(w->saff);
 	FREE(w->info);
+    FREE(w->best_info);
 	FREE(w->lambda);
 	FREE(w->rx);
 	FREE(w->ry);
@@ -441,10 +441,10 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 	FREE(w->stgs);
 	FREE(w->G);	
 	if( w->p > 0 ) FREE(w->A);	
-	if( keepvars < 4 ) FREE(w->z);
-	if( keepvars < 3 ) FREE(w->s);
-	if( keepvars < 2 ) FREE(w->y);
-	if( keepvars < 1 ) FREE(w->x);
+	if( keepvars < 4 ) { FREE(w->z); FREE(w->best_z); }
+	if( keepvars < 3 ) { FREE(w->s); FREE(w->best_s); }
+	if( keepvars < 2 ) { FREE(w->y); FREE(w->best_y); }
+	if( keepvars < 1 ) { FREE(w->x); FREE(w->best_x); }
     FREE(w->xequil);
     FREE(w->Aequil);
     FREE(w->Gequil);
@@ -531,7 +531,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     mywork->y = (pfloat *)MALLOC(p*sizeof(pfloat));
     mywork->z = (pfloat *)MALLOC(m*sizeof(pfloat));
     mywork->s = (pfloat *)MALLOC(m*sizeof(pfloat));
-	mywork->lambda = (pfloat *)MALLOC(m*sizeof(pfloat));
+  	mywork->lambda = (pfloat *)MALLOC(m*sizeof(pfloat));
 	mywork->dsaff_by_W = (pfloat *)MALLOC(m*sizeof(pfloat));
     mywork->dsaff = (pfloat *)MALLOC(m*sizeof(pfloat));
     mywork->dzaff = (pfloat *)MALLOC(m*sizeof(pfloat));
@@ -541,6 +541,13 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #if PRINTLEVEL > 2
     PRINTTEXT("Memory allocated for variables\n");
 #endif
+    
+    /* best iterates so far */
+    mywork->best_x = (pfloat *)MALLOC(n*sizeof(pfloat));
+    mywork->best_y = (pfloat *)MALLOC(p*sizeof(pfloat));
+    mywork->best_z = (pfloat *)MALLOC(m*sizeof(pfloat));
+    mywork->best_s = (pfloat *)MALLOC(m*sizeof(pfloat));
+    mywork->best_info = (stats *)MALLOC(sizeof(stats));
 
 	/* cones */
 	mywork->C = (cone *)MALLOC(sizeof(cone));
@@ -626,6 +633,9 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->stgs->abstol = ABSTOL;	
 	mywork->stgs->feastol = FEASTOL;
 	mywork->stgs->reltol = RELTOL;
+    mywork->stgs->abstol_inacc = ATOL_INACC;
+	mywork->stgs->feastol_inacc = FTOL_INACC;
+	mywork->stgs->reltol_inacc = RTOL_INACC;
     mywork->stgs->verbose = VERBOSE;
 #if PRINTLEVEL > 2
     PRINTTEXT("Written settings\n");
