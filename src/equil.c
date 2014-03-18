@@ -120,7 +120,6 @@ void use_alternating_norm_equilibration(pwork *w)
     idxint num_G_rows = w->G->m;
     pfloat sum;
 
-    printf("a\n");
     /* initialize equilibration vector to 0 */
     for(i = 0; i < num_cols; i++) {
         w->xequil[i] = 0.0;
@@ -132,16 +131,12 @@ void use_alternating_norm_equilibration(pwork *w)
         w->Gequil[i] = 0.0;
     }
 
-    printf("b\n");
-
     /* compute norm across rows of A */
     if(w->A)
         sum_sq_rows(w->Aequil, w->A);
     /* compute norm across rows of G */
     if(num_G_rows > 0)
         sum_sq_rows(w->Gequil, w->G);
-
-    printf("c\n");
 
     /* now collapse cones together by taking average norm square */
     ind = w->C->lpc->p;
