@@ -156,8 +156,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
       opts_maxit = opts ? mxGetField(opts, 0, "maxit") : 0;
     }
     
-    
-    
     /* determine sizes */
     n = (idxint)size_c[0];
     m = (idxint)size_G[0];
@@ -185,14 +183,16 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         mexErrMsgTxt("c and G do not match in dimension");
     }
 
-    if( size_h[0] != m )
-    {
-        mexErrMsgTxt("G and h do not match in dimension");
-    }
-
-    if( size_h[1] != 1 )
-    {
-        mexErrMsgTxt("h is expected to be a column vector");
+    if( m > 0 ){
+        if( size_h[0] != m )
+        {
+            mexErrMsgTxt("G and h do not match in dimension");
+        }
+        
+        if( size_h[1] != 1 )
+        {
+            mexErrMsgTxt("h is expected to be a column vector");
+        }
     }
 
     if( !mxIsStruct(dims) )
@@ -263,12 +263,18 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     /* set up solver */
     l = (idxint)(*mxGetPr(dims_l)); numConicVariables += l;
     q = mxGetPr(dims_q);
-    ncones = size_q[1] > size_q[0] ? size_q[1] : size_q[0];
-   
+    if( size_q[0] == 0 || size_q[1]==0 ){
+        ncones = 0;
+    } else {
+        ncones = size_q[1] > size_q[0] ? size_q[1] : size_q[0];
+    }
+    
     /* get problem data in right format matrices */
-    Gpr = (pfloat *)mxGetPr(G);
-    Gjc = (idxint *)mxGetJc(G);
-    Gir = (idxint *)mxGetIr(G);      
+    if( m > 0){
+        Gpr = (pfloat *)mxGetPr(G);
+        Gjc = (idxint *)mxGetJc(G);
+        Gir = (idxint *)mxGetIr(G);
+    } else { mexErrMsgTxt( "ECOS does not support equality constrained problems without inequalities yet." ); }
     if( p > 0 ){
         Apr = (pfloat *)mxGetPr(A);
         Ajc = (idxint *)mxGetJc(A);
@@ -279,6 +285,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     if ( p > 0 ) {
       bpr = (pfloat *)mxGetPr(b);
     }
+   
     
     /* we have to copy the number of cones since Matlab gives us double
      * values but the C version of ECOS expects idxint values */

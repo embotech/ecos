@@ -502,7 +502,7 @@ void printProgress(stats* info)
 /* enable to flush printf in Matlab immediately */
 #ifdef MATLAB_MEX_FILE
 #if defined MATLAB_FLUSH_PRINTS
-    mexEvalString("pause(0.0001)");
+    mexEvalString("pause(0.0001);");
 #endif
 #endif
  

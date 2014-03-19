@@ -27,12 +27,14 @@
 
 /* Include Tests */
 #include "MPC/MPC01.h"
+#include "MPC/MPC02.h"
 #include "quadratic/quadratics.h"
 
 int tests_run = 0;
 
 static char * all_tests() {
     mu_run_test(test_MPC01);
+    mu_run_test(test_MPC02);
     mu_run_test(test_norm);
     mu_run_test(test_quad_over_lin);
     mu_run_test(test_sq_norm);
