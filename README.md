@@ -31,7 +31,7 @@ Features of ECOS
    code).
 + *ECOS is numerically robust*. Using regularization and iterative refinement coupled with a carefully chosen 
   sparse representation of scaling matrices, millions of problem instances are solved reliably.
-+ *ECOS comes with a MATLAB and CVX 2.0 interface*, and *it is supported by YALMIP*. With [CVX](http://cvxr.com) and
++ *ECOS comes with a MATLAB and CVX 2.1 interface*, and *it is supported by YALMIP*. With [CVX](http://cvxr.com) and
   [YALMIP](http://users.isy.liu.se/johanl/yalmip/) you can prototype, simulate and verify the performance of ECOS before you implement the very same code on 
 your embedded hardware.  
 + *ECOS comes with a Python interface*. This interface is built on top of 
