@@ -29,6 +29,7 @@
 #include "MPC/MPC01.h"
 #include "MPC/MPC02.h"
 #include "quadratic/quadratics.h"
+#include "feas_prob/feas.h"
 
 int tests_run = 0;
 
@@ -39,6 +40,7 @@ static char * all_tests() {
     mu_run_test(test_quad_over_lin);
     mu_run_test(test_sq_norm);
     mu_run_test(test_sum_sq);
+    mu_run_test(test_feas);
     return 0;
 }
 
@@ -51,6 +53,6 @@ int main(void) {
         printf("ALL TESTS PASSED\n");
     }
     printf("Tests run: %d\n", tests_run);
-    
+
     return result != 0;
 }
