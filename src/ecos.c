@@ -421,9 +421,9 @@ void computeResiduals(pwork *w)
 	vsubscale(w->m, w->tau, w->h, w->rz);
 
 	/* rt = kappa + c'*x + b'*y + h'*z; */
-	w->cx = ddot(w->n, w->c, w->x);
-	w->by = w->p > 0 ? ddot(w->p, w->b, w->y) : 0.0;
-	w->hz = ddot(w->m, w->h, w->z);
+	w->cx = eddot(w->n, w->c, w->x);
+	w->by = w->p > 0 ? eddot(w->p, w->b, w->y) : 0.0;
+	w->hz = eddot(w->m, w->h, w->z);
 	w->rt = w->kap + w->cx + w->by + w->hz;    
 }
 
@@ -439,7 +439,7 @@ void updateStatistics(pwork* w)
 	stats* info = w->info;
 	
 	/* mu = (s'*z + kap*tau) / (D+1) where s'*z is the duality gap */
-	info->gap = ddot(w->m, w->s, w->z);
+	info->gap = eddot(w->m, w->s, w->z);
 	info->mu = (info->gap + w->kap*w->tau) / (w->D + 1);
 
 	info->kapovert = w->kap / w->tau;
@@ -606,7 +606,7 @@ void RHS_combined(pwork* w)
 
 
 /*
- * Line search according to Vandenberghe (cf. §8 in his manual).
+ * Line search according to Vandenberghe (cf. ï¿½8 in his manual).
  */
 pfloat lineSearch(pfloat* lambda, pfloat* ds, pfloat* dz, pfloat tau, pfloat dtau, pfloat kap, pfloat dkap, cone* C, kkt* KKT)
 {
@@ -660,7 +660,7 @@ pfloat lineSearch(pfloat* lambda, pfloat* ds, pfloat* dz, pfloat tau, pfloat dta
 		lk = lambda + cone_start;  dsk = ds + cone_start;  dzk = dz + cone_start;
 		
 		/* normalize */
-		lknorm = sqrt( lk[0]*lk[0] - ddot(conesize-1, lk+1, lk+1) );
+		lknorm = sqrt( lk[0]*lk[0] - eddot(conesize-1, lk+1, lk+1) );
 		for( j=0; j < conesize; j++ ){ lkbar[j] = lk[j] / lknorm; }
 		lknorminv = 1.0 / lknorm;
 
@@ -956,10 +956,10 @@ idxint ECOS_solve(pwork* w)
 #endif
         
 		/* dtau_denom = kap/tau - (c'*x1 + by1 + h'*z1); */
-		dtau_denom = w->kap/w->tau - ddot(w->n, w->c, w->KKT->dx1) - ddot(w->p, w->b, w->KKT->dy1) - ddot(w->m, w->h, w->KKT->dz1);
+		dtau_denom = w->kap/w->tau - eddot(w->n, w->c, w->KKT->dx1) - eddot(w->p, w->b, w->KKT->dy1) - eddot(w->m, w->h, w->KKT->dz1);
 		
         /* dtauaff = (dt + c'*x2 + by2 + h'*z2) / dtau_denom; */
-		dtauaff = (w->rt - w->kap + ddot(w->n, w->c, w->KKT->dx2) + ddot(w->p, w->b, w->KKT->dy2) + ddot(w->m, w->h, w->KKT->dz2)) / dtau_denom;
+		dtauaff = (w->rt - w->kap + eddot(w->n, w->c, w->KKT->dx2) + eddot(w->p, w->b, w->KKT->dy2) + eddot(w->m, w->h, w->KKT->dz2)) / dtau_denom;
         
 		/* dzaff = dz2 + dtau_aff*dz1 */
 		for( i=0; i<w->m; i++ ){ w->W_times_dzaff[i] = w->KKT->dz2[i] + dtauaff*w->KKT->dz1[i]; } 
@@ -996,7 +996,7 @@ idxint ECOS_solve(pwork* w)
 		bkap = w->kap*w->tau + dkapaff*dtauaff - sigma*w->info->mu;
 
 		/* dtau = ((1-sigma)*rt - bkap/tau + c'*x2 + by2 + h'*z2) / dtau_denom; */		
-		dtau = ((1-sigma)*w->rt - bkap/w->tau + ddot(w->n, w->c, w->KKT->dx2) + ddot(w->p, w->b, w->KKT->dy2) + ddot(w->m, w->h, w->KKT->dz2)) / dtau_denom;
+		dtau = ((1-sigma)*w->rt - bkap/w->tau + eddot(w->n, w->c, w->KKT->dx2) + eddot(w->p, w->b, w->KKT->dy2) + eddot(w->m, w->h, w->KKT->dz2)) / dtau_denom;
       	
 		/* dx = x2 + dtau*x1;     dy = y2 + dtau*y1;       dz = z2 + dtau*z1; */
 		for( i=0; i < w->n; i++ ){ w->KKT->dx2[i] += dtau*w->KKT->dx1[i]; }
