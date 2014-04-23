@@ -383,7 +383,7 @@ pfloat conicProduct(pfloat* u, pfloat* v, cone* C, pfloat* w)
 		conesize = C->soc[i].p; 
 		u0 = u[cone_start];
 		v0 = v[cone_start];
-		w[k] = ddot(conesize, u+cone_start, v+cone_start);
+		w[k] = eddot(conesize, u+cone_start, v+cone_start);
         mu += w[k] < 0 ? -w[k] : w[k];
         k++;
 		for( j=1; j < conesize; j++ ){ w[k++] = u0*v[cone_start+j] + v0*u[cone_start+j]; }
