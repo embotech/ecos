@@ -154,9 +154,9 @@ pfloat norminf(pfloat* v, idxint n)
 }
 
 /*
- * Dot product z = x'*y of size n.
+ * ECOS dot product z = x'*y of size n.
  */
-pfloat ddot(idxint n, pfloat* x, pfloat* y)
+pfloat eddot(idxint n, pfloat* x, pfloat* y)
 {
 	pfloat z = 0; idxint i;
 	for( i=0; i<n; i++ ){ z += x[i]*y[i]; }
