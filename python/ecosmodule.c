@@ -3,7 +3,7 @@
 #include "numpy/arrayobject.h"
 
 /*
- * Macro for MSVC compatibility.
+ * Define INLINE for MSVC compatibility.
  */
 #ifdef _MSC_VER
   #define INLINE __inline
