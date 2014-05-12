@@ -2,6 +2,15 @@
 #include "ecos.h"
 #include "numpy/arrayobject.h"
 
+/*
+ * Define INLINE for MSVC compatibility.
+ */
+#ifdef _MSC_VER
+  #define INLINE __inline
+#else
+  #define INLINE inline
+#endif
+
 /* IMPORTANT: This code now uses numpy array types. It is a private C module
  * in the sense that end users only see the front-facing Python code in
  * "ecos.py"; hence, we can get away with the inputs being numpy arrays of
@@ -13,33 +22,33 @@
  * does not correspond to a CSR matrix, this code will just crash inelegantly.
  * Please use the "solve" interface in ecos.py.
  */
-//#include "cvxopt.h"
+/* #include "cvxopt.h" */
 
 /* ECHU: Note, Python3.x may require special handling for the int and double
  * types. */
-static inline int getIntType() {
+static INLINE int getIntType() {
   switch(sizeof(idxint)) {
     case 1: return NPY_INT8;
     case 2: return NPY_INT16;
     case 4: return NPY_INT32;
     case 8: return NPY_INT64;
-    default: return NPY_INT32;  // defaults to 4 byte int
+    default: return NPY_INT32;  /* defaults to 4 byte int */
   }
 }
 
-static inline int getDoubleType() {
-  // ECHU: known bug, if pfloat isn't "double", will cause aliasing in memory
+static INLINE int getDoubleType() {
+  /* ECHU: known bug, if pfloat isn't "double", will cause aliasing in memory */
   return NPY_DOUBLE;
 }
 
-static inline PyArrayObject *getContiguous(PyArrayObject *array, int typenum) {
-  // gets the pointer to the block of contiguous C memory
-  // the overhead should be small unless the numpy array has been
-  // reordered in some way or the data type doesn't quite match
-  //
-  // the "new_owner" pointer has to have Py_DECREF called on it; it owns
-  // the "new" array object created by PyArray_Cast
-  //
+static INLINE PyArrayObject *getContiguous(PyArrayObject *array, int typenum) {
+  /* gets the pointer to the block of contiguous C memory
+   * the overhead should be small unless the numpy array has been
+   * reordered in some way or the data type doesn't quite match
+   *
+   * the "new_owner" pointer has to have Py_DECREF called on it; it owns
+   * the "new" array object created by PyArray_Cast
+   */
   static PyArrayObject *tmp_arr;
   PyArrayObject *new_owner;
   tmp_arr = PyArray_GETCONTIGUOUS(array);
@@ -123,8 +132,10 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    */
 
   /* data structures for arguments */
-  //matrix *c, *h, *b = NULL;
-  //spmatrix *G, *A = NULL;
+  /* ECHU: below is for CVXOPT 
+   * matrix *c, *h, *b = NULL;
+   * spmatrix *G, *A = NULL;
+   */
   
   PyArrayObject *Gx, *Gi, *Gp, *c, *h;
   PyArrayObject *Ax = NULL;
@@ -132,10 +143,10 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   PyArrayObject *Ap = NULL;
   PyArrayObject *b = NULL;
   PyObject *dims, *verbose = NULL;
-  idxint n;      // number or variables
-  idxint m;      // number of conic variables
-  idxint p = 0;  // number of equality constraints
-  idxint ncones = 0; // number of cones
+  idxint n;           /* number or variables            */
+  idxint m;           /* number of conic variables      */
+  idxint p = 0;       /* number of equality constraints */
+  idxint ncones = 0;  /* number of cones                */
   idxint numConicVariables = 0;
 
   /* ECOS data structures */
@@ -159,7 +170,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
 
   idxint i;
   static char *kwlist[] = {"shape", "c", "Gx", "Gi", "Gp", "h", "dims", "Ax", "Ai", "Ap", "b", "verbose", NULL};
-  // parse the arguments and ensure they are the correct type
+  /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
   static char *argparse_string = "(lll)O!O!O!O!O!O!|O!O!O!O!O!";
 #else
@@ -319,32 +330,33 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       Py_DECREF(c_arr); Py_DECREF(h_arr);
       return NULL;
     }
-    // if ((SpMatrix_Check(A) && SP_ID(A) != DOUBLE)){
-    //     PyErr_SetString(PyExc_TypeError, "A must be a sparse 'd' matrix");
-    //     if(q) free(q);
-    //     Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
-    //     Py_DECREF(c_arr); Py_DECREF(h_arr);
-    //     return NULL;
-    // }
-    // if ((p = SP_NROWS(A)) < 0) {
-    //     PyErr_SetString(PyExc_ValueError, "p must be a nonnegative integer");
-    //     if(q) free(q);
-    //     Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
-    //     Py_DECREF(c_arr); Py_DECREF(h_arr);
-    //     return NULL;
-    // }
-    // if (SP_NCOLS(A) != n) {
-    //     PyErr_SetString(PyExc_ValueError, "A has incompatible dimension with c");
-    //     if(q) free(q);
-    //     Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
-    //     Py_DECREF(c_arr); Py_DECREF(h_arr);
-    //     return NULL;
-    // }
-    // if (p != 0) {
-    //   Apr = SP_VALD(A);
-    //   Air = SP_ROW(A);
-    //   Ajc = SP_COL(A);
-    // }
+    /* if ((SpMatrix_Check(A) && SP_ID(A) != DOUBLE)){
+     *     PyErr_SetString(PyExc_TypeError, "A must be a sparse 'd' matrix");
+     *     if(q) free(q);
+     *     Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
+     *     Py_DECREF(c_arr); Py_DECREF(h_arr);
+     *     return NULL;
+     * }
+     * if ((p = SP_NROWS(A)) < 0) {
+     *     PyErr_SetString(PyExc_ValueError, "p must be a nonnegative integer");
+     *     if(q) free(q);
+     *     Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
+     *     Py_DECREF(c_arr); Py_DECREF(h_arr);
+     *     return NULL;
+     * }
+     * if (SP_NCOLS(A) != n) {
+     *     PyErr_SetString(PyExc_ValueError, "A has incompatible dimension with c");
+     *     if(q) free(q);
+     *     Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
+     *     Py_DECREF(c_arr); Py_DECREF(h_arr);
+     *     return NULL;
+     * }
+     * if (p != 0) {
+     *   Apr = SP_VALD(A);
+     *   Air = SP_ROW(A);
+     *   Ajc = SP_COL(A);
+     * }
+     */
     Ax_arr = getContiguous(Ax, doubleType);
     Ai_arr = getContiguous(Ai, intType);
     Ap_arr = getContiguous(Ap, intType);
@@ -353,19 +365,20 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     Ajc = (idxint *) PyArray_DATA(Ap_arr);
 
     /* set b */
-    // if (!Matrix_Check(b) || MAT_NCOLS(b) != 1 || MAT_ID(b) != DOUBLE) {
-    //     PyErr_SetString(PyExc_TypeError, "b must be a dense 'd' matrix with one column");
-    //     if(q) free(q);
-    //     return NULL;
-    // }
-    // if (MAT_NROWS(b) != p){
-    //     PyErr_SetString(PyExc_ValueError, "b has incompatible dimension with A");
-    //     if(q) free(q);
-    //     return NULL;
-    // }
-    // if (p != 0) {
-    //   bpr = MAT_BUFD(b);
-    // }
+    /* if (!Matrix_Check(b) || MAT_NCOLS(b) != 1 || MAT_ID(b) != DOUBLE) {
+     *     PyErr_SetString(PyExc_TypeError, "b must be a dense 'd' matrix with one column");
+     *     if(q) free(q);
+     *     return NULL;
+     * }
+     * if (MAT_NROWS(b) != p){
+     *     PyErr_SetString(PyExc_ValueError, "b has incompatible dimension with A");
+     *     if(q) free(q);
+     *     return NULL;
+     * }
+     * if (p != 0) {
+     *   bpr = MAT_BUFD(b);
+     * }
+     */
     if (!PyArray_ISFLOAT(b) || PyArray_NDIM(b) != 1) {
         PyErr_SetString(PyExc_TypeError, "b must be a dense numpy array with one dimension");
         if(q) free(q);
@@ -385,7 +398,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     b_arr = getContiguous(b, doubleType);
     bpr = (pfloat *) PyArray_DATA(b_arr);
   } else if (Ax || Ai || Ap || b) {
-    // check that A and b are both supplied
+    /* check that A and b are both supplied */
     PyErr_SetString(PyExc_ValueError, "A and b arguments must be supplied together");
     if(q) free(q);
     Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
@@ -430,27 +443,29 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   idxint exitcode = ECOS_solve(mywork);
 
   /* create output (all data is *deep copied*) */
-  // TODO: request CVXOPT API for constructing from existing pointer
+  /* TODO: request CVXOPT API for constructing from existing pointer */
   /* x */
-  // matrix *x;
-  // if(!(x = Matrix_New(n,1,DOUBLE)))
-  //   return PyErr_NoMemory();
-  // memcpy(MAT_BUFD(x), mywork->x, n*sizeof(double));
+  /* matrix *x;
+   * if(!(x = Matrix_New(n,1,DOUBLE)))
+   *   return PyErr_NoMemory();
+   * memcpy(MAT_BUFD(x), mywork->x, n*sizeof(double));
+   */
   npy_intp veclen[1];
   veclen[0] = n;
   PyObject *x = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->x);
 
   /* y */
-  // matrix *y;
-  // if(!(y = Matrix_New(p,1,DOUBLE)))
-  //   return PyErr_NoMemory();
-  // memcpy(MAT_BUFD(y), mywork->y, p*sizeof(double));
+  /* matrix *y;
+   * if(!(y = Matrix_New(p,1,DOUBLE)))
+   *   return PyErr_NoMemory();
+   * memcpy(MAT_BUFD(y), mywork->y, p*sizeof(double));
+   */
   veclen[0] = p;
   PyObject *y = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->y);
   
   
   /* info dict */
-  // infostring
+  /* infostring */
   const char* infostring;
   switch( exitcode ){
       case ECOS_OPTIMAL:
@@ -475,13 +490,13 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
           infostring = "UNKNOWN PROBLEM IN SOLVER";
   }
 
-  // numerical errors
+  /* numerical errors */
   idxint numerr = 0;
   if( (exitcode == ECOS_NUMERICS) || (exitcode == ECOS_OUTCONE) || (exitcode == ECOS_FATAL) ){
       numerr = 1;
   }
 
-  // timings
+  /* timings */
 #if PROFILING > 0
 	PyObject *tinfos = Py_BuildValue(
 #if PROFILING > 1
@@ -527,23 +542,25 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     "numerr",numerr);
 
 #if PROFILING > 0
-  // give reference to infoDict
+  /* give reference to infoDict */
   Py_DECREF(tinfos);
 #endif
 
   /* s */
-  // matrix *s;
-  // if(!(s = Matrix_New(m,1,DOUBLE)))
-  //   return PyErr_NoMemory();
-  // memcpy(MAT_BUFD(s), mywork->s, m*sizeof(double));
+  /* matrix *s;
+   * if(!(s = Matrix_New(m,1,DOUBLE)))
+   *   return PyErr_NoMemory();
+   * memcpy(MAT_BUFD(s), mywork->s, m*sizeof(double));
+   */
   veclen[0] = m;
   PyObject *s = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->s);
   
   /* z */
-  // matrix *z;
-  // if(!(z = Matrix_New(m,1,DOUBLE)))
-  //   return PyErr_NoMemory();
-  // memcpy(MAT_BUFD(z), mywork->z, m*sizeof(double));
+  /* matrix *z;
+   * if(!(z = Matrix_New(m,1,DOUBLE)))
+   *   return PyErr_NoMemory();
+   * memcpy(MAT_BUFD(z), mywork->z, m*sizeof(double));
+   */
   veclen[0] = m;
   PyObject *z = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->z);
   
@@ -559,10 +576,10 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     "z",z,
     "s",s,
     "info",infoDict);
-  // give up ownership to the return dictionary
+  /* give up ownership to the return dictionary */
   Py_DECREF(x); Py_DECREF(y); Py_DECREF(z); Py_DECREF(s); Py_DECREF(infoDict);
   
-  // no longer need pointers to arrays that held primitives
+  /* no longer need pointers to arrays that held primitives */
   if(q) free(q);
   Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
   Py_DECREF(c_arr); Py_DECREF(h_arr);
@@ -579,7 +596,7 @@ static PyMethodDef ECOSMethods[] =
   {"csolve", (PyCFunction)csolve, METH_VARARGS | METH_KEYWORDS,
     "Solve an SOCP using ECOS."},
   {"version", (PyCFunction)version, METH_NOARGS, "Version number for ECOS."},
-  {NULL, NULL, 0, NULL} // sentinel
+  {NULL, NULL, 0, NULL} /* sentinel */
 };
 
 /* Module initialization */
@@ -607,8 +624,8 @@ static PyObject* moduleinit(void)
   m = Py_InitModule("_ecos", ECOSMethods);
 #endif
   
-  //if (import_array() < 0) return NULL; // for numpy arrays
-  //if (import_cvxopt() < 0) return NULL; // for cvxopt support
+  /*if (import_array() < 0) return NULL;  */ /* for numpy arrays */
+  /*if (import_cvxopt() < 0) return NULL; */ /* for cvxopt support */
 
   if (m == NULL)
     return NULL;
@@ -619,13 +636,13 @@ static PyObject* moduleinit(void)
 #if PY_MAJOR_VERSION >= 3
   PyMODINIT_FUNC PyInit__ecos(void)
   {
-    import_array(); // for numpy arrays
+    import_array(); /* for numpy arrays */
     return moduleinit();
   }
 #else
   PyMODINIT_FUNC init_ecos(void)
   {
-    import_array(); // for numpy arrays
+    import_array(); /* for numpy arrays */
     moduleinit();
   }
 #endif
