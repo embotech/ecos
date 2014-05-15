@@ -293,7 +293,7 @@ empty, they default to 0.
 The argument `verbose` is a Boolean that defaults to `False`.  The argument `opts` is a
 dictionary with tolerance values `FEASTOL`, `ABSTOL`, `RELTOL`, `FEASTOL_INACC`, `ABSTOL_INNAC`,
 and `RELTOL_INACC`, and maximum iteration counter `MAX_ITERS`.
-The arguments `A` and `b`,`verbose`, and `opts` are optional.
+The arguments `A`, `b`,`verbose`, and `opts` are optional.
 
 The returned object is a dictionary containing the fields `solution['x']`, `solution['y']`, `solution['s']`, `solution['z']`, and `solution['info']`. 
 The first four are Numpy arrays containing the relevant solution. The last field contains a dictionary with the same fields as the `info` struct in the MATLAB interface.
