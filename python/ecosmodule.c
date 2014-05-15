@@ -104,19 +104,19 @@ static int getOptIntParam(char *key, idxint *v, PyObject *opts){
 
 
 static int parseOpts(settings *s, PyObject *opts){
-  if (getOptFloatParam("abstol", &(s->abstol), opts) < 0)
+  if (getOptFloatParam("FEASTOL", &(s->feastol), opts) < 0)
     return -1;
-  if (getOptFloatParam("feastol", &(s->feastol), opts) < 0)
+  if (getOptFloatParam("ABSTOL", &(s->abstol), opts) < 0)
     return -1;
-  if (getOptFloatParam("reltol", &(s->reltol), opts) < 0)
+  if (getOptFloatParam("RELTOL", &(s->reltol), opts) < 0)
     return -1;
-  if (getOptFloatParam("abstol_inacc", &(s->abstol_inacc), opts) < 0)
+  if (getOptFloatParam("FEASTOL_INACC", &(s->feastol_inacc), opts) < 0)
     return -1;
-  if (getOptFloatParam("feastol_inacc", &(s->feastol_inacc), opts) < 0)
+  if (getOptFloatParam("ABSTOL_INCACC", &(s->abstol_inacc), opts) < 0)
     return -1;
-  if (getOptFloatParam("reltol_inacc", &(s->reltol_inacc), opts) < 0)
+  if (getOptFloatParam("RELTOL_INACC", &(s->reltol_inacc), opts) < 0)
     return -1;
-  if (getOptIntParam("maxit",&(s->maxit),opts) < 0 )
+  if (getOptIntParam("MAX_ITERS",&(s->maxit),opts) < 0 )
     return -1;
   return 0;
 }
@@ -150,13 +150,13 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    * `b` is an optional argument, which is a Numpy array of doubles
    * `verbose` is an optional bool signaling whether to print info
    * `opts` is an optional argument which is a dictionary with
-   *     `feastol`: the tolerance on the primal and dual residual
-   *     `abstol`: the absolute tolerance on the duality gap
-   *     `reltol`: the relative tolerance on the duality gap
-   *     `feastol_inacc`: the tolerance on the primal and dual residual if reduced precisions
-   *     `abstol_inacc`: the absolute tolerance on the duality gap if reduced precision
-   *     `reltol_inacc`: the relative tolerance on the duality gap if reduced precision
-   *     `maxit`: the maximum numer of iterations.
+   *     `FEASTOL`: the tolerance on the primal and dual residual
+   *     `ABSTOL`: the absolute tolerance on the duality gap
+   *     `RELTOL`: the relative tolerance on the duality gap
+   *     `FEASTOL_INACC`: the tolerance on the primal and dual residual if reduced precisions
+   *     `ABSTOL_INACC`: the absolute tolerance on the duality gap if reduced precision
+   *     `RELTOL_INACC`: the relative tolerance on the duality gap if reduced precision
+   *     `MAX_ITERS`: the maximum numer of iterations.
    *
    * This call will solve the problem
    *
