@@ -224,7 +224,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   pfloat *cpr = NULL;
   pfloat *hpr = NULL;
   pfloat *bpr = NULL;
-  settings opts_ecos;
+  settings opts_ecos = {.feastol = -1, .reltol = -1, .abstol = -1, .feastol_inacc = -1, .abstol_inacc = -1, .reltol_inacc = -1, .maxit = -1};
 
   pwork* mywork;
 
