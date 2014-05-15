@@ -149,8 +149,14 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    * `Ap` is a Numpy array of ints
    * `b` is an optional argument, which is a Numpy array of doubles
    * `verbose` is an optional bool signaling whether to print info
-   * 'opts' is an optional argument which is a dictionary with
-   *     'abstol', 'feastol','reltol','abstol_inacc','feastol_inacc','reltol_inacc','maxit'
+   * `opts` is an optional argument which is a dictionary with
+   *     `feastol`: the tolerance on the primal and dual residual
+   *     `abstol`: the absolute tolerance on the duality gap
+   *     `reltol`: the relative tolerance on the duality gap
+   *     `feastol_inacc`: the tolerance on the primal and dual residual if reduced precisions
+   *     `abstol_inacc`: the absolute tolerance on the duality gap if reduced precision
+   *     `reltol_inacc`: the relative tolerance on the duality gap if reduced precision
+   *     `maxit`: the maximum numer of iterations.
    *
    * This call will solve the problem
    *

@@ -282,18 +282,20 @@ import ecos
 This module provides a single function `ecos` with one of the following calling sequences:
 ```
 solution = ecos.solve(c,G,h,dims)
-solution = ecos.solve(c,G,h,dims,A,b)
+solution = ecos.solve(c,G,h,dims,A,b,verbose,opts)
 ```
 The arguments `c`, `h`, and `b` are Numpy arrays (i.e., matrices with a single
 column).  The arguments `G` and `A` are Scipy *sparse* matrices in CSR format;
 if they are not of the proper format, ECOS will attempt to convert them.  The
 argument `dims` is a dictionary with two fields, `dims['l']` and `dims['q']`.
 These are the same fields as in the Matlab case. If the fields are omitted or
-empty, they default to 0. The arguments `A` and `b` are optional.
+empty, they default to 0. The arguments `A` and `b`,`verbose`, and `opts` are optional.
+The argument `verbose` is a Boolean that defaults to `False`.  The argument `opts` is a
+dictionary with tolerance values `feastol`, `abstol`, `reltol`, `feastol_inacc`, `abstol_innac`,
+and `reltol_inacc`, and maximum iteration counter `maxit`.
 
 The returned object is a dictionary containing the fields `solution['x']`, `solution['y']`, `solution['s']`, `solution['z']`, and `solution['info']`. 
 The first four are Numpy arrays containing the relevant solution. The last field contains a dictionary with the same fields as the `info` struct in the MATLAB interface.
-
 
 Using ECOS in C
 ====
