@@ -515,7 +515,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   }
   
   /* Set settings for ECOS. */
-  if (opts_ecos.verbose > -1)
+  if (opts_ecos.verbose >= 0)
     mywork->stgs->verbose = opts_ecos.verbose;
   if (opts_ecos.abstol >= 0)
     mywork->stgs->abstol = opts_ecos.abstol;
