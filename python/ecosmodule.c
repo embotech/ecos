@@ -243,7 +243,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   pwork* mywork;
 
   idxint i;
-  static char *kwlist[] = {"shape", "c", "Gx", "Gi", "Gp", "h", "dims", "Ax", "Ai", "Ap", "b", "opts", NULL};
+  static char *kwlist[] = {"shape", "c", "Gx", "Gi", "Gp", "h", "dims", "Ax", "Ai", "Ap", "b", "kwargs", NULL};
   /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
   static char *argparse_string = "(lll)O!O!O!O!O!O!|O!O!O!O!O!";
