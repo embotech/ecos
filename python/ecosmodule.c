@@ -76,11 +76,11 @@ static int getOptFloatParam(char *key, pfloat *v, PyObject* opts){
     if (obj) {
       if (PyInt_Check(obj)) {
 	if ((*v = (pfloat) PyInt_AsLong(obj)) < 0) {
-	  PySys_WriteStdout("ERROR: '%s' ought to be a nonnegative float\n",key); 
+	  PySys_WriteStderr("ERROR: '%s' ought to be a nonnegative float\n",key); 
 	  return -1;
 	}
       } else if (!PyFloat_Check(obj) || !((*v = (pfloat) PyFloat_AsDouble(obj)) >= 0)) {
-	  PySys_WriteStdout("ERROR: '%s' ought to be a nonnegative float\n", key);
+	  PySys_WriteStderr("ERROR: '%s' ought to be a nonnegative float\n", key);
 	  return -1;
       }
     }
@@ -89,12 +89,11 @@ static int getOptFloatParam(char *key, pfloat *v, PyObject* opts){
 }
 
 static int getOptIntParam(char *key, idxint *v, PyObject *opts){
-  *v = -1;
   if (opts) {
     PyObject *obj = PyDict_GetItemString(opts, key);
     if (obj) {
-      if (!PyInt_Check(obj) || !((*v = (idxint) PyInt_AsLong(obj)) >= 0)) {
-	PySys_WriteStdout("Error: failed to parse '%s'\n",key); 
+      if (!PyInt_Check(obj) || !((*v = (idxint) PyInt_AsLong(obj)) > 0)) {
+	PySys_WriteStderr("Error: '%s' ought to be a nonnegative integer\n",key); 
 	return -1;
       }
     }
@@ -102,6 +101,18 @@ static int getOptIntParam(char *key, idxint *v, PyObject *opts){
   return 0;
 }
 
+static int getOptBoolParam(char *key, idxint *v, PyObject *opts){
+  if (opts) {
+    PyObject *obj = PyDict_GetItemString(opts, key);
+    if (obj) {
+      if (!PyBool_Check(obj) || ((*v = (idxint) PyObject_IsTrue(obj)) < 0)) {
+	PySys_WriteStderr("Error: '%s' ought to be Bool\n",key); 
+	return -1;
+      }
+    }
+  }
+  return 0;
+}
 
 static int parseOpts(settings *s, PyObject *opts){
   if (getOptFloatParam("FEASTOL", &(s->feastol), opts) < 0)
@@ -118,13 +129,15 @@ static int parseOpts(settings *s, PyObject *opts){
     return -1;
   if (getOptIntParam("MAX_ITERS",&(s->maxit),opts) < 0 )
     return -1;
+  if (getOptBoolParam("VERBOSE",&(s->verbose),opts) < 0 )
+    return -1;
   return 0;
 }
 
 static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
 {
   /* Expects a function call
-   *     sol = csolve((m,n,p),c,Gx,Gi,Gp,h,dims,Ax,Ai,Ap,b,verbose,opts)
+   *     sol = csolve((m,n,p),c,Gx,Gi,Gp,h,dims,Ax,Ai,Ap,b,opts)
    * where
    *
    * the triple (m,n,p) corresponds to:
@@ -148,7 +161,6 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    * `Ai` is a Numpy array of ints
    * `Ap` is a Numpy array of ints
    * `b` is an optional argument, which is a Numpy array of doubles
-   * `verbose` is an optional bool signaling whether to print info
    * `opts` is an optional argument which is a dictionary with
    *     `FEASTOL`: the tolerance on the primal and dual residual
    *     `ABSTOL`: the absolute tolerance on the duality gap
@@ -157,6 +169,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    *     `ABSTOL_INACC`: the absolute tolerance on the duality gap if reduced precision
    *     `RELTOL_INACC`: the relative tolerance on the duality gap if reduced precision
    *     `MAX_ITERS`: the maximum numer of iterations.
+   *     `VERBOSE`: signals to print on non zero value.
    *
    * This call will solve the problem
    *
@@ -201,7 +214,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   PyArrayObject *Ai = NULL;
   PyArrayObject *Ap = NULL;
   PyArrayObject *b = NULL;
-  PyObject *dims, *verbose, *opts = NULL;
+  PyObject *dims = NULL;
+  PyObject *opts = NULL;
   idxint n;           /* number or variables            */
   idxint m;           /* number of conic variables      */
   idxint p = 0;       /* number of equality constraints */
@@ -224,17 +238,17 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   pfloat *cpr = NULL;
   pfloat *hpr = NULL;
   pfloat *bpr = NULL;
-  settings opts_ecos = {.feastol = -1, .reltol = -1, .abstol = -1, .feastol_inacc = -1, .abstol_inacc = -1, .reltol_inacc = -1, .maxit = -1};
+  settings opts_ecos = {.feastol = -1, .reltol = -1, .abstol = -1, .feastol_inacc = -1, .abstol_inacc = -1, .reltol_inacc = -1, .maxit = -1, .verbose = -1};
 
   pwork* mywork;
 
   idxint i;
-  static char *kwlist[] = {"shape", "c", "Gx", "Gi", "Gp", "h", "dims", "Ax", "Ai", "Ap", "b", "verbose", "opts", NULL};
+  static char *kwlist[] = {"shape", "c", "Gx", "Gi", "Gp", "h", "dims", "Ax", "Ai", "Ap", "b", "opts", NULL};
   /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
-  static char *argparse_string = "(lll)O!O!O!O!O!O!|O!O!O!O!O!O!";
+  static char *argparse_string = "(lll)O!O!O!O!O!O!|O!O!O!O!O!";
 #else
-  static char *argparse_string = "(iii)O!O!O!O!O!O!|O!O!O!O!O!O!";
+  static char *argparse_string = "(iii)O!O!O!O!O!O!|O!O!O!O!O!";
 #endif
     
   if( !PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist,
@@ -249,7 +263,6 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       &PyArray_Type, &Ai,
       &PyArray_Type, &Ap,
       &PyArray_Type, &b,
-      &PyBool_Type, &verbose,
       &PyDict_Type, &opts)
     ) { return NULL; }
   
@@ -502,8 +515,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   }
   
   /* Set settings for ECOS. */
-  if (verbose)
-    mywork->stgs->verbose = (idxint) PyObject_IsTrue(verbose);
+  if (opts_ecos.verbose > -1)
+    mywork->stgs->verbose = opts_ecos.verbose;
   if (opts_ecos.abstol >= 0)
     mywork->stgs->abstol = opts_ecos.abstol;
   if (opts_ecos.feastol >= 0)
