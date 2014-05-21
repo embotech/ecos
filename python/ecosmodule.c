@@ -115,21 +115,21 @@ static int getOptBoolParam(char *key, idxint *v, PyObject *opts){
 }
 
 static int parseOpts(settings *s, PyObject *opts){
-  if (getOptFloatParam("FEASTOL", &(s->feastol), opts) < 0)
+  if (getOptFloatParam("feastol", &(s->feastol), opts) < 0)
     return -1;
-  if (getOptFloatParam("ABSTOL", &(s->abstol), opts) < 0)
+  if (getOptFloatParam("abstol", &(s->abstol), opts) < 0)
     return -1;
-  if (getOptFloatParam("RELTOL", &(s->reltol), opts) < 0)
+  if (getOptFloatParam("reltol", &(s->reltol), opts) < 0)
     return -1;
-  if (getOptFloatParam("FEASTOL_INACC", &(s->feastol_inacc), opts) < 0)
+  if (getOptFloatParam("feastol_inacc", &(s->feastol_inacc), opts) < 0)
     return -1;
-  if (getOptFloatParam("ABSTOL_INCACC", &(s->abstol_inacc), opts) < 0)
+  if (getOptFloatParam("abstol_inacc", &(s->abstol_inacc), opts) < 0)
     return -1;
-  if (getOptFloatParam("RELTOL_INACC", &(s->reltol_inacc), opts) < 0)
+  if (getOptFloatParam("reltol_inacc", &(s->reltol_inacc), opts) < 0)
     return -1;
-  if (getOptIntParam("MAX_ITERS",&(s->maxit),opts) < 0 )
+  if (getOptIntParam("max_iters",&(s->maxit),opts) < 0 )
     return -1;
-  if (getOptBoolParam("VERBOSE",&(s->verbose),opts) < 0 )
+  if (getOptBoolParam("verbose",&(s->verbose),opts) < 0 )
     return -1;
   return 0;
 }
@@ -137,7 +137,7 @@ static int parseOpts(settings *s, PyObject *opts){
 static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
 {
   /* Expects a function call
-   *     sol = csolve((m,n,p),c,Gx,Gi,Gp,h,dims,Ax,Ai,Ap,b,opts)
+   *     sol = csolve((m,n,p),c,Gx,Gi,Gp,h,dims,Ax,Ai,Ap,b,**kwargs)
    * where
    *
    * the triple (m,n,p) corresponds to:
@@ -161,15 +161,15 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    * `Ai` is a Numpy array of ints
    * `Ap` is a Numpy array of ints
    * `b` is an optional argument, which is a Numpy array of doubles
-   * `opts` is an optional argument which is a dictionary with
-   *     `FEASTOL`: the tolerance on the primal and dual residual
-   *     `ABSTOL`: the absolute tolerance on the duality gap
-   *     `RELTOL`: the relative tolerance on the duality gap
-   *     `FEASTOL_INACC`: the tolerance on the primal and dual residual if reduced precisions
-   *     `ABSTOL_INACC`: the absolute tolerance on the duality gap if reduced precision
-   *     `RELTOL_INACC`: the relative tolerance on the duality gap if reduced precision
-   *     `MAX_ITERS`: the maximum numer of iterations.
-   *     `VERBOSE`: signals to print on non zero value.
+   * `kwargs` can include the keywords
+   *     `feastol`: the tolerance on the primal and dual residual
+   *     `abstol`: the absolute tolerance on the duality gap
+   *     `reltol`: the relative tolerance on the duality gap
+   *     `feastol_inacc`: the tolerance on the primal and dual residual if reduced precisions
+   *     `abstol_inacc`: the absolute tolerance on the duality gap if reduced precision
+   *     `reltolL_inacc`: the relative tolerance on the duality gap if reduced precision
+   *     `max_iters`: the maximum numer of iterations.
+   *     `verbose`: signals to print on non zero value.
    *
    * This call will solve the problem
    *
