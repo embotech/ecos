@@ -16,8 +16,8 @@
  * "ecos.py"; hence, we can get away with the inputs being numpy arrays of
  * the CSR data structures.
  *
- * WARNING: This code also does not check that the data for the sparse 
- * matrices are *actually* in column compressed storage for a sparse matrix. 
+ * WARNING: This code also does not check that the data for the sparse
+ * matrices are *actually* in column compressed storage for a sparse matrix.
  * The C module is not designed to be used stand-alone. If the data provided
  * does not correspond to a CSR matrix, this code will just crash inelegantly.
  * Please use the "solve" interface in ecos.py.
@@ -74,14 +74,13 @@ static int getOptFloatParam(char *key, pfloat *v, PyObject* opts){
   if(opts) {
     PyObject *obj = PyDict_GetItemString(opts, key);
     if (obj) {
-      if (PyInt_Check(obj)) {
-	if ((*v = (pfloat) PyInt_AsLong(obj)) < 0) {
-	  PySys_WriteStderr("ERROR: '%s' ought to be a nonnegative float\n",key); 
-	  return -1;
-	}
+      if ((PyInt_Check(obj) && (*v = (pfloat) PyInt_AsLong(obj)) < 0) ||
+          (PyLong_Check(obj) && (*v = (pfloat) PyLong_AsLong(obj)) < 0)) {
+          PySys_WriteStderr("ERROR: '%s' ought to be a nonnegative float\n",key);
+          return -1;
       } else if (!PyFloat_Check(obj) || !((*v = (pfloat) PyFloat_AsDouble(obj)) >= 0)) {
-	  PySys_WriteStderr("ERROR: '%s' ought to be a nonnegative float\n", key);
-	  return -1;
+          PySys_WriteStderr("ERROR: '%s' ought to be a nonnegative float\n", key);
+          return -1;
       }
     }
   }
@@ -92,9 +91,10 @@ static int getOptIntParam(char *key, idxint *v, PyObject *opts){
   if (opts) {
     PyObject *obj = PyDict_GetItemString(opts, key);
     if (obj) {
-      if (!PyInt_Check(obj) || !((*v = (idxint) PyInt_AsLong(obj)) > 0)) {
-	PySys_WriteStderr("Error: '%s' ought to be a nonnegative integer\n",key); 
-	return -1;
+      if ((!PyInt_Check(obj) || !(*v = (idxint) PyInt_AsLong(obj)) > 0) &&
+          (!PyLong_Check(obj) || !(*v = (idxint) PyLong_AsLong(obj)) > 0)) {
+        PySys_WriteStderr("Error: '%s' ought to be a nonnegative integer\n",key);
+        return -1;
       }
     }
   }
@@ -106,8 +106,8 @@ static int getOptBoolParam(char *key, idxint *v, PyObject *opts){
     PyObject *obj = PyDict_GetItemString(opts, key);
     if (obj) {
       if (!PyBool_Check(obj) || ((*v = (idxint) PyObject_IsTrue(obj)) < 0)) {
-	PySys_WriteStderr("Error: '%s' ought to be Bool\n",key); 
-	return -1;
+        PySys_WriteStderr("Error: '%s' ought to be Bool\n",key);
+        return -1;
       }
     }
   }
@@ -155,7 +155,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    *    `dims['l']` an integer specifying the dimension of positive orthant cone
    *    `dims['q']` an *list* specifying dimensions of second-order cones
    *
-   * "A" is an optional sparse matrix in column compressed storage. "Ax" are 
+   * "A" is an optional sparse matrix in column compressed storage. "Ax" are
    * the values, "Ai" are the rows, and "Ap" are the column pointers.
    * `Ax` is a Numpy array of doubles
    * `Ai` is a Numpy array of ints
@@ -204,11 +204,11 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    */
 
   /* data structures for arguments */
-  /* ECHU: below is for CVXOPT 
+  /* ECHU: below is for CVXOPT
    * matrix *c, *h, *b = NULL;
    * spmatrix *G, *A = NULL;
    */
-  
+
   PyArrayObject *Gx, *Gi, *Gp, *c, *h;
   PyArrayObject *Ax = NULL;
   PyArrayObject *Ai = NULL;
@@ -250,7 +250,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
 #else
   static char *argparse_string = "(iii)O!O!O!O!O!O!|O!O!O!O!O!";
 #endif
-    
+
   if( !PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist,
       &m, &n, &p,
       &PyArray_Type, &c,
@@ -265,7 +265,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       &PyArray_Type, &b,
       &PyDict_Type, &opts)
     ) { return NULL; }
-  
+
   if (m < 0) {
     PyErr_SetString(PyExc_ValueError, "m must be a positive integer");
     return NULL;
@@ -275,12 +275,12 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     PyErr_SetString(PyExc_ValueError, "n must be a positive integer");
     return NULL;
   }
-  
+
   if (p < 0) {
     PyErr_SetString(PyExc_ValueError, "p must be a positive integer");
     return NULL;
   }
-  
+
   /* parse the opts*/
   if(parseOpts(&opts_ecos, opts) < 0) {
     PyErr_SetString(PyExc_TypeError,"failed to parse opts");
@@ -317,7 +317,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
       return NULL;
   }
-  
+
   if (PyArray_DIM(c,0) != n){
       PyErr_SetString(PyExc_ValueError, "c has incompatible dimension with G");
       Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
@@ -347,7 +347,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   /* get dims['l'] */
   PyObject *linearObj = PyDict_GetItemString(dims, "l");
   if(linearObj) {
-    if(PyInt_Check(linearObj) && ((l = (idxint) PyInt_AsLong(linearObj)) >= 0)) {
+    if ( (PyInt_Check(linearObj) && ((l = (idxint) PyInt_AsLong(linearObj)) >= 0)) ||
+         (PyLong_Check(linearObj) && ((l = PyLong_AsLong(linearObj)) >= 0)) ){
         numConicVariables += l;
     } else {
       PyErr_SetString(PyExc_TypeError, "dims['l'] ought to be a nonnegative integer");
@@ -365,7 +366,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       q = calloc(ncones, sizeof(idxint));
       for (i = 0; i < ncones; ++i) {
           PyObject *qi = PyList_GetItem(socObj, i);
-          if(PyInt_Check(qi) && ((q[i] = (idxint) PyInt_AsLong(qi)) > 0)) {
+          if( (PyInt_Check(qi) && ((q[i] = (idxint) PyInt_AsLong(qi)) > 0)) ||
+              (PyLong_Check(qi) && ((q[i] = PyLong_AsLong(qi)) > 0)) ) {
               numConicVariables += q[i];
           } else {
             PyErr_SetString(PyExc_TypeError, "dims['q'] ought to be a list of positive integers");
@@ -485,21 +487,21 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     Py_DECREF(c_arr); Py_DECREF(h_arr);
     return NULL;
   }
-  
+
 
   /* check that sum(q) + l = m */
   if( numConicVariables != m ){
       PyErr_SetString(PyExc_ValueError, "Number of rows of G does not match dims.l+sum(dims.q)");
       if (q) free(q);
       Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
-      Py_DECREF(c_arr); Py_DECREF(h_arr); 
+      Py_DECREF(c_arr); Py_DECREF(h_arr);
       if (b_arr) Py_DECREF(b_arr);
-      if (Ax_arr) Py_DECREF(Ax_arr); 
-      if (Ai_arr) Py_DECREF(Ai_arr); 
+      if (Ax_arr) Py_DECREF(Ax_arr);
+      if (Ai_arr) Py_DECREF(Ai_arr);
       if (Ap_arr) Py_DECREF(Ap_arr);
       return NULL;
   }
-  
+
   /* This calls ECOS setup function. */
   mywork = ECOS_setup(n, m, p, l, ncones, q, Gpr, Gjc, Gir, Apr, Ajc, Air, cpr, hpr, bpr);
   if( mywork == NULL ){
@@ -508,12 +510,12 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
       Py_DECREF(c_arr); Py_DECREF(h_arr);
       if (b_arr) Py_DECREF(b_arr);
-      if (Ax_arr) Py_DECREF(Ax_arr); 
-      if (Ai_arr) Py_DECREF(Ai_arr); 
+      if (Ax_arr) Py_DECREF(Ax_arr);
+      if (Ai_arr) Py_DECREF(Ai_arr);
       if (Ap_arr) Py_DECREF(Ap_arr);
       return NULL;
   }
-  
+
   /* Set settings for ECOS. */
   if (opts_ecos.verbose >= 0)
     mywork->stgs->verbose = opts_ecos.verbose;
@@ -531,7 +533,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     mywork->stgs->reltol_inacc = opts_ecos.reltol_inacc;
   if (opts_ecos.maxit > 0)
     mywork->stgs->maxit = opts_ecos.maxit;
-  
+
   /* Solve! */
   idxint exitcode = ECOS_solve(mywork);
 
@@ -555,8 +557,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    */
   veclen[0] = p;
   PyObject *y = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->y);
-  
-  
+
+
   /* info dict */
   /* infostring */
   const char* infostring;
@@ -647,7 +649,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    */
   veclen[0] = m;
   PyObject *s = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->s);
-  
+
   /* z */
   /* matrix *z;
    * if(!(z = Matrix_New(m,1,DOUBLE)))
@@ -656,7 +658,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    */
   veclen[0] = m;
   PyObject *z = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->z);
-  
+
 
 
   /* cleanup */
@@ -671,14 +673,14 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     "info",infoDict);
   /* give up ownership to the return dictionary */
   Py_DECREF(x); Py_DECREF(y); Py_DECREF(z); Py_DECREF(s); Py_DECREF(infoDict);
-  
+
   /* no longer need pointers to arrays that held primitives */
   if(q) free(q);
   Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
   Py_DECREF(c_arr); Py_DECREF(h_arr);
   if (b_arr) Py_DECREF(b_arr);
-  if (Ax_arr) Py_DECREF(Ax_arr); 
-  if (Ai_arr) Py_DECREF(Ai_arr); 
+  if (Ax_arr) Py_DECREF(Ax_arr);
+  if (Ai_arr) Py_DECREF(Ai_arr);
   if (Ap_arr) Py_DECREF(Ap_arr);
 
   return returnDict;
@@ -716,7 +718,7 @@ static PyObject* moduleinit(void)
 #else
   m = Py_InitModule("_ecos", ECOSMethods);
 #endif
-  
+
   /*if (import_array() < 0) return NULL;  */ /* for numpy arrays */
   /*if (import_cvxopt() < 0) return NULL; */ /* for cvxopt support */
 
