@@ -2,9 +2,9 @@ init:
     - ps: "ls C:/Python*"
 
 install:
-    - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:\get-pip.py')
-    - python C:\get-pip.py
-    - C:\Python27\Scripts\pip.exe install conda
+    - ps: (new-object net.webclient).DownloadFile('Miniconda3-3.4.2-Windows-x86_64.exe', 'C:\miniconda.exe')
+    - C:\miniconda.exe
+    # - C:\Python27\Scripts\pip.exe install conda
     - C:\Python27\Scripts\conda.exe install numpy scipy
 
 build_script:
