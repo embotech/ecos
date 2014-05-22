@@ -57,7 +57,6 @@ static INLINE PyArrayObject *getContiguous(PyArrayObject *array, int typenum) {
   return new_owner;
 }
 
-
 /* The PyInt variable is a PyLong in Python3.x.
  */
 #if PY_MAJOR_VERSION >= 3
@@ -70,10 +69,75 @@ static PyObject *version(PyObject* self)
   return Py_BuildValue("s",ECOS_VERSION);
 }
 
+static int getOptFloatParam(char *key, pfloat *v, PyObject* opts){
+  *v = -1;
+  if(opts) {
+    PyObject *obj = PyDict_GetItemString(opts, key);
+    if (obj) {
+      if (PyInt_Check(obj)) {
+	if ((*v = (pfloat) PyInt_AsLong(obj)) < 0) {
+	  PySys_WriteStderr("ERROR: '%s' ought to be a nonnegative float\n",key); 
+	  return -1;
+	}
+      } else if (!PyFloat_Check(obj) || !((*v = (pfloat) PyFloat_AsDouble(obj)) >= 0)) {
+	  PySys_WriteStderr("ERROR: '%s' ought to be a nonnegative float\n", key);
+	  return -1;
+      }
+    }
+  }
+  return 0;
+}
+
+static int getOptIntParam(char *key, idxint *v, PyObject *opts){
+  if (opts) {
+    PyObject *obj = PyDict_GetItemString(opts, key);
+    if (obj) {
+      if (!PyInt_Check(obj) || !((*v = (idxint) PyInt_AsLong(obj)) > 0)) {
+	PySys_WriteStderr("Error: '%s' ought to be a nonnegative integer\n",key); 
+	return -1;
+      }
+    }
+  }
+  return 0;
+}
+
+static int getOptBoolParam(char *key, idxint *v, PyObject *opts){
+  if (opts) {
+    PyObject *obj = PyDict_GetItemString(opts, key);
+    if (obj) {
+      if (!PyBool_Check(obj) || ((*v = (idxint) PyObject_IsTrue(obj)) < 0)) {
+	PySys_WriteStderr("Error: '%s' ought to be Bool\n",key); 
+	return -1;
+      }
+    }
+  }
+  return 0;
+}
+
+static int parseOpts(settings *s, PyObject *opts){
+  if (getOptFloatParam("feastol", &(s->feastol), opts) < 0)
+    return -1;
+  if (getOptFloatParam("abstol", &(s->abstol), opts) < 0)
+    return -1;
+  if (getOptFloatParam("reltol", &(s->reltol), opts) < 0)
+    return -1;
+  if (getOptFloatParam("feastol_inacc", &(s->feastol_inacc), opts) < 0)
+    return -1;
+  if (getOptFloatParam("abstol_inacc", &(s->abstol_inacc), opts) < 0)
+    return -1;
+  if (getOptFloatParam("reltol_inacc", &(s->reltol_inacc), opts) < 0)
+    return -1;
+  if (getOptIntParam("max_iters",&(s->maxit),opts) < 0 )
+    return -1;
+  if (getOptBoolParam("verbose",&(s->verbose),opts) < 0 )
+    return -1;
+  return 0;
+}
+
 static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
 {
   /* Expects a function call
-   *     sol = csolve((m,n,p),c,Gx,Gi,Gp,h,dims,Ax,Ai,Ap,b,verbose)
+   *     sol = csolve((m,n,p),c,Gx,Gi,Gp,h,dims,Ax,Ai,Ap,b,**kwargs)
    * where
    *
    * the triple (m,n,p) corresponds to:
@@ -97,7 +161,15 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    * `Ai` is a Numpy array of ints
    * `Ap` is a Numpy array of ints
    * `b` is an optional argument, which is a Numpy array of doubles
-   * `verbose` is an optional bool signaling whether to print info
+   * `kwargs` can include the keywords
+   *     `feastol`: the tolerance on the primal and dual residual
+   *     `abstol`: the absolute tolerance on the duality gap
+   *     `reltol`: the relative tolerance on the duality gap
+   *     `feastol_inacc`: the tolerance on the primal and dual residual if reduced precisions
+   *     `abstol_inacc`: the absolute tolerance on the duality gap if reduced precision
+   *     `reltolL_inacc`: the relative tolerance on the duality gap if reduced precision
+   *     `max_iters`: the maximum numer of iterations.
+   *     `verbose`: signals to print on non zero value.
    *
    * This call will solve the problem
    *
@@ -142,7 +214,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   PyArrayObject *Ai = NULL;
   PyArrayObject *Ap = NULL;
   PyArrayObject *b = NULL;
-  PyObject *dims, *verbose = NULL;
+  PyObject *dims = NULL;
+  PyObject *opts = NULL;
   idxint n;           /* number or variables            */
   idxint m;           /* number of conic variables      */
   idxint p = 0;       /* number of equality constraints */
@@ -165,11 +238,12 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   pfloat *cpr = NULL;
   pfloat *hpr = NULL;
   pfloat *bpr = NULL;
+  settings opts_ecos = {.feastol = -1, .reltol = -1, .abstol = -1, .feastol_inacc = -1, .abstol_inacc = -1, .reltol_inacc = -1, .maxit = -1, .verbose = -1};
 
   pwork* mywork;
 
   idxint i;
-  static char *kwlist[] = {"shape", "c", "Gx", "Gi", "Gp", "h", "dims", "Ax", "Ai", "Ap", "b", "verbose", NULL};
+  static char *kwlist[] = {"shape", "c", "Gx", "Gi", "Gp", "h", "dims", "Ax", "Ai", "Ap", "b", "kwargs", NULL};
   /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
   static char *argparse_string = "(lll)O!O!O!O!O!O!|O!O!O!O!O!";
@@ -189,7 +263,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       &PyArray_Type, &Ai,
       &PyArray_Type, &Ap,
       &PyArray_Type, &b,
-      &PyBool_Type, &verbose)
+      &PyDict_Type, &opts)
     ) { return NULL; }
   
   if (m < 0) {
@@ -207,6 +281,12 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     return NULL;
   }
   
+  /* parse the opts*/
+  if(parseOpts(&opts_ecos, opts) < 0) {
+    PyErr_SetString(PyExc_TypeError,"failed to parse opts");
+    return NULL;
+  }
+
   /* get the typenum for the primitive int and double types */
   int intType = getIntType();
   int doubleType = getDoubleType();
@@ -435,9 +515,22 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   }
   
   /* Set settings for ECOS. */
-  if(verbose) {
-    mywork->stgs->verbose = (idxint) PyObject_IsTrue(verbose);
-  }
+  if (opts_ecos.verbose >= 0)
+    mywork->stgs->verbose = opts_ecos.verbose;
+  if (opts_ecos.abstol >= 0)
+    mywork->stgs->abstol = opts_ecos.abstol;
+  if (opts_ecos.feastol >= 0)
+    mywork->stgs->feastol = opts_ecos.feastol;
+  if (opts_ecos.reltol>= 0)
+    mywork->stgs->reltol = opts_ecos.reltol;
+  if (opts_ecos.abstol_inacc>= 0)
+    mywork->stgs->abstol_inacc = opts_ecos.abstol_inacc;
+  if (opts_ecos.feastol_inacc>= 0)
+    mywork->stgs->feastol_inacc = opts_ecos.feastol_inacc;
+  if (opts_ecos.reltol_inacc >= 0)
+    mywork->stgs->reltol_inacc = opts_ecos.reltol_inacc;
+  if (opts_ecos.maxit > 0)
+    mywork->stgs->maxit = opts_ecos.maxit;
   
   /* Solve! */
   idxint exitcode = ECOS_solve(mywork);
