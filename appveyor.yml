@@ -1,10 +1,12 @@
+environment:
+  matrix:
+    - ps: (new-object net.webclient).DownloadFile('http://repo.continuum.io/miniconda/Miniconda-3.4.2-Windows-x86_64.exe', 'C:\miniconda.exe')
+    - ps: (new-object net.webclient).DownloadFile('http://repo.continuum.io/miniconda/Miniconda-3.4.2-Windows-x86.exe', 'C:\miniconda.exe')
+
 init:
     - ps: "ls C:/Python*"
 
 install:
-    matrix:
-        - ps: (new-object net.webclient).DownloadFile('http://repo.continuum.io/miniconda/Miniconda-3.4.2-Windows-x86_64.exe', 'C:\miniconda.exe')
-        - ps: (new-object net.webclient).DownloadFile('http://repo.continuum.io/miniconda/Miniconda-3.4.2-Windows-x86.exe', 'C:\miniconda.exe')
     - C:\miniconda.exe
     # - C:\Python27\Scripts\pip.exe install conda
     - C:\Python27\Scripts\conda.exe install numpy scipy
