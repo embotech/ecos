@@ -1,7 +1,7 @@
 environment:
   matrix:
-    - CONDA_URL:http://repo.continuum.io/miniconda/Miniconda-3.4.2-Windows-x86_64.exe
-    - CONDA_URL:http://repo.continuum.io/miniconda/Miniconda-3.4.2-Windows-x86.exe
+    - CONDA_URL: "http://repo.continuum.io/miniconda/Miniconda-3.4.2-Windows-x86_64.exe"
+    - CONDA_URL: "http://repo.continuum.io/miniconda/Miniconda-3.4.2-Windows-x86.exe"
 
 init:
     - ps: "ls C:/Python*"
