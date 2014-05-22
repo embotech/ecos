@@ -1,2 +1,7 @@
+init:
+    ps: "ls C:/Python*"
+
 install:
-    cd python; python setup.py install
+    ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:\get-pip.py')
+    - cd python
+    - python setup.py install
