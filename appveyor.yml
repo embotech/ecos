@@ -4,7 +4,7 @@ init:
 install:
     - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:\get-pip.py')
     - python C:\get-pip.py
-    - pip install numpy scipy
+    - C:\Python27\Scripts\pip.exe install numpy scipy
 
 build_script:
     - cd python
