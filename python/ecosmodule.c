@@ -69,69 +69,20 @@ static PyObject *version(PyObject* self)
   return Py_BuildValue("s",ECOS_VERSION);
 }
 
-static int getOptFloatParam(char *key, pfloat *v, PyObject* opts){
-  *v = -1;
-  if(opts) {
-    PyObject *obj = PyDict_GetItemString(opts, key);
-    if (obj) {
-      if ((PyInt_Check(obj) && (*v = (pfloat) PyInt_AsLong(obj)) < 0) ||
-          (PyLong_Check(obj) && (*v = (pfloat) PyLong_AsLong(obj)) < 0)) {
-          PySys_WriteStderr("ERROR: '%s' ought to be a nonnegative float\n",key);
-          return -1;
-      } else if (!PyFloat_Check(obj) || !((*v = (pfloat) PyFloat_AsDouble(obj)) >= 0)) {
-          PySys_WriteStderr("ERROR: '%s' ought to be a nonnegative float\n", key);
-          return -1;
-      }
-    }
-  }
-  return 0;
-}
-
-static int getOptIntParam(char *key, idxint *v, PyObject *opts){
-  if (opts) {
-    PyObject *obj = PyDict_GetItemString(opts, key);
-    if (obj) {
-      if ((!PyInt_Check(obj) || !(*v = (idxint) PyInt_AsLong(obj)) > 0) &&
-          (!PyLong_Check(obj) || !(*v = (idxint) PyLong_AsLong(obj)) > 0)) {
-        PySys_WriteStderr("Error: '%s' ought to be a nonnegative integer\n",key);
+static int checkPositiveInt(const char *key, idxint val) {
+    if (val < 0) {
+        PyErr_Format(PyExc_ValueError, "'%s' must be a positive integer", key);
         return -1;
-      }
     }
-  }
-  return 0;
+    return 0;
 }
 
-static int getOptBoolParam(char *key, idxint *v, PyObject *opts){
-  if (opts) {
-    PyObject *obj = PyDict_GetItemString(opts, key);
-    if (obj) {
-      if (!PyBool_Check(obj) || ((*v = (idxint) PyObject_IsTrue(obj)) < 0)) {
-        PySys_WriteStderr("Error: '%s' ought to be Bool\n",key);
+static int checkPositiveFloat(const char *key, pfloat val) {
+    if (val < 0) {
+        PyErr_Format(PyExc_ValueError, "'%s' must be a positive float", key);
         return -1;
-      }
     }
-  }
-  return 0;
-}
-
-static int parseOpts(settings *s, PyObject *opts){
-  if (getOptFloatParam("feastol", &(s->feastol), opts) < 0)
-    return -1;
-  if (getOptFloatParam("abstol", &(s->abstol), opts) < 0)
-    return -1;
-  if (getOptFloatParam("reltol", &(s->reltol), opts) < 0)
-    return -1;
-  if (getOptFloatParam("feastol_inacc", &(s->feastol_inacc), opts) < 0)
-    return -1;
-  if (getOptFloatParam("abstol_inacc", &(s->abstol_inacc), opts) < 0)
-    return -1;
-  if (getOptFloatParam("reltol_inacc", &(s->reltol_inacc), opts) < 0)
-    return -1;
-  if (getOptIntParam("max_iters",&(s->maxit),opts) < 0 )
-    return -1;
-  if (getOptBoolParam("verbose",&(s->verbose),opts) < 0 )
-    return -1;
-  return 0;
+    return 0;
 }
 
 static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
@@ -161,7 +112,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    * `Ai` is a Numpy array of ints
    * `Ap` is a Numpy array of ints
    * `b` is an optional argument, which is a Numpy array of doubles
-   * `kwargs` can include the keywords
+   * other optional arguments are:
    *     `feastol`: the tolerance on the primal and dual residual
    *     `abstol`: the absolute tolerance on the duality gap
    *     `reltol`: the relative tolerance on the duality gap
@@ -215,7 +166,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   PyArrayObject *Ap = NULL;
   PyArrayObject *b = NULL;
   PyObject *dims = NULL;
-  PyObject *opts = NULL;
+  PyObject *verbose = NULL;
   idxint n;           /* number or variables            */
   idxint m;           /* number of conic variables      */
   idxint p = 0;       /* number of equality constraints */
@@ -238,17 +189,33 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   pfloat *cpr = NULL;
   pfloat *hpr = NULL;
   pfloat *bpr = NULL;
-  settings opts_ecos = {.feastol = -1, .reltol = -1, .abstol = -1, .feastol_inacc = -1, .abstol_inacc = -1, .reltol_inacc = -1, .maxit = -1, .verbose = -1};
+  /* ECHU: is the following ANSI C? will it compile on windows? */
+  /* Default ECOS settings */
+  settings opts_ecos = {
+      .feastol = FEASTOL,
+      .reltol = RELTOL,
+      .abstol = ABSTOL,
+      .feastol_inacc = FTOL_INACC,
+      .abstol_inacc = ATOL_INACC,
+      .reltol_inacc = RTOL_INACC,
+      .maxit = MAXIT,
+      .verbose = VERBOSE
+  };
 
   pwork* mywork;
 
   idxint i;
-  static char *kwlist[] = {"shape", "c", "Gx", "Gi", "Gp", "h", "dims", "Ax", "Ai", "Ap", "b", "kwargs", NULL};
+  static char *kwlist[] = {"shape", "c", "Gx", "Gi", "Gp", "h", "dims",
+      "Ax", "Ai", "Ap", "b",
+      "verbose", "feastol", "abstol", "reltol",
+      "feastol_inacc", "abstol_inacc", "reltol_inacc",
+      "max_iters", NULL};
+
   /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
-  static char *argparse_string = "(lll)O!O!O!O!O!O!|O!O!O!O!O!";
+  static char *argparse_string = "(lll)O!O!O!O!O!O!|O!O!O!O!O!ddddddl";
 #else
-  static char *argparse_string = "(iii)O!O!O!O!O!O!|O!O!O!O!O!";
+  static char *argparse_string = "(iii)O!O!O!O!O!O!|O!O!O!O!O!ddddddi";
 #endif
 
   if( !PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist,
@@ -263,29 +230,30 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       &PyArray_Type, &Ai,
       &PyArray_Type, &Ap,
       &PyArray_Type, &b,
-      &PyDict_Type, &opts)
+      &PyBool_Type, &verbose,
+      &opts_ecos.feastol,
+      &opts_ecos.abstol,
+      &opts_ecos.reltol,
+      &opts_ecos.feastol_inacc,
+      &opts_ecos.abstol_inacc,
+      &opts_ecos.reltol_inacc,
+      &opts_ecos.maxit)
     ) { return NULL; }
 
-  if (m < 0) {
-    PyErr_SetString(PyExc_ValueError, "m must be a positive integer");
-    return NULL;
-  }
+  if (checkPositiveInt("m", m) < 0) return NULL;
+  if (checkPositiveInt("n", n) < 0) return NULL;
+  if (checkPositiveInt("p", p) < 0) return NULL;
 
-  if (n < 0) {
-    PyErr_SetString(PyExc_ValueError, "n must be a positive integer");
-    return NULL;
-  }
-
-  if (p < 0) {
-    PyErr_SetString(PyExc_ValueError, "p must be a positive integer");
-    return NULL;
-  }
-
-  /* parse the opts*/
-  if(parseOpts(&opts_ecos, opts) < 0) {
-    PyErr_SetString(PyExc_TypeError,"failed to parse opts");
-    return NULL;
-  }
+  /* check the opts*/
+  if (verbose)
+      opts_ecos.verbose = (idxint) PyObject_IsTrue(verbose);
+  if (checkPositiveInt("maxit", opts_ecos.maxit) < 0) return NULL;
+  if (checkPositiveFloat("abstol", opts_ecos.abstol) < 0) return NULL;
+  if (checkPositiveFloat("feastol", opts_ecos.feastol) < 0) return NULL;
+  if (checkPositiveFloat("reltol", opts_ecos.reltol) < 0) return NULL;
+  if (checkPositiveFloat("abstol_inacc", opts_ecos.abstol_inacc) < 0) return NULL;
+  if (checkPositiveFloat("feastol_inacc", opts_ecos.feastol_inacc) < 0) return NULL;
+  if (checkPositiveFloat("reltol_inacc", opts_ecos.reltol_inacc) < 0) return NULL;
 
   /* get the typenum for the primitive int and double types */
   int intType = getIntType();
@@ -517,22 +485,14 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   }
 
   /* Set settings for ECOS. */
-  if (opts_ecos.verbose >= 0)
-    mywork->stgs->verbose = opts_ecos.verbose;
-  if (opts_ecos.abstol >= 0)
-    mywork->stgs->abstol = opts_ecos.abstol;
-  if (opts_ecos.feastol >= 0)
-    mywork->stgs->feastol = opts_ecos.feastol;
-  if (opts_ecos.reltol>= 0)
-    mywork->stgs->reltol = opts_ecos.reltol;
-  if (opts_ecos.abstol_inacc>= 0)
-    mywork->stgs->abstol_inacc = opts_ecos.abstol_inacc;
-  if (opts_ecos.feastol_inacc>= 0)
-    mywork->stgs->feastol_inacc = opts_ecos.feastol_inacc;
-  if (opts_ecos.reltol_inacc >= 0)
-    mywork->stgs->reltol_inacc = opts_ecos.reltol_inacc;
-  if (opts_ecos.maxit > 0)
-    mywork->stgs->maxit = opts_ecos.maxit;
+  mywork->stgs->verbose = opts_ecos.verbose;
+  mywork->stgs->abstol = opts_ecos.abstol;
+  mywork->stgs->feastol = opts_ecos.feastol;
+  mywork->stgs->reltol = opts_ecos.reltol;
+  mywork->stgs->abstol_inacc = opts_ecos.abstol_inacc;
+  mywork->stgs->feastol_inacc = opts_ecos.feastol_inacc;
+  mywork->stgs->reltol_inacc = opts_ecos.reltol_inacc;
+  mywork->stgs->maxit = opts_ecos.maxit;
 
   /* Solve! */
   idxint exitcode = ECOS_solve(mywork);

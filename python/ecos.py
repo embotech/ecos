@@ -53,6 +53,6 @@ def solve(c,G,h,dims,A=None,b=None, **kwargs):
 
     if A is None:
         if b is not None: raise TypeError("A and b must be supplied together")
-        return _ecos.csolve((m,n1,p), c, data, indices, colptr, h, dims, kwargs=kwargs)
+        return _ecos.csolve((m,n1,p), c, data, indices, colptr, h, dims, **kwargs)
     else:
-        return _ecos.csolve((m,n1,p), c, data, indices, colptr, h, dims, A.data, A.indices, A.indptr, b, kwargs)
+        return _ecos.csolve((m,n1,p), c, data, indices, colptr, h, dims, A.data, A.indices, A.indptr, b, **kwargs)
