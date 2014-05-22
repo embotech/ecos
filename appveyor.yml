@@ -1,13 +1,15 @@
 environment:
   matrix:
-    - CONDA_URL: "http://repo.continuum.io/miniconda/Miniconda-3.4.2-Windows-x86_64.exe"
-    - CONDA_URL: "http://repo.continuum.io/miniconda/Miniconda-3.4.2-Windows-x86.exe"
+    - platform: x64
+      CONDA_URL: "http://repo.continuum.io/miniconda/Miniconda-3.4.2-Windows-x86_64.exe"
+    - platform: x86
+      CONDA_URL: "http://repo.continuum.io/miniconda/Miniconda-3.4.2-Windows-x86.exe"
 
 init:
     - ps: "ls C:/Python*"
 
 install:
-    - ps: (new-object net.webclient).DownloadFile($CONDA_URL, 'C:\miniconda.exe')
+    - ps: (new-object net.webclient).DownloadFile($env:CONDA_URL, 'C:\miniconda.exe')
     - C:\miniconda.exe
     # - C:\Python27\Scripts\pip.exe install conda
     - C:\Python27\Scripts\conda.exe install numpy scipy
