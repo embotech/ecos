@@ -189,18 +189,9 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   pfloat *cpr = NULL;
   pfloat *hpr = NULL;
   pfloat *bpr = NULL;
-  /* ECHU: is the following ANSI C? will it compile on windows? */
+
   /* Default ECOS settings */
-  settings opts_ecos = {
-      .feastol = FEASTOL,
-      .reltol = RELTOL,
-      .abstol = ABSTOL,
-      .feastol_inacc = FTOL_INACC,
-      .abstol_inacc = ATOL_INACC,
-      .reltol_inacc = RTOL_INACC,
-      .maxit = MAXIT,
-      .verbose = VERBOSE
-  };
+  settings opts_ecos;
 
   pwork* mywork;
 
@@ -217,6 +208,16 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
 #else
   static char *argparse_string = "(iii)O!O!O!O!O!O!|O!O!O!O!O!ddddddi";
 #endif
+
+  /* Default ECOS settings */
+  opts_ecos.feastol = FEASTOL;
+  opts_ecos.reltol = RELTOL;
+  opts_ecos.abstol = ABSTOL;
+  opts_ecos.feastol_inacc = FTOL_INACC;
+  opts_ecos.abstol_inacc = ATOL_INACC;
+  opts_ecos.reltol_inacc = RTOL_INACC;
+  opts_ecos.maxit = MAXIT;
+  opts_ecos.verbose = VERBOSE;
 
   if( !PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist,
       &m, &n, &p,
