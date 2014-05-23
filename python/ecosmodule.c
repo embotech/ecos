@@ -1,7 +1,9 @@
+/* Check that we are clean against numpy 1.7 */
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
 #include <Python.h>
 #include "ecos.h"
 #include "numpy/arrayobject.h"
-
 /*
  * Define INLINE for MSVC compatibility.
  */
