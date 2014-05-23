@@ -6,12 +6,11 @@ environment:
         - platform: x86
 init:
     - "ECHO %VS90COMNTOOLS%"
-    - "type C:\Python27\Lib\distutils\msvc9compiler.py"
 
 install:
     - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:\get-pip.py')
     - python C:\get-pip.py
-    - C:\Python27\Scripts\pip.exe install conda
+    - set VS90COMNTOOLS=%VS100COMNTOOLS% C:\Python27\Scripts\pip.exe install conda
     - C:\Python27\Scripts\conda.exe init
     - C:\Python27\Scripts\conda.exe create -n build --yes --quiet python=2.7 numpy scipy nose
 
