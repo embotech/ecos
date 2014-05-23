@@ -6,6 +6,7 @@ environment:
         - platform: x86
 init:
     - "ECHO %VS90COMNTOOLS%"
+    - "type C:\Python27\Lib\distutils\msvc9compiler.py"
 
 install:
     - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:\get-pip.py')
