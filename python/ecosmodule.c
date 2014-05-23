@@ -160,6 +160,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    * spmatrix *G, *A = NULL;
    */
 
+  /* BEGIN VARIABLE DECLARATIONS */
   PyArrayObject *Gx, *Gi, *Gp, *c, *h;
   PyArrayObject *Ax = NULL;
   PyArrayObject *Ai = NULL;
@@ -220,6 +221,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   PyArrayObject *b_arr = NULL;
 
   idxint exitcode, numerr = 0;
+  npy_intp veclen[1];
   PyObject *x, *y, *z, *s;
   const char* infostring;
   PyObject *infoDict, *tinfos;
@@ -519,7 +521,6 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    *   return PyErr_NoMemory();
    * memcpy(MAT_BUFD(x), mywork->x, n*sizeof(double));
    */
-  npy_intp veclen[1];
   veclen[0] = n;
   x = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->x);
 
