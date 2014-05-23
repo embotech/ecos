@@ -1,13 +1,13 @@
 environment:
     # trick environment into thinking it has vcvarsall.bat
-    #VS90COMNTOOLS: "%VS120COMNTOOLS%"
+    VS90COMNTOOLS: "%VS100COMNTOOLS%"
     matrix:
         - platform: x64
         - platform: x86
+init:
+    - "ECHO %VS90COMNTOOLS%"
 
 install:
-    # Get visual studio 2008 for Python 2.7 compatibility
-    - cinst vcredist2008
     - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:\get-pip.py')
     - python C:\get-pip.py
     - C:\Python27\Scripts\pip.exe install conda
