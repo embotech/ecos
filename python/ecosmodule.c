@@ -28,7 +28,7 @@
 
 /* ECHU: Note, Python3.x may require special handling for the int and double
  * types. */
-static INLINE int getIntType() {
+static INLINE int getIntType(void) {
   switch(sizeof(idxint)) {
     case 1: return NPY_INT8;
     case 2: return NPY_INT16;
@@ -38,7 +38,7 @@ static INLINE int getIntType() {
   }
 }
 
-static INLINE int getDoubleType() {
+static INLINE int getDoubleType(void) {
   /* ECHU: known bug, if pfloat isn't "double", will cause aliasing in memory */
   return NPY_DOUBLE;
 }

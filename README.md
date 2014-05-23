@@ -1,9 +1,8 @@
 Embedded Conic Solver (ECOS)
 ====
 
-** REMEMBER TO CHANGE THE URLs BELOW **
-[![Linux Build Status](https://travis-ci.org/echu/ecos.svg?branch=master)](https://travis-ci.org/echu/ecos)
-[![Windows Build status](https://ci.appveyor.com/api/projects/status/yw8hjl3opu5ruhsd)](https://ci.appveyor.com/project/echu/ecos-849)
+[![Build Status](https://travis-ci.org/ifa-ethz/ecos.svg?branch=master)](https://travis-ci.org/ifa-ethz/ecos)
+[![Build status](https://ci.appveyor.com/api/projects/status/689y0hsljr7i1vbp)](https://ci.appveyor.com/project/echu/ecos)
 
 ECOS is a numerical software for solving convex second-order cone programs (SOCPs) of type
 ```
@@ -276,6 +275,17 @@ cd <ecos-directory>/python
 python setup.py install
 ```
 You may need `sudo` privileges for a global installation.
+
+### Windows installation
+Windows users may experience some extreme pain when installing ECOS for
+Python 2.7. We suggest switching to Linux or Mac OSX. If you must use
+Windows, you will need to install
+[Microsoft Visual Studio Express 2008](go.microsoft.com/?linkid=7729279),
+since *Python 2.7* is built against the 2008 compiler.
+
+If using a newer version of Python, you can use a newer version of
+Visual Studio. For instance, Python 3.3 is built against [Visual Studio
+2010](http://go.microsoft.com/?linkid=9709949).
 
 Calling ECOS from Python
 ----
