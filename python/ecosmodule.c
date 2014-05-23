@@ -201,6 +201,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       "verbose", "feastol", "abstol", "reltol",
       "feastol_inacc", "abstol_inacc", "reltol_inacc",
       "max_iters", NULL};
+  int intType, doubleType;
 
   /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
@@ -208,6 +209,22 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
 #else
   static char *argparse_string = "(iii)O!O!O!O!O!O!|O!O!O!O!O!ddddddi";
 #endif
+  PyArrayObject *Gx_arr, *Gi_arr, *Gp_arr;
+  PyArrayObject *c_arr;
+  PyArrayObject *h_arr;
+  PyObject *linearObj;
+  PyObject *socObj;
+  PyArrayObject *Ax_arr = NULL;
+  PyArrayObject *Ai_arr = NULL;
+  PyArrayObject *Ap_arr = NULL;
+  PyArrayObject *b_arr = NULL;
+
+  idxint exitcode, numerr = 0;
+  PyObject *x, *y, *z, *s;
+  const char* infostring;
+  PyObject *infoDict, *tinfos;
+  PyObject *returnDict = NULL;
+  /* END VARIABLE DECLARATIONS */
 
   /* Default ECOS settings */
   opts_ecos.feastol = FEASTOL;
@@ -257,8 +274,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   if (checkPositiveFloat("reltol_inacc", opts_ecos.reltol_inacc) < 0) return NULL;
 
   /* get the typenum for the primitive int and double types */
-  int intType = getIntType();
-  int doubleType = getDoubleType();
+  intType = getIntType();
+  doubleType = getDoubleType();
 
   /* set G */
   if( !PyArray_ISFLOAT(Gx) || PyArray_NDIM(Gx) != 1) {
@@ -273,9 +290,9 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     PyErr_SetString(PyExc_TypeError, "Gp must be a numpy array of ints");
     return NULL;
   }
-  PyArrayObject *Gx_arr = getContiguous(Gx, doubleType);
-  PyArrayObject *Gi_arr = getContiguous(Gi, intType);
-  PyArrayObject *Gp_arr = getContiguous(Gp, intType);
+  Gx_arr = getContiguous(Gx, doubleType);
+  Gi_arr = getContiguous(Gi, intType);
+  Gp_arr = getContiguous(Gp, intType);
   Gpr = (pfloat *) PyArray_DATA(Gx_arr);
   Gir = (idxint *) PyArray_DATA(Gi_arr);
   Gjc = (idxint *) PyArray_DATA(Gp_arr);
@@ -292,7 +309,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
       return NULL;
   }
-  PyArrayObject *c_arr = getContiguous(c, doubleType);
+  c_arr = getContiguous(c, doubleType);
   cpr = (pfloat *) PyArray_DATA(c_arr);
 
   /* set h */
@@ -310,11 +327,11 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       Py_DECREF(c_arr);
       return NULL;
   }
-  PyArrayObject *h_arr = getContiguous(h, doubleType);
+  h_arr = getContiguous(h, doubleType);
   hpr = (pfloat *) PyArray_DATA(h_arr);
 
   /* get dims['l'] */
-  PyObject *linearObj = PyDict_GetItemString(dims, "l");
+  linearObj = PyDict_GetItemString(dims, "l");
   if(linearObj) {
     if ( (PyInt_Check(linearObj) && ((l = (idxint) PyInt_AsLong(linearObj)) >= 0)) ||
          (PyLong_Check(linearObj) && ((l = PyLong_AsLong(linearObj)) >= 0)) ){
@@ -328,7 +345,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   }
 
   /* get dims['q'] */
-  PyObject *socObj = PyDict_GetItemString(dims, "q");
+  socObj = PyDict_GetItemString(dims, "q");
   if(socObj) {
     if (PyList_Check(socObj)) {
       ncones = PyList_Size(socObj);
@@ -354,10 +371,6 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     }
   }
 
-  PyArrayObject *Ax_arr = NULL;
-  PyArrayObject *Ai_arr = NULL;
-  PyArrayObject *Ap_arr = NULL;
-  PyArrayObject *b_arr = NULL;
   if(Ax && Ai && Ap && b) {
     /* set A */
     if( !PyArray_ISFLOAT(Ax) || PyArray_NDIM(Ax) != 1 ) {
@@ -496,7 +509,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   mywork->stgs->maxit = opts_ecos.maxit;
 
   /* Solve! */
-  idxint exitcode = ECOS_solve(mywork);
+  exitcode = ECOS_solve(mywork);
 
   /* create output (all data is *deep copied*) */
   /* TODO: request CVXOPT API for constructing from existing pointer */
@@ -508,7 +521,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    */
   npy_intp veclen[1];
   veclen[0] = n;
-  PyObject *x = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->x);
+  x = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->x);
 
   /* y */
   /* matrix *y;
@@ -517,12 +530,10 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    * memcpy(MAT_BUFD(y), mywork->y, p*sizeof(double));
    */
   veclen[0] = p;
-  PyObject *y = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->y);
-
+  y = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->y);
 
   /* info dict */
   /* infostring */
-  const char* infostring;
   switch( exitcode ){
       case ECOS_OPTIMAL:
           infostring = "Optimal solution found";
@@ -547,14 +558,13 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   }
 
   /* numerical errors */
-  idxint numerr = 0;
   if( (exitcode == ECOS_NUMERICS) || (exitcode == ECOS_OUTCONE) || (exitcode == ECOS_FATAL) ){
       numerr = 1;
   }
 
   /* timings */
 #if PROFILING > 0
-	PyObject *tinfos = Py_BuildValue(
+	tinfos = Py_BuildValue(
 #if PROFILING > 1
     "{s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d}",
 #else
@@ -572,7 +582,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     "tsolve",(double)mywork->info->tsolve);
 #endif
 
-  PyObject *infoDict = Py_BuildValue(
+  infoDict = Py_BuildValue(
 #if PROFILING > 0
     "{s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:l,s:s,s:O,s:l}",
 #else
@@ -609,7 +619,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    * memcpy(MAT_BUFD(s), mywork->s, m*sizeof(double));
    */
   veclen[0] = m;
-  PyObject *s = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->s);
+  s = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->s);
 
   /* z */
   /* matrix *z;
@@ -618,14 +628,12 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    * memcpy(MAT_BUFD(z), mywork->z, m*sizeof(double));
    */
   veclen[0] = m;
-  PyObject *z = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->z);
-
-
+  z = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->z);
 
   /* cleanup */
   ECOS_cleanup(mywork, 4);
 
-  PyObject *returnDict = Py_BuildValue(
+  returnDict = Py_BuildValue(
     "{s:O,s:O,s:O,s:O,s:O}",
     "x",x,
     "y",y,
