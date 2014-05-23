@@ -1,12 +1,15 @@
 environment:
     # trick environment into thinking it has vcvarsall.bat
-    VS90COMNTOOLS: %VS120COMNTOOLS%
+    VS90COMNTOOLS: "%VS120COMNTOOLS%"
     matrix:
         - platform: x64
         - platform: x86
 
 init:
     - ps: "ls C:/Python*"
+    - "ECHO %VS120COMNTOOLS%"
+    - "ECHO %VS110COMNTOOLS%"
+    - "ECHO %VS100COMNTOOLS%"
 
 install:
     - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:\get-pip.py')
