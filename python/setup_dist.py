@@ -25,7 +25,7 @@ _ecos = Extension('_ecos', libraries = lib,
 
 
 setup(  name = 'ecos',
-        version = '1.0.3',
+        version = '1.0.4',
         author = 'Alex Domahidi, Eric Chu',
         author_email = 'domahidi@control.ee.ethz.ch, echu@cs.stanford.edu',
         url = 'http://github.com/ifa-ethz/ecos',

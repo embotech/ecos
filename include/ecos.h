@@ -32,7 +32,7 @@
 
 
 /* ECOS VERSION NUMBER - FORMAT: X.Y.Z --------------------------------- */
-#define ECOS_VERSION ("1.0.3")
+#define ECOS_VERSION ("1.0.4")
 
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
