@@ -5,14 +5,9 @@ environment:
         - platform: x64
         - platform: x86
 
-init:
-    - ps: "ls C:/Python*"
-    - "ECHO %VS90COMNTOOLS%"
-    - "ECHO %VS120COMNTOOLS%"
-    - "ECHO %VS110COMNTOOLS%"
-    - "ECHO %VS100COMNTOOLS%"
-
 install:
+    # Get visual studio 2008 for Python 2.7 compatibility
+    - cinst vcredist2008
     - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:\get-pip.py')
     - python C:\get-pip.py
     - C:\Python27\Scripts\pip.exe install conda
