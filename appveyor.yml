@@ -11,8 +11,8 @@ platform:
 
 install:
     - ps: (new-object net.webclient).DownloadFile('http://go.microsoft.com/?linkid=7729279', 'C:\msvc2008.exe')
-    - C:\msvc2008.exe /V
-    #- C:\msvc2008.exe /quiet /qn /norestart /log "C:\install.log"
+    - C:\msvc2008.exe /?
+    - C:\msvc2008.exe /quiet /qn /norestart /log "C:\install.log"
     #- ps: msiexec /i C:\msvc2008.exe /quiet /qn /norestart /log install.log
     - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:\get-pip.py')
     - ps: "ls C:/*"
