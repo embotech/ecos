@@ -278,8 +278,14 @@ You may need `sudo` privileges for a global installation.
 
 ### Windows installation
 Windows users may experience some extreme pain when installing ECOS for
-Python 2.7. We suggest switching to Linux or Mac OSX. If you must use
-Windows, you will need to install
+Python 2.7. We suggest switching to Linux or Mac OSX.
+
+If you must use (or insist on using) Windows, we suggest using
+the [Miniconda](http://repo.continuum.io/miniconda/)
+distribution to minimize this pain.
+
+If during the installation process, you see the error message
+`Unable to find vcvarsall.bat`, you will need to install
 [Microsoft Visual Studio Express 2008](go.microsoft.com/?linkid=7729279),
 since *Python 2.7* is built against the 2008 compiler.
 
