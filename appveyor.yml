@@ -1,7 +1,9 @@
 environment:
-  matrix:
-    - platform: x64
-    - platform: x86
+    # trick environment into thinking it has vcvarsall.bat
+    VS90COMNTOOLS: %VS120COMNTOOLS%
+    matrix:
+        - platform: x64
+        - platform: x86
 
 init:
     - ps: "ls C:/Python*"
