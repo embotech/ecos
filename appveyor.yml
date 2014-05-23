@@ -13,7 +13,7 @@ install:
     - ps: (new-object net.webclient).DownloadFile('http://go.microsoft.com/?linkid=7729279', 'C:\msvc2008.exe')
     - ps: msiexec /i C:\msvc2008.exe /quiet /qn /norestart /log install.log
     - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:\get-pip.py')
-    - ps: "ls C:\*"
+    - ps: "ls C:/*"
     - python C:\get-pip.py
     - C:\Python27\Scripts\pip.exe install conda
     - C:\Python27\Scripts\conda.exe init
