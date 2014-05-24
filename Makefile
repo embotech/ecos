@@ -2,19 +2,19 @@
 # Configuration of make process in ecos.mk
 
 include ecos.mk
-C = $(CC) $(CFLAGS) -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config 
-TEST_INCLUDES = -Itest -Itest/quadratic
+C = $(CC) $(CFLAGS) -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config
+TEST_INCLUDES = -Itest -Itest/generated_tests
 
 # Compile all C code, including the C-callable routine
-all: ldl amd ecos demo	
+all: ldl amd ecos demo
 
 # build Tim Davis' sparse LDL package
-ldl: 
+ldl:
 	( cd external/ldl    ; $(MAKE) )
 	$(AR) -x external/ldl/libldl.a
-	
+
 # build Tim Davis' AMD package
-amd: 
+amd:
 	( cd external/amd    ; $(MAKE) )
 	$(AR) -x external/amd/libamd.a
 
@@ -48,29 +48,35 @@ equil.o: src/equil.c include/equil.h
 	$(C) -c src/equil.c -o equil.o
 
 # ECOS demo
-demo: ldl amd ecos src/runecos.c 
+demo: ldl amd ecos src/runecos.c
 	$(C) -o runecos src/runecos.c libecos.a $(LIBS)
 	echo ECOS successfully built. Type ./runecos to run demo problem.
-	
+
 # ECOS tester
-QUADRATIC_TEST_OBJS = qcml_utils.o norm.o sq_norm.o sum_sq.o quad_over_lin.o
-test: ldl amd ecos test/ecostester.c $(QUADRATIC_TEST_OBJS)
-	$(C) $(TEST_INCLUDES) -o ecostester test/ecostester.c libecos.a $(LIBS) $(QUADRATIC_TEST_OBJS)
+TEST_OBJS = qcml_utils.o norm.o sq_norm.o sum_sq.o quad_over_lin.o inv_pos.o sqrt.o
+test: ldl amd ecos test/ecostester.c $(TEST_OBJS)
+	$(C) $(TEST_INCLUDES) -o ecostester test/ecostester.c libecos.a $(LIBS) $(TEST_OBJS)
 
-qcml_utils.o: test/quadratic/qcml_utils.c test/quadratic/qcml_utils.h
-	$(C) $(TEST_INCLUDES) -c test/quadratic/qcml_utils.c -o $@
+qcml_utils.o: test/generated_tests/qcml_utils.c test/generated_tests/qcml_utils.h
+	$(C) $(TEST_INCLUDES) -c test/generated_tests/qcml_utils.c -o $@
 
-norm.o: test/quadratic/norm/norm.c test/quadratic/norm/norm.h
-	$(C) $(TEST_INCLUDES) -c test/quadratic/norm/norm.c -o $@
+norm.o: test/generated_tests/norm/norm.c test/generated_tests/norm/norm.h
+	$(C) $(TEST_INCLUDES) -c test/generated_tests/norm/norm.c -o $@
 
-quad_over_lin.o: test/quadratic/quad_over_lin/quad_over_lin.c test/quadratic/quad_over_lin/quad_over_lin.h
-	$(C) $(TEST_INCLUDES) -c test/quadratic/quad_over_lin/quad_over_lin.c -o $@
+quad_over_lin.o: test/generated_tests/quad_over_lin/quad_over_lin.c test/generated_tests/quad_over_lin/quad_over_lin.h
+	$(C) $(TEST_INCLUDES) -c test/generated_tests/quad_over_lin/quad_over_lin.c -o $@
 
-sq_norm.o: test/quadratic/sq_norm/sq_norm.c test/quadratic/sq_norm/sq_norm.h
-	$(C) $(TEST_INCLUDES) -c test/quadratic/sq_norm/sq_norm.c -o $@
+sq_norm.o: test/generated_tests/sq_norm/sq_norm.c test/generated_tests/sq_norm/sq_norm.h
+	$(C) $(TEST_INCLUDES) -c test/generated_tests/sq_norm/sq_norm.c -o $@
 
-sum_sq.o: test/quadratic/sum_sq/sum_sq.c test/quadratic/sum_sq/sum_sq.h
-	$(C) $(TEST_INCLUDES) -c test/quadratic/sum_sq/sum_sq.c -o $@
+sum_sq.o: test/generated_tests/sum_sq/sum_sq.c test/generated_tests/sum_sq/sum_sq.h
+	$(C) $(TEST_INCLUDES) -c test/generated_tests/sum_sq/sum_sq.c -o $@
+
+inv_pos.o: test/generated_tests/inv_pos/inv_pos.c test/generated_tests/inv_pos/inv_pos.h
+	$(C) $(TEST_INCLUDES) -c test/generated_tests/inv_pos/inv_pos.c -o $@
+
+sqrt.o: test/generated_tests/sqrt/sqrt.c test/generated_tests/sqrt/sqrt.h
+	$(C) $(TEST_INCLUDES) -c test/generated_tests/sqrt/sqrt.c -o $@
 
 # remove object files, but keep the compiled programs and library archives
 clean:
@@ -81,6 +87,5 @@ clean:
 # clean, and then remove compiled programs and library archives
 purge: clean
 	( cd external/ldl    ; $(MAKE) purge )
-	( cd external/amd    ; $(MAKE) purge )	
+	( cd external/amd    ; $(MAKE) purge )
 	- $(RM) libecos.a runecos
-

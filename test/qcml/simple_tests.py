@@ -4,22 +4,27 @@ from qcml import QCML
 
 if __name__ == '__main__':
     test_problems = [
-    (""" variable x(3)
+    ("""variable x(3)
         minimize norm(x)
         x >= 0""", "norm"),
-    (""" variable x(3)
+    ("""variable x(3)
         minimize quad_over_lin(x,1)
         x >= 0""", "quad_over_lin"),
-    (""" variable x(3)
+    ("""variable x(3)
         minimize square(norm(x))
         x >= 0""", "sq_norm"),
-    (""" variable x(3)
+    ("""variable x(3)
         minimize sum(square(x))
-        x >= 0""", "sum_sq")
-    ]    
+        x >= 0""", "sum_sq"),
+    ("""variable x
+        minimize inv_pos(x)""", "inv_pos"),
+    ("""variable x
+        maximize sqrt(x)""", "sqrt")
+    ]
 
-    p = QCML()
+    p = QCML(debug=True)
     def solve(s):
+        print s[1]
         p.parse(s[0])
         p.canonicalize()
         p.codegen("C")
@@ -30,5 +35,3 @@ if __name__ == '__main__':
         # return sol
 
     print map(solve, test_problems)
-
-

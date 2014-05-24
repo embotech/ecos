@@ -1,13 +1,16 @@
 Embedded Conic Solver (ECOS)
 ====
 
+[![Build Status](https://travis-ci.org/ifa-ethz/ecos.svg?branch=master)](https://travis-ci.org/ifa-ethz/ecos)
+[![Build status](https://ci.appveyor.com/api/projects/status/689y0hsljr7i1vbp)](https://ci.appveyor.com/project/echu/ecos)
+
 ECOS is a numerical software for solving convex second-order cone programs (SOCPs) of type
 ```
-min  c'*x 
+min  c'*x
 s.t. A*x = b
      G*x <=_K h
 ```
-where the last inequality is generalized, i.e. `h - G*x` belongs to the cone `K`. 
+where the last inequality is generalized, i.e. `h - G*x` belongs to the cone `K`.
 ECOS supports the positive orthant `R_+` and second-order cones `Q_n` defined as
 ```
 Q_n = { (t,x) | t >= || x ||_2 } 
@@ -20,23 +23,23 @@ K = R_+ x Q_n1 x ... x Q_nN
 
 Features of ECOS
 ----
- 
-+ *ECOS runs on embedded platforms*. Written in ANSI C (except for the timing code), 
+
++ *ECOS runs on embedded platforms*. Written in ANSI C (except for the timing code),
   it can be compiled for any platform for which a C compiler is available. Excluding the problem setup
-  part, no memory manager is needed for solving problem instances of same structure. 
+  part, no memory manager is needed for solving problem instances of same structure.
 + *ECOS is efficient*. Using sparse linear algebra routines, it computes only what is really necessary.
   The interior point algorithm it implements is one of the fastest converging methods that are currently
   in use for solving convex conic problems.
-+ *ECOS has a tiny footprint*. The ECOS solver consists of 750 lines of C code (excluding the problem setup 
++ *ECOS has a tiny footprint*. The ECOS solver consists of 750 lines of C code (excluding the problem setup
    code).
-+ *ECOS is numerically robust*. Using regularization and iterative refinement coupled with a carefully chosen 
++ *ECOS is numerically robust*. Using regularization and iterative refinement coupled with a carefully chosen
   sparse representation of scaling matrices, millions of problem instances are solved reliably.
 + *ECOS comes with a MATLAB and CVX 2.1 interface*, and *it is supported by YALMIP*. With [CVX](http://cvxr.com) and
-  [YALMIP](http://users.isy.liu.se/johanl/yalmip/) you can prototype, simulate and verify the performance of ECOS before you implement the very same code on 
+  [YALMIP](http://users.isy.liu.se/johanl/yalmip/) you can prototype, simulate and verify the performance of ECOS before you implement the very same code on
 your embedded hardware.  
-+ *ECOS comes with a Python interface*. This interface is built on top of 
++ *ECOS comes with a Python interface*. This interface is built on top of
   [NUMPY](http://numpy.org) and [SCIPY](http://scipy.org/) and uses its sparse data structures.
-+ *ECOS is library-free*. No need to link any external library to ECOS, apart from `AMD` and `sparseLDL`, both 
++ *ECOS is library-free*. No need to link any external library to ECOS, apart from `AMD` and `sparseLDL`, both
   from Timothy A. Davis, which are included in this project.
 
 
@@ -58,11 +61,11 @@ The main technical idea behind ECOS is described in a short [paper](http://www.s
 If you find ECOS useful, you can cite it using the following BibTex entry:
 
 ```
-@INPROCEEDINGS{bib:Domahidi2013ecos, 
-author={Domahidi, A. and Chu, E. and Boyd, S.}, 
-booktitle={European Control Conference (ECC)}, 
-title={{ECOS}: {A}n {SOCP} solver for embedded systems}, 
-year={2013}, 
+@INPROCEEDINGS{bib:Domahidi2013ecos,
+author={Domahidi, A. and Chu, E. and Boyd, S.},
+booktitle={European Control Conference (ECC)},
+title={{ECOS}: {A}n {SOCP} solver for embedded systems},
+year={2013},
 pages={3071-3076}
 }
 ```
@@ -71,15 +74,15 @@ pages={3071-3076}
 Using ECOS with CVX
 ====
 
-The simplest way to use ECOS is to install a CVX 2.0 shim. For this to work, you must have the latest version of 
+The simplest way to use ECOS is to install a CVX 2.0 shim. For this to work, you must have the latest version of
 [CVX](http://cvxr.com) installed in MATLAB. Once CVX is installed, add your ECOS directory to your MATLAB install path and run `cvx_setup`.
 
      addpath <ecos-directory>/matlab
      cvx_setup
 
 This will automatically detect the ECOS shim and add it to CVX. If you want to ensure you have the latest binary for ECOS, instead run
-    
-    cd <ecos-directory>/matlab 
+
+    cd <ecos-directory>/matlab
     makemex
     addpath <ecos-directory>/matlab
     cvx_setup
@@ -96,13 +99,13 @@ Once the ECOS shim is installed, the CVX solver can be switched using the `cvx_s
      cvx_begin
           cvx_solver ecos     % without this line, CVX will use its default solver
           variable x(n)
-          
+
           minimize sum_square(A*x - b)
           subject to
                x >= 0
      cvx_end
-     
-*IMPORTANT*: Not all of CVX's atoms are SOCP-representable. Some of the atoms implemented in CVX require the use of SDP cones. Some atoms that could be implemented with a second-order cone are instead implemented as SDPs, but these are automatically converted to SOC cones. See 
+
+*IMPORTANT*: Not all of CVX's atoms are SOCP-representable. Some of the atoms implemented in CVX require the use of SDP cones. Some atoms that could be implemented with a second-order cone are instead implemented as SDPs, but these are automatically converted to SOC cones. See
 [Issue #8](https://github.com/ifa-ethz/ecos/issues/8) for more information.
 
 Using ECOS with YALMIP
@@ -133,9 +136,9 @@ ECOS comes with a makefile which resides in the `matlab` subdirectory of the cod
 cd <ecos-directory>/matlab
 makemex
 ```
-You should now have a binary file `ecos.[ending]`, with a platform-specific ending. This is the solver binary. 
+You should now have a binary file `ecos.[ending]`, with a platform-specific ending. This is the solver binary.
 Add the directory `<ecos-directory>/matlab` to your path to be able to call ECOS from any place. The command
-```matlab 
+```matlab
 makemex clean
 ```
 deletes unecessary files that were produced during compilation.
@@ -143,19 +146,19 @@ deletes unecessary files that were produced during compilation.
 Calling ECOS from MATLAB
 ----
 
-You can directly call ECOS from Matlab using its native interface: 
+You can directly call ECOS from Matlab using its native interface:
 ```
 [x,y,info,s,z] = ecos(c,G,h,dims,A,b)
 ```
-It takes the problem data `c,G,h,A,b` and some dimension information that is given in the struct `dims`. Note that 
-`A` and `G` have to be given in sparse format. The equality constraints defined by `A` and `b` are optional and can be 
+It takes the problem data `c,G,h,A,b` and some dimension information that is given in the struct `dims`. Note that
+`A` and `G` have to be given in sparse format. The equality constraints defined by `A` and `b` are optional and can be
 omitted. The `dims` structure has the following fields:
 ```
 dims.l - scalar, dimension of positive orthant (LP-cone) R_+
 dims.q - vector with dimensions of second order cones
 ```
 The length of `dims.q` determines the number of second order cones. If you do not have a cone in your problem, use
-the empty matrix `[ ]` instead, for example `dims.q = [ ]` if you do not have second-order cones. After a solve, 
+the empty matrix `[ ]` instead, for example `dims.q = [ ]` if you do not have second-order cones. After a solve,
 ECOS returns the following variables
 ```
   x: primal variables
@@ -191,7 +194,7 @@ reconstruction problems (compressed sensing):
     minimize  ||x||_1         (L1)
   subject to  Ax = b
 ```
-where `x` is in `R^n`, `A` in `R^{m x n}` with `m <= n`. We use the epigraph reformulation to express the L1-norm of `x`, 
+where `x` is in `R^n`, `A` in `R^{m x n}` with `m <= n`. We use the epigraph reformulation to express the L1-norm of `x`,
 ```
     x <= u
    -x <= u
@@ -201,7 +204,7 @@ where `u` is in `R^n`, and we minimize `sum(u)`. Hence the optimization variable
    z = [x; u]
 ```
 With this reformulation, (L1) can be written as linear program (LP),
-``` 
+```
   minimize   c'*z
   subject to Atilde*z = b;    (LP)
              Gx <= h
@@ -210,7 +213,7 @@ where the inequality is w.r.t. the positive orthant. The following MATLAB code g
 and calls ECOS to solve the problem:
 ```
 % set dimensions and sparsity of A
-n = 1000; 
+n = 1000;
 m = 10;
 density = 0.01;
 
@@ -271,7 +274,24 @@ To create the Python interface, you need [Numpy](http://www.numpy.org/) and [Sci
 cd <ecos-directory>/python
 python setup.py install
 ```
-You may need `sudo` privileges for a global installation. 
+You may need `sudo` privileges for a global installation.
+
+### Windows installation
+Windows users may experience some extreme pain when installing ECOS for
+Python 2.7. We suggest switching to Linux or Mac OSX.
+
+If you must use (or insist on using) Windows, we suggest using
+the [Miniconda](http://repo.continuum.io/miniconda/)
+distribution to minimize this pain.
+
+If during the installation process, you see the error message
+`Unable to find vcvarsall.bat`, you will need to install
+[Microsoft Visual Studio Express 2008](go.microsoft.com/?linkid=7729279),
+since *Python 2.7* is built against the 2008 compiler.
+
+If using a newer version of Python, you can use a newer version of
+Visual Studio. For instance, Python 3.3 is built against [Visual Studio
+2010](http://go.microsoft.com/?linkid=9709949).
 
 Calling ECOS from Python
 ----
@@ -291,11 +311,11 @@ argument `dims` is a dictionary with two fields, `dims['l']` and `dims['q']`.
 These are the same fields as in the Matlab case. If the fields are omitted or
 empty, they default to 0.
 The argument `kwargs` can include the keywords
-`feastol`, `abstol`, `reltol`, `feastol_inacc`, `abstol_innac`, and `reltol_inacc` for tolerance values, 
+`feastol`, `abstol`, `reltol`, `feastol_inacc`, `abstol_innac`, and `reltol_inacc` for tolerance values,
 `max_iters` for the maximum number of iterations, and the Boolean `verbose`.
 The arguments `A`, `b`, and `kwargs` are optional.
 
-The returned object is a dictionary containing the fields `solution['x']`, `solution['y']`, `solution['s']`, `solution['z']`, and `solution['info']`. 
+The returned object is a dictionary containing the fields `solution['x']`, `solution['y']`, `solution['s']`, `solution['z']`, and `solution['info']`.
 The first four are Numpy arrays containing the relevant solution. The last field contains a dictionary with the same fields as the `info` struct in the MATLAB interface.
 
 Using ECOS in C
@@ -314,16 +334,16 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 ```
 where you have to pass the following arguments:
 * `n` is the number of variables,
-* `m` is the number of inequality constraints (dimension 1 of the matrix `G` and the length of the vector `h`), 
+* `m` is the number of inequality constraints (dimension 1 of the matrix `G` and the length of the vector `h`),
 * `p` is the number of equality constraints (can be 0)
 * `l` is the dimension of the positive orthant, i.e. in `Gx+s=h, s in K`, the first `l` elements of `s` are `>=0`
 * `ncones` is the number of second-order cones present in `K`
-* `q` is an array of integers of length `ncones`, where each element defines the dimension of the cone 
+* `q` is an array of integers of length `ncones`, where each element defines the dimension of the cone
 * `Gpr`, `Gjc`, `Gir` are the the data, the column index, and the row index arrays, respectively, for the matrix `G` represented in column compressed storage (CCS) format (Google it if you need more information on this format, it is one of the standard sparse matrix representations)
 * `Apr`, `Ajc`, `Air` is the CCS representation of the matrix `A` (can be all `NULL` if no equalities are present)
 * `c` is an array of type `pfloat` of size `n`
 * `h` is an array of type `pfloat` of size `m`
-* `b` is an array of type `pfloat` of size `p` (can be `NULL` if no equalities are present) 
+* `b` is an array of type `pfloat` of size `p` (can be `NULL` if no equalities are present)
 The setup function returns a struct of type ```pwork```, which you need to define first.
 
 2. Solve
@@ -334,7 +354,7 @@ The return value is an integer, see below.
 
 3. Cleanup
 ----
-Call 
+Call
 ```void ECOS_cleanup(pwork* w, idxint keepvars);```
 to free all allocated memory.
 
@@ -351,6 +371,6 @@ Negative numbers indicate that the problem could not be solved to the required a
 + -1: maximum number of iterations reached
 + -2: numerical problems (unreliable search direction)
 + -3: numerical problems (slacks or multipliers became exterior)
-+ -7: unknown problem in solver 
++ -7: unknown problem in solver
 
 It is in general good practice to check the exitcode, in particular when solving optimization problems in an unsupervised, automated fashion (in a batch job, for example). Please report optimization problems for which ECOS struggles to converge to one of the authors.
