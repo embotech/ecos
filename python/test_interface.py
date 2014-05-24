@@ -1,7 +1,9 @@
+from __future__ import print_function
+
 def import_error(msg):
-  print
-  print "## IMPORT ERROR:", msg
-  print
+  print_function()
+  print_function("## IMPORT ERROR:", msg)
+  print_function()
 
 try:
   from nose.tools import assert_raises, assert_almost_equals
