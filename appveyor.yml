@@ -37,6 +37,6 @@ build_script:
 
 test_script:
     - cd python
-    - ps: "ls C:\Python27\envs\testenv\*"
-    - C:\Python27\envs\testenv\nosetests.exe test_interface.py
+    - ps: "ls C:/Python27/envs/testenv/Scripts/*"
+    - C:\Python27\envs\testenv\Scripts\nosetests.exe test_interface.py
     - cd ..
