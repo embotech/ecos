@@ -7,9 +7,9 @@ python:
 virtualenv:
     system_site_packages: true
 # install scipy and numpy
-# cvxopt is for examples
 before_install:
     - sudo apt-get install python-numpy python-scipy
+    - pip install coverage
 # install dependencies
 install:
     - make test
@@ -17,4 +17,4 @@ install:
 # command to run tests
 script:
     - ./ecostester
-    # - nosetests?
+    - cd python; nosetests --with-cover test_interface.py; cd ..

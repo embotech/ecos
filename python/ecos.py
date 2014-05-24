@@ -41,8 +41,13 @@ def solve(c,G,h,dims,A=None,b=None, **kwargs):
     # G.sort_indices() # ECHU: performance hit? do we need this?
     # if A is not None: A.sort_indices()
 
+    if (G is None and h is not None) or (G is not None and h is None):
+      raise TypeError("G and h must be supplied together")
+
+    if (A is None and b is not None) or (A is not None and b is None):
+      raise TypeError("A and b must be supplied together")
+
     if G is None:
-        if h is not None: raise TypeError("G and h must be supplied together")
         data = np.zeros((0,),dtype=np.double)
         indices = np.zeros((0,),dtype=np.int)
         colptr = np.zeros((n1+1,),dtype=np.int)
@@ -50,9 +55,7 @@ def solve(c,G,h,dims,A=None,b=None, **kwargs):
     else:
         data, indices, colptr = G.data, G.indices, G.indptr
 
-
     if A is None:
-        if b is not None: raise TypeError("A and b must be supplied together")
         return _ecos.csolve((m,n1,p), c, data, indices, colptr, h, dims, **kwargs)
     else:
         return _ecos.csolve((m,n1,p), c, data, indices, colptr, h, dims, A.data, A.indices, A.indptr, b, **kwargs)

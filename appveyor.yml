@@ -28,8 +28,15 @@ install:
     - python C:\get-pip.py
     - C:\Python27\Scripts\pip.exe install conda
     - C:\Python27\Scripts\conda.exe init
-    - C:\Python27\Scripts\conda.exe create -n build --yes --quiet python=%PYVER% numpy scipy nose
+    - C:\Python27\Scripts\conda.exe create -n testenv --yes --quiet python=%PYVER% numpy scipy nose
 
 build_script:
     - cd python
-    - C:\Python27\envs\build\python.exe setup.py install
+    - C:\Python27\envs\testenv\python.exe setup.py install
+    - cd ..
+
+test_script:
+    - cd python
+    - ps: "ls C:\Python27\envs\testenv\*"
+    - C:\Python27\envs\testenv\nosetests.exe test_interface.py
+    - cd ..

@@ -71,20 +71,20 @@ static PyObject *version(PyObject* self)
   return Py_BuildValue("s",ECOS_VERSION);
 }
 
-static int checkPositiveInt(const char *key, idxint val) {
-    if (val < 0) {
-        PyErr_Format(PyExc_ValueError, "'%s' must be a positive integer", key);
-        return -1;
+static int checkNonnegativeInt(const char *key, idxint val) {
+    if (val >= 0) {
+      return 0;
     }
-    return 0;
+    PyErr_Format(PyExc_ValueError, "'%s' must be a nonnegative integer", key);
+    return -1;
 }
 
 static int checkPositiveFloat(const char *key, pfloat val) {
-    if (val < 0) {
-        PyErr_Format(PyExc_ValueError, "'%s' must be a positive float", key);
-        return -1;
+    if (val > 0) {
+      return 0;
     }
-    return 0;
+    PyErr_Format(PyExc_ValueError, "'%s' must be a positive float", key);
+    return -1;
 }
 
 static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
@@ -262,14 +262,14 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       &opts_ecos.maxit)
     ) { return NULL; }
 
-  if (checkPositiveInt("m", m) < 0) return NULL;
-  if (checkPositiveInt("n", n) < 0) return NULL;
-  if (checkPositiveInt("p", p) < 0) return NULL;
+  if (checkNonnegativeInt("m", m) < 0) return NULL;
+  if (checkNonnegativeInt("n", n) < 0) return NULL;
+  if (checkNonnegativeInt("p", p) < 0) return NULL;
 
   /* check the opts*/
   if (verbose)
       opts_ecos.verbose = (idxint) PyObject_IsTrue(verbose);
-  if (checkPositiveInt("maxit", opts_ecos.maxit) < 0) return NULL;
+  if (checkNonnegativeInt("maxit", opts_ecos.maxit) < 0) return NULL;
   if (checkPositiveFloat("abstol", opts_ecos.abstol) < 0) return NULL;
   if (checkPositiveFloat("feastol", opts_ecos.feastol) < 0) return NULL;
   if (checkPositiveFloat("reltol", opts_ecos.reltol) < 0) return NULL;
@@ -303,7 +303,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
 
   /* set c */
   if (!PyArray_ISFLOAT(c) || PyArray_NDIM(c) != 1) {
-      PyErr_SetString(PyExc_TypeError, "c must be a dense numpy array with one dimension");
+      PyErr_SetString(PyExc_TypeError, "c must be a dense numpy float array with one dimension");
       Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
       return NULL;
   }
@@ -318,7 +318,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
 
   /* set h */
   if (!PyArray_ISFLOAT(h) || PyArray_NDIM(h) != 1) {
-      PyErr_SetString(PyExc_TypeError, "h must be a dense numpy array with one dimension");
+      PyErr_SetString(PyExc_TypeError, "h must be a dense numpy float array with one dimension");
       Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
       Py_DECREF(c_arr);
       return NULL;
@@ -448,7 +448,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
      * }
      */
     if (!PyArray_ISFLOAT(b) || PyArray_NDIM(b) != 1) {
-        PyErr_SetString(PyExc_TypeError, "b must be a dense numpy array with one dimension");
+        PyErr_SetString(PyExc_TypeError, "b must be a dense numpy float array with one dimension");
         if(q) free(q);
         Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
         Py_DECREF(c_arr); Py_DECREF(h_arr);
