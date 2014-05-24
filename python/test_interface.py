@@ -1,9 +1,11 @@
+# for python 3 testing compatibility
 from __future__ import print_function
+import platform
 
 def import_error(msg):
-  print_function()
-  print_function("## IMPORT ERROR:", msg)
-  print_function()
+  print()
+  print("## IMPORT ERROR:", msg)
+  print()
 
 try:
   from nose.tools import assert_raises, assert_almost_equals
@@ -42,26 +44,27 @@ def check_solution(solution, expected):
 
 def test_problems():
   sol = ecos.solve(c, G, h, dims)
-  yield check_solution, sol['x'], 1
+  yield check_solution, sol['x'][0], 1
 
   sol = ecos.solve(c, G, h, dims, A, b)
-  yield check_solution, sol['x'], 3
+  yield check_solution, sol['x'][0], 3
 
   new_dims = {'q':[2], 'l': 0}
   sol = ecos.solve(c, G, h, new_dims)
-  yield check_solution, sol['x'], 0.5
+  yield check_solution, sol['x'][0], 0.5
 
-def test_problems_with_longs():
-  new_dims = {'q': [], 'l': 2L}
-  sol = ecos.solve(c, G, h, new_dims)
-  yield check_solution, sol['x'], 1
+if platform.python_version_tuple() < ('3','0','0'):
+  def test_problems_with_longs():
+    new_dims = {'q': [], 'l': long(2)}
+    sol = ecos.solve(c, G, h, new_dims)
+    yield check_solution, sol['x'][0], 1
 
-  sol = ecos.solve(c, G, h, new_dims, A, b)
-  yield check_solution, sol['x'], 3
+    sol = ecos.solve(c, G, h, new_dims, A, b)
+    yield check_solution, sol['x'][0], 3
 
-  new_dims = {'q':[2L], 'l': 0}
-  sol = ecos.solve(c, G, h, new_dims)
-  yield check_solution, sol['x'], 0.5
+    new_dims = {'q':[long(2)], 'l': 0}
+    sol = ecos.solve(c, G, h, new_dims)
+    yield check_solution, sol['x'][0], 0.5
 
 def check_keyword(error_type, keyword, value):
   assert_raises(error_type, ecos.solve, c,G,h,dims, **{keyword: value})

@@ -26,16 +26,16 @@ install:
     #- ps: msiexec /i C:\msvc2008.exe /quiet /qn /norestart /log install.log
     - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:\get-pip.py')
     - python C:\get-pip.py
-    - C:\Python27\Scripts\pip.exe install conda
-    - C:\Python27\Scripts\conda.exe init
-    - C:\Python27\Scripts\conda.exe create -n testenv --yes --quiet python=%PYVER% numpy scipy nose
+    - C:\Python34\Scripts\pip.exe install conda
+    - C:\Python34\Scripts\conda.exe init
+    - C:\Python34\Scripts\conda.exe create -n testenv --yes --quiet python=%PYVER% numpy scipy nose
 
 build_script:
     - cd python
-    - C:\Python27\envs\testenv\python.exe setup.py install
+    - C:\Python34\envs\testenv\python.exe setup.py install
     - cd ..
 
 test_script:
     - cd python
-    - C:\Python27\envs\testenv\Scripts\nosetests.exe test_interface.py
+    - C:\Python34\envs\testenv\Scripts\nosetests.exe test_interface.py
     - cd ..
