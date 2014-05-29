@@ -108,6 +108,24 @@ Once the ECOS shim is installed, the CVX solver can be switched using the `cvx_s
 *IMPORTANT*: Not all of CVX's atoms are SOCP-representable. Some of the atoms implemented in CVX require the use of SDP cones. Some atoms that could be implemented with a second-order cone are instead implemented as SDPs, but these are automatically converted to SOC cones. See
 [Issue #8](https://github.com/ifa-ethz/ecos/issues/8) for more information.
 
+Using ECOS with CVXPY
+====
+
+[CVXPY](http://cvxpy.org) is a powerful Python modeling framework for convex optimization, similar to the MATLAB counterpart CVX. ECOS is one of the default solvers in CVXPY, so there is nothing special you have to do in order to use ECOS with CVXPY, besides specifying it as a solver. Here is a small [example](http://www.cvxpy.org/en/latest/tutorial/advanced/index.html#solve-method-options) from the CVXPY tutorial:
+
+```
+# Solving a problem with different solvers.
+x = Variable(2)
+obj = Minimize(norm(x, 2) + norm(x, 1))
+constraints = [x >= 2]
+prob = Problem(obj, constraints)
+
+# Solve with ECOS.
+prob.solve(solver=ECOS)
+print "optimal value with ECOS:", prob.value
+```
+
+
 Using ECOS with YALMIP
 ====
 As of release R20130628, [YALMIP](http://users.isy.liu.se/johanl/yalmip/) supports ECOS as a solver - simply use the command
