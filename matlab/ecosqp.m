@@ -35,26 +35,57 @@ function [X,fval,exitflag,output,lambda,Tsolve,c,G,h,dims,Aeq,beq] = ecosqp(H,f,
 %
 % See also ECOS
 %
-% (c) Alexander Domahidi, Automatic Control Laboratory, ETH Zurich, 2013.
+% (c) Alexander Domahidi, Automatic Control Laboratory, ETH Zurich, 2014.
 
 if( ~exist('dosolve','var') )
     dosolve = 1;
 end
 
+disp('ECOSQP: Converting QP to SOCP...');
+
 %% check if Cholesky decomposition of H exists.
 assert( ~isempty(H),'Quadratic programming requires a Hessian.');
-W = chol(H,'upper');
-
+try
+    W = chol(H,'upper');
+catch
+    warning('Hessian not positive definite, using sqrt(H) instead of chol\n');
+    W = sqrt(H);
+    k = 0;
+    for i = 1:size(W,1)
+        if( all(W(i,:) == 0) )
+            k = k+1;
+            eliminateIdx(k) = i;            
+        end
+    end
+    W(eliminateIdx,:) = [];
+    fprintf('%d zero rows in square root of Hessian eliminated\n',k-1);
+end
 %% dimension
-n = max([size(H,1), length(f)]);
+n = max([size(H,2), length(f)]);
 
 %% set up SOCP problem
 % The new variable is stacked as [x, a, b, t]
 c = [f; 0; 0; 1];
 
-% upper/lower bounds
-if( exist('ub','var') && ~isempty(ub) ), A = [A; speye(n)]; B = [B; ub]; end
-if( exist('lb','var') && ~isempty(lb) ), A = [A; -speye(n)]; B = [B; -lb]; end
+% upper bounds
+if( exist('ub','var') && ~isempty(ub) ) 
+    % find indices which are upper bounded
+    Aub = speye(n);
+    Aub(isinf(ub),:) = [];
+    Bub = ub( ~isinf(ub) );
+    A = [A; Aub]; 
+    B = [B; Bub];
+end
+
+% lower bounds
+if( exist('lb','var') && ~isempty(lb) ) 
+    % find indices which are lower bounded
+    Alb = speye(n);
+    Alb(isinf(lb),:) = [];
+    Blb = -lb( ~isinf(lb) );
+    A = [A; Alb]; 
+    B = [B; Blb];
+end
 
 % a = 0.5*t - 0.5, 
 % b = 0.5*t + 0.5
@@ -71,17 +102,17 @@ end
 Gquad = -[zeros(1,n), 0, sqrt(2), 0;
              W,     zeros(size(W,1),3);
          zeros(1,n), sqrt(2), 0, 0];
-hquad = zeros(n+2,1);
+hquad = zeros(size(W,1)+2,1);
 if( isempty(A) )
     G = Gquad;
     h = hquad;
     dims.l = 0;
-    dims.q = n+2;
+    dims.q = size(W,1)+2;
 else
     G = [A, zeros(size(A,1),3); Gquad];
     h = [B; hquad];
     dims.l = size(A,1);
-    dims.q = n+2;
+    dims.q = size(W,1)+2;
 end
 
 %% sparsify
@@ -90,6 +121,7 @@ Aeq = sparse(Aeq);
 
 %% solve
 if( dosolve )
+fprintf('Conversion completed. Calling ECOS...\n');
 [x,y,info,~,z] = ecos(c,G,h,dims,Aeq,beq);
 else
     x = NaN(size(c,1),1);

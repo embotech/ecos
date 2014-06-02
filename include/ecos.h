@@ -36,7 +36,7 @@
 
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
-#define MAXIT      (30)          /* maximum number of iterations         */
+#define MAXIT      (50)          /* maximum number of iterations         */
 #define FEASTOL    (1E-6)        /* primal/dual infeasibility tolerance  */
 #define ABSTOL     (1E-7)        /* absolute tolerance on duality gap    */
 #define RELTOL     (1E-7)        /* relative tolerance on duality gap    */
