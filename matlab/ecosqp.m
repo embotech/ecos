@@ -1,4 +1,4 @@
-function [X,fval,exitflag,output,lambda,Tsolve,c,G,h,dims,Aeq,beq] = ecosqp(H,f,A,B,Aeq,Beq,lb,ub,dosolve)
+function [X,fval,exitflag,output,lambda,Tsolve,c,G,h,dims,Aeq,beq] = ecosqp(H,f,A,B,Aeq,Beq,lb,ub,opts)
 %QUADPROG Quadratic programming. 
 %   X = ECOSQP(H,f,A,b) attempts to solve the quadratic programming 
 %   problem:
@@ -37,18 +37,20 @@ function [X,fval,exitflag,output,lambda,Tsolve,c,G,h,dims,Aeq,beq] = ecosqp(H,f,
 %
 % (c) Alexander Domahidi, Automatic Control Laboratory, ETH Zurich, 2014.
 
-if( ~exist('dosolve','var') )
-    dosolve = 1;
+if( ~exist('opts','var') )
+    opts.verbose = 1;
 end
 
-disp('ECOSQP: Converting QP to SOCP...');
+if( opts.verbose > 0 )
+    disp('ECOSQP: Converting QP to SOCP...');
+end
 
 %% check if Cholesky decomposition of H exists.
 assert( ~isempty(H),'Quadratic programming requires a Hessian.');
 try
     W = chol(H,'upper');
 catch
-    warning('Hessian not positive definite, using sqrt(H) instead of chol\n');
+    warning('Hessian not positive definite, using sqrt(H) instead of chol');
     W = sqrt(H);
     k = 0;
     for i = 1:size(W,1)
@@ -58,7 +60,7 @@ catch
         end
     end
     W(eliminateIdx,:) = [];
-    fprintf('%d zero rows in square root of Hessian eliminated\n',k-1);
+    if( opts.verbose > 0 ), fprintf('%d zero rows in square root of Hessian eliminated\n',k-1); end
 end
 %% dimension
 n = max([size(H,2), length(f)]);
@@ -120,17 +122,9 @@ G = sparse(G);
 Aeq = sparse(Aeq);
 
 %% solve
-if( dosolve )
-fprintf('Conversion completed. Calling ECOS...\n');
-[x,y,info,~,z] = ecos(c,G,h,dims,Aeq,beq);
-else
-    x = NaN(size(c,1),1);
-    y = NaN(size(Aeq,1),1);
-    info.infostring = 'Did not call ECOS yet';
-    info.exitflag = -100;
-    info.timing.runtime = -1;
-    z = NaN(size(G,1),1);
-end
+if( opts.verbose > 0 ), fprintf('Conversion completed. Calling ECOS...\n'); end
+[x,y,info,~,z] = ecos(c,G,h,dims,Aeq,beq,opts);
+
 
 %% prepare return variables
 X = x(1:n);
@@ -141,7 +135,9 @@ switch( info.exitflag )
     case 0, exitflag = 1;
     otherwise, exitflag = -100;
 end
-output = info.infostring;
+output.statusstring = info.infostring;
+output.iterations = info.iter;
+output.time = info.timing.runtime;
 lambda = [z(1:dims.l); y]; 
 Tsolve = info.timing.runtime;
 
