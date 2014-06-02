@@ -53,6 +53,7 @@ catch
     warning('Hessian not positive definite, using sqrt(H) instead of chol');
     W = sqrt(H);
     k = 0;
+    eliminateIdx = [];
     for i = 1:size(W,1)
         if( all(W(i,:) == 0) )
             k = k+1;
