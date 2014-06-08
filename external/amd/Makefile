@@ -2,7 +2,7 @@
 # AMD Makefile for compiling on Unix systems (for GNU make only)
 #-------------------------------------------------------------------------------
 
-default: libamd.a
+default: libamd.so
 
 include ../../ecos.mk
 
@@ -23,7 +23,7 @@ INC = include/amd.h include/amd_internal.h $(CONFIG)
 # object files for each version
 #-------------------------------------------------------------------------------
 
-AMDI = $(addsuffix .o, $(subst amd_,amd_i_,$(AMD)))
+#AMDI = $(addsuffix .o, $(subst amd_,amd_i_,$(AMD)))
 AMDL = $(addsuffix .o, $(subst amd_,amd_l_,$(AMD)))
 
 #-------------------------------------------------------------------------------
@@ -31,21 +31,20 @@ AMDL = $(addsuffix .o, $(subst amd_,amd_l_,$(AMD)))
 #-------------------------------------------------------------------------------
 
 amd_global.o: src/amd_global.c $(INC)
-	$(C) -c $< -o $@
+	$(C) -fPIC -c $< -o $@
 
-amd_i_%.o: src/amd_%.c $(INC)
-	$(C) -DDINT -c $< -o $@
+#amd_i_%.o: src/amd_%.c $(INC)
+#	$(C) -fPIC -DDINT -c $< -o $@
 
 amd_l_%.o: src/amd_%.c $(INC)
-	$(C) -DDLONG -c $< -o $@
+	$(C) -fPIC -DDLONG -c $< -o $@
 
 #-------------------------------------------------------------------------------
 # Create the libamd.a library (C versions only)
 #-------------------------------------------------------------------------------
 
-libamd.a: amd_global.o $(AMDI) $(AMDL)
-	$(ARCHIVE) libamd.a $^
-	- $(RANLIB) libamd.a
+libamd.so: amd_global.o $(AMDI) $(AMDL)
+	$(C) -shared -o libamd.so $^
 
 #-------------------------------------------------------------------------------
 # Remove all but the files in the original distribution
@@ -55,5 +54,5 @@ clean:
 	- $(RM) $(CLEAN)
 
 purge: 
-	- $(RM) libamd.a libamdf77.a
+	- $(RM) libamd.so libamdf77.so
 

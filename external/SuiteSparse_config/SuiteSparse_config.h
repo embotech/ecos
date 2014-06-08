@@ -59,7 +59,9 @@ extern "C" {
 
 #else
 
-#define SuiteSparse_long long
+/* SuiteSparse_long default was LONG for non _WIN64 system but Breeze CSCMatrix use Array[Int] to represent rowIndices and colPtrs*/
+/* Changed it to int but Breeze needs to be compiled with 64 bit ints so that rowIndices and colPtrs are 64 bit ints */
+#define SuiteSparse_long int
 #define SuiteSparse_long_max LONG_MAX
 #define SuiteSparse_long_idd "ld"
 

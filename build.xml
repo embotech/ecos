@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="jecos" basedir="." default="jar">
+    <description>
+        This is the build script to compile and deploy the jecos project.
+    </description>
+
+    <!-- Define directories -->
+    
+    <property name="version" value="0.0.1-SNAPSHOT" />
+    <property name="src" value="${basedir}/src/main/java" />
+    <property name="test" value="${basedir}/src/test/java" />
+    <property name="bin" value="${basedir}/target/classes" />
+    <property name="native-libs" value="${basedir}/src/main/resources/lib" />
+    <property name="jar" value="${basedir}/target/jecos-${version}.jar" />
+    <property name="include" value="${basedir}/include" />
+    <property name="native" value="${basedir}/src/" />
+    <property name="external" value="${basedir}/external" />
+    <property name="pkgbase" value="com.verizon.jecos" />
+    
+    <target name="prepare" description="create directories needed for compilation">
+        <mkdir dir="${bin}" />
+    </target>
+    
+    <target name="javah" depends="prepare" description="run javah">
+      <javac destdir="${bin}" encoding="utf-8" source="1.6" debug="on" compiler="javac1.7" target="1.6" fork="yes" nowarn="yes">
+        <src path="${src}" />
+        <include name="**/NativeECOS.java" />
+      </javac>
+      <javah destdir="${include}" force="yes">
+        <class name="${pkgbase}.NativeECOS" />
+        <classpath>
+          <pathelement path="${bin}" />
+        </classpath>
+      </javah>
+    </target>
+</project>

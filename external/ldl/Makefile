@@ -10,20 +10,18 @@ INCLUDES = -I../SuiteSparse_config -Iinclude
 
 C = $(CC) $(CFLAGS) $(INCLUDES)
 
-all: libldl.a
+all: libldl.so
 
 #-------------------------------------------------------------------------------
 # the ldl library:
 #-------------------------------------------------------------------------------
 
-libldl.a: src/ldl.c include/ldl.h
-	$(C) -c src/ldl.c -o ldl.o
-	$(C) -DLDL_LONG -c src/ldl.c -o ldll.o
-	$(ARCHIVE)  libldl.a ldl.o ldll.o
-	- $(RANLIB) libldl.a
+libldl.so: src/ldl.c include/ldl.h
+	$(C) -fPIC -DLDL_LONG -c src/ldl.c -o ldl.o
+	$(C) -shared -o libldl.so ldl.o
 
 purge: 
-	- $(RM) libldl.a
+	- $(RM) libldl.so
 clean:
 	- $(RM) $(CLEAN)
 
