@@ -1,55 +1,133 @@
 function [X,fval,exitflag,output,lambda,Tsolve,c,G,h,dims,Aeq,beq] = ecosqp(H,f,A,B,Aeq,Beq,lb,ub,opts)
-%QUADPROG Quadratic programming. 
-%   X = ECOSQP(H,f,A,b) attempts to solve the quadratic programming 
-%   problem:
+% ECOSQP - solve quadratic program using the ECOS second-order cone solver.
+% The interface mimics MATLAB's quadprog interface.
 %
-%            min 0.5*x'*H*x + f'*x   subject to:  A*x <= b 
-%             x    
+%   X = ECOSQP(H,f,A,b) attempts to solve the quadratic program
 %
-%   X = ECOSQP(H,f,A,b,Aeq,beq) solves the problem above while 
-%   additionally satisfying the equality constraints Aeq*x = beq.
+%            minimize 1/2*x'*H*x + f'*x   
+%          subject to A*x <= b
 %
-%   X = ECOSQP(H,f,A,b,Aeq,beq,LB,UB) defines a set of lower and upper
-%   bounds on the design variables, X, so that the solution is in the 
-%   range LB <= X <= UB. Use empty matrices for LB and UB if no bounds 
-%   exist. Set LB(i) = -Inf if X(i) is unbounded below; set UB(i) = Inf if 
-%   X(i) is unbounded above.
+% 
+%   X = ECOSQP(H,f,A,b,Aeq,beq) attempts to solve the QP from above 
+%   with additional equality constraints on variable x:
+%
+%            minimize 1/2*x'*H*x + f'*x   
+%          subject to A*x <= b
+%                     Aeq*x = beq
+%
+%
+%   X = ECOSQP(H,f,A,b,Aeq,beq,LB,UB) attempts to solve the problem with  
+%   lower and upper bounds on the design variables, X, so that the solution
+%   is in the range LB <= X <= UB. Use empty matrices for LB and UB if no 
+%   bounds exist. Set LB(i) = -Inf if X(i) is unbounded below; set 
+%   UB(i) = +Inf if X(i) is unbounded above.
+%
+%   [X,FVAL] = ECOSQP(...) returns in addition to the minimizer X also 
+%   the optimal function value of the QP.
+%
+%   [X,FVAL,EXITFLAG] = ECOSQP(...) returns the exitflag with the following
+%   meaning:
+%
+%      1  KKT optimality conditions satisfied - optimal solution found.
+%      0  Maximum number of iterations exceeded.
+%     -2  Problem is (primal) infeasible.
+%     -3  Problem is unbounded (dual infeasible).
 %
 % This file is an interface for ECOS, and rewrites the QP as a second-order
 % cone program (SOCP) that can be solved by ECOS. The rewriting occurs
-% through introduction of 3 variables t,a,b and rewriting the problem as
+% through an epigraph reformulation of the objective function,
 %
-%     min     f'x + t
-%   x,t,a,b
+%   ||       Wx              ||
+%   || (t - f'*x + 1)/sqrt(2)||_2 <= (t-f'*x-1)/sqrt(2) <==> 1/2*x'*H*x + f'*x <= t,
 %
-%     s.t.    A*x <= b
+% assuming that the Hessian H is positive definite, and therefore admits a
+% Cholesky decomposition H = W'*W. We therefore solve the following problem
+% when calling ECOS:
+%
+%     minimize    t
+%     subject to  A*x <= b
 %           [ lb <= x <= ub ]
 %           [ Aeq*x == beq    ]
 %
-%              a = (t-1)/2      }
-%              b = (t+1)/2      } these constraints say 0.5*x'*H*x <= t
-%             ||W*x ||         } 
-%             || a  ||2  <= b  }
+%           ||       Wx     ||
+%           || (t-f'*x+1)/sqrt(2) ||_2 <= (t-f'*x-1)/sqrt(2)
 %
-% where L is such that W'*W = 0.5*H (--> L = chol(0.5*H) )
+% See also ECOS QUADPROG
 %
-% See also ECOS
-%
-% (c) Alexander Domahidi, Automatic Control Laboratory, ETH Zurich, 2014.
+% (c) Alexander Domahidi, embotech GmbH, Zurich, Switzerland, 2014.
+
+%% dimension and argument checking
+if( isempty(H) )
+    error('Quadratic programming requires a non-empty, non-zero Hessian');
+end
+
+% number of variables
+n = size(H,2);
+
+% check size of cost terms
+assert(size(H,1)==n,'Hessian must be a square matrix');
+if( isempty(f) )
+    f = zeros(n,1);
+else
+    assert( size(f,1)==n,sprintf('Linear term f must be a column vector of length %d',n));
+    assert( size(f,2)==1,'Linear term f must be a column vector');
+end
+
+
+if( nargin < 8 )
+    ub = [];
+end
+
+if( nargin < 7 )
+    lb = [];
+end
+
+if( nargin == 7 && isstruct(lb) )
+    opts = lb;
+    lb = [];
+end
+
+if( nargin == 8 && isstruct(ub) )
+    opts = ub;
+    ub = [];
+end
+
+if( nargin < 5 )
+    Aeq = [];
+    Beq = [];    
+end
+
+if( nargin == 5 )
+    if( ~isstruct(Aeq) )
+        error('Either Aeq or an options struct expected as fifth argument');
+    else
+        opts = Aeq;
+        Aeq = [];
+    end
+end
+
+if( nargin < 3 )
+    A = [];
+    B = [];
+end
 
 if( ~exist('opts','var') )
     opts.verbose = 1;
 end
 
+%% display that we can begin with conversion
 if( opts.verbose > 0 )
     disp('ECOSQP: Converting QP to SOCP...');
 end
 
-%% check if Cholesky decomposition of H exists.
+%% check if Cholesky decomposition of H exists, 
+%  i.e. whether we have a positive definite Hessian
 assert( ~isempty(H),'Quadratic programming requires a Hessian.');
 try
-    W = chol(H,'upper');
-catch
+    tic
+    W = chol(H,'lower');
+    fprintf('ECOSQP: Time for Cholesky: %4.2f seconds\n', toc);
+catch %#ok<CTCH>
     warning('Hessian not positive definite, using sqrt(H) instead of chol');
     W = sqrt(H);
     k = 0;
@@ -57,62 +135,62 @@ catch
     for i = 1:size(W,1)
         if( all(W(i,:) == 0) )
             k = k+1;
-            eliminateIdx(k) = i;            
+            eliminateIdx(k) = i; %#ok<AGROW>
         end
     end
     W(eliminateIdx,:) = [];
     if( opts.verbose > 0 ), fprintf('%d zero rows in square root of Hessian eliminated\n',k-1); end
 end
-%% dimension
-n = max([size(H,2), length(f)]);
+
 
 %% set up SOCP problem
-% The new variable is stacked as [x, a, b, t]
-c = [f; 0; 0; 1];
+% The new variable is stacked as [x, t]
+c = [zeros(n,1); 1];
 
 % upper bounds
-if( exist('ub','var') && ~isempty(ub) ) 
+if( exist('ub','var') && ~isempty(ub) )
     % find indices which are upper bounded
     Aub = speye(n);
     Aub(isinf(ub),:) = [];
     Bub = ub( ~isinf(ub) );
-    A = [A; Aub]; 
+    A = [A; Aub];
     B = [B; Bub];
 end
 
 % lower bounds
-if( exist('lb','var') && ~isempty(lb) ) 
+if( exist('lb','var') && ~isempty(lb) )
     % find indices which are lower bounded
-    Alb = speye(n);
+    Alb = -speye(n);
     Alb(isinf(lb),:) = [];
     Blb = -lb( ~isinf(lb) );
-    A = [A; Alb]; 
+    A = [A; Alb];
     B = [B; Blb];
 end
 
-% a = 0.5*t - 0.5, 
-% b = 0.5*t + 0.5
-Aeq_a = [zeros(1,n), 1, 0, -0.5]; beq_a = -0.5;
-Aeq_b = [zeros(1,n), 0, 1, -0.5]; beq_b = 0.5;
-if( isempty(Aeq) )
-    Aeq = [Aeq_a; Aeq_b]; beq = [beq_a; beq_b];
-else 
-    Aeq = [Aeq, zeros(size(Aeq,1),3)];
-    Aeq = [Aeq; Aeq_a; Aeq_b]; beq = [Beq; beq_a; beq_b];
+% pad Aeq with a zero column for t
+if( ~isempty(Aeq) )
+    Aeq = [Aeq, zeros(size(Aeq,1),1)];
+    beq = Beq;
+else
+    Aeq = [];
+    beq = [];
 end
 
-% add second-order cone constraint
-Gquad = -[zeros(1,n), 0, sqrt(2), 0;
-             W,     zeros(size(W,1),3);
-         zeros(1,n), sqrt(2), 0, 0];
-hquad = zeros(size(W,1)+2,1);
+
+% create second-order cone constraint for objective function
+fhalf = f./sqrt(2);
+zerocolumn = zeros(size(W,1),1);
+Gquad = [fhalf', -1/sqrt(2);
+         -W, zerocolumn;
+         -fhalf', +1/sqrt(2)];
+hquad = [1/sqrt(2); zerocolumn; 1/sqrt(2)];
 if( isempty(A) )
     G = Gquad;
     h = hquad;
     dims.l = 0;
     dims.q = size(W,1)+2;
 else
-    G = [A, zeros(size(A,1),3); Gquad];
+    G = [A, zeros(size(A,1),1); Gquad];
     h = [B; hquad];
     dims.l = size(A,1);
     dims.q = size(W,1)+2;
@@ -124,7 +202,11 @@ Aeq = sparse(Aeq);
 
 %% solve
 if( opts.verbose > 0 ), fprintf('Conversion completed. Calling ECOS...\n'); end
-[x,y,info,~,z] = ecos(c,G,h,dims,Aeq,beq,opts);
+if( isempty(Aeq) )
+    [x,y,info,~,z] = ecos(c,G,h,dims,opts);
+else
+    [x,y,info,~,z] = ecos(c,G,h,dims,Aeq,beq,opts);
+end
 
 
 %% prepare return variables
@@ -139,6 +221,6 @@ end
 output.statusstring = info.infostring;
 output.iterations = info.iter;
 output.time = info.timing.runtime;
-lambda = [z(1:dims.l); y]; 
+lambda = [z(1:dims.l); y];
 Tsolve = info.timing.runtime;
 
