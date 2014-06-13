@@ -23,18 +23,16 @@
 #ifndef __GLBLOPTS_H__
 #define __GLBLOPTS_H__
 
-#include "SuiteSparse_config.h"
-
 /* DATA TYPES ---------------------------------------------------------- */
 typedef double pfloat;              /* for numerical values  */
 
 /* SET PRINT LEVEL ----------------------------------------------------- */
-#define PRINTLEVEL (0)     /* 0: no prints					             */
-						   /* 1: only final info				         */
+#define PRINTLEVEL (1)     /* 0: no prints					             */
+                           /* 1: only final info				         */
                            /* 2: progress print per iteration            */
 						   /* 3: debug level, enables print & dump fcns. */
 
-#define MATLAB_FLUSH_PRINTS 
+#define MATLAB_FLUSH_PRINTS
                             /* print each iteration directly to Matlab.  */
                             /* this options considerably slows down the  */
                             /* solver, but is useful if you solve big    */
@@ -55,6 +53,22 @@ typedef double pfloat;              /* for numerical values  */
 #define NAN ((double)0x7ff8000000000000)
 #endif
 
+/* SYSTEM INCLUDES FOR PRINTING ---------------------------------------- */
+#if PRINTLEVEL > 0
+#ifdef MATLAB_MEX_FILE
+#include "mex.h"
+#define PRINTTEXT mexPrintf
+#elif defined PYTHON
+#include <Python.h>
+#define PRINTTEXT PySys_WriteStdout
+#else
+#define PRINTTEXT printf
+#endif
+#include <stdio.h>
+#endif
+
+#include "SuiteSparse_config.h"
+
 /* use this if pfloat is float: */
 /* #define NAN ((float)0x7fc00000) */
 
@@ -66,25 +80,11 @@ typedef SuiteSparse_long idxint;
 #include "mex.h"
 #endif
 
-/* SYSTEM INCLUDES FOR PRINTING ---------------------------------------- */
-#if PRINTLEVEL > 0
-#include <stdio.h>
-#ifdef MATLAB_MEX_FILE
-#include "mex.h"
-#define PRINTTEXT mexPrintf
-#elif defined PYTHON
-#include <Python.h>
-#define PRINTTEXT PySys_WriteStdout
-#else
-#define PRINTTEXT printf
-#endif
-#endif
-
 /* CHOOSE RIGHT MEMORY MANAGER ----------------------------------------- */
 #ifdef MATLAB_MEX_FILE
 #define MALLOC mxMalloc
 #define FREE mxFree
-#else 
+#else
 #define MALLOC malloc
 #define FREE free
 #endif

@@ -1,7 +1,9 @@
+/* Check that we are clean against numpy 1.7 */
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
 #include <Python.h>
 #include "ecos.h"
 #include "numpy/arrayobject.h"
-
 /*
  * Define INLINE for MSVC compatibility.
  */
@@ -16,8 +18,8 @@
  * "ecos.py"; hence, we can get away with the inputs being numpy arrays of
  * the CSR data structures.
  *
- * WARNING: This code also does not check that the data for the sparse 
- * matrices are *actually* in column compressed storage for a sparse matrix. 
+ * WARNING: This code also does not check that the data for the sparse
+ * matrices are *actually* in column compressed storage for a sparse matrix.
  * The C module is not designed to be used stand-alone. If the data provided
  * does not correspond to a CSR matrix, this code will just crash inelegantly.
  * Please use the "solve" interface in ecos.py.
@@ -26,7 +28,7 @@
 
 /* ECHU: Note, Python3.x may require special handling for the int and double
  * types. */
-static INLINE int getIntType() {
+static INLINE int getIntType(void) {
   switch(sizeof(idxint)) {
     case 1: return NPY_INT8;
     case 2: return NPY_INT16;
@@ -36,7 +38,7 @@ static INLINE int getIntType() {
   }
 }
 
-static INLINE int getDoubleType() {
+static INLINE int getDoubleType(void) {
   /* ECHU: known bug, if pfloat isn't "double", will cause aliasing in memory */
   return NPY_DOUBLE;
 }
@@ -57,7 +59,6 @@ static INLINE PyArrayObject *getContiguous(PyArrayObject *array, int typenum) {
   return new_owner;
 }
 
-
 /* The PyInt variable is a PyLong in Python3.x.
  */
 #if PY_MAJOR_VERSION >= 3
@@ -70,10 +71,26 @@ static PyObject *version(PyObject* self)
   return Py_BuildValue("s",ECOS_VERSION);
 }
 
+static int checkNonnegativeInt(const char *key, idxint val) {
+    if (val >= 0) {
+      return 0;
+    }
+    PyErr_Format(PyExc_ValueError, "'%s' must be a nonnegative integer", key);
+    return -1;
+}
+
+static int checkPositiveFloat(const char *key, pfloat val) {
+    if (val > 0) {
+      return 0;
+    }
+    PyErr_Format(PyExc_ValueError, "'%s' must be a positive float", key);
+    return -1;
+}
+
 static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
 {
   /* Expects a function call
-   *     sol = csolve((m,n,p),c,Gx,Gi,Gp,h,dims,Ax,Ai,Ap,b,verbose)
+   *     sol = csolve((m,n,p),c,Gx,Gi,Gp,h,dims,Ax,Ai,Ap,b,**kwargs)
    * where
    *
    * the triple (m,n,p) corresponds to:
@@ -91,13 +108,21 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    *    `dims['l']` an integer specifying the dimension of positive orthant cone
    *    `dims['q']` an *list* specifying dimensions of second-order cones
    *
-   * "A" is an optional sparse matrix in column compressed storage. "Ax" are 
+   * "A" is an optional sparse matrix in column compressed storage. "Ax" are
    * the values, "Ai" are the rows, and "Ap" are the column pointers.
    * `Ax` is a Numpy array of doubles
    * `Ai` is a Numpy array of ints
    * `Ap` is a Numpy array of ints
    * `b` is an optional argument, which is a Numpy array of doubles
-   * `verbose` is an optional bool signaling whether to print info
+   * other optional arguments are:
+   *     `feastol`: the tolerance on the primal and dual residual
+   *     `abstol`: the absolute tolerance on the duality gap
+   *     `reltol`: the relative tolerance on the duality gap
+   *     `feastol_inacc`: the tolerance on the primal and dual residual if reduced precisions
+   *     `abstol_inacc`: the absolute tolerance on the duality gap if reduced precision
+   *     `reltolL_inacc`: the relative tolerance on the duality gap if reduced precision
+   *     `max_iters`: the maximum numer of iterations.
+   *     `verbose`: signals to print on non zero value.
    *
    * This call will solve the problem
    *
@@ -132,17 +157,19 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    */
 
   /* data structures for arguments */
-  /* ECHU: below is for CVXOPT 
+  /* ECHU: below is for CVXOPT
    * matrix *c, *h, *b = NULL;
    * spmatrix *G, *A = NULL;
    */
-  
+
+  /* BEGIN VARIABLE DECLARATIONS */
   PyArrayObject *Gx, *Gi, *Gp, *c, *h;
   PyArrayObject *Ax = NULL;
   PyArrayObject *Ai = NULL;
   PyArrayObject *Ap = NULL;
   PyArrayObject *b = NULL;
-  PyObject *dims, *verbose = NULL;
+  PyObject *dims = NULL;
+  PyObject *verbose = NULL;
   idxint n;           /* number or variables            */
   idxint m;           /* number of conic variables      */
   idxint p = 0;       /* number of equality constraints */
@@ -166,17 +193,53 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   pfloat *hpr = NULL;
   pfloat *bpr = NULL;
 
+  /* Default ECOS settings */
+  settings opts_ecos;
+
   pwork* mywork;
 
   idxint i;
-  static char *kwlist[] = {"shape", "c", "Gx", "Gi", "Gp", "h", "dims", "Ax", "Ai", "Ap", "b", "verbose", NULL};
+  static char *kwlist[] = {"shape", "c", "Gx", "Gi", "Gp", "h", "dims",
+      "Ax", "Ai", "Ap", "b",
+      "verbose", "feastol", "abstol", "reltol",
+      "feastol_inacc", "abstol_inacc", "reltol_inacc",
+      "max_iters", NULL};
+  int intType, doubleType;
+
   /* parse the arguments and ensure they are the correct type */
 #ifdef DLONG
-  static char *argparse_string = "(lll)O!O!O!O!O!O!|O!O!O!O!O!";
+  static char *argparse_string = "(lll)O!O!O!O!O!O!|O!O!O!O!O!ddddddl";
 #else
-  static char *argparse_string = "(iii)O!O!O!O!O!O!|O!O!O!O!O!";
+  static char *argparse_string = "(iii)O!O!O!O!O!O!|O!O!O!O!O!ddddddi";
 #endif
-    
+  PyArrayObject *Gx_arr, *Gi_arr, *Gp_arr;
+  PyArrayObject *c_arr;
+  PyArrayObject *h_arr;
+  PyObject *linearObj;
+  PyObject *socObj;
+  PyArrayObject *Ax_arr = NULL;
+  PyArrayObject *Ai_arr = NULL;
+  PyArrayObject *Ap_arr = NULL;
+  PyArrayObject *b_arr = NULL;
+
+  idxint exitcode, numerr = 0;
+  npy_intp veclen[1];
+  PyObject *x, *y, *z, *s;
+  const char* infostring;
+  PyObject *infoDict, *tinfos;
+  PyObject *returnDict = NULL;
+  /* END VARIABLE DECLARATIONS */
+
+  /* Default ECOS settings */
+  opts_ecos.feastol = FEASTOL;
+  opts_ecos.reltol = RELTOL;
+  opts_ecos.abstol = ABSTOL;
+  opts_ecos.feastol_inacc = FTOL_INACC;
+  opts_ecos.abstol_inacc = ATOL_INACC;
+  opts_ecos.reltol_inacc = RTOL_INACC;
+  opts_ecos.maxit = MAXIT;
+  opts_ecos.verbose = VERBOSE;
+
   if( !PyArg_ParseTupleAndKeywords(args, kwargs, argparse_string, kwlist,
       &m, &n, &p,
       &PyArray_Type, &c,
@@ -189,27 +252,34 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       &PyArray_Type, &Ai,
       &PyArray_Type, &Ap,
       &PyArray_Type, &b,
-      &PyBool_Type, &verbose)
+      &PyBool_Type, &verbose,
+      &opts_ecos.feastol,
+      &opts_ecos.abstol,
+      &opts_ecos.reltol,
+      &opts_ecos.feastol_inacc,
+      &opts_ecos.abstol_inacc,
+      &opts_ecos.reltol_inacc,
+      &opts_ecos.maxit)
     ) { return NULL; }
-  
-  if (m < 0) {
-    PyErr_SetString(PyExc_ValueError, "m must be a positive integer");
-    return NULL;
-  }
 
-  if (n < 0) {
-    PyErr_SetString(PyExc_ValueError, "n must be a positive integer");
-    return NULL;
-  }
-  
-  if (p < 0) {
-    PyErr_SetString(PyExc_ValueError, "p must be a positive integer");
-    return NULL;
-  }
-  
+  if (checkNonnegativeInt("m", m) < 0) return NULL;
+  if (checkNonnegativeInt("n", n) < 0) return NULL;
+  if (checkNonnegativeInt("p", p) < 0) return NULL;
+
+  /* check the opts*/
+  if (verbose)
+      opts_ecos.verbose = (idxint) PyObject_IsTrue(verbose);
+  if (checkNonnegativeInt("maxit", opts_ecos.maxit) < 0) return NULL;
+  if (checkPositiveFloat("abstol", opts_ecos.abstol) < 0) return NULL;
+  if (checkPositiveFloat("feastol", opts_ecos.feastol) < 0) return NULL;
+  if (checkPositiveFloat("reltol", opts_ecos.reltol) < 0) return NULL;
+  if (checkPositiveFloat("abstol_inacc", opts_ecos.abstol_inacc) < 0) return NULL;
+  if (checkPositiveFloat("feastol_inacc", opts_ecos.feastol_inacc) < 0) return NULL;
+  if (checkPositiveFloat("reltol_inacc", opts_ecos.reltol_inacc) < 0) return NULL;
+
   /* get the typenum for the primitive int and double types */
-  int intType = getIntType();
-  int doubleType = getDoubleType();
+  intType = getIntType();
+  doubleType = getDoubleType();
 
   /* set G */
   if( !PyArray_ISFLOAT(Gx) || PyArray_NDIM(Gx) != 1) {
@@ -224,31 +294,31 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     PyErr_SetString(PyExc_TypeError, "Gp must be a numpy array of ints");
     return NULL;
   }
-  PyArrayObject *Gx_arr = getContiguous(Gx, doubleType);
-  PyArrayObject *Gi_arr = getContiguous(Gi, intType);
-  PyArrayObject *Gp_arr = getContiguous(Gp, intType);
+  Gx_arr = getContiguous(Gx, doubleType);
+  Gi_arr = getContiguous(Gi, intType);
+  Gp_arr = getContiguous(Gp, intType);
   Gpr = (pfloat *) PyArray_DATA(Gx_arr);
   Gir = (idxint *) PyArray_DATA(Gi_arr);
   Gjc = (idxint *) PyArray_DATA(Gp_arr);
 
   /* set c */
   if (!PyArray_ISFLOAT(c) || PyArray_NDIM(c) != 1) {
-      PyErr_SetString(PyExc_TypeError, "c must be a dense numpy array with one dimension");
+      PyErr_SetString(PyExc_TypeError, "c must be a dense numpy float array with one dimension");
       Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
       return NULL;
   }
-  
+
   if (PyArray_DIM(c,0) != n){
       PyErr_SetString(PyExc_ValueError, "c has incompatible dimension with G");
       Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
       return NULL;
   }
-  PyArrayObject *c_arr = getContiguous(c, doubleType);
+  c_arr = getContiguous(c, doubleType);
   cpr = (pfloat *) PyArray_DATA(c_arr);
 
   /* set h */
   if (!PyArray_ISFLOAT(h) || PyArray_NDIM(h) != 1) {
-      PyErr_SetString(PyExc_TypeError, "h must be a dense numpy array with one dimension");
+      PyErr_SetString(PyExc_TypeError, "h must be a dense numpy float array with one dimension");
       Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
       Py_DECREF(c_arr);
       return NULL;
@@ -261,13 +331,14 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       Py_DECREF(c_arr);
       return NULL;
   }
-  PyArrayObject *h_arr = getContiguous(h, doubleType);
+  h_arr = getContiguous(h, doubleType);
   hpr = (pfloat *) PyArray_DATA(h_arr);
 
   /* get dims['l'] */
-  PyObject *linearObj = PyDict_GetItemString(dims, "l");
+  linearObj = PyDict_GetItemString(dims, "l");
   if(linearObj) {
-    if(PyInt_Check(linearObj) && ((l = (idxint) PyInt_AsLong(linearObj)) >= 0)) {
+    if ( (PyInt_Check(linearObj) && ((l = (idxint) PyInt_AsLong(linearObj)) >= 0)) ||
+         (PyLong_Check(linearObj) && ((l = PyLong_AsLong(linearObj)) >= 0)) ){
         numConicVariables += l;
     } else {
       PyErr_SetString(PyExc_TypeError, "dims['l'] ought to be a nonnegative integer");
@@ -278,14 +349,15 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   }
 
   /* get dims['q'] */
-  PyObject *socObj = PyDict_GetItemString(dims, "q");
+  socObj = PyDict_GetItemString(dims, "q");
   if(socObj) {
     if (PyList_Check(socObj)) {
       ncones = PyList_Size(socObj);
       q = calloc(ncones, sizeof(idxint));
       for (i = 0; i < ncones; ++i) {
           PyObject *qi = PyList_GetItem(socObj, i);
-          if(PyInt_Check(qi) && ((q[i] = (idxint) PyInt_AsLong(qi)) > 0)) {
+          if( (PyInt_Check(qi) && ((q[i] = (idxint) PyInt_AsLong(qi)) > 0)) ||
+              (PyLong_Check(qi) && ((q[i] = PyLong_AsLong(qi)) > 0)) ) {
               numConicVariables += q[i];
           } else {
             PyErr_SetString(PyExc_TypeError, "dims['q'] ought to be a list of positive integers");
@@ -303,10 +375,6 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     }
   }
 
-  PyArrayObject *Ax_arr = NULL;
-  PyArrayObject *Ai_arr = NULL;
-  PyArrayObject *Ap_arr = NULL;
-  PyArrayObject *b_arr = NULL;
   if(Ax && Ai && Ap && b) {
     /* set A */
     if( !PyArray_ISFLOAT(Ax) || PyArray_NDIM(Ax) != 1 ) {
@@ -380,7 +448,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
      * }
      */
     if (!PyArray_ISFLOAT(b) || PyArray_NDIM(b) != 1) {
-        PyErr_SetString(PyExc_TypeError, "b must be a dense numpy array with one dimension");
+        PyErr_SetString(PyExc_TypeError, "b must be a dense numpy float array with one dimension");
         if(q) free(q);
         Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
         Py_DECREF(c_arr); Py_DECREF(h_arr);
@@ -405,21 +473,21 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     Py_DECREF(c_arr); Py_DECREF(h_arr);
     return NULL;
   }
-  
+
 
   /* check that sum(q) + l = m */
   if( numConicVariables != m ){
       PyErr_SetString(PyExc_ValueError, "Number of rows of G does not match dims.l+sum(dims.q)");
       if (q) free(q);
       Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
-      Py_DECREF(c_arr); Py_DECREF(h_arr); 
+      Py_DECREF(c_arr); Py_DECREF(h_arr);
       if (b_arr) Py_DECREF(b_arr);
-      if (Ax_arr) Py_DECREF(Ax_arr); 
-      if (Ai_arr) Py_DECREF(Ai_arr); 
+      if (Ax_arr) Py_DECREF(Ax_arr);
+      if (Ai_arr) Py_DECREF(Ai_arr);
       if (Ap_arr) Py_DECREF(Ap_arr);
       return NULL;
   }
-  
+
   /* This calls ECOS setup function. */
   mywork = ECOS_setup(n, m, p, l, ncones, q, Gpr, Gjc, Gir, Apr, Ajc, Air, cpr, hpr, bpr);
   if( mywork == NULL ){
@@ -428,19 +496,24 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
       Py_DECREF(c_arr); Py_DECREF(h_arr);
       if (b_arr) Py_DECREF(b_arr);
-      if (Ax_arr) Py_DECREF(Ax_arr); 
-      if (Ai_arr) Py_DECREF(Ai_arr); 
+      if (Ax_arr) Py_DECREF(Ax_arr);
+      if (Ai_arr) Py_DECREF(Ai_arr);
       if (Ap_arr) Py_DECREF(Ap_arr);
       return NULL;
   }
-  
+
   /* Set settings for ECOS. */
-  if(verbose) {
-    mywork->stgs->verbose = (idxint) PyObject_IsTrue(verbose);
-  }
-  
+  mywork->stgs->verbose = opts_ecos.verbose;
+  mywork->stgs->abstol = opts_ecos.abstol;
+  mywork->stgs->feastol = opts_ecos.feastol;
+  mywork->stgs->reltol = opts_ecos.reltol;
+  mywork->stgs->abstol_inacc = opts_ecos.abstol_inacc;
+  mywork->stgs->feastol_inacc = opts_ecos.feastol_inacc;
+  mywork->stgs->reltol_inacc = opts_ecos.reltol_inacc;
+  mywork->stgs->maxit = opts_ecos.maxit;
+
   /* Solve! */
-  idxint exitcode = ECOS_solve(mywork);
+  exitcode = ECOS_solve(mywork);
 
   /* create output (all data is *deep copied*) */
   /* TODO: request CVXOPT API for constructing from existing pointer */
@@ -450,9 +523,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    *   return PyErr_NoMemory();
    * memcpy(MAT_BUFD(x), mywork->x, n*sizeof(double));
    */
-  npy_intp veclen[1];
   veclen[0] = n;
-  PyObject *x = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->x);
+  x = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->x);
 
   /* y */
   /* matrix *y;
@@ -461,12 +533,10 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    * memcpy(MAT_BUFD(y), mywork->y, p*sizeof(double));
    */
   veclen[0] = p;
-  PyObject *y = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->y);
-  
-  
+  y = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->y);
+
   /* info dict */
   /* infostring */
-  const char* infostring;
   switch( exitcode ){
       case ECOS_OPTIMAL:
           infostring = "Optimal solution found";
@@ -491,14 +561,13 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
   }
 
   /* numerical errors */
-  idxint numerr = 0;
   if( (exitcode == ECOS_NUMERICS) || (exitcode == ECOS_OUTCONE) || (exitcode == ECOS_FATAL) ){
       numerr = 1;
   }
 
   /* timings */
 #if PROFILING > 0
-	PyObject *tinfos = Py_BuildValue(
+	tinfos = Py_BuildValue(
 #if PROFILING > 1
     "{s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d}",
 #else
@@ -516,7 +585,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     "tsolve",(double)mywork->info->tsolve);
 #endif
 
-  PyObject *infoDict = Py_BuildValue(
+  infoDict = Py_BuildValue(
 #if PROFILING > 0
     "{s:l,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:l,s:s,s:O,s:l}",
 #else
@@ -553,8 +622,8 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    * memcpy(MAT_BUFD(s), mywork->s, m*sizeof(double));
    */
   veclen[0] = m;
-  PyObject *s = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->s);
-  
+  s = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->s);
+
   /* z */
   /* matrix *z;
    * if(!(z = Matrix_New(m,1,DOUBLE)))
@@ -562,14 +631,12 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
    * memcpy(MAT_BUFD(z), mywork->z, m*sizeof(double));
    */
   veclen[0] = m;
-  PyObject *z = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->z);
-  
-
+  z = PyArray_SimpleNewFromData(1, veclen, NPY_DOUBLE, mywork->z);
 
   /* cleanup */
   ECOS_cleanup(mywork, 4);
 
-  PyObject *returnDict = Py_BuildValue(
+  returnDict = Py_BuildValue(
     "{s:O,s:O,s:O,s:O,s:O}",
     "x",x,
     "y",y,
@@ -578,14 +645,14 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
     "info",infoDict);
   /* give up ownership to the return dictionary */
   Py_DECREF(x); Py_DECREF(y); Py_DECREF(z); Py_DECREF(s); Py_DECREF(infoDict);
-  
+
   /* no longer need pointers to arrays that held primitives */
   if(q) free(q);
   Py_DECREF(Gx_arr); Py_DECREF(Gi_arr); Py_DECREF(Gp_arr);
   Py_DECREF(c_arr); Py_DECREF(h_arr);
   if (b_arr) Py_DECREF(b_arr);
-  if (Ax_arr) Py_DECREF(Ax_arr); 
-  if (Ai_arr) Py_DECREF(Ai_arr); 
+  if (Ax_arr) Py_DECREF(Ax_arr);
+  if (Ai_arr) Py_DECREF(Ai_arr);
   if (Ap_arr) Py_DECREF(Ap_arr);
 
   return returnDict;
@@ -623,7 +690,7 @@ static PyObject* moduleinit(void)
 #else
   m = Py_InitModule("_ecos", ECOSMethods);
 #endif
-  
+
   /*if (import_array() < 0) return NULL;  */ /* for numpy arrays */
   /*if (import_cvxopt() < 0) return NULL; */ /* for cvxopt support */
 

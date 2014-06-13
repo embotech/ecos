@@ -1,0 +1,20 @@
+language: python
+python:
+    #- "2.6"
+    - "2.7"
+    - "3.2"
+    #- "3.3"
+virtualenv:
+    system_site_packages: true
+# install scipy and numpy
+before_install:
+    - sudo apt-get install python-numpy python-scipy
+    - pip install coverage
+# install dependencies
+install:
+    - make test
+    - cd python; sudo python setup.py install; cd ..
+# command to run tests
+script:
+    - ./ecostester
+    - cd python; nosetests --with-cover --cover-package=ecos test_interface.py; cd ..

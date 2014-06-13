@@ -4,4 +4,4 @@ a simple
     python setup.py install
 
 will do. The `distribute.sh` script is used to submit ECOS to the PyPi
-repository. Normal users can ignore it along with `setup_dist.py`.
+repository. Normal users can ignore it.

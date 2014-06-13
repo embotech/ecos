@@ -31,21 +31,21 @@
 #endif
 
 
-/* ECOS VERSION NUMBER - FORMAT: X.Y.Z --------------------------------- */ 
-#define ECOS_VERSION ("1.0.3")
+/* ECOS VERSION NUMBER - FORMAT: X.Y.Z --------------------------------- */
+#define ECOS_VERSION ("1.0.4")
 
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
-#define MAXIT      (30)          /* maximum number of iterations         */
+#define MAXIT      (50)          /* maximum number of iterations         */
 #define FEASTOL    (1E-6)        /* primal/dual infeasibility tolerance  */
-#define ABSTOL     (1E-7)        /* absolute tolerance on duality gap    */
-#define RELTOL     (1E-7)        /* relative tolerance on duality gap    */
+#define ABSTOL     (5E-7)        /* absolute tolerance on duality gap    */
+#define RELTOL     (5E-7)        /* relative tolerance on duality gap    */
 #define FTOL_INACC (1E-4)        /* inaccurate solution feasibility tol. */
 #define ATOL_INACC (1E-5)        /* inaccurate solution absolute tol.    */
 #define RTOL_INACC (1E-5)        /* inaccurate solution relative tol.    */
 #define GAMMA      (0.99)        /* scaling the final step length        */
 #define STATICREG  (1)           /* static regularization: 0:off, 1:on   */
-#define DELTASTAT  (5E-9)        /* regularization parameter             */
+#define DELTASTAT  (1E-8)        /* regularization parameter             */
 #define DELTA      (5E-7)        /* dyn. regularization parameter        */
 #define EPS        (1E-14)  /* dyn. regularization threshold (do not 0!) */
 #define VERBOSE    (1)           /* bool for verbosity; PRINTLEVEL < 3   */
@@ -54,9 +54,9 @@
 #define LINSYSACC  (1E-14)       /* rel. accuracy of search direction    */
 #define SIGMAMIN   (0.0001)      /* always do some centering             */
 #define SIGMAMAX   (0.9999)      /* never fully center                   */
-#define STEPMIN    (0.0001)      /* smallest step that we do take        */
-#define STEPMAX    (0.9999) /* largest step allowed, also in affine dir. */
-#define SAFEGUARD  (500)    /* Maximum increase in PRES before
+#define STEPMIN    (0.001)       /* smallest step that we do take        */
+#define STEPMAX    (0.999)  /* largest step allowed, also in affine dir. */
+#define SAFEGUARD  (500)         /* Maximum increase in PRES before
                                                 ECOS_NUMERICS is thrown. */
 
 /* EQUILIBRATION METHOD ------------------------------------------------ */
@@ -83,7 +83,7 @@ extern "C" {
 
 /* SETTINGS STRUCT ----------------------------------------------------- */
 typedef struct settings{
-	pfloat gamma;                /* scaling the final step length        */	
+	pfloat gamma;                /* scaling the final step length        */
 	pfloat delta;                /* regularization parameter             */
     pfloat eps;                  /* regularization threshold             */
 	pfloat feastol;              /* primal/dual infeasibility tolerance  */
@@ -105,7 +105,7 @@ typedef struct stats{
     pfloat pres;
     pfloat dres;
     pfloat pinf;
-    pfloat dinf;    
+    pfloat dinf;
 	pfloat pinfres;
     pfloat dinfres;
     pfloat gap;
@@ -124,8 +124,8 @@ typedef struct stats{
 	pfloat tsolve;
 #endif
 #if PROFILING > 1
-	pfloat tfactor;	
-	pfloat tkktsolve;	
+	pfloat tfactor;
+	pfloat tkktsolve;
 	pfloat torder;
 	pfloat tkktcreate;
 	pfloat ttranspose;
@@ -133,7 +133,7 @@ typedef struct stats{
     pfloat tfactor_t1;
     pfloat tfactor_t2;
 #endif
-    
+
 } stats;
 
 
@@ -144,7 +144,7 @@ typedef struct pwork{
 	idxint m;   /* number of conically constrained variables s */
 	idxint p;   /* number of equality constraints */
     idxint D;   /* degree of the cone */
-	    
+
     /* variables */
     pfloat* x;  /* primal variables                    */
     pfloat* y;  /* multipliers for equality constaints */
@@ -153,7 +153,7 @@ typedef struct pwork{
 	pfloat* lambda; /* scaled variable                 */
 	pfloat kap; /* kappa (homogeneous embedding)       */
 	pfloat tau; /* tau (homogeneous embedding)         */
-    
+
     /* best iterate seen so far */
     /* variables */
     pfloat* best_x;  /* primal variables                    */
@@ -166,7 +166,7 @@ typedef struct pwork{
     pfloat best_by;
     pfloat best_hz;
     stats* best_info; /* info of best iterate               */
-	
+
 	/* temporary stuff holding search direction etc. */
     pfloat* dsaff;
     pfloat* dzaff;
@@ -174,10 +174,10 @@ typedef struct pwork{
 	pfloat* dsaff_by_W;
     pfloat* saff;
     pfloat* zaff;
-	    
+
     /* cone */
     cone* C;
-    
+
     /* problem data */
     spmat* A;  spmat* G;  pfloat* c;  pfloat* b;  pfloat* h;
 
@@ -196,22 +196,22 @@ typedef struct pwork{
 	/* temporary storage */
 	pfloat cx;  pfloat by;  pfloat hz;  pfloat sz;
 
-	/* KKT System */   
+	/* KKT System */
 	kkt* KKT;
 
 	/* info struct */
-    stats* info; 
+    stats* info;
 
 	/* settings struct */
-	settings* stgs; 
-    
+	settings* stgs;
+
 } pwork;
 
 
 /* SOME USEFUL MACROS -------------------------------------------------- */
 #define MAX(X,Y)  ((X) < (Y) ? (Y) : (X))  /* maximum of 2 expressions   */
 /* safe division x/y where y is assumed to be positive! */
-#define SAFEDIV_POS(X,Y)  ( (Y) < EPS ? ((X)/EPS) : (X)/(Y) ) 
+#define SAFEDIV_POS(X,Y)  ( (Y) < EPS ? ((X)/EPS) : (X)/(Y) )
 
 
 /* METHODS */
@@ -232,16 +232,16 @@ idxint ECOS_solve(pwork* w);
  *
  * Use the second argument to give the number of variables to NOT free.
  * This is useful if you want to use the result of the optimization without
- * copying over the arrays. One use case is the MEX interface, where we 
+ * copying over the arrays. One use case is the MEX interface, where we
  * do not want to free x,y,s,z (depending on the number of LHS).
  */
 void ECOS_cleanup(pwork* w, idxint keepvars);
-    
-    
-/** 
+
+
+/**
  * Version: returns the current version number
  * Use a character array of length 7 to obtain the version number
- * in the format 
+ * in the format
  *      x.y.zzz
  * where x is the major, y the minor and zzz the build number
  */

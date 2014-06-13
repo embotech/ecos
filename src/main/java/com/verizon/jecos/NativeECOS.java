@@ -1,5 +1,8 @@
 package com.verizon.jecos;
 
+import org.jblas.util.Logger;
+import org.jblas.util.LibraryLoader;
+
 public class NativeECOS {
 	/* Load the libecos.so / libecos.jnilib library and test some basic functionality */
 	static void loadLibraryAndCheckErrors() {
@@ -7,9 +10,19 @@ public class NativeECOS {
 			System.loadLibrary("ecos");
 		} catch (UnsatisfiedLinkError e) {
 			System.out.println("ECOS native library not found in path");
+			// Nope, ok, so let's copy it.
+	        Logger.getLogger().config(
+	            "BLAS native library not found in path. Copying native library "
+	                + "from the archive. Consider installing the library somewhere "
+	                + "in the path (for Windows: PATH, for Linux: LD_LIBRARY_PATH).");
+	        // Ok, and now load it!
+	        LibraryLoader loader = new LibraryLoader();
+	        loader.loadLibrary("ldl", false, false);
+	        loader.loadLibrary("amd", false, false);
+	        loader.loadLibrary("ecos", false, false);
 		}
 	}
-
+	
 	public static native int EcosSolve(int n, int m, int p, int l,
 										int ncones, int[] q, 
 										double[] Gpr, int[] Gjc, int[] Gir,

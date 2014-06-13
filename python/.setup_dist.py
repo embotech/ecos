@@ -23,14 +23,16 @@ _ecos = Extension('_ecos', libraries = lib,
                     ] + glob('external/amd/src/*.c')
                       + glob('src/*.c'))
 
-
-setup(  name = 'ecos',
-        version = '1.0.2',
-        author = 'Alex Domahidi, Eric Chu',
-        author_email = 'domahidi@control.ee.ethz.ch, echu@cs.stanford.edu',
-        url = 'http://github.com/ifa-ethz/ecos',
-        description = 'This is the Python package for ECOS: Embedded Cone Solver. See Github page for more information.',
-        py_modules = ['ecos'],
-        license = "GPLv3",
-        ext_modules = [_ecos],
-        requires = ["numpy (>= 1.7)"])
+setup(
+    name = 'ecos',
+    version = '1.0.4',
+    author = 'Alex Domahidi, Eric Chu',
+    author_email = 'domahidi@control.ee.ethz.ch, echu@cs.stanford.edu',
+    url = 'http://github.com/ifa-ethz/ecos',
+    description = 'This is the Python package for ECOS: Embedded Cone Solver. See Github page for more information.',
+    license = "GPLv3",
+    py_modules = ['ecos'],
+    ext_modules = [_ecos],
+    requires = ["numpy (>= 1.7)",
+                "scipy (>= 0.12)"]
+)

@@ -17,8 +17,6 @@ JNIEXPORT jint JNICALL Java_com_verizon_jecos_NativeECOS_EcosSolve(
 
 	extern void ECOS_cleanup(pwork*, idxint);
 
-	printf("Native EcosSolve\n");
-
 	idxint * qPtr = (idxint *) (*env)->GetLongArrayElements(env, q, NULL);
 	pfloat *GprPtr = (*env)->GetDoubleArrayElements(env, Gpr, NULL);
 	idxint *GjcPtr = (idxint *) (*env)->GetLongArrayElements(env, Gjc, NULL);
@@ -55,6 +53,7 @@ JNIEXPORT jint JNICALL Java_com_verizon_jecos_NativeECOS_EcosSolve(
 		tsetup = wspace->info->tsetup * 1000;
 		ttotal = tsetup + tsolve;
 #endif
+
 #if PROFILING > 1
 		torder = wspace->info->torder * 1000;
 		tkktcreate = wspace->info->tkktcreate * 1000;
