@@ -25,7 +25,7 @@ opts.maxit = 50;
 opts.verbose = 1;
 
 % set entries as requested by user
-for i = 1:nargin/2
+for i = 1:2:nargin
     assert(ischar(varargin{i}),'Parameter %d is not a string');
     opts.(varargin{i}) = varargin{i+1};
 end
