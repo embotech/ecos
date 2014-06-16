@@ -54,35 +54,35 @@ class DirectQpSolver(H: DoubleMatrix, alpha: Double, rho: Double,
   var zOld = DoubleMatrix.zeros(n, 1)
   var xHat = DoubleMatrix.zeros(n, 1)
   var scale = DoubleMatrix.zeros(n, 1)
-  
+
   var residual = DoubleMatrix.zeros(n, 1)
-  var s = DoubleMatrix.zeros(n,1)
-  
+  var s = DoubleMatrix.zeros(n, 1)
+
   var proximal = 1
-  
-  def setProximal(p: Int) : DirectQpSolver = {
-	proximal = p  
+
+  def setProximal(p: Int): DirectQpSolver = {
+    proximal = p
     this
   }
-  
-  def solve(q: DoubleMatrix, lb: DoubleMatrix, ub: DoubleMatrix): DoubleMatrix = {
+
+  def solve(q: DoubleMatrix, lb: Option[DoubleMatrix], ub: Option[DoubleMatrix]): DoubleMatrix = {
     z.fill(0)
     u.fill(0)
 
     zOld.fill(0)
     xHat.fill(0)
     scale.fill(0)
-    
+
     residual.fill(0)
     s.fill(0)
-    
+
     var k = 0
-    
+
     //Memory for x and tempR are allocated by Solve.solve calls
     //TO DO : See how this is implemented in breeze, why a workspace can't be used
-    var x : DoubleMatrix = null
-    var tempR : DoubleMatrix = null
-    
+    var x: DoubleMatrix = null
+    var tempR: DoubleMatrix = null
+
     while (k < MAX_ITER) {
       //scale = rho*(z - u) - q
       scale.copy(z).subi(u).muli(rho).subi(q)
@@ -91,19 +91,19 @@ class DirectQpSolver(H: DoubleMatrix, alpha: Double, rho: Double,
       tempR = Solve.solve(scale, Rtrans)
       //Step 2 : y * x = R
       x = Solve.solve(tempR, R)
-      
+
       //z-update with relaxation
-      
+
       //x_hat = alpha*x + (1-alpha)*zold
       zOld.copy(z).muli(1 - alpha)
       xHat.copy(x).muli(alpha).addi(zOld)
-      
+
       //Apply proximal operator
       zOld.copy(z)
-      
+
       //Pick the correct proximal operator based on options
       //We will test the following
-      
+
       //1. no proximal
       //2. proxBound
       //3. proxPos
@@ -111,33 +111,36 @@ class DirectQpSolver(H: DoubleMatrix, alpha: Double, rho: Double,
       //5. proxPos + Linear
       //6. proxL1
       proximal match {
-        case 2 => Proximal.projectBox(xHat.data, lb.data, ub.data)
+        case 2 =>
+          if (lb == None || ub == None)
+            throw new IllegalArgumentException("DirectQpSolver proximal operator on box needs lower and upper bounds")
+          Proximal.projectBox(xHat.data, lb.get.data, ub.get.data)
         case 3 => Proximal.projectPos(xHat.data)
-        case 4 => if(A != None) Proximal.proxLinear(xHat.data, rho, A.get)
-        case 5 => if(A != None) Proximal.proxLp(xHat.data, rho, A.get)
+        case 4 => if (A != None) Proximal.proxLinear(xHat.data, rho, A.get)
+        case 5 => if (A != None) Proximal.proxLp(xHat.data, rho, A.get)
         case 6 => Proximal.proxL1(xHat.data, rho)
       }
       z.copy(xHat)
       
       //Dual (u) update
       u.addi(xHat.subi(z))
-      
+
       //Convergence checks
       //history.r_norm(k)  = norm(x - z);
       val residualNorm = residual.copy(x).subi(z).norm2()
       //history.s_norm(k)  = norm(-rho*(z - zold));
       val sNorm = s.copy(z).subi(zOld).muli(-rho).norm2()
-      
+
       //TO DO : Make sure z.muli(-1) is actually needed in norm calculation
       residual.copy(z).muli(-1)
       s.copy(u).muli(rho)
-      
-      val epsPrimal = sqrt(n)*ABSTOL + RELTOL*max(x.norm2(), residual.norm2())
-      val epsDual = sqrt(n)*ABSTOL + RELTOL*s.norm2()
-      if(residualNorm < epsPrimal && sNorm < epsDual) x
+
+      val epsPrimal = sqrt(n) * ABSTOL + RELTOL * max(x.norm2(), residual.norm2())
+      val epsDual = sqrt(n) * ABSTOL + RELTOL * s.norm2()
+      if (residualNorm < epsPrimal && sNorm < epsDual) x
       k = k + 1
     }
-    println("MAX ITER reached without convergence, call Interior Point Solver")
+    println("DirectQpSolver MAX ITER reached without convergence, call Interior Point Solver")
     x
   }
 }
