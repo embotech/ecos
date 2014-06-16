@@ -1,4 +1,4 @@
-package com.verizon.jecos;
+package com.verizon.cvxoptimizer.ecos;
 
 import org.jblas.util.Logger;
 import org.jblas.util.LibraryLoader;

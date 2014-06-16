@@ -1,4 +1,4 @@
-package com.verizon.jecos
+package com.verizon.cvxoptimizer.ecos
 
 /*
  import org.scalatest.WrapWith

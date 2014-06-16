@@ -1,4 +1,4 @@
-package com.verizon.jecos
+package com.verizon.cvxoptimizer.ecos
 
 import breeze.linalg.DenseMatrix
 import breeze.linalg.CSCMatrix
@@ -118,7 +118,7 @@ class QpSolver(n: Int, diagonal: Boolean = false,
   }
   gBuilder.add(linearInequality + bounds * n + n + 1, n, -math.sqrt(2))
 
-  val hBuilder = Array.fill[Double](linearInequality + bounds * n + n + 2)(0)
+  val hBuilder = Array.fill[Double](linearInequality + bounds * n + n + 2)(0.0)
 
   if (linearInequality > 0) {
     for (i <- Inequalities.get.iterator) {
@@ -193,7 +193,7 @@ class QpSolver(n: Int, diagonal: Boolean = false,
     }
     for (i <- 0 to f.length - 1) c.update(i, f(i))
   }
-
+  
   def run(H: DoubleMatrix, f: Array[Double]): (Int, Array[Double]) = {
     if(diagonal) {
       throw new IllegalArgumentException("Qpsolver: digonal flag must be false for dense solve")
@@ -293,9 +293,30 @@ object QpSolver {
     val dposvResult = Solve.solvePositive(jblasH, jblasf).data
     println("Dposv output")
     for (i <- 0 to dposvResult.length - 1) println(dposvResult(i))
-
+    
     val dposvTime = System.currentTimeMillis() - dposvStart
 
     println("Runtime bfgs " + bfgsTime + " qpDiag " + qpDiagTime + " qp " + qpTime + " dposv " + dposvTime)
+    
+    val n = 5
+    val ata = new DoubleMatrix(Array(
+      Array( 4.377, -3.531, -1.306, -0.139,  3.418),
+      Array(-3.531,  4.344,  0.934,  0.305, -2.140),
+      Array(-1.306,  0.934,  2.644, -0.203, -0.170),
+      Array(-0.139,  0.305, -0.203,  5.883,  1.428),
+      Array( 3.418, -2.140, -0.170,  1.428,  4.684)))
+    val atb = new DoubleMatrix(Array(-1.632, 2.115, 1.094, -1.025, -0.636))
+
+    val goodx = Array(0.13025, 0.54506, 0.2874, 0.0, 0.028628)
+    
+    val qpSolverBounds = new QpSolver(n, false, None, None, true, false)
+    
+    val (statusBounds, qpResultBounds) = qpSolverBounds.run(ata, atb.data)
+    
+    for(i <- 0 until n) {
+      println(qpResultBounds(i) + " " + goodx(i))
+      //assert(Math.abs(x(i) - goodx(i)) < 1e-3)
+      //assert(x(i) >= 0)
+    }
   }
 }

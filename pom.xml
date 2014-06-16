@@ -2,14 +2,14 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	
-        <groupId>com.verizon</groupId>
-	<artifactId>jecos</artifactId>
+    <groupId>com.verizon</groupId>
+	<artifactId>cvxoptimizer</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
         
-	<name>jecos</name>
-	<description>A primal-dual interior point constraint solver for the JVM</description>
-	<url>http://www.github.com/debasish83/jecos</url>
+	<name>cvxoptimizer</name>
+	<description>Constraint solver for the JVM</description>
+	<url>http://www.github.com/debasish83/cvxoptimizer</url>
 
 	<licenses>
 	  <license>
@@ -32,9 +32,9 @@
 	</properties>
 
 	<scm>
-		<connection>scm:git:https://github.com/debasish83/jecos.git</connection>
-		<developerConnection>scm:git:https://github.com/debasish83/jecos.git</developerConnection>
-		<url>https://github.com/debasish83/jecos.git</url>
+		<connection>scm:git:https://github.com/debasish83/cvxoptimizer.git</connection>
+		<developerConnection>scm:git:https://github.com/debasish83/cvxoptimizer.git</developerConnection>
+		<url>https://github.com/debasish83/cvxoptimizer.git</url>
 	</scm>
 
 	<developers>

@@ -1,7 +1,7 @@
 /*
  * Example problem from ECOS 
  */
-package com.verizon.jecos;
+package com.verizon.cvxoptimizer.ecos;
 
 public class RunECOS {
 	public static void main(String[] args) {
