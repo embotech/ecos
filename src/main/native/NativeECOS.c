@@ -1,9 +1,9 @@
-#include "com_verizon_jecos_NativeECOS.h"
-#define CORE_PACKAGE "com/verizon/jecos/"
+#include "com_verizon_cvxoptimizer_ecos_NativeECOS.h"
+#define CORE_PACKAGE "com/verizon/cvxoptimizer/ecos/"
 
 #include "ecos.h"
 
-JNIEXPORT jint JNICALL Java_com_verizon_jecos_NativeECOS_EcosSolve(
+JNIEXPORT jint JNICALL Java_com_verizon_cvxoptimizer_ecos_NativeECOS_EcosSolve(
 		JNIEnv *env, jclass this, jint n, jint m, jint p, jint l, jint ncones,
 		jintArray q, jdoubleArray Gpr, jintArray Gjc, jintArray Gir,
 		jdoubleArray Apr, jintArray Ajc, jintArray Air, jdoubleArray c,
@@ -100,7 +100,7 @@ JNIEXPORT jint JNICALL Java_com_verizon_jecos_NativeECOS_EcosSolve(
 	return exitflag;
 }
 
-JNIEXPORT jstring JNICALL Java_com_verizon_jecos_NativeECOS_EcosVer(JNIEnv *env, jclass this)
+JNIEXPORT jstring JNICALL Java_com_verizon_cvxoptimizer_ecos_NativeECOS_EcosVer(JNIEnv *env, jclass this)
 {
 	extern const char * ECOS_ver();
 	jstring ecosVer = (*env)->NewStringUTF(env, ECOS_ver());

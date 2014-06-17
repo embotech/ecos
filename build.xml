@@ -16,7 +16,7 @@
     <property name="include" value="${basedir}/include" />
     <property name="native" value="${basedir}/src/" />
     <property name="external" value="${basedir}/external" />
-    <property name="pkgbase" value="com.verizon.jecos" />
+    <property name="pkgbase" value="com.verizon.cvxoptimizer.ecos" />
     
     <target name="prepare" description="create directories needed for compilation">
         <mkdir dir="${bin}" />

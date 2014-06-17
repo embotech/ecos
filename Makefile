@@ -1,7 +1,7 @@
 # Makefile for ECOS
 # Configuration of make process in ecos.mk
 # ECOS JNILib
-PACKAGE=com.verizon.jecos
+PACKAGE=com.verizon.cvxoptimizer.ecos
 PACKAGE_PATH=$(subst .,/,$(PACKAGE))
 
 SRC=src/main
@@ -12,7 +12,7 @@ RESOURCES=$(SRC)/main/resources
 TARGET_C=target/
 LIB_PATH=$(RESOURCES)/lib
 
-GENERATED_HEADERS=include/com_verizon_jecos_NativeECOS.h
+GENERATED_HEADERS=include/com_verizon_cvxoptimizer_ecos_NativeECOS.h
 #ant javah generates the NativeECOS header, implement the NativeECOS.c driver
 GENERATED_SOURCES=${SRC_C}/NativeECOS.c
 

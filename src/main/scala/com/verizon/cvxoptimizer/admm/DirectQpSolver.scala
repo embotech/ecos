@@ -13,6 +13,10 @@ import scala.math.sqrt
  * 
  * Author @ Debasish Das
  * 
+ * Reference: http://www.stanford.edu/~boyd/papers/admm/quadprog/quadprog.html
+ * 
+ * Extension for proximal operators that show up in Matrix Factorization using Alternating Least Squares
+ *  
  */
 
 /*
@@ -58,6 +62,7 @@ class DirectQpSolver(H: DoubleMatrix, alpha: Double, rho: Double,
   var residual = DoubleMatrix.zeros(n, 1)
   var s = DoubleMatrix.zeros(n, 1)
 
+  //Default is same as dposv: One cholesky factorization followed by forward-backward solves
   var proximal = 1
 
   def setProximal(p: Int): DirectQpSolver = {
@@ -75,7 +80,7 @@ class DirectQpSolver(H: DoubleMatrix, alpha: Double, rho: Double,
 
     residual.fill(0)
     s.fill(0)
-
+    
     var k = 0
 
     //Memory for x and tempR are allocated by Solve.solve calls
@@ -112,7 +117,7 @@ class DirectQpSolver(H: DoubleMatrix, alpha: Double, rho: Double,
       //6. proxL1
       proximal match {
         case 2 =>
-          if (lb == None || ub == None)
+          if (lb == None && ub == None)
             throw new IllegalArgumentException("DirectQpSolver proximal operator on box needs lower and upper bounds")
           Proximal.projectBox(xHat.data, lb.get.data, ub.get.data)
         case 3 => Proximal.projectPos(xHat.data)
@@ -134,13 +139,13 @@ class DirectQpSolver(H: DoubleMatrix, alpha: Double, rho: Double,
       //TO DO : Make sure z.muli(-1) is actually needed in norm calculation
       residual.copy(z).muli(-1)
       s.copy(u).muli(rho)
-
+      
       val epsPrimal = sqrt(n) * ABSTOL + RELTOL * max(x.norm2(), residual.norm2())
       val epsDual = sqrt(n) * ABSTOL + RELTOL * s.norm2()
       if (residualNorm < epsPrimal && sNorm < epsDual) x
       k = k + 1
     }
-    println("DirectQpSolver MAX ITER reached without convergence, call Interior Point Solver")
+    println("DirectQpSolver MAX ITER reached convergence failure call ECOS")
     x
   }
 }
