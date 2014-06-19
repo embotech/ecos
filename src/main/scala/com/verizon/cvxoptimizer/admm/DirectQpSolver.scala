@@ -40,7 +40,9 @@ import breeze.linalg.norm
 class DirectQpSolver(n: Int, proximal: Int = 0,
   alpha: Double = 1.0, rho: Double = 1.0,
   A: Option[Array[Double]] = None) {
-
+	
+  val wsH = DoubleMatrix.zeros(n, n)
+  
   val MAX_ITER = 1000
   val ABSTOL = 1e-8
   val RELTOL = 1e-4
@@ -54,17 +56,21 @@ class DirectQpSolver(n: Int, proximal: Int = 0,
 
   var residual = DoubleMatrix.zeros(n, 1)
   var s = DoubleMatrix.zeros(n, 1)
-
-  //Default is same as dposv: One cholesky factorization followed by forward-backward solves
-
-  def solve(H: DoubleMatrix, q: DoubleMatrix,
-    lb: Option[DoubleMatrix] = None, ub: Option[DoubleMatrix] = None): DoubleMatrix = {
-    for (i <- 0 until H.rows) {
-      val diag = H.get(i, i)
-      H.put(i, i, diag + rho)
+  
+  def updateGram(row: Int, col: Int, value: Double) {
+    if (row < 0 || row >= n) {
+      throw new IllegalArgumentException("DirectQpSolver row out of bounds for gram matrix update")
     }
+    if (col < 0 || col >= n) {
+      throw new IllegalArgumentException("DirectQpSolver column out of bounds for gram matrix update")
+    }
+    wsH.put(row, col, value)
+  }
+  //Default is same as dposv: One cholesky factorization followed by forward-backward solves
+  
+  def solve(q: DoubleMatrix, lb: Option[DoubleMatrix], ub: Option[DoubleMatrix]): DoubleMatrix = {
     //Dense cholesky factorization
-    val R = Decompose.cholesky(H)
+    val R = Decompose.cholesky(wsH)
     val Rtrans = R.transpose()
     
     z.fill(0)
@@ -79,7 +85,7 @@ class DirectQpSolver(n: Int, proximal: Int = 0,
     //TO DO : See how this is implemented in breeze, why a workspace can't be used
     var x: DoubleMatrix = null
     var scaledR: DoubleMatrix = null
-
+    
     while (k < MAX_ITER) {
       //scale = rho*(z - u) - q
       scale.fill(0)
@@ -159,6 +165,17 @@ class DirectQpSolver(n: Int, proximal: Int = 0,
     }
     println("DirectQpSolver MAX ITER reached convergence failure call ECOS")
     x
+  }
+  
+  def solve(H: DoubleMatrix, q: DoubleMatrix,
+    lb: Option[DoubleMatrix] = None, ub: Option[DoubleMatrix] = None): DoubleMatrix = {
+    for (i <- 0 until H.rows)
+      for(j <- 0 until H.columns) {
+        val h = H.get(i,j)
+        if(i==j) wsH.put(i, j, rho + h)
+        else wsH.put(i, j, h)
+      }
+    solve(q, lb, ub)
   }
 }
 
@@ -251,7 +268,18 @@ object DirectQpSolver {
     proximal = 5
     val qpSolverL1 = new DirectQpSolver(problemSize, proximal)
     val l1Results = qpSolverL1.solve(H, f)
-    println("L1 result check " + (l1Results.subi(2.5).norm2() < 1e-4))
+    println("L1 result check " + (l1Results.subi(2.5).norm2() < 1e-3))
+    
+    proximal = 4
+    //Lp formulation
+    //x1 + x2 + .. + xr <= 0, x1 >= 0, x2>= 0, ... , xr >= 0
+    //Still have to generate a golden for this test
+    /*
+    val A = Array.fill[Double](problemSize)(1.0)
+    val qpSolverLp = new DirectQpSolver(problemSize, proximal,1.0, 1.0, Some(A))
+    val lpResults = qpSolverLp.solve(H, f)
+    println("Lp results " + lpResults)
+    */
     
     println("Spark tests")
     
@@ -264,6 +292,9 @@ object DirectQpSolver {
     val testSolver = new DirectQpSolver(1)
     val testResult = testSolver.solve(Htest, ftest)
     println(testResult)
-    println(Solve.solvePositive(Htest, ftest.muli(-1)))
+    println(Solve.solvePositive(Htest, ftest.mul(-1)))
+    
+    val testResult1 = testSolver.solve(Htest, ftest)
+    println(testResult1)
   }
 }
