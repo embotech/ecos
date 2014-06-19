@@ -171,10 +171,7 @@ class DirectQpSolver(n: Int,
       val epsPrimal = sqrt(n) * ABSTOL + RELTOL * max(x.norm2(), residual.norm2())
       val epsDual = sqrt(n) * ABSTOL + RELTOL * s.norm2()
 
-      if (residualNorm < epsPrimal && sNorm < epsDual) {
-        println("DirectQpSolver converged in iterations " + k)
-        return x
-      }
+      if (residualNorm < epsPrimal && sNorm < epsDual) return x
       k = k + 1
     }
     println("DirectQpSolver MAX ITER reached convergence failure call ECOS")

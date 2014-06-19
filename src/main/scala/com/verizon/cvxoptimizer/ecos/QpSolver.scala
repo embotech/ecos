@@ -136,7 +136,6 @@ class QpSolver(nHessian: Int, nLinear: Int = 0, diagonal: Boolean = false,
   hBuilder.update(linearInequality + bounds * n + n + 1, 1.0/sqrt(2))
 
   if (linearInequality > 0) {
-    println("Update inequality")
     for (i <- Inequalities.get.iterator) {
       val ((row, col), value) = i
       gBuilder.add(row, col, value)
@@ -230,42 +229,28 @@ class QpSolver(nHessian: Int, nLinear: Int = 0, diagonal: Boolean = false,
     if (diagonal) {
       throw new IllegalArgumentException("Qpsolver: digonal flag must be false for dense solve")
     }
-    val hessianStart = System.currentTimeMillis()
     updateHessian(H)
-    val hessianTime = System.currentTimeMillis() - hessianStart
-
-    val linearStart = System.currentTimeMillis()
+    
     updateLinearObjective(f)
-    val linearTime = System.currentTimeMillis() - linearStart
-
-    val nativeStart = System.currentTimeMillis()
+    
     val status = NativeECOS.solveSocp(c, G.rows, G.cols, G.data, G.colPtrs, G.rowIndices, hBuilder,
       Aeq.rows, Aeq.cols, Aeq.data, Aeq.colPtrs, Aeq.rowIndices, beqBuilder,
-      linear, cones, x);
-    val nativeTime = System.currentTimeMillis() - nativeStart
-    println("hessian " + hessianTime + " linear " + linearTime + " native " + nativeTime)
+      linear, cones, x)
     
     (status, x.slice(0, n))
   }
 
   def solve(Hdiag: Array[Double], f: Array[Double]): (Int, Array[Double]) = {
-    val diagStart = System.currentTimeMillis()
     if (!diagonal) {
       throw new IllegalArgumentException("QpSolver: diagonal flag must be true for sparse solve")
     }
     updateDiagonal(Hdiag)
-    val diagTime = System.currentTimeMillis() - diagStart
-
-    val linearStart = System.currentTimeMillis()
+    
     updateLinearObjective(f)
-    val linearTime = System.currentTimeMillis() - linearStart
-
-    val nativeStart = System.currentTimeMillis()
+    
     val status = NativeECOS.solveSocp(c, G.rows, G.cols, G.data, G.colPtrs, G.rowIndices, hBuilder,
       Aeq.rows, Aeq.cols, Aeq.data, Aeq.colPtrs, Aeq.rowIndices, beqBuilder,
-      linear, cones, x);
-    val nativeTime = System.currentTimeMillis() - nativeStart
-    println("diagonal " + diagTime + " linear " + linearTime + " native " + nativeTime)
+      linear, cones, x)
     
     (status, x.slice(0, nHessian))
   }
