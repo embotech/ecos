@@ -67,7 +67,9 @@ class DirectQpSolver(n: Int, proximal: Int = 0,
     val R = Decompose.cholesky(H)
     val Rtrans = R.transpose()
     
+    z.fill(0)
     u.fill(0)
+    
     residual.fill(0)
     s.fill(0)
     
@@ -250,5 +252,18 @@ object DirectQpSolver {
     val qpSolverL1 = new DirectQpSolver(problemSize, proximal)
     val l1Results = qpSolverL1.solve(H, f)
     println("L1 result check " + (l1Results.subi(2.5).norm2() < 1e-4))
+    
+    println("Spark tests")
+    
+    val Htest = DoubleMatrix.zeros(1,1)
+
+    Htest.put(0, 0, 1.123621)
+    val ftest = DoubleMatrix.zeros(1,1)
+    ftest.put(0, 0, -0.521311)
+    
+    val testSolver = new DirectQpSolver(1)
+    val testResult = testSolver.solve(Htest, ftest)
+    println(testResult)
+    println(Solve.solvePositive(Htest, ftest.muli(-1)))
   }
 }
