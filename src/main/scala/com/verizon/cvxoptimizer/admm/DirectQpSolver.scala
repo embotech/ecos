@@ -44,8 +44,8 @@ class DirectQpSolver(n: Int,
   val wsH = DoubleMatrix.zeros(n, n)
   
   val MAX_ITER = 1000
-  val ABSTOL = 1e-4
-  val RELTOL = 1e-4
+  val ABSTOL = 1e-8
+  val RELTOL = 1e-8
 
   var z = DoubleMatrix.zeros(n, 1)
   var u = DoubleMatrix.zeros(n, 1)
