@@ -226,7 +226,7 @@ class QpSolver(nHessian: Int, nLinear: Int = 0, diagonal: Boolean = false,
     }
   }
 
-  def run(H: DoubleMatrix, f: Array[Double]): (Int, Array[Double]) = {
+  def solve(H: DoubleMatrix, f: Array[Double]): (Int, Array[Double]) = {
     if (diagonal) {
       throw new IllegalArgumentException("Qpsolver: digonal flag must be false for dense solve")
     }
@@ -248,7 +248,7 @@ class QpSolver(nHessian: Int, nLinear: Int = 0, diagonal: Boolean = false,
     (status, x.slice(0, n))
   }
 
-  def run(Hdiag: Array[Double], f: Array[Double]): (Int, Array[Double]) = {
+  def solve(Hdiag: Array[Double], f: Array[Double]): (Int, Array[Double]) = {
     val diagStart = System.currentTimeMillis()
     if (!diagonal) {
       throw new IllegalArgumentException("QpSolver: diagonal flag must be true for sparse solve")
@@ -315,12 +315,12 @@ object QpSolver {
 
     val qpSolverDiag = new QpSolver(problemSize, 0, true)
     val qpDiagStart = System.currentTimeMillis()
-    val (statusDiag, qpResultDiag) = qpSolverDiag.run(Hdiag, f)
+    val (statusDiag, qpResultDiag) = qpSolverDiag.solve(Hdiag, f)
     val qpDiagTime = System.currentTimeMillis() - qpDiagStart
 
     val qpSolver = new QpSolver(problemSize)
     val qpStart = System.currentTimeMillis()
-    val (status, qpResult) = qpSolver.run(H, f)
+    val (status, qpResult) = qpSolver.solve(H, f)
     val qpTime = System.currentTimeMillis() - qpStart
     
     //TO DO : Except basic runtime comparisons move everything else to tests
@@ -344,7 +344,7 @@ object QpSolver {
     /*QpSolver with lower bound true, upper bound false*/
     val qpSolverBounds = new QpSolver(n, 0, false, None, None, true, false)
     
-    val (statusBounds, qpResultBounds) = qpSolverBounds.run(ata, atb.mul(-1).data)
+    val (statusBounds, qpResultBounds) = qpSolverBounds.solve(ata, atb.mul(-1).data)
     
     for (i <- 0 until n) {
       println(qpResultBounds(i) + " " + goodx(i))
@@ -355,7 +355,7 @@ object QpSolver {
     val ub = Array.fill[Double](n)(0.25)
     qpSolverUb.updateUb(ub)
     
-    val (statusUb, ubResult) = qpSolverUb.run(ata, atb.mul(-1).data)
+    val (statusUb, ubResult) = qpSolverUb.solve(ata, atb.mul(-1).data)
     for(i <- 0 until n) {
       println(ubResult(i))
     }
@@ -365,7 +365,7 @@ object QpSolver {
     val qpSolverEq = new QpSolver(n, 0, false, Some(equalityBuilder.result), None, true, true)
     qpSolverEq.updateUb(Array.fill[Double](n)(1.0))
     qpSolverEq.updateEquality(Array[Double](0.5))
-    val (statusEq, eqResult) = qpSolverEq.run(ata, atb.mul(-1).data)
+    val (statusEq, eqResult) = qpSolverEq.solve(ata, atb.mul(-1).data)
     var sum: Double = 0.0
     for(i <- 0 until n) {
       println(eqResult(i))
@@ -404,7 +404,7 @@ object QpSolver {
     val Hl1 = Array.fill[Double](l1)(2.0)
     val fl1 = Array.fill[Double](2*l1)(-6.0)
     for(i <- 0 until l1) fl1.update(l1 + i, 1.0)
-    val (statusL1, resultL1) = qpSolverL1.run(Hl1, fl1)
+    val (statusL1, resultL1) = qpSolverL1.solve(Hl1, fl1)
     for(i <- 0 until l1) println(resultL1(i))
   }
 }

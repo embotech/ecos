@@ -37,33 +37,17 @@ import breeze.linalg.norm
  * When constraints are much less than variables it should behave better than ECOS 
  * We have to see what's the threshold when larger constraints will break the primal solver	
  */
-class DirectQpSolver(H: DoubleMatrix, alpha: Double, rho: Double,
+class DirectQpSolver(n: Int, proximal: Int = 0,
+  alpha: Double = 1.0, rho: Double = 1.0,
   A: Option[Array[Double]] = None) {
-  val n = H.rows
-
-  def updateGram(row: Int, col: Int, value: Double) {
-    if (row < 0 || row >= n)
-      throw new IllegalArgumentException("ProximalQpSolver updateHessian row is out of range")
-    if (col < 0 || col >= n)
-      throw new IllegalArgumentException("ProximalQpSolver updateHessian col is out of range")
-    H.data(row * n + col) = value
-  }
 
   val MAX_ITER = 1000
   val ABSTOL = 1e-8
   val RELTOL = 1e-4
-  
-  for(i <- 0 until H.rows) {
-    val diag = H.get(i, i)
-    H.put(i, i, diag + rho)
-  }
-  
-  val R = Decompose.cholesky(H)
-  val Rtrans = R.transpose()
-  
+
   var z = DoubleMatrix.zeros(n, 1)
   var u = DoubleMatrix.zeros(n, 1)
-  
+
   var zOld = DoubleMatrix.zeros(n, 1)
   var xHat = DoubleMatrix.zeros(n, 1)
   var scale = DoubleMatrix.zeros(n, 1)
@@ -72,53 +56,55 @@ class DirectQpSolver(H: DoubleMatrix, alpha: Double, rho: Double,
   var s = DoubleMatrix.zeros(n, 1)
 
   //Default is same as dposv: One cholesky factorization followed by forward-backward solves
-  var proximal = 0
 
-  def setProximal(p: Int): DirectQpSolver = {
-    proximal = p
-    this
-  }
-
-  def solve(q: DoubleMatrix, lb: Option[DoubleMatrix] = None, ub: Option[DoubleMatrix] = None): DoubleMatrix = {
-    u.fill(0)
+  def solve(H: DoubleMatrix, q: DoubleMatrix,
+    lb: Option[DoubleMatrix] = None, ub: Option[DoubleMatrix] = None): DoubleMatrix = {
+    for (i <- 0 until H.rows) {
+      val diag = H.get(i, i)
+      H.put(i, i, diag + rho)
+    }
+    //Dense cholesky factorization
+    val R = Decompose.cholesky(H)
+    val Rtrans = R.transpose()
     
+    u.fill(0)
     residual.fill(0)
     s.fill(0)
-
+    
     var k = 0
-
+    
     //Memory for x and tempR are allocated by Solve.solve calls
     //TO DO : See how this is implemented in breeze, why a workspace can't be used
     var x: DoubleMatrix = null
     var scaledR: DoubleMatrix = null
-    
+
     while (k < MAX_ITER) {
       //scale = rho*(z - u) - q
       scale.fill(0)
       scale.addi(z).subi(u).muli(rho).subi(q)
-         
+
       // x = R \ (R' \ scale)
       //Step 1 : scale * y = R'
       scaledR = Solve.solve(Rtrans, scale)
-      
+
       //Step 2 : y * x = R
       x = Solve.solve(R, scaledR)
-      
+
       //z-update with relaxation
-      
+
       //zold = (1-alpha)*z
       //x_hat = alpha*x + zold
-      zOld.fill(0).addi(z).muli(1-alpha)
+      zOld.fill(0).addi(z).muli(1 - alpha)
       xHat.fill(0).addi(x).muli(alpha).addi(zOld)
-      
+
       //zold = z
       zOld.fill(0).addi(z)
-      
+
       //z = xHat + u
       z.fill(0).addi(xHat).addi(u)
-      
+
       //Apply proximal operator
-      
+
       //Pick the correct proximal operator based on options
       //We will test the following
 
@@ -129,7 +115,7 @@ class DirectQpSolver(H: DoubleMatrix, alpha: Double, rho: Double,
       //4. proxPos + Linear
       //5. proxL1
       proximal match {
-        case 0 => 
+        case 0 =>
         case 1 =>
           if (lb == None && ub == None)
             throw new IllegalArgumentException("DirectQpSolver proximal operator on box needs lower and upper bounds")
@@ -139,39 +125,39 @@ class DirectQpSolver(H: DoubleMatrix, alpha: Double, rho: Double,
         case 4 => if (A != None) Proximal.proxLp(z.data, rho, A.get)
         case 5 => Proximal.proxL1(z.data, rho)
       }
-      
+
       //z has proximal(x_hat)
-      
+
       //Dual (u) update
       u.addi(xHat.subi(z))
-            
+
       //Convergence checks
       //history.r_norm(k)  = norm(x - z);
       residual.fill(0).addi(x).subi(z)
       val residualNorm = residual.norm2()
-      
+
       //history.s_norm(k)  = norm(-rho*(z - zold));
       s.fill(0).addi(z).subi(zOld).muli(-rho)
       val sNorm = s.norm2()
-      
+
       //TO DO : Make sure z.muli(-1) is actually needed in norm calculation
       //residual = -z
       residual.fill(0).addi(z).muli(-1)
       //s = rho*u
       s.fill(0).addi(u).muli(rho)
-      
+
       val epsPrimal = sqrt(n) * ABSTOL + RELTOL * max(x.norm2(), residual.norm2())
       val epsDual = sqrt(n) * ABSTOL + RELTOL * s.norm2()
-          
+
       if (residualNorm < epsPrimal && sNorm < epsDual) {
-    	  println("DirectQpSolver converged in iterations " + k)
-    	  return x
+        println("DirectQpSolver converged in iterations " + k)
+        return x
       }
       k = k + 1
     }
     println("DirectQpSolver MAX ITER reached convergence failure call ECOS")
     x
-  } 
+  }
 }
 
 object DirectQpSolver {
@@ -186,7 +172,7 @@ object DirectQpSolver {
     println("Test DirectQpSolver, breeze LBFGS and jblas solvePositive with problemSize " + problemSize)
 
     val lbfgs = new LBFGS[DenseVector[Double]](problemSize, 4)
-    
+
     def optimizeWithLBFGS(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
@@ -196,7 +182,7 @@ object DirectQpSolver {
       val result = lbfgs.minimize(f, init)
       norm(result - 3.0, 2) < 1E-10
     }
-    
+
     val init = DenseVector.zeros[Double](problemSize)
     init(0 until init.length by 2) := -1.2
     init(1 until init.length by 2) := 1.0
@@ -211,21 +197,58 @@ object DirectQpSolver {
     val dposvStart = System.currentTimeMillis()
     val dposvResult = Solve.solvePositive(jblasH, jblasf).data
     val dposvTime = System.currentTimeMillis() - dposvStart
-    
+
     val H = DoubleMatrix.eye(problemSize).mul(2.0)
     val f = DoubleMatrix.zeros(problemSize, 1).add(-6)
     val alpha = 1.0
     val rho = 1.0
-    val qpSolver = new DirectQpSolver(H,alpha,rho)
-    val lb = DoubleMatrix.zeros(problemSize,1)
-    val ub = DoubleMatrix.zeros(problemSize,1).addi(10)
-    
+
+    val qpSolver = new DirectQpSolver(problemSize)
     val qpStart = System.currentTimeMillis()
-    val result = qpSolver.solve(f)
+    val result = qpSolver.solve(H, f)
     val qpTime = System.currentTimeMillis() - qpStart
-    
+
     assert(result.subi(3.0).norm2() < 1E-4)
-    
+
     println("dim " + problemSize + " bfgs " + bfgsTime + " dposv " + dposvTime + " directqp " + qpTime)
+    
+    val n = 5
+    val ata = new DoubleMatrix(Array(
+      Array(4.377, -3.531, -1.306, -0.139, 3.418),
+      Array(-3.531, 4.344, 0.934, 0.305, -2.140),
+      Array(-1.306, 0.934, 2.644, -0.203, -0.170),
+      Array(-0.139, 0.305, -0.203, 5.883, 1.428),
+      Array(3.418, -2.140, -0.170, 1.428, 4.684)))
+
+    val atb = new DoubleMatrix(Array(-1.632, 2.115, 1.094, -1.025, -0.636))
+
+    val goodx = Array(0.13025, 0.54506, 0.2874, 0.0, 0.028628)
+
+    var proximal = 2
+    val qpSolverPos = new DirectQpSolver(n, proximal)
+    val posResult = qpSolverPos.solve(ata, atb.muli(-1))
+
+    for (i <- 0 until n) {
+      println(posResult.get(i) + " " + goodx(i))
+      assert(Math.abs(posResult.get(i) - goodx(i)) < 1e-4)
+    }
+    proximal = 1
+    val goodBounds: DoubleMatrix = DoubleMatrix.zeros(n, 1)
+    goodBounds.put(0,0,0.0)
+    goodBounds.put(1,0,0.25000000000236045)
+    goodBounds.put(2,0,0.2499999999945758)
+    goodBounds.put(3,0,0.0)
+    goodBounds.put(4,0,0.0)
+
+    val qpSolverBounds = new DirectQpSolver(n, proximal)
+    val lb = DoubleMatrix.zeros(problemSize, 1)
+    val ub = DoubleMatrix.zeros(problemSize, 1).addi(0.25)
+    val boundsResult = qpSolverBounds.solve(ata, atb, Some(lb), Some(ub))
+    println("Bounds result check " + (boundsResult.subi(goodBounds).norm2() < 1e-4))
+    
+    proximal = 5
+    val qpSolverL1 = new DirectQpSolver(problemSize, proximal)
+    val l1Results = qpSolverL1.solve(H, f)
+    println("L1 result check " + (l1Results.subi(2.5).norm2() < 1e-4))
   }
 }
