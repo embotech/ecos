@@ -26,16 +26,22 @@ all: ldl amd ecos demo
 
 # build Tim Davis' sparse LDL package
 ldl:
-	( cd external/ldl    ; $(MAKE) )
+	( cd external/ldl    ; $(MAKE) )	
 
 # build Tim Davis' AMD package
 amd:
 	( cd external/amd    ; $(MAKE) )
 
+AMD = amd_aat amd_1 amd_2 amd_dump amd_postorder amd_post_tree amd_defaults \
+	amd_order amd_control amd_info amd_valid amd_preprocess
+
+AMDL = $(addsuffix .o, $(subst amd_,amd_l_,$(AMD)))
+	
 # build ECOS
 ecos: jniecos.o ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o equil.o
-	$(C) -L./external/amd -L./external/ldl -shared -o libecos.so jniecos.o ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o equil.o -lldl -lamd
-	cp libecos.so libecos.jnilib
+	$(C) -shared -o libecos.so jniecos.o ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o equil.o external/ldl/ldl.o external/amd/amd_global.o external/amd/amd_l_1.o \
+	external/amd/amd_l_2.o external/amd/amd_l_aat.o external/amd/amd_l_control.o external/amd/amd_l_defaults.o external/amd/amd_l_dump.o external/amd/amd_l_info.o \
+	external/amd/amd_l_order.o external/amd/amd_l_post_tree.o external/amd/amd_l_postorder.o external/amd/amd_l_preprocess.o external/amd/amd_l_valid.o
 
 jniecos.o: ${GENERATED_SOURCES} ${GENERATED_HEADERS}
 	$(C) -fPIC -c ${GENERATED_SOURCES} -o jniecos.o
