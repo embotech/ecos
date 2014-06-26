@@ -381,7 +381,7 @@ def solve(q: DoubleMatrix, beq: Option[DoubleMatrix]): DoubleMatrix = {
       	val scaledR = Dpotrs(Rtrans, scale)
 
       	//Step 2 : y * x = R
-      	val xlambda = Dpotrs(R, scaledR)
+      	val x = Dpotrs(R, scaledR)
       
       	//z-update with relaxation
 
