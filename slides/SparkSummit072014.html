@@ -45,47 +45,49 @@
 				<section>
 					<h2>Quadratic Programing Solver for Non-negative Matrix Factorization with Spark</h2>
 					<p>
-						<small> Debashis Das &nbsp; & &nbsp; Santanu Das</small>
+						<small> Debasish Das &nbsp; & &nbsp; Santanu Das</small>
 					</p>
 				</section>
-
+					
 				<section>
 					<h3>Roadmap</h3>
 					<div align="left">
 						<p>
-						</ul>
-							<li> Some overview on Matrix Factorization
-							<li> QP formulation of Non-negative Matrix Factorization (NMF)
-							<li> Algorithms to solve quadratic programming problems
-						</ul>
-						<ul>
-							<li> Some QP Use Cases (on public data)
-						<ul>
-							<li> unconstrained
-							<li> linear constrained
+							<ul>
+							<li> Some overview on Matrix Factorization </li>
+							<li> QP formulation of Non-negative Matrix Factorization (NMF) </li>
+							<li> Algorithms to solve quadratic programming problems </li>
+							<li> Some QP Use Cases (on public data) </li>
 								<ul>
-									<li> inquality constraint
-									<li> equality constraint
-									<li> box constraints
+									<li> unconstrained </li>
+									<li> linear constrained </li>
+									<ul>
+										<li> box constraints </li>
+										<li> inquality constraint </li>
+										<li> equality constraint </li>
+									</ul>
 								</ul>
-						<ul>
-							<li> Results & Discussions
-						<ul>
-							<li> Regularized Alternating Least Square
-							<li> ECOS
-							<li> ADMM
-							<li> MATLAB (validation)
+							<li> Results & Discussions </li>
+								<ul>
+									<li> Regularized Alternating Least Square </li>
+									<li> Interior point method </li>
+									<li> Alternating Direction Method of Multipliers </li>
+									<li> Octave validation </li>
+								</ul>
+							</ul>
 						</p>
-
 					</div>
-
 				</section>
-
+				
 				<section>
 					<h3>Matrix Factorization</h3>
 					<div align="left">
 						<p>
-							What it is- To decompose observed data (matrix): (1) factors/component matrixand (2) coefficient matrix
+							What it is- To decompose observed data (matrix):
+							<ul>
+								<li>Factors/component matrix </li> 
+								<li>Coefficient matrix </li>
+							</ul>
 						</p>
 
 						<p>
@@ -104,7 +106,7 @@
 					</p>
 					
 					<div align="left">
-						To Solve for W  & H -
+						To Solve for W & H -
 					</div>
 					
 					<p>
@@ -116,17 +118,13 @@
 					<div align="left">
 						Further- Use case drives Usability and Interpretability
 						<p>
-						</ul>
-							<li> Non-negativity
-							<li> Smoothness
-							<li> Sparsity etc.
-						</ul>
-					</div>
-
-
-
-					
-
+							<ul>
+								<li> Non-negativity </li>
+								<li> Smoothness </li>
+								<li> Sparsity </li>
+							</ul>
+						</p>
+					</div>	
 				</section>
 
 				<section>
@@ -143,10 +141,10 @@
 							Fixed-point RALS Algorithm: Equating gradient to zero, we get the iterative update scheme of $W$, $H$
 						</p>
 						</ul>
-							<li> start random / specific initialization of $W$
-							<li> estimate $H$, given $W$
-							<li> enforce positivity (NMF)
-							<li> REPEAT until convergence
+							<li> start random / specific initialization of $W$ </li>
+							<li> estimate $H$, given $W$ </li>
+							<li> enforce positivity (NMF) </li>
+							<li> REPEAT until convergence </li>
 						</ul>
 						<p>
 							Regularization constants: Fixed or dynamically varied
@@ -154,12 +152,7 @@
 						<p>
 							Other forms of update scheme: Multiplicative / Additive etc.
 						</p>
-
 					</div>
-
-					
-				</section>
-
 				</section>
 
 				<section>
@@ -174,10 +167,10 @@
 						</p>
 						<p>
 							Non-negativity property of NMF allows additive combinations, no subtraction occurs.
+							<ul>
+								<li> Suitable for part-based representation and intuitive as the combined parts form the whole representation </li>
+							</ul>
 						</p>
-						</ul>
-							<li> suitable for part-based representation and intuitive as the combined parts form the whole representation
-						</ul>
 						<p>
 							Current effort aims to introduce flexibility to impose additional constraints (e.g. bounds on variables, sparsity, etc.)
 						</p>
@@ -193,7 +186,7 @@
 							$D(R || W,H)=\frac{1}{2}||R_{p \times n} - W_{p \times r}H_{r \times n}||^{2}_{F}$
 						</p>
 						<p>
-							$=\frac{1}{2}\sum^{n}_{i=1}||r_{i}-Wh_{i}||^{2}_{F}$
+							$=\frac{1}{2}\sum^{n}_{i=1}||r_{i}-Wh_{i}||^{2}_{2}$
 						</p>
 						</ul>
 							<li> $W=[w_{1},w_{2},w_{3},…w_{r}]$ : cluster centers/factors 
@@ -202,22 +195,65 @@
 							Solve   $n$ independent problems:
 						</p>
 						</ul>
-							<li> $min_{h_{i}\ge 0} \frac{1}{2} ||r_{i}-Wh_{i}||_{F}$
-							<li> Aggregated solutions: $H=[h_{1},h_{2},h_{3},…h_{n}]$
-							<li> Intuition: $h_{ik}$ is the measure that $r_{i}$ belongs to cluster $k$ i.e. ideally if $r_{i}$  is the exact representative of cluster $r$ then $h_{ik}=1$
+							<li> $min_{h_{i}\ge 0} \frac{1}{2} ||r_{i}-Wh_{i}||^{2}_{2}$ </li>
+							<li> Aggregated solutions: $H=[h_{1},h_{2},h_{3},…h_{n}]$ </li>
+							<li> Intuition: $h_{ik}$ is the measure that $r_{i}$ belongs to cluster $k$ i.e. ideally if $r_{i}$  is the exact representative of cluster $r$ then $h_{ik}=1$ </li>
 						</ul>
 						<p>
-							With $W$, we distributedly compute cluster possibilities ($H$) using a QP solver in spark framework.
+							Given $W$, we compute cluster possibilities ($H$) using a QP solver in Spark Mllib.
 						</p>
-
 					</div>				
 				</section>
 
+				<section>
+					<h3> QP to ADMM/SOCP </h3>	
+					<ul>
+						<li> ADMM : what is it? When we use it? </li>
+						<li> QP to SOCP is solved using Interior Point Method (ECOS) </li>
+						<li> QP to ADMM is solved using Cholesky Factorization based Solver </li>
+						<li> SOCP: what is it? When we use it?	</li>
+					</ul>	
+				</section>
+				
+				<section>
+					<h3> QP to ADMM formulation </h3>
+					<div align="left">
+						<p> Objective
+							$f(h): 0.5||r-Wh||^{2}_{2} => 0.5h^{T}(WW^{T})h - (r^{T}W)h$
+						</p>
+						<p> Constraints
+							$g(z) : z >= 0$						
+						</p>
+						<p> ADMM formulation
+							$f(h) + g(z) \\
+							\text{s.t } h = z$
+						</p>
+
+						<p> ADMM Steps
+							<ul>
+								<li> $h^{k+1} = argmin_{h} (f(h + 0.5 \times \rho ||h - z^{k} + u^{k}))$ </li>
+								<li> $z^{k+1} = x^{k+1} + u^{k} \text{s.t } z^{k+1} \in g(z)$ </li>
+								<li> $u^{k+1} = u^{k} + x_{k+1} - z_{k+1}$ </li>
+							</ul>
+						</p>
+					</div>
+				</section>
 
 				<section>
-					<h3> QP to SOCP Conversion</h3>
-
-								
+					<h3> QP to SOCP formulation </h3>
+					<div align="left">
+						<p> Objective transformation
+							$\text{minimize } t \\
+							\text{ s.t } 0.5h^{T}(WW^{T})h - (r^{T}W)h \leq t$
+						</p>
+						<p> Constraints
+							$h >= 0 \\
+							Aeq \times h = Beq \\
+							A \times h \leq B$
+						</p>
+						<p> Quadratic constraint transformation </p>
+							$[{Q_{chol}h};{c}]_{2} \leq d$
+					</div>
 				</section>
 
 				<section>
@@ -237,10 +273,11 @@ function linkify( selector ) {
     }
   }
 }
-					</code></pre>
+				</code></pre>
 
 								
 				</section>
+
 				<section>
 					<h3> ADMM: Spark Implementation (II)</h3>
 					<pre><code data-trim contenteditable>
@@ -266,23 +303,39 @@ function linkify( selector ) {
 
 
 				<section>
-					<h2>Some images</h2>
-					<a class="image" href="http://lab.hakim.se/meny/" target="_blank">
-						<img width="320" height="299" src="http://s3.amazonaws.com/hakim-static/portfolio/images/meny.png" alt="Meny">
-					</a>
-				</section>
-
-
-				<section>
-					<h2>Stellar Links</h2>
-					<ul>
-						<li><a href="https://github.com/hakimel/reveal.js">Source code on GitHub</a></li>
-					</ul>
+					<h2>Use Case: Positivity</h2>
+					code: (ecos/admm)
+					comps
+					application
+		
 				</section>
 
 				<section>
-					<h1>Questions</h1>
-					<h3>BY Debasish Das & Santanu Das</h3>
+					<h2>Use Case: Sparsity</h2>
+					code: (ecos/admm)
+					comps
+					application
+		
+				</section>
+
+				<section>
+					<h2>Use Case: Equality with bound</h2>
+					code: (ecos/admm)
+					comps
+					application
+		
+				</section>
+
+				<section>
+					<h2>RunTime</h2>
+				</section>
+
+				<section>
+					<h2>Future work</h2>
+				</section>
+
+				<section>
+					<h2>Questions</h2>
 				</section>
 
 			</div>
