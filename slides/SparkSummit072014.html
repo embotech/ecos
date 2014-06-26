@@ -277,7 +277,7 @@
 				</section>
 
 				<section>
-					<h3> QP to ADMM formulation </h3>
+					<h3> QP: ADMM formulation </h3>
 					<div align="left">
 						<p>
 							Objective
@@ -309,57 +309,10 @@
 						</p>
 					</div>
 				</section>
-
-				<section>
-					<h3> QP to SOCP formulation </h3>
-					<div align="left">
-						<p>
-							Objective transformation
-							$\text{minimize } t \\
-							\text{ s.t } 0.5h^{T}(WW^{T})h - (r^{T}W)h \leq t$
-						</p>
-						<p>
-							Constraints
-							$h >= 0 \\
-							Aeq \times h = Beq \\
-							A \times h \leq B$
-						</p>
-						<p>
-							Quadratic constraint transformation
-						</p>
-						$[{Q_{chol}h};{c}]_{2} \leq d$
-					</div>
-				</section>
-				
-				<section>
-					<h3> QP with SOCP: Spark Implementation (I)</h3>
-					<pre><code>class QpSolver(nGram: Int, nLinear: Int = 0,diagonal: Boolean = false,
-	Equalities: Option[CSCMatrix[Double]] = None, 
-	Inequalities: Option[CSCMatrix[Double]] = None, 
-	lbFlag: Boolean = false, ubFlag: Boolean = false) = {
-
-	NativeECOS.loadLibraryAndCheckErrors()					
-  							
-	def solve(H: DoubleMatrix, f: Array[Double]): (Int, Array[Double]) = {
-    				
-		updateHessian(H)
-    				
-		updateLinearObjective(f)
-    				
-		val status = NativeECOS.solveSocp(c, G.rows, G.cols, 
-											G.data, G.colPtrs, G.rowIndices, hBuilder,
-											Aeq.rows, Aeq.cols, 
-											Aeq.data, Aeq.colPtrs, Aeq.rowIndices, beqBuilder,
-											linear, cones, x)			
-		
-		(status, x.slice(0, n))
-	}
-}
-</code></pre>
 </section>
 				
 				<section>
-					<h3> ADMM: Spark Implementation (II)</h3>
+					<h3> QP: ADMM Implementation</h3>
 					<pre><code>class DirectQpSolver(nGram: Int,
   lb: Option[DoubleMatrix] = None, ub: Option[DoubleMatrix] = None,
   Aeq: Option[DoubleMatrix] = None, 
@@ -402,6 +355,54 @@ def solve(q: DoubleMatrix, beq: Option[DoubleMatrix]): DoubleMatrix = {
   }
 }
 </code></pre>																									
+</section>
+
+				<section>
+					<h3> QP: SOCP formulation </h3>
+					<div align="left">
+						<p>
+							Objective transformation
+							$\text{minimize } t \\
+							\text{ s.t } 0.5h^{T}(WW^{T})h - (r^{T}W)h \leq t$
+						</p>
+						<p>
+							Constraints
+							$h >= 0 \\
+							Aeq \times h = Beq \\
+							A \times h \leq B$
+						</p>
+						<p>
+							Quadratic constraint transformation
+						</p>
+						$[{Q_{chol}h};{c}]_{2} \leq d$
+					</div>
+				</section>
+				
+				<section>
+					<h3> QP: SOCP Implementation</h3>
+					<pre><code>class QpSolver(nGram: Int, nLinear: Int = 0,diagonal: Boolean = false,
+	Equalities: Option[CSCMatrix[Double]] = None, 
+	Inequalities: Option[CSCMatrix[Double]] = None, 
+	lbFlag: Boolean = false, ubFlag: Boolean = false) = {
+
+	NativeECOS.loadLibraryAndCheckErrors()					
+  							
+	def solve(H: DoubleMatrix, f: Array[Double]): (Int, Array[Double]) = {
+    				
+		updateHessian(H)
+    				
+		updateLinearObjective(f)
+    				
+		val status = NativeECOS.solveSocp(c, G.rows, G.cols, 
+											G.data, G.colPtrs, G.rowIndices, hBuilder,
+											Aeq.rows, Aeq.cols, 
+											Aeq.data, Aeq.colPtrs, Aeq.rowIndices, beqBuilder,
+											linear, cones, x)			
+		
+		(status, x.slice(0, n))
+	}
+}
+</code></pre>
 </section>
 
 				<section>
