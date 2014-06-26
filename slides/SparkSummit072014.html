@@ -333,7 +333,6 @@
 				
 				<section>
 					<h3> QP with SOCP: Spark Implementation (I)</h3>
-					<td class="scala">
 					<pre><code>class QpSolver(nGram: Int, nLinear: Int = 0,diagonal: Boolean = false,
 	Equalities: Option[CSCMatrix[Double]] = None, 
 	Inequalities: Option[CSCMatrix[Double]] = None, 
@@ -361,7 +360,6 @@
 				
 				<section>
 					<h3> ADMM: Spark Implementation (II)</h3>
-					<td class="scala"></td>
 					<pre><code>class DirectQpSolver(nGram: Int,
   lb: Option[DoubleMatrix] = None, ub: Option[DoubleMatrix] = None,
   Aeq: Option[DoubleMatrix] = None, 
@@ -376,12 +374,14 @@ def solve(q: DoubleMatrix, beq: Option[DoubleMatrix]): DoubleMatrix = {
     while (k &le; ITERS) {
       	//scale = rho*(z - u) - q
       	scale.fill(0).addi(z).subi(u).muli(rho).subi(q)
-      
+      	
+      	//Use Dpotrs solve if structure of Hessian supports it
+      	
       	//Step 1 : scale * y = R'
-      	val scaledR = Dpotrs(Rtrans, scale)
+      	val scaledR = Solve.solve(Rtrans, scale)
 
       	//Step 2 : y * x = R
-      	val x = Dpotrs(R, scaledR)
+      	val x = Solve.solve(R, scaledR)
       
       	//z-update with relaxation
 
@@ -406,25 +406,30 @@ def solve(q: DoubleMatrix, beq: Option[DoubleMatrix]): DoubleMatrix = {
 
 				<section>
 					<h2>Use Case: Positivity</h2>
-					code: (ecos/admm)
-					comps
-					application
-
+					<pre><code>
+						
+					</code></pre>
+					<p>comps</p>
+					<p>application</p>
+					
 				</section>
 
 				<section>
 					<h2>Use Case: Sparsity</h2>
-					code: (ecos/admm)
-					comps
-					application
-
+					<pre><code>
+						
+					</code></pre>
+					<p>comps</p>
+					<p>application</p>
 				</section>
 
 				<section>
 					<h2>Use Case: Equality with bound</h2>
-					code: (ecos/admm)
-					comps
-					application
+					<pre><code>
+											
+					</code></pre>
+					<p>comps</p>
+					<p>application</p>
 
 				</section>
 
