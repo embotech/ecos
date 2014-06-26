@@ -107,39 +107,56 @@
 					</div>
 				</section>
 
-<section>
-<h3>Matrix Factorization</h3>
-<div align="left">
-<p>
-	What it is- To decompose observed data (matrix):
-	<ul>
-		<li>Factors/component matrix</li>
-		<li>Coefficient matrix </li>
-	</ul>
-</p>
-
-<p>
-	Goal- minimize reconstruction error
-</p>
-
-<p>
-	Problem Formulation-<br /> 
-	&nbsp;&nbsp;&nbsp;&nbsp;$R_{p \times n} = W_{p \times r}H_{r \times n} + E_{p \times n}$
-</p>
-						
-<p>
-	To Solve for W &amp; H <br />
-	&nbsp;&nbsp;&nbsp;&nbsp;$D^{\alpha}(R || W,H)=\frac{1}{2}||R_{p \times n} - W_{p \times r}H_{r \times n}||^{2}_{F} + \\
-							   {\alpha}_{l1w}||W|| + {\alpha}_{l2w}||W||^{2}_{F} +  \lambda_{l1h}|H||| + \lambda_{l2h}||H||^{2}_{F}$
+				<section>
+					<h3>Matrix Factorization</h3>
+					<div align="left">
+						<p>
+							What it is- To decompose observed data (matrix):
+							<ul>
+								<li>
+									Factors/component matrix
+								</li>
+								<li>
+									Coefficient matrix
+								</li>
+							</ul>
 						</p>
-					
+
+						<p>
+							Goal- minimize reconstruction error<br>
+						</p>
+
+						<p>
+							Problem Formulation-
+						</p>
+
+					</div>
+
 					<p>
-						Further- Use case drives Usability and Interpretability
-						<ul>
-							<li> Non-negativity </li>
-							<li> Sparsity </li>
-						</ul>
+						$R_{p \times n} = W_{p \times r}H_{r \times n} + E_{p \times n}$ <br>
 					</p>
+
+					<div align="left">
+						To Solve for W &amp; H
+					</div>
+
+					<p>
+						$D(R | W,H)=\frac{1}{2}||R_{p \times n} - W_{p \times r}H_{r \times n}||^{2}_{F} + \\
+						{\alpha}_{l1w}||W|| + {\alpha}_{l2w}||W||^{2}_{F} +  \lambda_{l1h}|H||| + \lambda_{l2h}||H||^{2}_{F}$
+					</p>
+
+					<div align="left">
+						Further- Use case drives Usability and Interpretability <br>
+						<p>
+							<ul>
+								<li>
+									Non-negativity
+								</li>
+								<li>
+									Sparsity
+								</li>
+							</ul>
+						</p>
 					</div>
 				</section>
 
@@ -148,30 +165,27 @@
 
 					<div align="left">
 						<p>
-							Gradient of the cost function wrt unknown matrices ($W$, $H$)
+							Gradient of the cost function wrt unknown matrices ($W$, $H$) <br>
 						</p>
 
 					</div>
 					<div align="left">
 						<p>
-							Fixed-point RALS Algorithm: Equating gradient to zero, we get the iterative update scheme of $W$, $H$
+							Fixed-point RALS Algorithm: Equating gradient to zero, we get the iterative update scheme of $W$, $H$ <br>
 						</p>
 						<ul>
 							<li>
-								start random / specific initialization of $W$
+								estimate $H$, given $W$ <small>(inner loop: tolerance based solutions are provided)</small> <br>
 							</li>
 							<li>
-								estimate $H$, given $W$
+								enforce positivity (NMF) <br>
 							</li>
 							<li>
-								enforce positivity (NMF)
-							</li>
-							<li>
-								REPEAT until convergence
+								REPEAT until convergence <small> (outer loop: factor matrices are updated until convergence)</small> <br>
 							</li>
 						</ul>
 						<p>
-							Regularization constants: Fixed or dynamically varied
+							Regularization constants: Fixed or dynamically varied <br>
 						</p>
 						<p>
 							Other forms of update scheme: Multiplicative / Additive etc.
@@ -180,23 +194,23 @@
 				</section>
 
 				<section>
-					<h3> Constraints: NMF vs Other MF</h3>
+					<h3> Constraints: NMF vs Other Popular Factorization Techniques</h3>
 
 					<div align="left">
 						<p>
-							PCA constraints columns of W to be orthonormal and rows of H to be strictly orthogonal to each other.
+							PCA constraints columns of W to be orthonormal and rows of H to be strictly orthogonal to each other.<br>
+
 						</p>
 						<p>
-							K-means constraints rows of H to be strictly orthogonal to each other. H represents indicator matrix (clusters) and W represent cluster centers.
+							K-means constraints rows of H to be strictly orthogonal to each other.<br>
+
 						</p>
 						<p>
-							Non-negativity property of NMF allows additive combinations, no subtraction occurs.
-							<ul>
-								<li>
-									Suitable for part-based representation and intuitive as the combined parts form the whole representation
-								</li>
-							</ul>
+							Non-negativity property of NMF allows additive combinations, no subtraction occurs.<br>
+
+
 						</p>
+
 						<p>
 							Current effort aims to introduce flexibility to impose additional constraints (e.g. bounds on variables, sparsity, etc.)
 						</p>
@@ -209,31 +223,31 @@
 
 					<div align="left">
 						<p>
-							$D(R || W,H)=\frac{1}{2}||R_{p \times n} - W_{p \times r}H_{r \times n}||^{2}_{F}$
+							$D(R | W,H)=\frac{1}{2}||R_{p \times n} - W_{p \times r}H_{r \times n}||^{2}_{F}$
 						</p>
 						<p>
 							$=\frac{1}{2}\sum^{n}_{i=1}||r_{i}-Wh_{i}||^{2}_{2}$
 						</p>
 						<ul>
 							<li>
-								$W=[w_{1},w_{2},w_{3},…w_{r}]$ : cluster centers/factors
+								$W=[w_{1},w_{2},w_{3},…w_{r}]$ : cluster centers/factors<br>
 						</ul>
 						<p>
 							Solve   $n$ independent problems:
 						</p>
 						<ul>
 							<li>
-								$min_{h_{i}\ge 0} \frac{1}{2} ||r_{i}-Wh_{i}||^{2}_{2}$
+								$min_{h_{i}\ge 0} \frac{1}{2} ||r_{i}-Wh_{i}||^{2}_{2}$ <br>
 							</li>
 							<li>
-								Aggregated solutions: $H=[h_{1},h_{2},h_{3},…h_{n}]$
+								Aggregated solutions: $H=[h_{1},h_{2},h_{3},…h_{n}]$ <br>
 							</li>
 							<li>
-								Intuition: $h_{ik}$ is the measure that $r_{i}$ belongs to cluster $k$ i.e. ideally if $r_{i}$  is the exact representative of cluster $r$ then $h_{ik}=1$
+								Intuition: $h_{ik}$ is the measure that $r_{i}$ belongs to cluster $k$ i.e. ideally if $r_{i}$  is the exact representative of cluster $r$ then $h_{ik}=1$ <br>
 							</li>
 						</ul>
 						<p>
-							Given $W$, we compute cluster possibilities ($H$) using a QP solver in Spark Mllib.
+							Given $W$, we compute cluster possibilities ($H$) using a QP solver in Spark Mllib. <small>(Note: This is inner loop)</small> <br>
 						</p>
 					</div>
 				</section>
@@ -242,16 +256,16 @@
 					<h3> QP to ADMM/SOCP </h3>
 					<ul>
 						<li>
-							ADMM : what is it? When we use it?
+							ADMM : solves distributed consensus problems by splitting a hard problem into simpler yet efﬁciently solvable sub-problems. <br>
+
 						</li>
 						<li>
-							QP to SOCP is solved using Interior Point Method (ECOS)
+							ECOS: solves a specific class of problems that can be formulated as a second-order cone program (SOCP) using primal-dual interior-point method. <br>
+
 						</li>
 						<li>
-							QP to ADMM is solved using Cholesky Factorization based Solver
-						</li>
-						<li>
-							SOCP: what is it? When we use it?
+
+							Use: Our priliminary investigation (incomplete) shows that ADMM solves certain class of problems (e.g. l1 minimization) much faster than ECOS while the later proves effective in handling relatively complicated constraints (e.g. equality constraints).
 						</li>
 					</ul>
 				</section>
@@ -354,8 +368,8 @@ def solve(q: DoubleMatrix, beq: Option[DoubleMatrix]): DoubleMatrix = {
 						<p>
 							Quadratic constraint transformation
 						</p>
-						$[{Q_{chol}h};{c}]_{2} \leq d$
 					</div>
+					$\begin{vmatrix} Q_{chol}h \\ c \end{vmatrix} \leq d$
 				</section>
 				
 				<section>
@@ -405,8 +419,24 @@ def projectBox(z: Array[Double], l: Array[Double], u: Array[Double]) {
   	for(i &lt;- 0 until z.length) z.update(i, max(l(i), min(x(i), u(i))))
 }	
 </code></pre>
-<p>comps</p>
-<p>application</p>
+<p>
+						<small>
+							Octave QP used as base line: <br>
+
+							Negative Coefficients (< -1e-4): |Octave(0)|, |ALS (2)|, |ECOS (0)|, |ADMM (1)| <br>
+							RMSE: |ALS (0.023)|, |ECOS (3e-4)|, |ADMM (2.7e-4)| <br>
+
+							<!--
+							ALS: (0.2603810623485856, 0.4691420315852794, 0.1285415765363319, 0.04173911756758212, 0.060422558644892876, 0.37780771013396663, 0.6410088565032461, 0.1644004345325534, 0.013059281544081978, 0.16113499917608942, 0.24889251108117733, 0.4642459194416755, 0.15162283007289407, 0.42113455731380733, -0.06909430214906694, 0.05431460335067089, 0.16672169853490573, -0.07221988828872833, 0.3014244697143103, 0.08568366775845401, 0.15897494913621396, 0.16202946594474105, 0.24308910221203664, 0.0279057172559352, 0.05197423493678404)
+
+							ECOS: (0.23392231069670547, 0.44793966522670625, 0.12558336258472058, 0.0423705232939605, 0.05575891516349965, 0.3735271595768671, 0.6377725961778649, 0.16294037324276067, 0.002378137400086885, 0.17641912106413496, 0.25749106724184795, 0.4589241431032841, 0.13490924508455115, 0.40491851813341123, 3.103483438279619E-5, 0.05465637867152716, 0.17073061112980079, 2.4054319029097743E-5, 0.2937838325088211, 0.07947830932173215, 0.1542754655327302, 0.15924261183574392, 0.22603352489152717, 0.010353698643308241, 0.04226102309521129)
+
+							ADMM: (0.23402786809957343, 0.44791829391542826, 0.125690612375943, 0.04221015333186668, 0.05568028401075164, 0.37351888250363685, 0.6377516458527199, 0.1628873538841959, 0.002221441572620262, 0.17645593392730902, 0.25737581733499315, 0.4589165229595863, 0.1350771985567436, 0.40494564010771433, -2.93510227604376E-5, 0.05461399718151978, 0.17070638225221418, -1.1717365945662072E-4, 0.2938127954097653, 0.07948288824735185, 0.15434589935756, 0.1593947533004461, 0.22615850124675674, 0.0107371592149609, 0.0420014231232954)
+
+							Octave: (0.234 0.448 0.126 0.042 0.056 0.374 0.638 0.163 0.002 0.176 0.257 0.459 0.135 0.405 0.000 0.055 0.171 0.000 0.294 0.079 0.154 0.159 0.226 0.011 0.042) -->
+						</small>	
+					</p>
+					<p>Application: Image feature extraction / energy spectrum where negative coefficients or factors are counter intuitive </p>
 </section>
 
 <section>
@@ -423,20 +453,36 @@ val factors = Array.range(0, numUsers).map { index =>
   val directQpL1Result = directQpSolverL1.solve(H, f)
   directQpL1Result
 }
-
 //DirectQpSolver Proximal Operator
 def proximalL1(z: Array[Double], rho: Double) {
   for(i &lt;- 0 until z.length) 
     z.update(i, max(0, z(i) - 1.0 / rho) - max(0, -z(i) - 1.0 / rho))
 }
 </code></pre>
-<p>comps</p>
-<p>application</p>
-</section>
+					<p>
+						<small>
+							Octave QP used as base line: <br>
+							Sparse Coefficients (> 1e-4): |Octave(16)|, |ALS (20)|, |ECOS (18)|, |ADMM (18)| <br>
+							RMSE: |ALS (0.094)|, |ECOS (0.020)|, |ADMM (0.020)| <br>
+							<!--
+							ALS: (-0.17233280353230368, 0.26813905657318693, 0.2983977288694642, -0.038383666025533426, -0.007958306052824668, 0.06025559335559582, -0.170408283469932, 0.12677747003305245, 0.04160974371440539, 0.4080962658226674, 0.05582738426356671, -0.05106071900953661, 0.18978259530816302, 0.17469208257430266, 0.19804592549438646, 0.03178871499968392, 0.45174349720659696, 0.5453422346384738, 0.15920118685286253, 0.5151240590081638, 0.17033401837725384, 0.09554738882476692, 0.17278101134396082, 0.0864765900477526, 0.6229361615833446)
 
-<section>
-<h2>Use Case: Equality with bound</h2>
-<pre><code>//Equality constraint x1 + x2 + ... + xr = 1
+							ECOS: (6.677357117579477E-7, 0.3532770955711023, 0.22203692911638848, 5.794952649362054E-7, 1.5533717784285757E-6, 0.06396127358612258, 5.394539220947886E-7, 0.06966471242891378, 0.044397382318409846, 0.42001970560536, 0.01813201273124305, 1.3177001477732287E-6, 1.4400473937054273E-6, 0.04168999536013941, 0.21273414522504727, 5.668551364028845E-4, 0.46134721501908316, 0.6612116405630358, 0.10631308102208355, 0.4208590309371256, 0.05520842941514332, 0.10317323345587417, 0.20430987877637977, 1.599257320892257E-6, 0.6414627116962383)
+
+							ADMM: (5.539680905721903E-5, 0.35330082176049665, 0.22201126650395012, 3.676468119200884E-5, 1.3612753108134446E-5, 0.06396819784259122, 6.897804599993105E-5, 0.06957461946645875, 0.044447029847334604, 0.4200612348715408, 0.018154180865929855, -5.153622968074362E-6, 1.99330294029019E-5, 0.041681022196755194, 0.21283264881332237, 3.443953878672043E-4, 0.46136371935325504, 0.6612459302678843, 0.1062566906115344, 0.42086101090531103, 0.05510869077993812, 0.10309253412515856, 0.2043142993711212, 7.388638616829067E-5, 0.641555747039296)
+
+							Octave: (0.000 0.385 0.214 0.000 0.000 0.023 0.000 0.058 0.000 0.411 0.001 0.000 0.000 0.000 0.221 0.013 0.466 0.672 0.071 0.410 0.059 0.141 0.228 0.000 0.642)
+						-->
+
+						</small>
+
+					</p>
+					<p>Application: signal recovery problems in which the original signal is known to have a sparse representation</p>
+				</section>
+
+				<section>
+					<h2>Use Case: Equality with bound</h2>
+					<pre><code>//Equality constraint x1 + x2 + ... + xr = 1
 //Bound constraint is 0 &le; x &le; 1
 val equalityBuilder = new CSCMatrix.Builder[Double](1, rank)
 for (i &lt;- until rank) equalityBuilder.add(0, i, 1)
@@ -454,8 +500,28 @@ val factors = Array.range(0, numUsers).map { index =>
   qpEqualityResult
 }
 </code></pre>
-<p>comps</p>
-<p>application</p>
+					<p>
+						<small>
+							Octave QP used as base line: <br>
+							$\sum$ should be 1: |Octave(1.0)|, |ALS (24)|, |ECOS (0.99)|, |ADMM (24 ??)| <br>
+							Sparse Factors (> 1e-4): |Octave(3)|, |ALS (25)|, |ECOS (3)|, |ADMM (25 ??)| <br>
+							RMSE: |ALS (1.06)|, |ECOS (3e-4)|, |ADMM (1.06)| <br>
+							<!--Sparse factors
+
+							ALS: (1.1873317096067257, 1.3194247762196458, 1.150043570315777, 0.6580098289673267, 0.3876250330308706, 0.4023662793612053, 1.4773930406225069, 1.6080437667484109, 0.04135968697092852, 1.6349439352643065, 1.7666089342406253, 0.40063447042835654, 0.9170214137079815, 0.6422113028337297, 0.7827389266191483, 1.6035582685828396, 0.624534153092173, 0.6786470160862147, 1.405100365539485, 0.3625147773651813, 1.5459237575242588, 1.373300685466455, 0.7269610239632477, 0.4569533082941178, 1.2770901032621316)
+
+							ECOS: (5.281989335844137E-6, 1.96273620646663E-7, 0.7747694457971799, 3.53024581703675E-7, 5.986224283403843E-7, 1.0178360223057677E-6, 1.1522356115864543E-6, 1.1592509445097642E-7, 1.147803703703541E-7, 2.548306793432559E-7, 2.0515690795481794E-7, 1.846023334759782E-7, 1.6884664880152343E-7, 3.276207663355021E-7, 6.506148686128495E-7, 2.645541258592432E-7, 1.9597822967243253E-7, 2.441143631534814E-7, 1.194830744821929E-7, 0.17174199264723888, 1.0915911927479895E-6, 0.053468131596555855, 4.4710700656147975E-7, 2.512890818520256E-7, 1.5828779239218984E-7)
+
+							ADMM: (1.189994746409809, 1.3142973405430987, 1.154514804956833, 0.656270805321331, 0.38988531941774585, 0.4038246246869557, 1.4785357919757471, 1.6003418908964342, 0.033463568050443336, 1.6327766214602601, 1.762324614312061, 0.39746058732517475, 0.9113187480764764, 0.6409439755305839, 0.782319143351226, 1.5997799637202044, 0.6197305794980114, 0.6769265644262611, 1.3967321708663603, 0.3677124957375963, 1.5475153105015809, 1.375970000638589, 0.7269799775955129, 0.4550808174424312, 1.2718865603870995)
+
+							Octave: (0.000 0.000 0.774 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.173 0.000 0.053 0.000 0.000 0.000)
+						-->
+
+
+						</small>		
+
+					</p>
+					<p>Application: Support Vector Machines based models with sparse weight representation or portfolio optimization</p>
 </section>
 
 <section>
