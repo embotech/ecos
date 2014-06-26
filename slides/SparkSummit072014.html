@@ -107,59 +107,39 @@
 					</div>
 				</section>
 
-				<section>
-					<h3>Matrix Factorization</h3>
-					<div align="left">
-						<p>
-							What it is- To decompose observed data (matrix):
-							<ul>
-								<li>
-									Factors/component matrix
-								</li>
-								<li>
-									Coefficient matrix
-								</li>
-							</ul>
+<section>
+<h3>Matrix Factorization</h3>
+<div align="left">
+<p>
+	What it is- To decompose observed data (matrix):
+	<ul>
+		<li>Factors/component matrix</li>
+		<li>Coefficient matrix </li>
+	</ul>
+</p>
+
+<p>
+	Goal- minimize reconstruction error
+</p>
+
+<p>
+	Problem Formulation-<br /> 
+	&nbsp;&nbsp;&nbsp;&nbsp;$R_{p \times n} = W_{p \times r}H_{r \times n} + E_{p \times n}$
+</p>
+						
+<p>
+	To Solve for W &amp; H <br />
+	&nbsp;&nbsp;&nbsp;&nbsp;$D^{\alpha}(R || W,H)=\frac{1}{2}||R_{p \times n} - W_{p \times r}H_{r \times n}||^{2}_{F} + \\
+							   {\alpha}_{l1w}||W|| + {\alpha}_{l2w}||W||^{2}_{F} +  \lambda_{l1h}|H||| + \lambda_{l2h}||H||^{2}_{F}$
 						</p>
-
-						<p>
-							Goal- minimize reconstruction error
-						</p>
-
-						<p>
-							Problem Formulation-
-						</p>
-
-					</div>
-
+					
 					<p>
-						$R_{p \times n} = W_{p \times r}H_{r \times n} + E_{p \times n}$
-					</p>
-
-					<div align="left">
-						To Solve for W &amp; H
-					</div>
-
-					<p>
-						$D^{\alpha}(R || W,H)=\frac{1}{2}||R_{p \times n} - W_{p \times r}H_{r \times n}||^{2}_{F} + \\
-						{\alpha}_{l1w}||W|| + {\alpha}_{l2w}||W||^{2}_{F} +  \lambda_{l1h}|H||| + \lambda_{l2h}||H||^{2}_{F}$
-					</p>
-
-					<div align="left">
 						Further- Use case drives Usability and Interpretability
-						<p>
-							<ul>
-								<li>
-									Non-negativity
-								</li>
-								<li>
-									Smoothness
-								</li>
-								<li>
-									Sparsity
-								</li>
-							</ul>
-						</p>
+						<ul>
+							<li> Non-negativity </li>
+							<li> Sparsity </li>
+						</ul>
+					</p>
 					</div>
 				</section>
 
@@ -380,75 +360,118 @@ def solve(q: DoubleMatrix, beq: Option[DoubleMatrix]): DoubleMatrix = {
 				
 				<section>
 					<h3> QP: SOCP Implementation</h3>
-					<pre><code>class QpSolver(nGram: Int, nLinear: Int = 0,diagonal: Boolean = false,
-	Equalities: Option[CSCMatrix[Double]] = None, 
-	Inequalities: Option[CSCMatrix[Double]] = None, 
-	lbFlag: Boolean = false, ubFlag: Boolean = false) = {
+					<pre><code>class QpSolver(nGram: Int, nLinear: Int = 0, diagonal: Boolean = false,
+  Equalities: Option[CSCMatrix[Double]] = None, 
+  Inequalities: Option[CSCMatrix[Double]] = None, 
+  lbFlag: Boolean = false, ubFlag: Boolean = false) = {
 
-	NativeECOS.loadLibraryAndCheckErrors()					
+  NativeECOS.loadLibraryAndCheckErrors()					
   							
-	def solve(H: DoubleMatrix, f: Array[Double]): (Int, Array[Double]) = {
-    				
-		updateHessian(H)
-    				
-		updateLinearObjective(f)
-    				
-		val status = NativeECOS.solveSocp(c, G.rows, G.cols, 
-											G.data, G.colPtrs, G.rowIndices, hBuilder,
-											Aeq.rows, Aeq.cols, 
-											Aeq.data, Aeq.colPtrs, Aeq.rowIndices, beqBuilder,
-											linear, cones, x)			
+  def solve(H: DoubleMatrix, f: Array[Double]): (Int, Array[Double]) = {  				
+    
+    updateHessian(H)
+    updateLinearObjective(f)
+    
+    val status = NativeECOS.solveSocp(c, G.rows, G.cols, 
+									  G.data, G.colPtrs, G.rowIndices, hBuilder,
+									  Aeq.rows, Aeq.cols, 
+									  Aeq.data, Aeq.colPtrs, Aeq.rowIndices, beqBuilder,
+									  linear, cones, x)			
 		
-		(status, x.slice(0, n))
-	}
+    (status, x.slice(0, n))
+  }
 }
 </code></pre>
 </section>
 
 				<section>
 					<h2>Use Case: Positivity</h2>
-					<pre><code>
-						
-					</code></pre>
-					<p>comps</p>
-					<p>application</p>
-					
-				</section>
+					<pre><code>//Spark Driver
+val lb = DoubleMatrix.zeros(rank, 1)
+val ub = DoubleMatrix.zeros(rank, 1).addi(1.0)
+val directQpSolver = new DirectQpSolver(rank, Some(lb), Some(ub)).setProximal(ProjectBox)
+          			
+val factors = Array.range(0, numUsers).map { index =>
+  // Compute the full XtX matrix from the lower-triangular part we got above
+  fillFullMatrix(userXtX(index), fullXtX)
+  val H = fullXtX.add(YtY.get.value)
+  val f = userXy(index).mul(-1)
+  val directQpResult = directQpSolver.solve(H, f)
+  directQpResult
+}
+   
+//Direct QpSolver Projection Operator
+def projectBox(z: Array[Double], l: Array[Double], u: Array[Double]) {
+  	for(i &lt;- 0 until z.length) z.update(i, max(l(i), min(x(i), u(i))))
+}	
+</code></pre>
+<p>comps</p>
+<p>application</p>
+</section>
 
-				<section>
-					<h2>Use Case: Sparsity</h2>
-					<pre><code>
-						
-					</code></pre>
-					<p>comps</p>
-					<p>application</p>
-				</section>
+<section>
+<h2>Use Case: Sparsity</h2>
+<pre><code>//Spark Driver
+val directQpSolverL1 = new DirectQpSolver(rank).setProximal(ProximalL1)
+directQpSolverL1.setLambda(lambdaL1)
 
-				<section>
-					<h2>Use Case: Equality with bound</h2>
-					<pre><code>
-											
-					</code></pre>
-					<p>comps</p>
-					<p>application</p>
+val factors = Array.range(0, numUsers).map { index =>
+  // Compute the full XtX matrix from the lower-triangular part we got above
+  fillFullMatrix(userXtX(index), fullXtX)
+  val H = fullXtX.add(YtY.get.value)
+  val f = userXy(index).mul(-1)
+  val directQpL1Result = directQpSolverL1.solve(H, f)
+  directQpL1Result
+}
 
-				</section>
+//DirectQpSolver Proximal Operator
+def proximalL1(z: Array[Double], rho: Double) {
+  for(i &lt;- 0 until z.length) 
+    z.update(i, max(0, z(i) - 1.0 / rho) - max(0, -z(i) - 1.0 / rho))
+}
+</code></pre>
+<p>comps</p>
+<p>application</p>
+</section>
 
-				<section>
-					<h2>RunTime</h2>
-				</section>
+<section>
+<h2>Use Case: Equality with bound</h2>
+<pre><code>//Equality constraint x1 + x2 + ... + xr = 1
+//Bound constraint is 0 &le; x &le; 1
+val equalityBuilder = new CSCMatrix.Builder[Double](1, rank)
+for (i &lt;- until rank) equalityBuilder.add(0, i, 1)
+val qpSolverEquality = 
+          new QpSolver(rank, 0, false, 
+            Some(equalityBuilder.result), None, true, true)
+qpSolverEquality.updateUb(Array.fill[Double](rank)(1.0))
+qpSolverEquality.updateEquality(Array[Double](1.0))
 
-				<section>
-					<h2>Future work</h2>
-				</section>
+val factors = Array.range(0, numUsers).map { index =>
+  fillFullMatrix(userXtX(index), fullXtX)
+  val H = fullXtX.add(YtY.get.value)
+  val f = userXy(index).mul(-1)
+  val qpEqualityResult = qpSolverEquality.solve(H, f)
+  qpEqualityResult
+}
+</code></pre>
+<p>comps</p>
+<p>application</p>
+</section>
 
-				<section>
-					<h2>Questions</h2>
-				</section>
+<section>
+	<h2>RunTime</h2>
+</section>
 
-			</div>
+<section>
+	<h2>Future work</h2>
+</section>
 
-		</div>
+<section>
+	<h2>Questions</h2>
+</section>
+
+</div>
+</div>
 
 		<script src="lib/js/head.min.js"></script>
 		<script src="js/reveal.min.js"></script>
