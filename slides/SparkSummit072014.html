@@ -453,10 +453,11 @@ def solve(q: DoubleMatrix, beq: Option[DoubleMatrix]): DoubleMatrix = {
 					<h2>Use Case: Positivity</h2>
 					<p>Application: Image feature extraction / energy spectrum where negative coefficients or factors are counter intuitive </p>
 					<p>
+						<small>
 						Octave QP used as base line: <br>
 							Negative Coefficients (< -1e-4): |Octave(0)|, |ALS (2)|, |ECOS (0)|, |ADMM (1)| <br>
 							RMSE: |ALS (0.023)|, |ECOS (3e-4)|, |ADMM (2.7e-4)| <br>
-
+					   </small>
 							<!--
 							ALS: (0.2603810623485856, 0.4691420315852794, 0.1285415765363319, 0.04173911756758212, 0.060422558644892876, 0.37780771013396663, 0.6410088565032461, 0.1644004345325534, 0.013059281544081978, 0.16113499917608942, 0.24889251108117733, 0.4642459194416755, 0.15162283007289407, 0.42113455731380733, -0.06909430214906694, 0.05431460335067089, 0.16672169853490573, -0.07221988828872833, 0.3014244697143103, 0.08568366775845401, 0.15897494913621396, 0.16202946594474105, 0.24308910221203664, 0.0279057172559352, 0.05197423493678404)
 
@@ -500,6 +501,7 @@ def projectBox(z: Array[Double], l: Array[Double], u: Array[Double]) {
 <p>Application: signal recovery problems in which the original signal is known to have a sparse representation</p>
 
 <p>
+	<small>
 							Octave QP used as base line: <br>
 							Sparse Coefficients (> 1e-4): |Octave(16)|, |ALS (20)|, |ECOS (18)|, |ADMM (18)| <br>
 							RMSE: |ALS (0.094)|, |ECOS (0.020)|, |ADMM (0.020)| <br>
@@ -512,6 +514,7 @@ def projectBox(z: Array[Double], l: Array[Double], u: Array[Double]) {
 
 							Octave: (0.000 0.385 0.214 0.000 0.000 0.023 0.000 0.058 0.000 0.411 0.001 0.000 0.000 0.000 0.221 0.013 0.466 0.672 0.071 0.410 0.059 0.141 0.228 0.000 0.642)
 						-->
+	</small>
 					</p>
 </section>
 
@@ -547,6 +550,7 @@ def proximalL1(z: Array[Double], rho: Double) {
 					<h2>Use Case: Equality with bound</h2>
 					<p>Application: Support Vector Machines based models with sparse weight representation or portfolio optimization</p>
 					<p>
+						<small>
 							Octave QP used as base line: <br>
 							$\sum$ should be 1: |Octave(1.0)|, |ALS (-25.2)|, |ECOS (0.99)|, |ADMM (1.0)| <br>
 							Sparse Factors (> 1e-4): |Octave(4)|, |ALS (25)|, |ECOS (4)|, |ADMM (4)| <br>
@@ -561,6 +565,7 @@ def proximalL1(z: Array[Double], rho: Double) {
 
 							Octave: (0.000 0.000 0.774 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.173 0.000 0.053 0.000 0.000 0.000)
 						-->
+						</small>
 					</p>
 				</section>	
 	
