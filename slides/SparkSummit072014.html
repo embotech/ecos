@@ -43,9 +43,12 @@
 			<!-- Any section element inside of this container is displayed as a slide -->
 			<div class="slides">
 				<section>
-					<h2>Quadratic Programing Solver for Non-negative Matrix Factorization with Spark</h2>
+					<h2>Quadratic Programming Solver for Non-negative Matrix Factorization with Spark</h2>
 					<p>
-						<small> Debasish Das &nbsp;&nbsp; Santanu Das</small>
+						<small>Debasish Das &nbsp;&nbsp; Santanu Das</small> <br />
+						<small>debasish.das@one.verizon.com &nbsp;&nbsp; santanu.das@one.verizon.com</small> <br />
+						<small>Big Data Analytics</small> <br />
+						<small>Verizon</small>						
 					</p>
 				</section>
 
@@ -256,7 +259,7 @@
 					<h3> QP to ADMM/SOCP </h3>
 					<ul>
 						<li>
-							ADMM : solves distributed consensus problems by splitting a hard problem into simpler yet efﬁciently solvable sub-problems. <br>
+							ADMM : solves by decomposing a hard problem into simpler yet efﬁciently solvable sub-problems and let them achieve consensus. <br>
 
 						</li>
 						<li>
@@ -305,54 +308,53 @@
 				</section>
 </section>
 				
-				<section>
-					<h3> QP: ADMM Implementation</h3>
-					<pre><code>class DirectQpSolver(nGram: Int,
+<section>
+<h3> QP: ADMM Implementation(I)</h3>
+<pre><code>class DirectQpSolver(nGram: Int,
   lb: Option[DoubleMatrix] = None, ub: Option[DoubleMatrix] = None,
   Aeq: Option[DoubleMatrix] = None, 
   alpha: Double = 0.0, rho: Double = 0.0, 
   addEqualityToGram: Boolean = false) = {
- 
+
+def solve(H: DoubleMatrix, q: DoubleMatrix, 
+            beq: Option[DoubleMatrix] = None): DoubleMatrix = {
+  wsH = H + rho*I
+  solve(q, beq)
+}
+  
 def solve(q: DoubleMatrix, beq: Option[DoubleMatrix]): DoubleMatrix = {
-    //Dense cholesky factorization
-    val R = Decompose.cholesky(wsH)
-    val Rtrans = R.transpose()
-    
-    while (k &le; ITERS) {
-      	//scale = rho*(z - u) - q
-      	scale.fill(0).addi(z).subi(u).muli(rho).subi(q)
-      	
-      	//Use Dpotrs solve if structure of Hessian supports it
-      	
-      	//Step 1 : scale * y = R'
-      	val scaledR = Solve.solve(Rtrans, scale)
+  //Dense cholesky factorization
+  val R = Decompose.cholesky(wsH)
+  ADMM(R)
+}
+</code></pre>																									
+</section>
 
-      	//Step 2 : y * x = R
-      	val x = Solve.solve(R, scaledR)
-      
-      	//z-update with relaxation
-
-      	//zold = (1-alpha)*z
-      	//x_hat = alpha*x + zold
-      	zOld.fill(0).addi(z).muli(1 - alpha)
-      	xHat.fill(0).addi(x).muli(alpha).addi(zOld)
+<section>
+	<h3>QP : ADMM Implementation(II)</h3>
+	<pre><code>def ADMM(R: DoubleMatrix): DoubleMatrix = {
+  rho = 1.0
+  alpha = 1.0
+  while (k &le; MAX_ITERS) {
+    scale = rho*(z - u) - q
+    // x = R \ (R' \ scale)
+    solveTriangular(R, scale)      	
+        
+    //z-update with relaxation
+    zold = (1-alpha)*z
+    x_hat = alpha*x + zold
       	
-      	//zold = z
-      	zOld.fill(0).addi(z)
-      	//z = xHat + u
-      	z.fill(0).addi(xHat).addi(u)
-      	//Apply proximal operators
-      	Proximal(z)
-      	if(converged(x, z, u)) return x
-      	k = k + 1
-    }
+    z = xHat + u
+    Proximal(z)
+    if(converged(x, z, u)) return x
+    k = k + 1
   }
 }
 </code></pre>																									
 </section>
 
-				<section>
-					<h3> QP: SOCP formulation </h3>
+<section>
+	<h3> QP: SOCP formulation </h3>
 					<div align="left">
 						<p>
 							Objective transformation
@@ -378,29 +380,22 @@ def solve(q: DoubleMatrix, beq: Option[DoubleMatrix]): DoubleMatrix = {
   Equalities: Option[CSCMatrix[Double]] = None, 
   Inequalities: Option[CSCMatrix[Double]] = None, 
   lbFlag: Boolean = false, ubFlag: Boolean = false) = {
-
-  NativeECOS.loadLibraryAndCheckErrors()					
+  
+  NativeECOS.loadLibraryAndCheckErrors() 
   							
-  def solve(H: DoubleMatrix, f: Array[Double]): (Int, Array[Double]) = {  				
-    
+  def solve(H: DoubleMatrix, f: Array[Double]): (Int, Array[Double]) = {
     updateHessian(H)
-    updateLinearObjective(f)
-    
-    val status = NativeECOS.solveSocp(c, G.rows, G.cols, 
-									  G.data, G.colPtrs, G.rowIndices, hBuilder,
-									  Aeq.rows, Aeq.cols, 
-									  Aeq.data, Aeq.colPtrs, Aeq.rowIndices, beqBuilder,
-									  linear, cones, x)			
-		
+    updateLinearObjective(f)  
+    val status = NativeECOS.solveSocp(c, G, h, Aeq, beq, linear, cones, x)
     (status, x.slice(0, n))
   }
 }
 </code></pre>
 </section>
 
-				<section>
-					<h2>Use Case: Positivity</h2>
-					<pre><code>//Spark Driver
+<section>
+	<h2>Use Case: Positivity</h2>
+	<pre><code>//Spark Driver
 val lb = DoubleMatrix.zeros(rank, 1)
 val ub = DoubleMatrix.zeros(rank, 1).addi(1.0)
 val directQpSolver = new DirectQpSolver(rank, Some(lb), Some(ub)).setProximal(ProjectBox)
@@ -412,19 +407,24 @@ val factors = Array.range(0, numUsers).map { index =>
   val f = userXy(index).mul(-1)
   val directQpResult = directQpSolver.solve(H, f)
   directQpResult
-}
-   
-//Direct QpSolver Projection Operator
-def projectBox(z: Array[Double], l: Array[Double], u: Array[Double]) {
-  	for(i &lt;- 0 until z.length) z.update(i, max(l(i), min(x(i), u(i))))
 }	
 </code></pre>
-<p>
-						<small>
-							Octave QP used as base line: <br>
+</section>
 
-							Negative Coefficients (< -1e-4): |Octave(0)|, |ALS (2)|, |ECOS (0)|, |ADMM (1)| <br>
-							RMSE: |ALS (0.023)|, |ECOS (3e-4)|, |ADMM (2.7e-4)| <br>
+<section>
+	<h2>Use Case: Positivity</h2>
+	<pre><code>//DirectQpSolver Projection Operator
+def projectBox(z: Array[Double], l: Array[Double], u: Array[Double]) {
+  for(i &lt;- 0 until z.length) z.update(i, max(l(i), min(x(i), u(i))))
+}
+</code></pre>
+
+<p>
+<small>
+Octave QP used as base line: <br>
+
+Negative Coefficients (< -1e-4): |Octave(0)|, |ALS (2)|, |ECOS (0)|, |ADMM (1)| <br>
+RMSE: |ALS (0.023)|, |ECOS (3e-4)|, |ADMM (2.7e-4)| <br>
 
 							<!--
 							ALS: (0.2603810623485856, 0.4691420315852794, 0.1285415765363319, 0.04173911756758212, 0.060422558644892876, 0.37780771013396663, 0.6410088565032461, 0.1644004345325534, 0.013059281544081978, 0.16113499917608942, 0.24889251108117733, 0.4642459194416755, 0.15162283007289407, 0.42113455731380733, -0.06909430214906694, 0.05431460335067089, 0.16672169853490573, -0.07221988828872833, 0.3014244697143103, 0.08568366775845401, 0.15897494913621396, 0.16202946594474105, 0.24308910221203664, 0.0279057172559352, 0.05197423493678404)
@@ -434,9 +434,9 @@ def projectBox(z: Array[Double], l: Array[Double], u: Array[Double]) {
 							ADMM: (0.23402786809957343, 0.44791829391542826, 0.125690612375943, 0.04221015333186668, 0.05568028401075164, 0.37351888250363685, 0.6377516458527199, 0.1628873538841959, 0.002221441572620262, 0.17645593392730902, 0.25737581733499315, 0.4589165229595863, 0.1350771985567436, 0.40494564010771433, -2.93510227604376E-5, 0.05461399718151978, 0.17070638225221418, -1.1717365945662072E-4, 0.2938127954097653, 0.07948288824735185, 0.15434589935756, 0.1593947533004461, 0.22615850124675674, 0.0107371592149609, 0.0420014231232954)
 
 							Octave: (0.234 0.448 0.126 0.042 0.056 0.374 0.638 0.163 0.002 0.176 0.257 0.459 0.135 0.405 0.000 0.055 0.171 0.000 0.294 0.079 0.154 0.159 0.226 0.011 0.042) -->
-						</small>	
-					</p>
-					<p>Application: Image feature extraction / energy spectrum where negative coefficients or factors are counter intuitive </p>
+</small>	
+</p>
+<p>Application: Image feature extraction / energy spectrum where negative coefficients or factors are counter intuitive </p>
 </section>
 
 <section>
@@ -453,11 +453,16 @@ val factors = Array.range(0, numUsers).map { index =>
   val directQpL1Result = directQpSolverL1.solve(H, f)
   directQpL1Result
 }
-//DirectQpSolver Proximal Operator
+</code></pre>
+</section>
+
+<section>
+	<h2>Use Case: Sparsity</h2>
+	<pre><code>//DirectQpSolver Proximal Operator
 def proximalL1(z: Array[Double], rho: Double) {
   for(i &lt;- 0 until z.length) 
     z.update(i, max(0, z(i) - 1.0 / rho) - max(0, -z(i) - 1.0 / rho))
-}
+}	
 </code></pre>
 					<p>
 						<small>
@@ -481,7 +486,7 @@ def proximalL1(z: Array[Double], rho: Double) {
 				</section>
 
 				<section>
-					<h2>Use Case: Equality with bound</h2>
+					<h2>Use Case: Equality with bounds</h2>
 					<pre><code>//Equality constraint x1 + x2 + ... + xr = 1
 //Bound constraint is 0 &le; x &le; 1
 val equalityBuilder = new CSCMatrix.Builder[Double](1, rank)
@@ -491,7 +496,12 @@ val qpSolverEquality =
             Some(equalityBuilder.result), None, true, true)
 qpSolverEquality.updateUb(Array.fill[Double](rank)(1.0))
 qpSolverEquality.updateEquality(Array[Double](1.0))
+</code></pre>
+</section>
 
+<section>
+	<h2>Use Case: Equality with bounds</h2>
+	<pre><code>
 val factors = Array.range(0, numUsers).map { index =>
   fillFullMatrix(userXtX(index), fullXtX)
   val H = fullXtX.add(YtY.get.value)
@@ -525,17 +535,32 @@ val factors = Array.range(0, numUsers).map { index =>
 </section>
 
 <section>
-	<h2>RunTime</h2>
-</section>
-
-<section>
 	<h2>Future work</h2>
+	<ul>
+		<li>Release QpSolver-Spark integration after thorough testing</li>
+		<li>Runtime optimizations for QpSolver-Spark integration</li>
+		<li>Matrix Factorization using Gram Matrix broadcast</li>
+		<li>Release ECOS based LP and SOCP solvers based on community feedback</li>
+		<li>BFGS/CG based IterativeQpSolver for large ranks with application to Kernel-SVMs</li>
+		<li>QpSolver-Spark applications to Verizon datasets</li>
+	</ul>
 </section>
 
 <section>
 	<h2>Questions</h2>
 </section>
 
+<section>
+	<h3>Join us and make machines smarter</h3>
+	
+	<p>References
+		<ul>
+			<li>ECOS by Domahidi et al. https://github.com/ifa-ethz/ecos</li>
+			<li>ADMM by Boyd et al. http://web.stanford.edu/~boyd/papers/admm/</li>
+			<li>Proximal Algorithms by Neal Parikh and Professor Boyd</li>
+		</ul>
+	</p>
+</section>
 </div>
 </div>
 
