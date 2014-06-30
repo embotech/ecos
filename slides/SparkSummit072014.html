@@ -237,10 +237,10 @@
 									$h^{k+1} = argmin_{h} f(h + 0.5 \times \rho ||h - z^{k} + u^{k}||_{2}^{2})$
 								</li>
 								<li>
-									$z^{k+1} = x^{k+1} + u^{k} \text{s.t } z^{k+1} \in g(z)$
+									$z^{k+1} = h^{k+1} + u^{k} \text{s.t } z^{k+1} \in g(z)$
 								</li>
 								<li>
-									$u^{k+1} = u^{k} + x_{k+1} - z_{k+1}$
+									$u^{k+1} = u^{k} + h_{k+1} - z_{k+1}$
 								</li>
 							</ul>
 						</p>
@@ -499,7 +499,7 @@ qpSolverEquality.updateEquality(Array[Double](1.0))
 	<h2>Runtime Experiments</h2>
 	<small>Dataset: Movielens 1M ratings from 6040 users on 3706 movies</small><br />
 	<small>Example run</small><br /> 
-	<small>MASTER=local[1] run-example mllib.MovieLensALS ­­rank 25 ­­numIterations 1 ­­kryo ­­qpProblem 1 ratings.dat</small><br />
+	<small>MASTER=local[1] run-example mllib.MovieLensALS ­­--rank 25 --­­numIterations 1 --­­kryo --­­qpProblem 1 ratings.dat</small><br />
 	<small>Algorithms variants</small><br/>
 	<small>Quadratic Minimization(QP), with Positivity(QpPos), bounds(QpBounds), Sparsity(QpL1), Equality and Bounds(QpEquality)</small><br />
 	
