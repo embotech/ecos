@@ -387,7 +387,7 @@ def projectBox(z: Array[Double], l: Array[Double], u: Array[Double]) {
 <p>Application: signal recovery problems in which the original signal is known to have a sparse representation</p><br><br>
 
 					<TABLE border="1">
-<CAPTION><EM>A test to compute Sparse Coefficients (> -1e-4) & RMSE</EM></CAPTION>
+<CAPTION><EM>A test to compute Sparse Coefficients (> 1e-4) & RMSE</EM></CAPTION>
 <TR><TH><TH>
 <TR><TH><TH>OCTAVE<TH>ALS<TH>ECOS</TH><TH>ADMM<TH>
 <TR><TH>Sparse Coefficients:<TD>16<TD>20<TD>18<TH>18<TH>
@@ -444,7 +444,7 @@ def proximalL1(z: Array[Double], scale: Double) {
 
 
 					<TABLE border="1">
-<CAPTION><EM>A test to compute Sum, Sparse Coefficients (< -1e-4) & RMSE</EM></CAPTION>
+<CAPTION><EM>A test to compute Sum, Sparse Coefficients (> 1e-4) & RMSE</EM></CAPTION>
 <TR><TH><TH>
 <TR><TH><TH>OCTAVE<TH>ALS<TH>ECOS</TH><TH>ADMM<TH>
 <TR><TH>Sum of Coefficients:<TD>1<TD> - <TD>0.99<TH>1<TH>
@@ -496,7 +496,7 @@ qpSolverEquality.updateEquality(Array[Double](1.0))
 
 <section>
 	<div align="left">
-	<h2>Runtime Experiments</h2>
+	<h2>Runtime Experiments (in ms)</h2>
 	<small>Dataset: Movielens 1M ratings from 6040 users on 3706 movies</small><br />
 	<small>Example run</small><br /> 
 	<small>MASTER=local[1] run-example mllib.MovieLensALS ­­--rank 25 --­­numIterations 1 --­­kryo --­­qpProblem 1 ratings.dat</small><br />
@@ -504,14 +504,14 @@ qpSolverEquality.updateEquality(Array[Double](1.0))
 	<small>Quadratic Minimization(QP), with Positivity(QpPos), bounds(QpBounds), Sparsity(QpL1), Equality and Bounds(QpEquality)</small><br />
 	
 	<TABLE border="1">
-<CAPTION><EM>1 ALS iteration userUpdate + movieUpdate</EM></CAPTION>
+<CAPTION><EM>1 ALS iteration: (userUpdate) + (movieUpdate)</EM></CAPTION>
 <TR><TH><TH>
 <TR><TH><TH>LS<TH>ECOS<TH>ADMM</TH>
-<TR><TH>Qp<TD>30+57<TD>3826+6943<TD>99+143<TH>
-<TR><TH>QpPos<TD>98+320<TD>6288+11975<TD>265 + 2135<TH>
-<TR><TH>QpBounds<TD>39+55<TD>6709+11951<TD>1556+1329<TH>
-<TR><TH>QpL1<TD>54+80<TD>32171+58766<TD>352+1593<TH>
-<TR><TH>QpEquality<TD>63+133<TD>5231+7912<TD>14681+65893<TH>
+<TR><TH>Qp<TD>(30)+(57)<TD>(3826)+(6943)<TD>(99)+(143)<TH>
+<TR><TH>QpPos<TD>(98)+(320)<TD>(6288)+(11975)<TD>(265) + (2135)<TH>
+<TR><TH>QpBounds<TD>(39)+(55)<TD>(6709)+(11951)<TD>(1556)+(1329)<TH>
+<TR><TH>QpL1<TD>(54)+(80)<TD>(32171)+(58766)<TD>(352)+(1593)<TH>
+<TR><TH>QpEquality<TD>(63)+(133)<TD>(5231)+(7912)<TD>(14681)+(65893)<TH>
 </TABLE>
 	</div>
 </section>
