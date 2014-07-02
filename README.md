@@ -39,6 +39,7 @@ Features of ECOS
 your embedded hardware.  
 + *ECOS comes with a Python interface*. This interface is built on top of
   [NUMPY](http://numpy.org) and [SCIPY](http://scipy.org/) and uses its sparse data structures.
++ *There is a Julia interface for ECOS*. [Julia](http://julialang.org) is a high-level, high-performance language for technical and scientific computing. You can pull the Julia interface [here](https://github.com/karanveerm/ecos.jl).
 + *ECOS is library-free*. No need to link any external library to ECOS, apart from `AMD` and `sparseLDL`, both
   from Timothy A. Davis, which are included in this project.
 
