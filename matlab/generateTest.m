@@ -7,11 +7,18 @@ function generateTest(name,testdir,c,G,h,dims,A,b)
 %
 % (c) Alexander Domahidi, embotech GmbH, March 2014.
 
+
 disp('Generating Test...');
 txt = {'#include "ecos.h"'};
 txt = [txt; '#include "minunit.h"'];
 txt = [txt; sprintf('static char * test_%s(){',name)];
-txt = [txt; cg_dump_conelpproblem(c,G,h,dims,A,b)];
+if( nargin > 6 )
+    txt = [txt; cg_dump_conelpproblem(c,G,h,dims,A,b)];
+elseif( nargin == 6 )
+    txt = [txt; cg_dump_conelpproblem(c,G,h,dims)];
+else
+    error('generateTest requires at least 6 arguments. See help generateTest');
+end
 txt = [txt; ' '];
 txt = [txt; 'pwork *mywork;'];
 txt = [txt; 'idxint exitflag;'];
@@ -32,5 +39,8 @@ txt = [txt; '}'];
 
 % save txt to name.h
 fn = sprintf('%s/%s.h',testdir,name);
+if( ~exist(testdir,'dir') )
+    mkdir(testdir);
+end
 fprintf('Saving test to %s\n',fn);
 cg_dumpfile(fn,txt);

@@ -206,24 +206,7 @@ idxint checkExitConditions(pwork* w, idxint mode)
         w->info->dinf = 0;
         return ECOS_OPTIMAL + mode;
     }
-    
-    /* Primal infeasible? */
-    else if( (w->info->pinfres != NAN && w->info->pinfres < feastol) ||
-             ( w->tau < w->stgs->feastol && w->kap < w->stgs->feastol && w->info->pinfres < w->stgs->feastol) ){
-#if PRINTLEVEL > 0
-        if( w->stgs->verbose ) {
-            if( mode == 0) {
-                PRINTTEXT("\nPRIMAL INFEASIBLE (within feastol=%3.1e).", w->info->pinfres );
-            } else {
-                PRINTTEXT("\nClose to PRIMAL INFEASIBLE (within feastol=%3.1e).", w->info->pinfres );
-            }
-        }
-#endif
-        w->info->pinf = 1;
-        w->info->dinf = 0;
-        return ECOS_PINF + mode;
-    }
-    
+        
     /* Dual infeasible? */
     else if( (w->info->dinfres != NAN) && (w->info->dinfres < feastol) ){
 #if PRINTLEVEL > 0
@@ -239,6 +222,24 @@ idxint checkExitConditions(pwork* w, idxint mode)
         w->info->dinf = 1;
         return ECOS_DINF + mode;
     }
+    
+    /* Primal infeasible? */
+    else if( (w->info->pinfres != NAN && w->info->pinfres < feastol) ||
+            ( w->tau < w->stgs->feastol && w->kap < w->stgs->feastol && w->info->pinfres < w->stgs->feastol) ){
+#if PRINTLEVEL > 0
+        if( w->stgs->verbose ) {
+            if( mode == 0) {
+                PRINTTEXT("\nPRIMAL INFEASIBLE (within feastol=%3.1e).", w->info->pinfres );
+            } else {
+                PRINTTEXT("\nClose to PRIMAL INFEASIBLE (within feastol=%3.1e).", w->info->pinfres );
+            }
+        }
+#endif
+        w->info->pinf = 1;
+        w->info->dinf = 0;
+        return ECOS_PINF + mode;
+    }
+
     
     /* Indicate if none of the above criteria are met */
     else {

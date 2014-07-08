@@ -56,7 +56,7 @@ demo: ldl amd ecos src/runecos.c
 TEST_OBJS = qcml_utils.o norm.o sq_norm.o sum_sq.o quad_over_lin.o inv_pos.o sqrt.o
 test: ldl amd ecos test/ecostester.c $(TEST_OBJS)
 	$(C) $(TEST_INCLUDES) -o ecostester test/ecostester.c libecos.a $(LIBS) $(TEST_OBJS)
-
+    
 qcml_utils.o: test/generated_tests/qcml_utils.c test/generated_tests/qcml_utils.h
 	$(C) $(TEST_INCLUDES) -c test/generated_tests/qcml_utils.c -o $@
 
