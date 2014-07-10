@@ -226,6 +226,7 @@ idxint checkExitConditions(pwork* w, idxint mode)
     /* Primal infeasible? */
     else if( (w->info->pinfres != NAN && w->info->pinfres < feastol) ||
             ( w->tau < w->stgs->feastol && w->kap < w->stgs->feastol && w->info->pinfres < w->stgs->feastol) ){
+    INFEASIBLE:
 #if PRINTLEVEL > 0
         if( w->stgs->verbose ) {
             if( mode == 0) {
@@ -712,11 +713,19 @@ pfloat lineSearch(pfloat* lambda, pfloat* ds, pfloat* dz, pfloat tau, pfloat dta
 void backscale(pwork *w)
 {
 	idxint i;
+#if defined EQUILIBRATE && EQUILIBRATE > 0
     /* We performed a change of variables on x so this recovers it also */
 	for( i=0; i < w->n; i++ ){ w->x[i] /= (w->xequil[i] * w->tau); }
-	for( i=0; i < w->p; i++ ){ w->y[i] /= (w->Aequil[i] * w->tau); }
+    for( i=0; i < w->p; i++ ){ w->y[i] /= (w->Aequil[i] * w->tau); }
 	for( i=0; i < w->m; i++ ){ w->z[i] /= (w->Gequil[i] * w->tau); }
 	for( i=0; i < w->m; i++ ){ w->s[i] /= (w->Gequil[i] * w->tau); }
+#else
+    /* standard back scaling without equilibration */
+    for( i=0; i < w->n; i++ ){ w->x[i] /= w->tau; }
+    for( i=0; i < w->p; i++ ){ w->y[i] /= w->tau; }
+	for( i=0; i < w->m; i++ ){ w->z[i] /= w->tau; }
+	for( i=0; i < w->m; i++ ){ w->s[i] /= w->tau; }
+#endif
 }
 
 

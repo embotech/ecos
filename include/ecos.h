@@ -36,17 +36,17 @@
 
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
-#define MAXIT      (50)          /* maximum number of iterations         */
-#define FEASTOL    (1E-6)        /* primal/dual infeasibility tolerance  */
-#define ABSTOL     (5E-7)        /* absolute tolerance on duality gap    */
-#define RELTOL     (5E-7)        /* relative tolerance on duality gap    */
+#define MAXIT      (30)          /* maximum number of iterations         */
+#define FEASTOL    (1E-7)        /* primal/dual infeasibility tolerance  */
+#define ABSTOL     (1E-7)        /* absolute tolerance on duality gap    */
+#define RELTOL     (1E-7)        /* relative tolerance on duality gap    */
 #define FTOL_INACC (1E-4)        /* inaccurate solution feasibility tol. */
 #define ATOL_INACC (1E-5)        /* inaccurate solution absolute tol.    */
 #define RTOL_INACC (1E-5)        /* inaccurate solution relative tol.    */
-#define GAMMA      (0.99)        /* scaling the final step length        */
+#define GAMMA      (0.992)       /* scaling the final step length        */
 #define STATICREG  (1)           /* static regularization: 0:off, 1:on   */
-#define DELTASTAT  (1E-8)        /* regularization parameter             */
-#define DELTA      (5E-7)        /* dyn. regularization parameter        */
+#define DELTASTAT  (5E-8)        /* regularization parameter             */
+#define DELTA      (1E-7)        /* dyn. regularization parameter        */
 #define EPS        (1E-14)  /* dyn. regularization threshold (do not 0!) */
 #define VERBOSE    (1)           /* bool for verbosity; PRINTLEVEL < 3   */
 #define NITREF     (3)       	 /* number of iterative refinement steps */
@@ -54,16 +54,16 @@
 #define LINSYSACC  (1E-14)       /* rel. accuracy of search direction    */
 #define SIGMAMIN   (0.0001)      /* always do some centering             */
 #define SIGMAMAX   (0.9999)      /* never fully center                   */
-#define STEPMIN    (0.001)       /* smallest step that we do take        */
-#define STEPMAX    (0.999)  /* largest step allowed, also in affine dir. */
+#define STEPMIN    (0.0001)      /* smallest step that we do take        */
+#define STEPMAX    (0.9999) /* largest step allowed, also in affine dir. */
 #define SAFEGUARD  (500)         /* Maximum increase in PRES before
                                                 ECOS_NUMERICS is thrown. */
 
 /* EQUILIBRATION METHOD ------------------------------------------------ */
-#define EQUIL_ITERS     (5)     /* number of equilibration iterations    */
-/* Comment out both lines to turn off equilibration                      */
-/* #define RUIZ_EQUIL */
-#define ALTERNATING_EQUIL
+#define EQUILIBRATE (1)     /* use equlibration of data matrices? >0: yes */
+#define EQUIL_ITERS (3)         /* number of equilibration iterations  */
+#define RUIZ_EQUIL      /* define algorithm to use - if both are ... */
+//#define ALTERNATING_EQUIL /* ... commented out no equlibration is used */
 
 
 /* EXITCODES ----------------------------------------------------------- */
@@ -181,10 +181,12 @@ typedef struct pwork{
     /* problem data */
     spmat* A;  spmat* G;  pfloat* c;  pfloat* b;  pfloat* h;
 
+#if defined EQUILIBRATE && EQUILIBRATE > 0
     /* equilibration vector */
     pfloat *xequil;
     pfloat *Aequil;
     pfloat *Gequil;
+#endif
 
 	/* scalings of problem data */
 	pfloat resx0;  pfloat resy0;  pfloat resz0;
