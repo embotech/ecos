@@ -43,7 +43,7 @@
 #define FTOL_INACC (1E-4)        /* inaccurate solution feasibility tol. */
 #define ATOL_INACC (1E-5)        /* inaccurate solution absolute tol.    */
 #define RTOL_INACC (1E-5)        /* inaccurate solution relative tol.    */
-#define GAMMA      (0.992)       /* scaling the final step length        */
+#define GAMMA      (0.99)        /* scaling the final step length        */
 #define STATICREG  (1)           /* static regularization: 0:off, 1:on   */
 #define DELTASTAT  (5E-8)        /* regularization parameter             */
 #define DELTA      (1E-7)        /* dyn. regularization parameter        */
