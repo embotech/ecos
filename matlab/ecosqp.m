@@ -22,6 +22,10 @@ function [X,fval,exitflag,output,lambda,Tsolve,c,G,h,dims,Aeq,beq] = ecosqp(H,f,
 %   bounds exist. Set LB(i) = -Inf if X(i) is unbounded below; set 
 %   UB(i) = +Inf if X(i) is unbounded above.
 %
+%   X = ECOSQP(...,OPTIONS) solves the QP as above and uses the settings as
+%   defined in the OPTIONS structure. See ECOSOPTIMSET for more information
+%   on how to set settings in ECOS.
+%
 %   [X,FVAL] = ECOSQP(...) returns in addition to the minimizer X also 
 %   the optimal function value of the QP.
 %
@@ -52,7 +56,7 @@ function [X,fval,exitflag,output,lambda,Tsolve,c,G,h,dims,Aeq,beq] = ecosqp(H,f,
 %           ||       Wx     ||
 %           || (t-f'*x+1)/sqrt(2) ||_2 <= (t-f'*x-1)/sqrt(2)
 %
-% See also ECOS QUADPROG
+% See also ECOS ECOSOPTIMSET QUADPROG
 %
 % (c) Alexander Domahidi, embotech GmbH, Zurich, Switzerland, 2014.
 
@@ -125,7 +129,7 @@ end
 assert( ~isempty(H),'Quadratic programming requires a Hessian.');
 try
     tic
-    W = chol(H,'lower');
+    W = chol(H,'upper');
     fprintf('ECOSQP: Time for Cholesky: %4.2f seconds\n', toc);
 catch %#ok<CTCH>
     warning('Hessian not positive definite, using sqrt(H) instead of chol');
@@ -203,15 +207,15 @@ Aeq = sparse(Aeq);
 %% solve
 if( opts.verbose > 0 ), fprintf('Conversion completed. Calling ECOS...\n'); end
 if( isempty(Aeq) )
-    [x,y,info,~,z] = ecos(c,G,h,dims,opts);
+    [x,y,info,s,z] = ecos(c,G,h,dims,opts); %#ok<ASGLU>
 else
-    [x,y,info,~,z] = ecos(c,G,h,dims,Aeq,beq,opts);
+    [x,y,info,s,z] = ecos(c,G,h,dims,Aeq,beq,opts); %#ok<ASGLU>
 end
 
 
 %% prepare return variables
 X = x(1:n);
-fval = c'*x;
+fval = x(end);
 switch( info.exitflag )
     case 1, exitflag = -2;
     case 2, exitflag = -3;
@@ -223,4 +227,4 @@ output.iterations = info.iter;
 output.time = info.timing.runtime;
 lambda = [z(1:dims.l); y];
 Tsolve = info.timing.runtime;
-
+output.ecosinfo = info;

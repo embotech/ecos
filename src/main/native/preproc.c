@@ -369,7 +369,7 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 {
 	idxint i;
     
-#if defined EQUIL_ITERS && (defined RUIZ_EQUIL || defined ALTERNATING_EQUIL )
+#if defined EQUILIBRATE && EQUILIBRATE > 0
     /* restore the equilibration */
     unset_equilibration(w);
 #endif
@@ -445,9 +445,11 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 	if( keepvars < 3 ) { FREE(w->s); FREE(w->best_s); }
 	if( keepvars < 2 ) { FREE(w->y); FREE(w->best_y); }
 	if( keepvars < 1 ) { FREE(w->x); FREE(w->best_x); }
+#if defined EQUILIBRATE && EQUILIBRATE > 0
     FREE(w->xequil);
     FREE(w->Aequil);
     FREE(w->Gequil);
+#endif
 	FREE(w);
 }
 
@@ -612,7 +614,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #endif
 
     
-#if defined EQUIL_ITERS && (defined RUIZ_EQUIL || defined ALTERNATING_EQUIL )
+#if defined EQUILIBRATE && EQUILIBRATE > 0
     /* equilibration vector */
     mywork->xequil = (pfloat *)MALLOC(n*sizeof(pfloat));
     mywork->Aequil = (pfloat *)MALLOC(p*sizeof(pfloat));
@@ -661,7 +663,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->G = createSparseMatrix(m, n, 0, Gjc, Gir, Gpr);
   }
 
-#if defined EQUIL_ITERS && (defined RUIZ_EQUIL || defined ALTERNATING_EQUIL )
+#if defined EQUILIBRATE && EQUILIBRATE > 0
     set_equilibration(mywork);
     #if PRINTLEVEL > 2
         PRINTTEXT("Done equilibrating\n");
