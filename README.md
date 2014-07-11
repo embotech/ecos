@@ -39,9 +39,9 @@ Features of ECOS
 your embedded hardware.  
 + *ECOS comes with a Python interface*. This interface is built on top of
   [NUMPY](http://numpy.org) and [SCIPY](http://scipy.org/) and uses its sparse data structures.
++ *There is a Julia interface for ECOS*. [Julia](http://julialang.org) is a high-level, high-performance language for technical and scientific computing. You can pull the Julia interface [here](https://github.com/karanveerm/ecos.jl).
 + *ECOS is library-free*. No need to link any external library to ECOS, apart from `AMD` and `sparseLDL`, both
   from Timothy A. Davis, which are included in this project.
-
 
 Credits
 ----
@@ -55,7 +55,8 @@ The following people have been, and are, involved in the development and mainten
 + Stephen Boyd (methods and maths)
 + Michael Grant (CVX interface)
 + Johan Löfberg (YALMIP interface)
-+ Debasish Das (Java/Scala JNI library and QpSolver integrated to Constrained ALS in Spark mllib)  
++ Debasish Das (Java/Scala JNI library and Java driver for SocpSolver, See package breeze.optimize.quadratic for scala driver for Quadratic Programming Solver)  
++ Karanveer Mohan (Julia interface)
 
 The main technical idea behind ECOS is described in a short [paper](http://www.stanford.edu/~boyd/papers/ecos.html). More details are given in Alexander Domahidi's [PhD Thesis](http://e-collection.library.ethz.ch/view/eth:7611?q=domahidi) in Chapter 9.
 

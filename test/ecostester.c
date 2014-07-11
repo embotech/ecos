@@ -30,6 +30,7 @@
 #include "MPC/MPC02.h"
 #include "generated_tests/generated_tests.h"
 #include "feas_prob/feas.h"
+#include "unboundedProblems/unboundedLP1.h"
 
 int tests_run = 0;
 
@@ -41,8 +42,9 @@ static char * all_tests() {
     mu_run_test(test_sq_norm);
     mu_run_test(test_sum_sq);
     mu_run_test(test_inv_pos);
-    /* mu_run_test(test_sqrt); */
+    /*mu_run_test(test_sqrt);*/
     mu_run_test(test_feas);
+    mu_run_test(test_unboundedLP1);
     return 0;
 }
 
