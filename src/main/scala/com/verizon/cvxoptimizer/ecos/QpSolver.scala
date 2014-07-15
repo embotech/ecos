@@ -61,6 +61,8 @@ class QpSolver(nHessian: Int, nLinear: Int = 0, diagonal: Boolean = false,
   val c = Array.fill[Double](n + 1)(0.0)
   c.update(n, 1.0)
   
+  var solveTime: Long = 0
+  
   var bounds = 0
   if (lbFlag) bounds += 1
   if (ubFlag) bounds += 1
@@ -233,10 +235,11 @@ class QpSolver(nHessian: Int, nLinear: Int = 0, diagonal: Boolean = false,
     
     updateLinearObjective(f)
     
+    val nativeStart = System.nanoTime()
     val status = NativeECOS.solveSocp(c, G.rows, G.cols, G.data, G.colPtrs, G.rowIndices, hBuilder,
       Aeq.rows, Aeq.cols, Aeq.data, Aeq.colPtrs, Aeq.rowIndices, beqBuilder,
       linear, cones, x)
-    
+    solveTime = solveTime + (System.nanoTime() - nativeStart)
     (status, x.slice(0, nHessian))
   }
 
