@@ -24,10 +24,8 @@ function [z, history] = qpprox(P, q, r, lb, ub, rho, alpha)
 % More information can be found in the paper linked at:
 % http://www.stanford.edu/~boyd/papers/distr_opt_stat_learning_admm.html
 %
-
-t_start = tic;
-
-QUIET    = 0;
+    
+QUIET    = 1;
 MAX_ITER = 1000;
 ABSTOL   = 1e-4;
 RELTOL   = 1e-2;
@@ -44,7 +42,6 @@ if ~QUIET
 end
 
 for k = 1:MAX_ITER
-
     if k > 1
         x = R \ (R' \ (rho*(z - u) - q));
     else
@@ -61,7 +58,7 @@ for k = 1:MAX_ITER
     u = u + (x_hat - z);
 
     % diagnostics, reporting, termination checks
-    history.objval(k)  = objective(P, q, r, x);
+    % history.objval(k)  = objective(P, q, r, x);
 
     history.r_norm(k)  = norm(x - z);
     history.s_norm(k)  = norm(-rho*(z - zold));
@@ -79,11 +76,7 @@ for k = 1:MAX_ITER
        history.s_norm(k) < history.eps_dual(k))
          break;
     end
-end
-
-if ~QUIET
-    toc(t_start);
-end
+end    
 end
 
 function obj = objective(P, q, r, x)
