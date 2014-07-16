@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="jecos" basedir="." default="jar">
+<project name="ecos" basedir="." default="jar">
     <description>
-        This is the build script to compile and deploy the jecos project.
+        This is the build script to compile and deploy the ecos project.
     </description>
 
     <!-- Define directories -->
@@ -12,11 +12,11 @@
     <property name="test" value="${basedir}/src/test/java" />
     <property name="bin" value="${basedir}/target/classes" />
     <property name="native-libs" value="${basedir}/src/main/resources/lib" />
-    <property name="jar" value="${basedir}/target/jecos-${version}.jar" />
+    <property name="jar" value="${basedir}/target/ecos-${version}.jar" />
     <property name="include" value="${basedir}/include" />
     <property name="native" value="${basedir}/src/" />
     <property name="external" value="${basedir}/external" />
-    <property name="pkgbase" value="com.verizon.cvxoptimizer.ecos" />
+    <property name="pkgbase" value="com.github.ecos" />
     
     <target name="prepare" description="create directories needed for compilation">
         <mkdir dir="${bin}" />

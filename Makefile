@@ -1,7 +1,7 @@
 # Makefile for ECOS
 # Configuration of make process in ecos.mk
 # ECOS JNILib
-PACKAGE=com.verizon.cvxoptimizer.ecos
+PACKAGE=com.github.ecos
 PACKAGE_PATH=$(subst .,/,$(PACKAGE))
 
 SRC=src/main
@@ -12,7 +12,7 @@ RESOURCES=$(SRC)/main/resources
 TARGET_C=target/
 LIB_PATH=$(RESOURCES)/lib
 
-GENERATED_HEADERS=include/com_verizon_cvxoptimizer_ecos_NativeECOS.h
+GENERATED_HEADERS=include/com_github_ecos_NativeECOS.h
 #ant javah generates the NativeECOS header, implement the NativeECOS.c driver
 GENERATED_SOURCES=${SRC_C}/NativeECOS.c
 
@@ -37,12 +37,12 @@ AMD = amd_aat amd_1 amd_2 amd_dump amd_postorder amd_post_tree amd_defaults \
 
 AMDL = $(addsuffix .o, $(subst amd_,amd_l_,$(AMD)))
 	
-# build ECOS
+# build ECOS, make it OS indepedent
 ecos: jniecos.o ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o equil.o
 	$(C) -shared -o libecos.so jniecos.o ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o equil.o external/ldl/ldl.o external/amd/amd_global.o external/amd/amd_l_1.o \
 	external/amd/amd_l_2.o external/amd/amd_l_aat.o external/amd/amd_l_control.o external/amd/amd_l_defaults.o external/amd/amd_l_dump.o external/amd/amd_l_info.o \
 	external/amd/amd_l_order.o external/amd/amd_l_post_tree.o external/amd/amd_l_postorder.o external/amd/amd_l_preprocess.o external/amd/amd_l_valid.o
-
+	cp libecos.so src/main/resources/lib/static/Mac\ OS\ X/x86_64/libecos.jnilib
 jniecos.o: ${GENERATED_SOURCES} ${GENERATED_HEADERS}
 	$(C) -fPIC -c ${GENERATED_SOURCES} -o jniecos.o
 
@@ -111,4 +111,4 @@ clean:
 purge: clean
 	( cd external/ldl    ; $(MAKE) purge )
 	( cd external/amd    ; $(MAKE) purge )	
-	- $(RM) libecos.so libecos.jnilib runecos
+	- $(RM) libecos.so src/main/resources/lib/static/Mac\ OS\ X/x86_64/libecos.jnilib runecos

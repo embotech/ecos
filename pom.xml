@@ -2,15 +2,15 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	
-    <groupId>com.verizon</groupId>
-	<artifactId>cvxoptimizer</artifactId>
+    <groupId>com.github</groupId>
+	<artifactId>ecos</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
         
-	<name>cvxoptimizer</name>
-	<description>Constraint solver for the JVM</description>
-	<url>http://www.github.com/debasish83/cvxoptimizer</url>
-
+	<name>ecos</name>
+	<description>Second Order Cone Programming Solver for the JVM</description>
+	<url>http://www.github.com/debasish83/ecos</url>
+        
 	<licenses>
 	  <license>
 	    <name>GNU General Public License (GPL)</name>
@@ -24,7 +24,6 @@
 		<java.version>1.6</java.version>
 		<jblas.version>1.2.3</jblas.version>
 		<scala.binary.version>2.10</scala.binary.version>
-		<hadoop.version>2.0.0-mr1-cdh4.5.0</hadoop.version>
 		<compiler.plugin.version>2.3.2</compiler.plugin.version>
 		<dependency.plugin.version>2.6</dependency.plugin.version>
 		<surefire.plugin.version>2.12</surefire.plugin.version>
@@ -184,7 +183,7 @@
 
 		</plugins>
 	</build>
-
+        
         <distributionManagement>
 	  <snapshotRepository>
 	    <id>istgbd011.hadoop.istg.verizon.com</id>
