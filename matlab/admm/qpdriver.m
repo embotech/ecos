@@ -22,19 +22,20 @@ u = randn(n,1);
 lb = min(l,u);
 ub = max(l,u);
 
-tic;
-[x history] = qpproximal(P, q, r, lb, ub, 1.0, 1.0);
-admmTime = toc;
-
 %Add MOSEK path
 addpath /home/debasish/mosek/7/toolbox/r2013a/
 tic;
 mosekx = quadprog(P, q, [], [], [], [], lb, ub);
 mosekTime = toc;
+fprintf('mosek done\n');
 
 %Add ECOS path
-addpath /home/debasish/cvxoptimizer/matlab
-[ecosx, ~, ~, ~, ~, ecosTime] = ecosqp(P,q,[],[],[],[],lb,ub, ecosoptimset('verbose', 0, 'feastol', 1e-8)); 
+addpath /home/debasish/ecos/matlab
+[ecosx, ~, ~, ~, ~, ecosTime] = ecosqp(P,q,[],[],[],[],lb,ub, ecosoptimset('verbose', 0, 'feastol', 1e-8));
+
+tic;
+[x history] = qpproximal(P, q, r, lb, ub, 1.0, 1.0);
+admmTime = toc;
 
 fprintf('mosek-ecos norm %g\n', norm(mosekx - ecosx));
 fprintf('mosek-admm norm %g\n', norm(mosekx -x));

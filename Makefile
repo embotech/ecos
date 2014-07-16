@@ -35,8 +35,7 @@ amd:
 AMD = amd_aat amd_1 amd_2 amd_dump amd_postorder amd_post_tree amd_defaults \
 	amd_order amd_control amd_info amd_valid amd_preprocess
 
-AMDL = $(addsuffix .o, $(subst amd_,amd_l_,$(AMD)))
-	
+AMDL = $(addsuffix .o, $(subst amd_,amd_l_,$(AMD)))	
 # build ECOS, make it OS indepedent
 ecos: jniecos.o ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o equil.o
 	$(C) -shared -o libecos.so jniecos.o ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o equil.o external/ldl/ldl.o external/amd/amd_global.o external/amd/amd_l_1.o \

@@ -7,7 +7,8 @@ function [z, history] = qpprox(P, q, r, lb, ub, rho, alpha)
 % Solves the following problem via ADMM:
 %
 %   minimize     (1/2)*x'*P*x + q'*x + r
-%   subject to   lb <= x <= ub
+%   subject to  Aeqx <= beq
+%               lb <= x <= ub
 %
 % The solution is returned in the vector x.
 %
@@ -26,9 +27,9 @@ function [z, history] = qpprox(P, q, r, lb, ub, rho, alpha)
 %
     
 QUIET    = 1;
-MAX_ITER = 1000;
-ABSTOL   = 1e-4;
-RELTOL   = 1e-2;
+MAX_ITER = 5000;
+ABSTOL   = 1e-8;
+RELTOL   = 1e-6;
 
 n = size(P,1);
 
@@ -48,7 +49,7 @@ for k = 1:MAX_ITER
         R = chol(P + rho*eye(n));
         x = R \ (R' \ (rho*(z - u) - q));
     end
-
+    
     % z-update with relaxation
     zold = z;
     x_hat = alpha*x +(1-alpha)*zold;
