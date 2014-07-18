@@ -37,6 +37,11 @@ tic;
 [x history] = qpproximal(P, q, r, lb, ub, 1.0, 1.0);
 admmTime = toc;
 
+tic;
+[xfast history] = qpaccelerated(P,q,r,lb,ub,1.0,1.0);
+admmFast = toc;
+
 fprintf('mosek-ecos norm %g\n', norm(mosekx - ecosx));
-fprintf('mosek-admm norm %g\n', norm(mosekx -x));
-fprintf('mosek %g ecos %g admm %g\n', mosekTime, ecosTime, admmTime);
+fprintf('mosek-admm norm %g\n', norm(mosekx - x));
+fprintf('mosek-admmfast norm %g\n', norm(mosekx - xfast));
+fprintf('mosek %g ecos %g admm %g admmfast %g\n', mosekTime, ecosTime, admmTime, admmFast);

@@ -1,4 +1,4 @@
-function [z, history] = qpproximal(P, q, r, lb, ub, rho, alpha)
+function [z, history] = qpaccelerated(P, q, r, lb, ub, rho, alpha)
 
 % quadprog  Solve standard form box-constrained QP via ADMM
 %
@@ -52,12 +52,13 @@ for k = 1:MAX_ITER
     
     % z-update with relaxation
     zold = z;
-    
-    x_hat = alpha*x +(1-alpha)*zold;
-    z = min(ub, max(lb, x_hat + u));
+    uold = u;
+    alphaold = alpha;
+
+    z = min(ub, max(lb, x + u));
     
     % u-update
-    u = u + (x_hat - z);
+    u = u + (x - z);
     
     % diagnostics, reporting, termination checks
     history.objval(k)  = objective(P, q, r, x);
@@ -78,6 +79,10 @@ for k = 1:MAX_ITER
        history.s_norm(k) < history.eps_dual(k))
          break;
     end
+
+    alpha = (1 + sqrt(1 + 4*alphaold*alphaold))/2;
+    z = z + (alphaold - 1)*(z - zold)/alpha;
+    u = u + (alphaold - 1)*(u - uold)/alpha;
 end    
 end
 

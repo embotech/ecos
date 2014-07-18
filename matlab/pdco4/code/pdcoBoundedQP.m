@@ -12,30 +12,25 @@ function pdcotestQP( m,n )
 %              It may be passed to pdco instead of function 'linobj'.
 %-----------------------------------------------------------------------
 
-  %[A,b,bl,bu,c,d1,d2,H] = toydata( m,n ); % Private function below
   [A,b,bl,bu,c,d1,d2,H] = toydatadense(m, n);
+
   %Add MOSEK path
   addpath /home/debasish/mosek/7/toolbox/r2013a/
   tic;
-  mosekx = quadprog(H,c,[],[],A,b,bl,bu);
+  mosekx = quadprog(H,c,[],[],[],[],bl,bu);
   mosekTime = toc;
-  	
+
+  %ADD ADMM path
+  addpath /home/debasish/ecos/matlab/admm
+  r = randn(1);
+  tic;    
+  admmx = qpproximal(H,c,r,bl,bu,1.0,1.0)
+  admmTime = toc;
+
   %Add ECOS path
-  addpath /home/debasish/cvxoptimizer/matlab
-  [ecosx, ~, ~, ~, ~, ecosTime] = ecosqp(H,c,[],[],A,b,bl,bu,ecosoptimset('verbose', 0, 'feastol', 1e-8));
+  addpath /home/debasish/ecos/matlab
+  [ecosx, ~, ~, ~, ~, ecosTime] = ecosqp(H,c,[],[],[],[],bl,bu,ecosoptimset('verbose', 0, 'feastol', 1e-8));
   
-% D  = sum(A,1);   D(find(D==0)) = 1;
-% D  = sparse( 1:n, 1:n, 1./D, n, n );
-% A  = A*D;                             % Normalize cols of A
-
-%%%%%%% TEST OF FIXED VARIABLES ON pdcotestQP(5,10)
-%if m==5 && n==10
-%  bl(2) = 1.056179230657742;
-%  bu(2) = bl(2);
-%  bl(5) = 1.204010603155194;
-%  bu(5) = bl(5);
-%end
-
   options = pdcoSet;
 
   x0    = ones(n,1)/n;       % Initial x
@@ -54,17 +49,17 @@ function pdcotestQP( m,n )
   [x,y,z,inform,PDitns,CGitns,time] = ...
     pdco(objectivefunction,A,b,bl,bu,d1,d2,options,x0,y0,z0,xsize,zsize );
 
-  fprintf('QP time %g\n', time)
-  fprintf('mosek-ecos norm %g\n', norm(mosekx - ecosx))
-  fprintf('mosek-x norm %g\n' , norm(mosekx - x))
-  fprintf('mosek %g ecos %g pdco %g\n', mosekTime, ecosTime, time)
+  fprintf('QP time %g\n', time);
+  fprintf('mosek-admm norm %g\n', norm(mosekx- admmx));
+  fprintf('mosek-ecos norm %g\n', norm(mosekx - ecosx));
+  fprintf('mosek-x norm %g\n' , norm(mosekx - x));
+  fprintf('mosek %g admm %g ecos %g pdco %g\n', mosekTime, admmTime, ecosTime, time);
+
   %disp('Waiting in pdcotestQP')
   %keyboard                   % Allow review of x,y,z, etc.
 %-----------------------------------------------------------------------
 % End function pdcotestQP
 %-----------------------------------------------------------------------
-function [A,b,bl,bu,c,d1,d2,H] = toydatatest(m, n)                               
-
 function [A,b,bl,bu,c,d1,d2,H] = toydata( m,n )
 
 %        [A,b,bl,bu,c,d1,d2] = toydata( m,n );
