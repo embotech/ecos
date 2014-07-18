@@ -37,8 +37,22 @@ void misocp_solve(misocp_pwork* prob){
 }
 
 void branch(idxint curr_node_idx, misocp_pwork* prob){
-    
-}
+    idxint i;
+
+    // Create right node
+    prob->nodes[prob->iter].L = prob->nodes[curr_node_idx].L;
+    prob->nodes[prob->iter].status = MI_NOT_SOLVED;
+
+    // Copy over the node id
+    for(i=0; i<prob->num_int_vars; ++i){
+        get_node_id(prob->iter, prob)[i] = get_node_id(curr_node_idx, prob)[i];
+    }
+
+    get_node_id(curr_node_idx, prob)[split_idx] = MI_ZERO;
+    get_node_id(prob->iter, prob)[split_idx] = MI_ONE;
+
+    prob->nodes[curr_node_idx].status = MI_NOT_SOLVED;
+}   
 
 /*
  * Function to return the next node to be expanded

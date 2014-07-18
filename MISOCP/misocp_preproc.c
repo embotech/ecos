@@ -1,7 +1,6 @@
 #include "ecos.h"
 #include "string.h"
 #include "stdlib.h"
-#include "math.h"
 #include "misocp.h"
 
 // We assume that the first num_int column vars are booleans
