@@ -58,9 +58,7 @@ idxint get_next_node(misocp_pwork* prob){
 pfloat get_global_L(misocp_pwork* prob){
     idxint i;
     pfloat L = INFINITY;
-    for(i=0; i < prob->iter; ++i){
-        L = min(L, prob->nodes[i].L);
-    }
+    for(i=0; i < prob->iter; ++i){ L = min(L, prob->nodes[i].L); }
     return L;
 }
 
@@ -113,9 +111,7 @@ void get_bounds(idxint node_idx, misocp_pwork* prob){
         }
 
         if (prob->nodes[node_idx].U < prob->global_U){
-            for(i=0; i<prob->ecos_prob->n; ++i){
-                prob->best_x[i] = get_node_id(node_idx)[i];
-            }
+            for(i=0; i<prob->ecos_prob->n; ++i){ prob->best_x[i] = get_node_id(node_idx)[i]; }
         }
     }else { //Assume node infeasible
         prob->nodes[node_idx].L = INFINITY;
