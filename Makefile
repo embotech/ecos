@@ -23,8 +23,8 @@ ecos: ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o equil.o
 	$(ARCHIVE) libecos.a *.o
 	- $(RANLIB) libecos.a
 
-misocp: ldl amd ecos
-	$(C) -c MISOCP/bnb.c -o misocp
+misocp: ldl amd ecos MISOCP/misocp.c
+	$(C) -o misocp MISOCP/misocp.c libecos.a $(LIBS)
 
 ecos.o: src/ecos.c include/ecos.h
 	$(C) -c src/ecos.c -o ecos.o
