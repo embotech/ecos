@@ -69,16 +69,16 @@ void set_prob(pwork* ecos_prob, char* node_id, idxint num_int_vars){
     for(i=0; i<num_int_vars; ++i){
         switch(node_id[i]){
             case MI_ONE:
-                ecos_prob->b[2*i] = -((pfloat) MI_ONE); // -x <= -1 <=> x >= 1
-                ecos_prob->b[2*i + 1] = (pfloat) MI_ONE;         
+                ecos_prob->h[2*i] = -((pfloat) MI_ONE); // -x <= -1 <=> x >= 1
+                ecos_prob->h[2*i + 1] = (pfloat) MI_ONE;         
                 break;
             case MI_ZERO:
-                ecos_prob->b[2*i] = (pfloat) MI_ZERO;
-                ecos_prob->b[2*i + 1] = (pfloat) MI_ZERO;         
+                ecos_prob->h[2*i] = (pfloat) MI_ZERO;
+                ecos_prob->h[2*i + 1] = (pfloat) MI_ZERO;         
                 break;
             case MI_STAR:
-                ecos_prob->b[2*i] = (pfloat) MI_ZERO;
-                ecos_prob->b[2*i + 1] = (pfloat) MI_ONE;         
+                ecos_prob->h[2*i] = (pfloat) MI_ZERO;
+                ecos_prob->h[2*i + 1] = (pfloat) MI_ONE;         
                 break;
         }
     }
@@ -132,10 +132,13 @@ idxint should_continue(misocp_pwork* prob){
         || prob->iter < MI_MAXITER;
 }
 
+void print_progress(misocp_pwork* prob){
+    printf("iter: %u, L: %f, U: %f\n", prob->iter, prob->global_L, prob->global_U);
+}
 
 void misocp_solve(misocp_pwork* prob){
     prob->iter = 0;
-
+    
     // Initialize to root node and execute steps 1 on slide 6
     idxint curr_node_idx = 0;
     get_bounds(curr_node_idx, prob);
@@ -144,6 +147,8 @@ void misocp_solve(misocp_pwork* prob){
     prob->global_U = prob->nodes[curr_node_idx].U;
     
     while ( should_continue(prob) ){
+        print_progress(prob);
+
         ++(prob->iter);
 
         // Step 2

@@ -107,7 +107,7 @@ misocp_pwork* misocp_setup(
     misocp_pwork* prob = (misocp_pwork*) malloc(sizeof(misocp_pwork));
 
     // Malloc the best optimal solution's memory
-    prob->best_x = malloc( n*sizeof(pfloat) );
+    prob->best_x = (pfloat*) malloc( n*sizeof(pfloat) );
 
     // Malloc the initial node's book keeping data #(2*maxIter)
     prob->nodes = (node*) calloc( 2*MI_MAXITER, sizeof(node) );
@@ -116,7 +116,6 @@ misocp_pwork* misocp_setup(
     prob->node_ids = (char*) malloc( 2*MI_MAXITER*num_int_vars*sizeof(char) );
 
     printf("\nPassed mallocs \n");
-
 
     // Setup the ecos solver
     prob->ecos_prob = ECOS_setup(
