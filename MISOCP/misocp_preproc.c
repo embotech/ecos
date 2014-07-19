@@ -2,44 +2,38 @@
 #include "misocp.h"
 #include "math.h"
 #include "stdlib.h"
-
-// Same as string.h's memcpy
-void memory_copy(void* src, void* dest, idxint bytes){
-    int i;
-    for (i=0; i<bytes; ++i){
-        ((char*) dest)[i] = ((char*) src)[i];
-    }
-}
+#include "splamm.h"
 
 /* Augments the G and b arrays to take lb and ub constraints
  * for all of the variables marked integer
  * USES MALLOC
  */ 
 void socp_to_misocp(
-    idxint num_int, idxint n, idxint m, idxint* l,
+    idxint num_int, idxint n, idxint m,
     pfloat* Gpr_in, idxint* Gjc_in, idxint* Gir_in,
     pfloat* Gpr_out, idxint* Gjc_out, idxint* Gir_out,
-    pfloat* b_in, pfloat* b_out)
+    pfloat* h_in, pfloat* h_out)
 {
-    idxint i;
-    /** We assume that the first num_int column vars are integers **/
+    idxint i, j;
     
-    // First we need to resize the G mat to accomodate lb and ub constraints
-    idxint new_G_size = Gjc_in[n] + 2 * num_int;
-    Gpr_out = (pfloat *) malloc( new_G_size * sizeof(pfloat) );
-    Gjc_out = (idxint *) malloc( n * sizeof(idxint) );
-    Gir_out = (idxint *) malloc( new_G_size * sizeof(idxint) );
-
-    b_out = (pfloat *) malloc( (n + 2 * num_int ) * sizeof(pfloat) );
+    spmat* G_old = createSparseMatrix(m, n, Gjc_in[n], 
+        Gjc_in, Gir_in, Gpr_in);
+    printSparseMatrix(G_old);
+    printf("======\n\n");
 
     // Fill in column pointers making room for the lb's and ub's
-    for (i=0; i<n ; ++i){
+    for (i=1; i<=n ; ++i){
         idxint a = i < num_int ? i : num_int;
         Gjc_out[i] = Gjc_in[i] + 2 * a; 
     }
 
+    spmat* G_new = createSparseMatrix(m + 2*num_int, n, Gjc_out[n], 
+        Gjc_out, Gir_out, Gpr_out);
+    printSparseMatrix(G_new);    
+    printf("======\n\n");
+
     // Fill in the new matrices 
-    for (i=0; i<num_int; ++i){
+    for (i=0; i<n; ++i){
         if (i<num_int){
             // Set coefficients for G matrix
             Gpr_out[ Gjc_out[i] ] = -1;
@@ -48,36 +42,32 @@ void socp_to_misocp(
             Gir_out[ Gjc_out[i] ] = 2*i;
             Gir_out[ Gjc_out[i] + 1 ] = 2*i + 1;
 
-            // Copy data
-            memory_copy(&Gpr_in[ Gjc_in[i] ] , &Gpr_out[ Gjc_out[i] + 2],
-                ( Gjc_in[i+1] - Gjc_in[i] )*sizeof(pfloat) );        
-
-            // Copy indexes
-            memory_copy(&Gir_in[ Gjc_in[i] ] , &Gir_out[ Gjc_out[i] + 2],
-                ( Gjc_in[i+1] - Gjc_in[i] )*sizeof(idxint) );        
+            for(j=0; j<(Gjc_in[i+1] - Gjc_in[i]); ++j){
+                Gpr_out[Gjc_out[i]+2+j] = Gpr_in[Gjc_in[i]+j];
+                Gir_out[Gjc_out[i]+2+j] = Gir_in[Gjc_in[i]+j] + 2*num_int;
+            }
+    
+            // Set lower bound to -Inf
+            h_out[ 2*i ] = INFINITY;     
 
             // Set upper bound to +Inf
-            b_out[ 2*i ] = INFINITY;     
+            h_out[ 2*i + 1] = INFINITY;     
 
-            // Set lower bound to -Inf
-            b_out[ 2*i + 1] = -INFINITY;     
         } else {
-            // Copy data
-            memory_copy(&Gpr_in[ Gjc_in[i] ] , &Gpr_out[ Gjc_out[i] ],
-                ( Gjc_in[i+1] - Gjc_in[i] )*sizeof(pfloat) );        
-
-            // Copy indexes
-            memory_copy(&Gir_in[ Gjc_in[i] ] , &Gir_out[ Gjc_out[i] ],
-                ( Gjc_in[i+1] - Gjc_in[i] )*sizeof(idxint) );        
-
+            for(j=0; j<(Gjc_in[i+1] - Gjc_in[i]); ++j){
+                Gpr_out[Gjc_out[i]+j] = Gpr_in[Gjc_in[i]+j];
+                Gir_out[Gjc_out[i]+j] = Gir_in[Gjc_in[i]+j] + 2*num_int;
+            }
         }
     }
 
-    // Copy the remaining entries of b
-    memory_copy( b_in, &b_out[2*num_int], m*sizeof(pfloat) );
+    printSparseMatrix(G_new);    
+    printf("======\n\n");
 
-    // Augment the number of linear cones2 
-    *l = *l + num_int;
+    // Copy the remaining entries of b
+    for (i=0; i<m; ++i){
+        h_out[2*num_int+i] = h_in[i];
+    }
 }
 
 
@@ -92,29 +82,29 @@ misocp_pwork* misocp_setup(
 {
     idxint i;
    
-    pfloat* Gpr_new, * b_new;
+    pfloat* Gpr_new, * h_new;
     idxint* Gjc_new, * Gir_new; 
 
+    idxint new_G_size = Gjc[n] + 2 * num_int_vars;
+    Gpr_new = (pfloat *) malloc( new_G_size * sizeof(pfloat) );
+    Gjc_new = (idxint *) malloc( (n+1) * sizeof(idxint) );
+    Gir_new = (idxint *) malloc( new_G_size * sizeof(idxint) );
+    h_new = (pfloat *) malloc( (m + 2 * num_int_vars ) * sizeof(pfloat) );
+
     // Copy the data and convert it to boolean
-    socp_to_misocp(num_int_vars, n, m, &l,
+    socp_to_misocp(num_int_vars, n, m,
                     Gpr, Gjc, Gir,
                     Gpr_new, Gjc_new, Gir_new,
-                    b, b_new);
+                    h, h_new);
+    m += 2*num_int_vars;
+    l += 2*num_int_vars;
 
-    //idxint num_int, idxint n, idxint m, idxint* l,
-    //pfloat* Gpr_in, idxint* Gjc_in, idxint* Gir_in,
-    //pfloat* Gpr_out, idxint* Gjc_out, idxint* Gir_out,
-    //pfloat* b_in, pfloat* b_out)
+    for (i=0; i<m; ++i){
+        printf("%f,", h_new[l]);
+    }
 
     // Malloc the problem's memory
     misocp_pwork* prob = (misocp_pwork*) malloc(sizeof(misocp_pwork));
-
-    // Setup the ecos solver
-    prob->ecos_prob = ECOS_setup(
-        n, m, p, l, ncones, q,
-        Gpr, Gjc, Gir,
-        Apr, Ajc, Air,
-        c, h, b);
 
     // Malloc the best optimal solution's memory
     prob->best_x = malloc( n*sizeof(pfloat) );
@@ -125,6 +115,18 @@ misocp_pwork* misocp_setup(
     // Malloc the id array
     prob->node_ids = (char*) malloc( 2*MI_MAXITER*num_int_vars*sizeof(char) );
 
+    printf("\nPassed mallocs \n");
+
+
+    // Setup the ecos solver
+    prob->ecos_prob = ECOS_setup(
+        n, m, p, l, ncones, q,
+        Gpr_new, Gjc_new, Gir_new,
+        Apr, Ajc, Air,
+        c, h_new, b);
+
+    printf("\nPassed ECOS \n");
+
     // Store the number of integer variables in the problem
     prob->num_int_vars = num_int_vars;
 
@@ -134,14 +136,10 @@ misocp_pwork* misocp_setup(
     prob->nodes[0].status = MI_NOT_SOLVED;
     prob->nodes[0].L = -INFINITY;
     prob->nodes[0].U =  INFINITY;
-    for (i=0; i<num_int_vars; ++i){
-        prob->node_ids[i] = MI_STAR;
-    }
+    for (i=0; i<num_int_vars; ++i){ prob->node_ids[i] = MI_STAR; }
 
     return prob;
 }
-
-
 
 // Performs the same function as ecos_cleanup
 void misocp_cleanup(misocp_pwork* prob){
