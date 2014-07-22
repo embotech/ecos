@@ -17,10 +17,10 @@ void branch(idxint curr_node_idx, misocp_pwork* prob){
     for(i=0; i<prob->num_int_vars; ++i){
         get_node_id(prob->iter, prob)[i] = get_node_id(curr_node_idx, prob)[i];
     }
-
+    
     get_node_id(curr_node_idx, prob)[prob->nodes[curr_node_idx].split_idx] = MI_ZERO;
     get_node_id(prob->iter, prob)[prob->nodes[curr_node_idx].split_idx] = MI_ONE;
-
+    
     prob->nodes[curr_node_idx].status = MI_NOT_SOLVED;
 }   
 
@@ -105,11 +105,11 @@ void get_bounds(idxint node_idx, misocp_pwork* prob){
             branchable = branchable && 
                 !float_eqls( prob->ecos_prob->x[i] , (pfloat) prob->tmp_node_id[i]);
         }
-        
+
         //printf("Orig Solve:\n");for (i=0; i<prob->ecos_prob->n; ++i) printf("%f\n", prob->ecos_prob->x[i]);
 
         if (branchable){ // Round and check feasibility
-            prob->nodes[node_idx].split_idx = get_branch_var(prob->ecos_prob->best_x, prob->num_int_vars);
+            prob->nodes[node_idx].split_idx = get_branch_var(prob->ecos_prob->x, prob->num_int_vars);
             prob->nodes[node_idx].status = MI_SOLVED_BRANCHABLE;  
             set_prob(prob->ecos_prob, prob->tmp_node_id, prob->num_int_vars);
             ret_code = ECOS_solve(prob->ecos_prob);
@@ -117,7 +117,7 @@ void get_bounds(idxint node_idx, misocp_pwork* prob){
             //printf("Guess:\n");for (i=0; i<prob->ecos_prob->n; ++i) printf("%f\n", prob->ecos_prob->x[i]);
 
             if (ret_code == ECOS_OPTIMAL){
-                prob->nodes[node_idx].U = eddot(prob->ecos_prob->n, prob->ecos_prob->x, prob->ecos_prob->c);
+                prob->nodes[node_idx].U = eddot(prob->ecos_prob->n, &prob->ecos_prob->x[0], prob->ecos_prob->c);
             }else{
                 prob->nodes[node_idx].U = INFINITY;    
             }
@@ -156,14 +156,14 @@ int get_ret_code(misocp_pwork* prob){
     }else { return ECOS_OPTIMAL; }
 }
 
-/*
+
 void print_node(misocp_pwork* prob, idxint i){
     int j;
     printf("Node info: %u : %f : %f : %u\nPartial id:", prob->nodes[i].status, 
         prob->nodes[i].L, prob->nodes[i].U, prob->nodes[i].split_idx);
     for (j=0; j<prob->num_int_vars; ++j) printf("%i,", get_node_id(i,prob)[j]);
     printf("\n");
-}*/
+}
 
 int misocp_solve(misocp_pwork* prob){
     prob->iter = 0;

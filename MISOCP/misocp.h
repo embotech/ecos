@@ -19,8 +19,6 @@
 #define MI_ZERO (0)
 #define MI_STAR (-1)
 
-
-
 //#define INFINITY (1E999)
 
 typedef struct node {

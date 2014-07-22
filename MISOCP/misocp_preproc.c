@@ -15,8 +15,9 @@ void socp_to_misocp(
     pfloat* h_in, pfloat* h_out)
 {
     idxint i, j;
-    
+
     // Fill in column pointers making room for the lb's and ub's
+    Gjc_out[0] = 0;
     for (i=1; i<=n ; ++i){
         idxint a = i < num_int ? i : num_int;
         Gjc_out[i] = Gjc_in[i] + 2 * a; 
@@ -36,7 +37,7 @@ void socp_to_misocp(
                 Gpr_out[Gjc_out[i]+2+j] = Gpr_in[Gjc_in[i]+j];
                 Gir_out[Gjc_out[i]+2+j] = Gir_in[Gjc_in[i]+j] + 2*num_int;
             }
-    
+            
             // Set lower bound to 0
             h_out[ 2*i ] = 0;     
 
@@ -55,8 +56,6 @@ void socp_to_misocp(
     for (i=0; i<m; ++i){
         h_out[2*num_int+i] = h_in[i];
     }
-
-    
 }
 
 
