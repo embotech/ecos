@@ -302,3 +302,92 @@ void kkt_update(spmat* PKP, idxint* P, cone *C)
 #endif
 	}
 }
+
+
+
+/**
+ * Initializes the (3,3) block of the KKT matrix to produce the matrix
+ * 
+ * 		[0  A'  G']
+ * K =  [A  0   0 ]
+ *      [G  0  -I ]
+ *
+ * It is assumed that the A,G have been already copied in appropriately, 
+ * and that enough memory has been allocated (this is done in preproc.c module).
+ *
+ * Note that the function works on the permuted KKT matrix.
+ */
+void kkt_init(spmat* PKP, idxint* P, cone *C)
+{
+	idxint i, j, k, conesize;
+    pfloat eta_square, *q;
+#if CONEMODE == 0
+    pfloat d1, u0, u1, v1;
+    idxint conesize_m1;
+#else
+    pfloat a, w, c, d, eta_square_d, qj;
+    idxint thiscolstart;
+#endif
+	
+	/* LP cone */
+    for( i=0; i < C->lpc->p; i++ ){ PKP->pr[P[C->lpc->kkt_idx[i]]] = -1.0; }
+    
+	/* Second-order cone */
+	for( i=0; i<C->nsoc; i++ ){
+        
+#if CONEMODE == 0
+        getSOCDetails(&C->soc[i], &conesize, &eta_square, &d1, &u0, &u1, &v1, &q);
+        conesize_m1 = conesize - 1;
+        
+        /* D */
+        PKP->pr[P[C->soc[i].Didx[0]]] = -1.0;
+        for (k=1; k < conesize; k++) {
+            PKP->pr[P[C->soc[i].Didx[k]]] = -1.0;
+        }
+        
+        /* v */
+        j=1;
+        for (k=0; k < conesize_m1; k++) {
+            PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = 0.0;
+        }
+        PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = -1.0;
+        
+        /* u */
+        PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = 0.0;
+        for (k=0; k < conesize_m1; k++) {
+            PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = 0.0;
+        }
+        PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = +1.0;
+#endif
+        
+#if CONEMODE > 0
+        conesize = C->soc[i].p;
+        eta_square = C->soc[i].eta_square;
+        a = C->soc[i].a;
+        w = C->soc[i].w;
+        c = C->soc[i].c;
+        d = C->soc[i].d;
+        q = C->soc[i].q;
+        eta_square_d = eta_square * d;
+        
+        /* first column - only diagonal element */
+        PKP->pr[P[C->soc[i].colstart[0]]] = -1.0;
+        
+        /* next conesize-1 columns */
+        for (j=1; j<conesize; j++) {
+            
+            thiscolstart = C->soc[i].colstart[j];
+            
+            /* first element in column (=c*q) */
+            qj = q[j-1];
+            PKP->pr[P[thiscolstart]] = 0.0;
+            
+            /* the rest of the column (=I + d*qq') */
+            for (k=1; k<j; k++) {
+                PKP->pr[P[thiscolstart+k]] = 0.0;      /* super-diagonal elements */
+            }
+            PKP->pr[P[thiscolstart+j]] = -1.0;   /* diagonal element */
+        }
+#endif
+	}
+}

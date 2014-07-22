@@ -101,13 +101,35 @@ idxint kkt_factor(kkt* KKT, pfloat eps, pfloat delta);
  *
  * Returns the number of iterative refinement steps really taken.
  */
-idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy, pfloat* dz, idxint n, idxint p, idxint m, cone* C, idxint isinit, idxint nitref);
+idxint kkt_solve(kkt* KKT,
+                 spmat* A, spmat* G,
+                 pfloat* Pb,
+                 pfloat* dx, pfloat* dy, pfloat* dz,
+                 idxint n, idxint p, idxint m,
+                 cone* C,
+                 idxint isinit,
+                 idxint nitref);
 
 
 /**
  * Updates the permuted KKT matrix by copying in the new scalings.
  */
 void kkt_update(spmat* PKP, idxint* P, cone *C);
+
+
+/**
+ * Initializes the (3,3) block of the KKT matrix to produce the matrix
+ *
+ * 		[0  A'  G']
+ * K =  [A  0   0 ]
+ *      [G  0  -I ]
+ *
+ * It is assumed that the A,G have been already copied in appropriately,
+ * and that enough memory has been allocated (this is done in preproc.c module).
+ *
+ * Note that the function works on the permuted KKT matrix.
+ */
+void kkt_init(spmat* PKP, idxint* P, cone *C);
 
 
 #endif
