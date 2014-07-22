@@ -6,7 +6,7 @@
 // MISOCP configuration settings
 #define MI_ABS_EPS (1E-7)
 #define MI_REL_EPS (1E-2)
-#define MI_MAXITER (2)
+#define MI_MAXITER (7)
 #define MI_INT_TOL (1E-5)
 
 // Flags

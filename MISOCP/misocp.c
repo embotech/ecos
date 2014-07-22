@@ -31,7 +31,7 @@ idxint get_next_node(misocp_pwork* prob){
     idxint i;
     idxint next_node = -1;
     pfloat L = INFINITY;
-    for(i=0; i < prob->iter; ++i){
+    for(i=0; i <= prob->iter; ++i){
         if(prob->nodes[i].status == MI_SOLVED_BRANCHABLE && prob->nodes[i].L < L ){
             next_node = i;
             L = prob->nodes[i].L;
@@ -109,7 +109,7 @@ void get_bounds(idxint node_idx, misocp_pwork* prob){
         branchable = !branchable;
         //printf("branchable: %u\n", branchable);
 
-        //printf("Orig Solve:\n");for (i=0; i<prob->ecos_prob->n; ++i) printf("%f\n", prob->ecos_prob->x[i]);
+        //printf("Orig Solve: %u\n", ret_code);for (i=0; i<prob->ecos_prob->n; ++i) printf("%f\n", prob->ecos_prob->x[i]);
 
         if (branchable){ // Round and check feasibility
             prob->nodes[node_idx].split_idx = get_branch_var(prob->ecos_prob->x, prob->num_int_vars);
@@ -117,7 +117,7 @@ void get_bounds(idxint node_idx, misocp_pwork* prob){
             set_prob(prob->ecos_prob, prob->tmp_node_id, prob->num_int_vars);
             ret_code = ECOS_solve(prob->ecos_prob);
 
-            //printf("Guess:\n");for (i=0; i<prob->ecos_prob->n; ++i) printf("%f\n", prob->ecos_prob->x[i]);
+            //printf("Guess: %u\n", ret_code);for (i=0; i<prob->ecos_prob->n; ++i) printf("%f\n", prob->ecos_prob->x[i]);
 
             if (ret_code == ECOS_OPTIMAL){
                 prob->nodes[node_idx].U = eddot(prob->ecos_prob->n, prob->ecos_prob->x, prob->ecos_prob->c);
@@ -171,6 +171,8 @@ void print_node(misocp_pwork* prob, idxint i){
 }
 
 int misocp_solve(misocp_pwork* prob){
+    idxint i;
+
     prob->iter = 0;
     
     // Initialize to root node and execute steps 1 on slide 6
@@ -191,12 +193,13 @@ int misocp_solve(misocp_pwork* prob){
         // and nodes[prob->iter]=rightNode 
         branch(curr_node_idx, prob);
 
+        //printf("curr_node_idx: %u\n", curr_node_idx);
+
         // Step 3
         get_bounds(curr_node_idx, prob);
         get_bounds(prob->iter, prob);
 
-        //print_node(prob, curr_node_idx);
-        //print_node(prob, prob->iter);
+        //for (i=0; i <= prob->iter; ++i) print_node(prob, i);
 
         // Step 4
         prob->global_L = get_global_L(prob);
