@@ -85,17 +85,15 @@ void set_prob(pwork* ecos_prob, char* node_id, idxint num_int_vars){
                 ecos_prob->h[2*i + 1] = 1.0;         
                 break;
         }
+        //printf("lb:%f, ub:%f\n", ecos_prob->h[2*i], ecos_prob->h[2*i+1]);
     }
     set_equilibration(ecos_prob);
 }
 
 void get_bounds(idxint node_idx, misocp_pwork* prob){  
     idxint i, ret_code, branchable;
-    set_prob(prob->ecos_prob, get_node_id(node_idx,prob), prob->num_int_vars);
-    
+    set_prob(prob->ecos_prob, get_node_id(node_idx,prob), prob->num_int_vars);    
     ret_code = ECOS_solve(prob->ecos_prob);
-
-
 
     branchable = 1;
     if (ret_code == ECOS_OPTIMAL){
@@ -108,7 +106,7 @@ void get_bounds(idxint node_idx, misocp_pwork* prob){
                 !float_eqls( prob->ecos_prob->x[i] , (pfloat) prob->tmp_node_id[i]);
         }
         
-       // printf("\n");for (i=0; i<prob->ecos_prob->n; ++i) printf("%f\n", prob->ecos_prob->x[i]);
+        //printf("Orig Solve:\n");for (i=0; i<prob->ecos_prob->n; ++i) printf("%f\n", prob->ecos_prob->x[i]);
 
         if (branchable){ // Round and check feasibility
             prob->nodes[node_idx].split_idx = get_branch_var(prob->ecos_prob->best_x, prob->num_int_vars);
@@ -116,7 +114,7 @@ void get_bounds(idxint node_idx, misocp_pwork* prob){
             set_prob(prob->ecos_prob, prob->tmp_node_id, prob->num_int_vars);
             ret_code = ECOS_solve(prob->ecos_prob);
 
-            //printf("\n");for (i=0; i<prob->ecos_prob->n; ++i) printf("%f\n", prob->ecos_prob->x[i]);
+            //printf("Guess:\n");for (i=0; i<prob->ecos_prob->n; ++i) printf("%f\n", prob->ecos_prob->x[i]);
 
             if (ret_code == ECOS_OPTIMAL){
                 prob->nodes[node_idx].U = eddot(prob->ecos_prob->n, prob->ecos_prob->x, prob->ecos_prob->c);
@@ -158,13 +156,14 @@ int get_ret_code(misocp_pwork* prob){
     }else { return ECOS_OPTIMAL; }
 }
 
+/*
 void print_node(misocp_pwork* prob, idxint i){
     int j;
-    printf("\n%u : %f : %f : %u\n", prob->nodes[i].status, 
+    printf("Node info: %u : %f : %f : %u\nPartial id:", prob->nodes[i].status, 
         prob->nodes[i].L, prob->nodes[i].U, prob->nodes[i].split_idx);
     for (j=0; j<prob->num_int_vars; ++j) printf("%i,", get_node_id(i,prob)[j]);
-    printf("\n\n");
-}
+    printf("\n");
+}*/
 
 int misocp_solve(misocp_pwork* prob){
     prob->iter = 0;
@@ -175,8 +174,6 @@ int misocp_solve(misocp_pwork* prob){
 
     prob->global_L = prob->nodes[curr_node_idx].L;
     prob->global_U = prob->nodes[curr_node_idx].U;
-    
-    print_node(prob, 0);
 
     while ( should_continue(prob, curr_node_idx) ){
         print_progress(prob);
@@ -188,15 +185,12 @@ int misocp_solve(misocp_pwork* prob){
         // and nodes[prob->iter]=rightNode 
         branch(curr_node_idx, prob);
 
-        print_node(prob, 0);
-        print_node(prob,1);
-
         // Step 3
         get_bounds(curr_node_idx, prob);
         get_bounds(prob->iter, prob);
 
-        print_node(prob, 0);
-        print_node(prob,1);
+        //print_node(prob, curr_node_idx);
+        //print_node(prob, prob->iter);
 
         // Step 4
         prob->global_L = get_global_L(prob);

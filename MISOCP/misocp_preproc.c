@@ -60,8 +60,10 @@ void socp_to_misocp(
 }
 
 
-// We assume that the first num_int column vars are booleans
-// Boolean vars only
+/* We assume that the first num_int column vars are booleans, otherwise all 
+ * arguements are exactly the same as ECOS
+ * Boolean vars only
+*/
 misocp_pwork* misocp_setup(
     idxint n, idxint m, idxint p, 
     idxint l, idxint ncones, idxint* q,
