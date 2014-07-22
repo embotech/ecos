@@ -6,7 +6,7 @@
 // MISOCP configuration settings
 #define MI_ABS_EPS (1E-7)
 #define MI_REL_EPS (1E-2)
-#define MI_MAXITER (1000)
+#define MI_MAXITER (2)
 #define MI_INT_TOL (1E-5)
 
 // Flags
@@ -18,6 +18,8 @@
 #define MI_ONE (1)
 #define MI_ZERO (0)
 #define MI_STAR (-1)
+
+
 
 //#define INFINITY (1E999)
 
@@ -56,7 +58,7 @@ misocp_pwork* misocp_setup(
     pfloat* Apr, idxint* Ajc, idxint* Air,
     pfloat* c, pfloat* h, pfloat* b, idxint num_int_var);
 
-void misocp_solve(misocp_pwork* prob);
+int misocp_solve(misocp_pwork* prob);
 
 void misocp_cleanup(misocp_pwork* prob);
 
@@ -80,5 +82,6 @@ inline idxint float_eqls(pfloat a, pfloat b){
 inline pfloat min(pfloat a, pfloat b){
 	return a < b ? a : b;
 }
+
 
 #endif
