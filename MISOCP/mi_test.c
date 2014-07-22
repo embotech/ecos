@@ -220,9 +220,6 @@ int test_6(){
 
 int main(){
 
-	printf("flteqls: %u\n",float_eqls(1.0, 1.5));
-	printf("flteqls: %u\n",float_eqls(1.0, 1-1e-6));
-
 	printf("Pass: 1, Fail: 0\n=============\n");
 	printf("\nTest 1: %u\n=============\n", test_1());
 	printf("\nTest 2: %u\n=============\n", test_2());	
