@@ -14,6 +14,9 @@ int test_1(){
 	pfloat feas_c[2] = {-1., -1.};
 	pfloat feas_h[2] = {4., 12.};
 
+	// Answer:
+	pfloat x[2] = {1.0, 2.0};
+
 	idxint i, ret_code, pass;
 	
 	misocp_pwork* prob = misocp_setup(
@@ -26,8 +29,7 @@ int test_1(){
 	ret_code = misocp_solve(prob);
 	
 	pass = 1;
-	// Answer is x = [1, 2]
-	pfloat x[2] = {1.0, 2.0};
+
 	printf("Soln:");
 	for (i=0; i<n; ++i){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
@@ -47,6 +49,9 @@ int test_2(){
 	pfloat feas_c[2] = {-1., -1.};
 	pfloat feas_h[2] = {4., 12.};
 
+	// Answer:
+	pfloat x[2] = {1.0, 1.0};
+	
 	idxint i, ret_code, pass;
 
 	misocp_pwork* prob = misocp_setup(
@@ -59,8 +64,7 @@ int test_2(){
 	ret_code = misocp_solve(prob);
 	
 	pass = 1;
-	// Answer is x = [1, 1]
-	pfloat x[2] = {1.0, 1.0};
+
 	printf("Soln:");
 	for (i=0; i<n; ++i){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
@@ -80,6 +84,9 @@ int test_3(){
 	pfloat feas_c[6] = {3, 5, 6, 9, 10, 10};
 	pfloat feas_h[3] = {-2, 2, -3};
 
+	// Answer: 
+	pfloat x[6] = {0,1,1,0,0,0};
+
 	idxint i, ret_code, pass;
 
 	misocp_pwork* prob = misocp_setup(
@@ -92,8 +99,7 @@ int test_3(){
 	ret_code = misocp_solve(prob);
 	
 	pass = 1;
-	// Answer is x = [6, 7]
-	pfloat x[6] = {0,1,1,0,0,0};
+	
 	printf("Soln:");
 	for (i=0; i<n; ++i){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
