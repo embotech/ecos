@@ -56,7 +56,8 @@ def test_problems():
 if platform.python_version_tuple() < ('3','0','0'):
   def test_problems_with_longs():
     new_dims = {'q': [], 'l': long(2)}
-    sol = ecos.solve(c, G, h, new_dims)
+    myopts = {'feastol': 2e-8, 'reltol': 2e-8, 'abstol': 2e-8};
+    sol = ecos.solve(c, G, h, new_dims, opts=myopts)
     yield check_solution, sol['x'][0], 1
 
     sol = ecos.solve(c, G, h, new_dims, A, b)

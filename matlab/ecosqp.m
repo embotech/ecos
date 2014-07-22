@@ -124,6 +124,13 @@ if( opts.verbose > 0 )
     disp('ECOSQP: Converting QP to SOCP...');
 end
 
+%% precondition
+scale = max(abs(f));
+scale = 1;
+f = f./scale;
+H = H./scale;
+
+
 %% check if Cholesky decomposition of H exists, 
 %  i.e. whether we have a positive definite Hessian
 assert( ~isempty(H),'Quadratic programming requires a Hessian.');
@@ -204,9 +211,11 @@ end
 G = sparse(G);
 Aeq = sparse(Aeq);
 
+
 %% solve
 if( opts.verbose > 0 ), fprintf('Conversion completed. Calling ECOS...\n'); end
 if( isempty(Aeq) )
+    save noscale c G h dims opts
     [x,y,info,s,z] = ecos(c,G,h,dims,opts); %#ok<ASGLU>
 else
     [x,y,info,s,z] = ecos(c,G,h,dims,Aeq,beq,opts); %#ok<ASGLU>
@@ -214,7 +223,7 @@ end
 
 
 %% prepare return variables
-X = x(1:n);
+X = x(1:n)*scale;
 fval = x(end);
 switch( info.exitflag )
     case 1, exitflag = -2;

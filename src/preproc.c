@@ -463,10 +463,10 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
                    pfloat* Apr, idxint* Ajc, idxint* Air,
                    pfloat* c, pfloat* h, pfloat* b)
 {
-    idxint i, j, k, cidx, conesize, lnz, amd_result, nK, *Ljc, *Lir, *P, *Pinv, *Sign;
+    idxint i, cidx, conesize, lnz, amd_result, nK, *Ljc, *Lir, *P, *Pinv, *Sign;
     pwork* mywork;
 	double Control [AMD_CONTROL], Info [AMD_INFO];		
-	pfloat rx, ry, rz, *Lpr;
+	pfloat *Lpr;
 	spmat *At, *Gt, *KU;
 
 #if PROFILING > 0
@@ -847,46 +847,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #if DEBUG > 0
     dumpSparseMatrix(mywork->KKT->PKPt, "PKPt.txt");
 #endif
-    
-#if CONEMODE > 0
-    /* zero any off-diagonal elements in (permuted) scalings in KKT matrix */
-    for (i=0; i<mywork->C->nsoc; i++) {
-        for (j=1; j<mywork->C->soc[i].p; j++) {
-            for (k=0; k<j; k++) {
-                mywork->KKT->PKPt->pr[mywork->KKT->PK[mywork->C->soc[i].colstart[j]+k]] = 0;
-            }
-        }
-    }
-#endif
-#if DEBUG > 0
-     dumpSparseMatrix(mywork->KKT->PKPt, "PKPt0.txt");
-#endif
-
-	/* set up RHSp for initialization */
-	k = 0; j = 0;
-	for( i=0; i<n; i++ ){ mywork->KKT->RHS1[Pinv[k++]] = 0; }
-	for( i=0; i<p; i++ ){ mywork->KKT->RHS1[Pinv[k++]] = b[i]; }
-	for( i=0; i<l; i++ ){ mywork->KKT->RHS1[Pinv[k++]] = h[i]; j++; }
-	for( l=0; l<ncones; l++ ){ 
-		for( i=0; i < mywork->C->soc[l].p; i++ ){ mywork->KKT->RHS1[Pinv[k++]] = h[j++]; }
-#if CONEMODE == 0
-		mywork->KKT->RHS1[Pinv[k++]] = 0;
-        mywork->KKT->RHS1[Pinv[k++]] = 0;
-#endif
-	}
-#if PRINTLEVEL > 2
-    PRINTTEXT("Written %d entries of RHS1\n", (int)k);
-#endif
-	
-	/* set up RHSd for initialization */
-	for( i=0; i<n; i++ ){ mywork->KKT->RHS2[Pinv[i]] = -c[i]; }
-	for( i=n; i<nK; i++ ){ mywork->KKT->RHS2[Pinv[i]] = 0; }
-
-	/* get scalings of problem data */
-	rx = norm2(c, n); mywork->resx0 = MAX(1, rx);
-	ry = norm2(b, p); mywork->resy0 = MAX(1, ry);
-	rz = norm2(h, m); mywork->resz0 = MAX(1, rz);
-
+    	
 	/* get memory for residuals */
 	mywork->rx = (pfloat *)MALLOC(n*sizeof(pfloat));
 	mywork->ry = (pfloat *)MALLOC(p*sizeof(pfloat));

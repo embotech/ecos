@@ -226,7 +226,6 @@ idxint checkExitConditions(pwork* w, idxint mode)
     /* Primal infeasible? */
     else if( (w->info->pinfres != NAN && w->info->pinfres < feastol) ||
             ( w->tau < w->stgs->feastol && w->kap < w->stgs->feastol && w->info->pinfres < w->stgs->feastol) ){
-    INFEASIBLE:
 #if PRINTLEVEL > 0
         if( w->stgs->verbose ) {
             if( mode == 0) {
@@ -251,26 +250,53 @@ idxint checkExitConditions(pwork* w, idxint mode)
 
 /*
  * Initializes the solver.
- *
- * This function assumes that the KKT matrix K is already in the form
- *
- *		[0  A'  G']
- * K =  [A  0   0 ]
- *      [G  0  -I ]
- *
- * The preprocessor/codegen takes care of this, we just have to be aware
- * of this implicit assumption.
  */
 idxint init(pwork* w)
 {
-	idxint i, KKT_FACTOR_RETURN_CODE;
+	idxint i, j, k, l, KKT_FACTOR_RETURN_CODE;
 	idxint* Pinv = w->KKT->Pinv;
+    pfloat rx, ry, rz;
 
 #if PROFILING > 1
 	timer tfactor, tkktsolve;
 #endif
 
+    /* set regularization parameter */
 	w->KKT->delta = w->stgs->delta;
+    
+    /* Initialize KKT matrix */
+    kkt_init(w->KKT->PKPt, w->KKT->PK, w->C);
+
+#if DEBUG > 0
+    dumpSparseMatrix(w->KKT->PKPt, "PKPt0.txt");
+#endif
+
+    
+    /* initialize RHS1 */
+	k = 0; j = 0;
+	for( i=0; i<w->n; i++ ){ w->KKT->RHS1[w->KKT->Pinv[k++]] = 0; }
+	for( i=0; i<w->p; i++ ){ w->KKT->RHS1[w->KKT->Pinv[k++]] = w->b[i]; }
+	for( i=0; i<w->C->lpc->p; i++ ){ w->KKT->RHS1[w->KKT->Pinv[k++]] = w->h[i]; j++; }
+	for( l=0; l<w->C->nsoc; l++ ){
+		for( i=0; i < w->C->soc[l].p; i++ ){ w->KKT->RHS1[w->KKT->Pinv[k++]] = w->h[j++]; }
+#if CONEMODE == 0
+		w->KKT->RHS1[w->KKT->Pinv[k++]] = 0;
+        w->KKT->RHS1[w->KKT->Pinv[k++]] = 0;
+#endif
+	}
+#if PRINTLEVEL > 2
+    PRINTTEXT("Written %d entries of RHS1\n", (int)k);
+#endif
+	
+	/* initialize RHS2 */
+	for( i=0; i<w->n; i++ ){ w->KKT->RHS2[w->KKT->Pinv[i]] = -w->c[i]; }
+	for( i=w->n; i<w->KKT->PKPt->n; i++ ){ w->KKT->RHS2[w->KKT->Pinv[i]] = 0; }
+    
+	/* get scalings of problem data */
+	rx = norm2(w->c, w->n); w->resx0 = MAX(1, rx);
+	ry = norm2(w->b, w->p); w->resy0 = MAX(1, ry);
+	rz = norm2(w->h, w->m); w->resz0 = MAX(1, rz);
+
 
 	/* Factor KKT matrix - this is needed in all 3 linear system solves */
 #if PROFILING > 1

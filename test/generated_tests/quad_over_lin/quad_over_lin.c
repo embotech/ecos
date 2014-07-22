@@ -2,7 +2,7 @@
 #include "quad_over_lin.h"
 
 /* ----------------------- BEGIN GENERATED CODE --------------------------- */
-qc_socp * qc_quad_over_lin2socp(const quad_over_lin_params * params, const quad_over_lin_dims * dims)
+qc_socp * qc_quad_over_lin2socp()
 {
     /*
      * maps 'params' into the C socp data type
@@ -16,9 +16,9 @@ qc_socp * qc_quad_over_lin2socp(const quad_over_lin_params * params, const quad_
     long *G_row_ptr, *G_col_ptr;
     double *A_data_ptr, *G_data_ptr;
     long nnzA, nnzG;
-    qc_matrix *G_csc, *A_csc;  /* possibly un-used */
-    qc_matrix G_coo, A_coo;    /* possibly un-used */
-
+    qc_matrix *G_csc;
+    qc_matrix G_coo;
+    
     /* allocate socp data structure */
     qc_socp * data = (qc_socp *) calloc(1, sizeof(qc_socp));
     if (!data) return qc_socp_free(data);
