@@ -129,7 +129,7 @@ misocp_pwork* misocp_setup(
 void misocp_cleanup(misocp_pwork* prob){
     // Free solver memory
     ECOS_cleanup(prob->ecos_prob, 0);
-
+    free(prob->tmp_node_id);
     free(prob->nodes);
     free(prob->node_ids);
     free(prob->best_x);
