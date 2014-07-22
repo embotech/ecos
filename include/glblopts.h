@@ -39,7 +39,7 @@ typedef double pfloat;              /* for numerical values  */
                             /* problems.                                 */
 
 /* SET PROFILING LEVEL ------------------------------------------------- */
-#define PROFILING (0)      /* 0: no timing information				     */
+#define PROFILING (1)      /* 0: no timing information				     */
                            /* 1: runtime (divided in setup and solve)    */
                            /* 2: detailed profiling                      */
 
