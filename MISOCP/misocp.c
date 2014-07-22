@@ -95,16 +95,19 @@ void get_bounds(idxint node_idx, misocp_pwork* prob){
     set_prob(prob->ecos_prob, get_node_id(node_idx,prob), prob->num_int_vars);    
     ret_code = ECOS_solve(prob->ecos_prob);
 
-    branchable = 1;
+    
     if (ret_code == ECOS_OPTIMAL){
         prob->nodes[node_idx].L = eddot(prob->ecos_prob->n, prob->ecos_prob->x, prob->ecos_prob->c);
 
+        branchable = 1;
         // Figure out if x is already an integer solution
         for (i=0; i<prob->num_int_vars; ++i){
             prob->tmp_node_id[i] = (char) round( prob->ecos_prob->x[i] );
-            branchable = branchable && 
-                !float_eqls( prob->ecos_prob->x[i] , (pfloat) prob->tmp_node_id[i]);
+            branchable &= float_eqls( prob->ecos_prob->x[i] , (pfloat) prob->tmp_node_id[i]);
+            //printf("branch: %f %f\n", prob->ecos_prob->x[i] , (pfloat) prob->tmp_node_id[i]);
         }
+        branchable = !branchable;
+        //printf("branchable: %u\n", branchable);
 
         //printf("Orig Solve:\n");for (i=0; i<prob->ecos_prob->n; ++i) printf("%f\n", prob->ecos_prob->x[i]);
 
@@ -117,7 +120,7 @@ void get_bounds(idxint node_idx, misocp_pwork* prob){
             //printf("Guess:\n");for (i=0; i<prob->ecos_prob->n; ++i) printf("%f\n", prob->ecos_prob->x[i]);
 
             if (ret_code == ECOS_OPTIMAL){
-                prob->nodes[node_idx].U = eddot(prob->ecos_prob->n, &prob->ecos_prob->x[0], prob->ecos_prob->c);
+                prob->nodes[node_idx].U = eddot(prob->ecos_prob->n, prob->ecos_prob->x, prob->ecos_prob->c);
             }else{
                 prob->nodes[node_idx].U = INFINITY;    
             }
@@ -131,6 +134,8 @@ void get_bounds(idxint node_idx, misocp_pwork* prob){
         }
 
     }else { //Assume node infeasible
+        //printf("Ret code: %u\n", ret_code);
+
         prob->nodes[node_idx].L = INFINITY;
         prob->nodes[node_idx].U = INFINITY;
         prob->nodes[node_idx].status = MI_SOLVED_NON_BRANCHABLE;
@@ -170,6 +175,7 @@ int misocp_solve(misocp_pwork* prob){
     
     // Initialize to root node and execute steps 1 on slide 6
     idxint curr_node_idx = 0;
+    //print_node(prob, curr_node_idx);
     get_bounds(curr_node_idx, prob);
 
     prob->global_L = prob->nodes[curr_node_idx].L;
