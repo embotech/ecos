@@ -1,12 +1,14 @@
 #ifndef __MISOCP_H__
 #define __MISOCP_H__
 
+#define inline __inline
+
 #include "ecos.h"
 
 // MISOCP configuration settings
 #define MI_ABS_EPS (1E-7)
 #define MI_REL_EPS (1E-2)
-#define MI_MAXITER (7)
+#define MI_MAXITER (100)
 #define MI_INT_TOL (1E-5)
 
 // Flags
@@ -37,8 +39,8 @@ typedef struct misocp_pwork{
 	char* node_ids;
 	
 	pfloat* best_x;
-    pfloat global_U;
-    pfloat global_L;
+	pfloat global_U;
+	pfloat global_L;
 
 	// ECOS data
 	pwork* ecos_prob;

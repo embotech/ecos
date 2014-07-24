@@ -21,10 +21,10 @@ int test_1(){
 	
 	misocp_pwork* prob = misocp_setup(
 		n, m, 0, 
-    	m, 0, NULL,
-    	feas_Gx, feas_Gp, feas_Gi,
-    	NULL, NULL, NULL,
-    	feas_c, feas_h, NULL, 1);
+		m, 0, NULL,
+		feas_Gx, feas_Gp, feas_Gi,
+		NULL, NULL, NULL,
+		feas_c, feas_h, NULL, 1);
 
 	ret_code = misocp_solve(prob);
 	
@@ -56,10 +56,10 @@ int test_2(){
 
 	misocp_pwork* prob = misocp_setup(
 		n, m, 0, 
-    	m, 0, NULL,
-    	feas_Gx, feas_Gp, feas_Gi,
-    	NULL, NULL, NULL,
-    	feas_c, feas_h, NULL, 2);
+		m, 0, NULL,
+		feas_Gx, feas_Gp, feas_Gi,
+		NULL, NULL, NULL,
+		feas_c, feas_h, NULL, 2);
 
 	ret_code = misocp_solve(prob);
 	
@@ -92,10 +92,10 @@ int test_3(){
 	
 	misocp_pwork* prob = misocp_setup(
 		n, m, 0, 
-    	m, 0, NULL,
-    	feas_Gx, feas_Gp, feas_Gi,
-    	NULL, NULL, NULL,
-    	feas_c, feas_h, NULL, 1);
+		m, 0, NULL,
+		feas_Gx, feas_Gp, feas_Gi,
+		NULL, NULL, NULL,
+		feas_c, feas_h, NULL, 1);
 
 	ret_code = misocp_solve(prob);
 	
@@ -127,13 +127,12 @@ int test_4(){
 
 	misocp_pwork* prob = misocp_setup(
 		n, m, 0, 
-    	m, 0, NULL,
-    	feas_Gx, feas_Gp, feas_Gi,
-    	NULL, NULL, NULL,
-    	feas_c, feas_h, NULL, 6);
+		m, 0, NULL,
+		feas_Gx, feas_Gp, feas_Gi,
+		NULL, NULL, NULL,
+		feas_c, feas_h, NULL, 6);
 
 	ret_code = misocp_solve(prob);
-	
 	pass = 1;
 	
 	printf("Soln:");
@@ -163,10 +162,10 @@ int test_5(){
 
 	misocp_pwork* prob = misocp_setup(
 		n, m, 0, 
-    	m, 0, NULL,
-    	feas_Gx, feas_Gp, feas_Gi,
-    	NULL, NULL, NULL,
-    	feas_c, feas_h, NULL, 6);
+		m, 0, NULL,
+		feas_Gx, feas_Gp, feas_Gi,
+		NULL, NULL, NULL,
+	feas_c, feas_h, NULL, 6);
 
 	ret_code = misocp_solve(prob);
 	
@@ -200,10 +199,10 @@ int test_6(){
 
 	misocp_pwork* prob = misocp_setup(
 		n, m, 0, 
-    	m, 0, NULL,
-    	feas_Gx, feas_Gp, feas_Gi,
-    	NULL, NULL, NULL,
-    	feas_c, feas_h, NULL, 6);
+		m, 0, NULL,
+		feas_Gx, feas_Gp, feas_Gi,
+		NULL, NULL, NULL,
+		feas_c, feas_h, NULL, 6);
 
 	ret_code = misocp_solve(prob);
 	

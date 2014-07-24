@@ -116,12 +116,6 @@ misocp_pwork* misocp_setup(
 
     prob->global_U = INFINITY;
 
-    // Now initialize the root node
-    prob->nodes[0].status = MI_NOT_SOLVED;
-    prob->nodes[0].L = -INFINITY;
-    prob->nodes[0].U =  INFINITY;
-    for (i=0; i<num_int_vars; ++i){ prob->node_ids[i] = MI_STAR; }
-
     return prob;
 }
 

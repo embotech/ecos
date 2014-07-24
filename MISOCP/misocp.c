@@ -14,7 +14,7 @@ void branch(idxint curr_node_idx, misocp_pwork* prob){
     prob->nodes[prob->iter].status = MI_NOT_SOLVED;
 
     // Copy over the node id
-    for(i=0; i<prob->num_int_vars; ++i){
+    for(i=0; i < prob->num_int_vars; ++i){
         get_node_id(prob->iter, prob)[i] = get_node_id(curr_node_idx, prob)[i];
     }
     
@@ -170,12 +170,22 @@ void print_node(misocp_pwork* prob, idxint i){
     printf("\n");
 }
 
+void initialize_root(misocp_pwork* prob){
+    idxint i;
+    prob->nodes[0].status = MI_NOT_SOLVED;
+    prob->nodes[0].L = -INFINITY;
+    prob->nodes[0].U =  INFINITY;
+    for (i=0; i < prob->num_int_vars; ++i){ prob->node_ids[i] = MI_STAR; }
+}
+
 int misocp_solve(misocp_pwork* prob){
     idxint i;
 
     prob->iter = 0;
     
-    // Initialize to root node and execute steps 1 on slide 6
+    // Initialize to root node and execute steps 1 on slide 6 
+    // of http://stanford.edu/class/ee364b/lectures/bb_slides.pdf
+    initialize_root(prob);
     idxint curr_node_idx = 0;
     //print_node(prob, curr_node_idx);
     get_bounds(curr_node_idx, prob);
@@ -189,8 +199,8 @@ int misocp_solve(misocp_pwork* prob){
         ++(prob->iter);
 
         // Step 2
-        // Branch replaces nodes[curr_node_idx]=leftNode 
-        // and nodes[prob->iter]=rightNode 
+        // Branch replaces nodes[curr_node_idx] with leftNode
+        // and nodes[prob->iter] with rightNode 
         branch(curr_node_idx, prob);
 
         //printf("curr_node_idx: %u\n", curr_node_idx);
