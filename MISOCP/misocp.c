@@ -152,13 +152,17 @@ idxint should_continue(misocp_pwork* prob, idxint curr_node_idx){
 }
 
 void print_progress(misocp_pwork* prob){
-    printf("iter: %u, L: %f, U: %f\n", prob->iter, prob->global_L, prob->global_U);
+    printf("%u \t%.2f \t\t%.2f \t\t%.2f\n", prob->iter, prob->global_L, prob->global_U, prob->global_U-prob->global_L);
 }
 
 int get_ret_code(misocp_pwork* prob){
-    if ( isinf(prob->global_U) ){ return ECOS_OPTIMAL;
-    }else if ( prob->iter == MI_MAXITER ){ return ECOS_MAXIT;        
-    }else { return ECOS_OPTIMAL; }
+    if ( prob->iter < MI_MAXITER){
+        if ( isinf(prob->global_U) ) return MI_INFEASIBLE;
+        else return MI_OPTIMAL_SOLN;
+    } else { 
+        if ( isinf(prob->global_U) ) return MI_MAXITER_NO_SOLN;
+        else return MI_MAXITER_FEASIBLE_SOLN;
+    }
 }
 
 
@@ -193,6 +197,8 @@ int misocp_solve(misocp_pwork* prob){
     prob->global_L = prob->nodes[curr_node_idx].L;
     prob->global_U = prob->nodes[curr_node_idx].U;
 
+    printf("Iter\tLower Bound\tUpper Bound\tGap\n");
+    printf("================================================\n");
     while ( should_continue(prob, curr_node_idx) ){
         print_progress(prob);
 

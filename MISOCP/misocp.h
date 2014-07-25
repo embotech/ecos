@@ -4,6 +4,7 @@
 #define inline __inline
 
 #include "ecos.h"
+#include "spla.h"
 
 // MISOCP configuration settings
 #define MI_ABS_EPS (1E-7)
@@ -20,6 +21,11 @@
 #define MI_ONE (1)
 #define MI_ZERO (0)
 #define MI_STAR (-1)
+
+#define MI_OPTIMAL_SOLN (0)
+#define MI_MAXITER_FEASIBLE_SOLN (1)
+#define MI_MAXITER_NO_SOLN (2)
+#define MI_INFEASIBLE (3)
 
 //#define INFINITY (1E999)
 
@@ -44,6 +50,14 @@ typedef struct misocp_pwork{
 
 	// ECOS data
 	pwork* ecos_prob;
+
+	// Modified pointers to ecos internals
+	// Use these to edit or reset the h variables
+	spmat* A;
+	spmat* G;
+	pfloat* c;
+	pfloat* b;
+	pfloat* h;
 
 	// Tmp data
 	char* tmp_node_id;

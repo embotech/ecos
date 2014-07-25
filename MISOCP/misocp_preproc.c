@@ -116,6 +116,15 @@ misocp_pwork* misocp_setup(
 
     prob->global_U = INFINITY;
 
+    // offset the h pointer for the user
+    prob->h = &prob->ecos_prob->h[2 * num_int_vars];
+
+    // Map the other variables
+    prob->A = prob->ecos_prob->A;
+    prob->G = prob->ecos_prob->G;
+    prob->c = prob->ecos_prob->c;
+    prob->b = prob->ecos_prob->b;
+
     return prob;
 }
 
