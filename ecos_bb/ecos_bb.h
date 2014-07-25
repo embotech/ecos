@@ -39,7 +39,7 @@ typedef struct node {
 // Wrapper for mixed integer module
 typedef struct ecos_bb_pwork{
 	// Mixed integer data
-	idxint num_int_vars;
+	idxint num_bool_vars;
 	
 	node* nodes;
 	char* node_ids;
@@ -78,7 +78,7 @@ void ecos_bb_cleanup(ecos_bb_pwork* prob);
 
 // Calculate the offset into the node_id array
 inline char* get_node_id(idxint idx, ecos_bb_pwork* prob){
-    return &prob->node_ids[prob->num_int_vars * idx];
+    return &prob->node_ids[prob->num_bool_vars * idx];
 }
 
 inline pfloat abs_2(pfloat number){

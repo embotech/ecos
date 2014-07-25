@@ -75,19 +75,19 @@ ecos_bb_pwork* ecos_bb_setup(
     pfloat* Gpr_new, * h_new;
     idxint* Gjc_new, * Gir_new; 
 
-    idxint new_G_size = Gjc[n] + 2 * num_int_vars;
+    idxint new_G_size = Gjc[n] + 2 * num_bool_vars;
     Gpr_new = (pfloat *) malloc( new_G_size * sizeof(pfloat) );
     Gjc_new = (idxint *) malloc( (n+1) * sizeof(idxint) );
     Gir_new = (idxint *) malloc( new_G_size * sizeof(idxint) );
-    h_new = (pfloat *) malloc( (m + 2 * num_int_vars ) * sizeof(pfloat) );
+    h_new = (pfloat *) malloc( (m + 2 * num_bool_vars ) * sizeof(pfloat) );
 
     // Copy the data and convert it to boolean
-    socp_to_ecos_bb(num_int_vars, n, m,
+    socp_to_ecos_bb(num_bool_vars, n, m,
                     Gpr, Gjc, Gir,
                     Gpr_new, Gjc_new, Gir_new,
                     h, h_new);
-    m += 2*num_int_vars;
-    l += 2*num_int_vars;
+    m += 2*num_bool_vars;
+    l += 2*num_bool_vars;
 
     // Malloc the problem's memory
     ecos_bb_pwork* prob = (ecos_bb_pwork*) malloc(sizeof(ecos_bb_pwork));
@@ -99,10 +99,10 @@ ecos_bb_pwork* ecos_bb_setup(
     prob->nodes = (node*) calloc( MI_MAXITER, sizeof(node) );
 
     // Malloc the id array
-    prob->node_ids = (char*) malloc( MI_MAXITER*num_int_vars*sizeof(char) );
+    prob->node_ids = (char*) malloc( MI_MAXITER*num_bool_vars*sizeof(char) );
 
     // Malloc the tmp node id
-    prob->tmp_node_id = (char*) malloc( num_int_vars*sizeof(char) );
+    prob->tmp_node_id = (char*) malloc( num_bool_vars*sizeof(char) );
 
     // Setup the ecos solver
     prob->ecos_prob = ECOS_setup(
@@ -112,12 +112,12 @@ ecos_bb_pwork* ecos_bb_setup(
         c, h_new, b);
 
     // Store the number of integer variables in the problem
-    prob->num_int_vars = num_int_vars;
+    prob->num_bool_vars = num_bool_vars;
 
     prob->global_U = INFINITY;
 
     // offset the h pointer for the user
-    prob->h = &prob->ecos_prob->h[2 * num_int_vars];
+    prob->h = &prob->ecos_prob->h[2 * num_bool_vars];
 
     // Map the other variables
     prob->A = prob->ecos_prob->A;

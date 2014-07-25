@@ -27,4 +27,4 @@ ARCHIVE = $(AR) $(ARFLAGS)
 RANLIB = ranlib
 
 ## WHICH FILES TO CLEAN UP
-CLEAN = *.o *.obj *.ln *.bb *.bbg *.da *.tcov *.gcov gmon.out *.bak *.d *.gcda *.gcno ecos_bb
+CLEAN = *.o *.obj *.ln *.bb *.bbg *.da *.tcov *.gcov gmon.out *.bak *.d *.gcda *.gcno ecos_bb_test

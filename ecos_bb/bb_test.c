@@ -1,8 +1,7 @@
+#include "timer.h"
 #include "ecos_bb.h"
 #include "ecos_bb.c"
 #include "ecos_bb_preproc.c"
-#include "ecos.h"
-#include "timer.h"
 
 int test_1(){
 	idxint n = 2;
@@ -125,6 +124,7 @@ int test_4(){
 
 	idxint i, ret_code, pass;
 
+	
 	ecos_bb_pwork* prob = ecos_bb_setup(
 		n, m, 0, 
 		m, 0, NULL,
@@ -133,6 +133,7 @@ int test_4(){
 		feas_c, feas_h, NULL, 6);
 
 	ret_code = ecos_bb_solve(prob);
+
 	pass = 1;
 	
 	printf("Soln:");
@@ -140,6 +141,7 @@ int test_4(){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
 		printf("%f,", prob->best_x[i]);
 	}
+	
 	ecos_bb_cleanup(prob);
 	return pass;
 }
