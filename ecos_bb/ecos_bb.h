@@ -1,12 +1,12 @@
-#ifndef __MISOCP_H__
-#define __MISOCP_H__
+#ifndef __ecos_bb_H__
+#define __ecos_bb_H__
 
 #define inline __inline
 
 #include "ecos.h"
 #include "spla.h"
 
-// MISOCP configuration settings
+// ecos_bb configuration settings
 #define MI_ABS_EPS (1E-7)
 #define MI_REL_EPS (1E-2)
 #define MI_MAXITER (100)
@@ -37,7 +37,7 @@ typedef struct node {
 } node;
 
 // Wrapper for mixed integer module
-typedef struct misocp_pwork{
+typedef struct ecos_bb_pwork{
 	// Mixed integer data
 	idxint num_int_vars;
 	
@@ -63,21 +63,21 @@ typedef struct misocp_pwork{
 	char* tmp_node_id;
 	idxint iter;
 	
-} misocp_pwork;
+} ecos_bb_pwork;
 
-misocp_pwork* misocp_setup(
+ecos_bb_pwork* ecos_bb_setup(
     idxint n, idxint m, idxint p, 
     idxint l, idxint ncones, idxint* q,
     pfloat* Gpr, idxint* Gjc, idxint* Gir,
     pfloat* Apr, idxint* Ajc, idxint* Air,
     pfloat* c, pfloat* h, pfloat* b, idxint num_int_var);
 
-int misocp_solve(misocp_pwork* prob);
+int ecos_bb_solve(ecos_bb_pwork* prob);
 
-void misocp_cleanup(misocp_pwork* prob);
+void ecos_bb_cleanup(ecos_bb_pwork* prob);
 
 // Calculate the offset into the node_id array
-inline char* get_node_id(idxint idx, misocp_pwork* prob){
+inline char* get_node_id(idxint idx, ecos_bb_pwork* prob){
     return &prob->node_ids[prob->num_int_vars * idx];
 }
 

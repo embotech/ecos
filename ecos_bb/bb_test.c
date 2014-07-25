@@ -1,6 +1,6 @@
-#include "misocp.h"
-#include "misocp.c"
-#include "misocp_preproc.c"
+#include "ecos_bb.h"
+#include "ecos_bb.c"
+#include "ecos_bb_preproc.c"
 #include "ecos.h"
 #include "timer.h"
 
@@ -19,14 +19,14 @@ int test_1(){
 
 	idxint i, ret_code, pass;
 	
-	misocp_pwork* prob = misocp_setup(
+	ecos_bb_pwork* prob = ecos_bb_setup(
 		n, m, 0, 
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 1);
 
-	ret_code = misocp_solve(prob);
+	ret_code = ecos_bb_solve(prob);
 	
 	pass = 1;
 
@@ -35,7 +35,7 @@ int test_1(){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
 		printf("%f,", prob->best_x[i]);
 	}
-	misocp_cleanup(prob);
+	ecos_bb_cleanup(prob);
 	return pass;
 }
 
@@ -54,14 +54,14 @@ int test_2(){
 	
 	idxint i, ret_code, pass;
 
-	misocp_pwork* prob = misocp_setup(
+	ecos_bb_pwork* prob = ecos_bb_setup(
 		n, m, 0, 
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 2);
 
-	ret_code = misocp_solve(prob);
+	ret_code = ecos_bb_solve(prob);
 	
 	pass = 1;
 
@@ -70,7 +70,7 @@ int test_2(){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
 		printf("%f,", prob->best_x[i]);
 	}
-	misocp_cleanup(prob);
+	ecos_bb_cleanup(prob);
 	return pass;
 }
 
@@ -90,14 +90,14 @@ int test_3(){
 
 	idxint i, ret_code, pass;
 	
-	misocp_pwork* prob = misocp_setup(
+	ecos_bb_pwork* prob = ecos_bb_setup(
 		n, m, 0, 
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 1);
 
-	ret_code = misocp_solve(prob);
+	ret_code = ecos_bb_solve(prob);
 	
 	pass = 1;
 
@@ -106,7 +106,7 @@ int test_3(){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
 		printf("%f,", prob->best_x[i]);
 	}
-	misocp_cleanup(prob);
+	ecos_bb_cleanup(prob);
 	return pass;
 }
 
@@ -125,14 +125,14 @@ int test_4(){
 
 	idxint i, ret_code, pass;
 
-	misocp_pwork* prob = misocp_setup(
+	ecos_bb_pwork* prob = ecos_bb_setup(
 		n, m, 0, 
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 6);
 
-	ret_code = misocp_solve(prob);
+	ret_code = ecos_bb_solve(prob);
 	pass = 1;
 	
 	printf("Soln:");
@@ -140,7 +140,7 @@ int test_4(){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
 		printf("%f,", prob->best_x[i]);
 	}
-	misocp_cleanup(prob);
+	ecos_bb_cleanup(prob);
 	return pass;
 }
 
@@ -160,14 +160,14 @@ int test_5(){
 
 	idxint i, ret_code, pass;
 
-	misocp_pwork* prob = misocp_setup(
+	ecos_bb_pwork* prob = ecos_bb_setup(
 		n, m, 0, 
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 	feas_c, feas_h, NULL, 6);
 
-	ret_code = misocp_solve(prob);
+	ret_code = ecos_bb_solve(prob);
 	
 	pass = 1;
 	
@@ -177,7 +177,7 @@ int test_5(){
 		printf("%f,", prob->best_x[i]);
 	}
 
-	misocp_cleanup(prob);
+	ecos_bb_cleanup(prob);
 
 	return pass;
 }
@@ -197,14 +197,14 @@ int test_6(){
 
 	idxint i, ret_code, pass;
 
-	misocp_pwork* prob = misocp_setup(
+	ecos_bb_pwork* prob = ecos_bb_setup(
 		n, m, 0, 
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 6);
 
-	ret_code = misocp_solve(prob);
+	ret_code = ecos_bb_solve(prob);
 	
 	pass = 1;
 	
@@ -213,7 +213,7 @@ int test_6(){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
 		printf("%f,", prob->best_x[i]);
 	}
-	misocp_cleanup(prob);
+	ecos_bb_cleanup(prob);
 	return pass;
 }
 

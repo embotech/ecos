@@ -1,5 +1,5 @@
 #include "ecos.h"
-#include "misocp.h"
+#include "ecos_bb.h"
 #include "math.h"
 #include "stdlib.h"
 #include "splamm.h"
@@ -8,7 +8,7 @@
  * for all of the variables marked integer
  * USES MALLOC
  */ 
-void socp_to_misocp(
+void socp_to_ecos_bb(
     idxint num_int, idxint n, idxint m,
     pfloat* Gpr_in, idxint* Gjc_in, idxint* Gir_in,
     pfloat* Gpr_out, idxint* Gjc_out, idxint* Gir_out,
@@ -63,7 +63,7 @@ void socp_to_misocp(
  * arguements are exactly the same as ECOS
  * Boolean vars only
 */
-misocp_pwork* misocp_setup(
+ecos_bb_pwork* ecos_bb_setup(
     idxint n, idxint m, idxint p, 
     idxint l, idxint ncones, idxint* q,
     pfloat* Gpr, idxint* Gjc, idxint* Gir,
@@ -82,7 +82,7 @@ misocp_pwork* misocp_setup(
     h_new = (pfloat *) malloc( (m + 2 * num_int_vars ) * sizeof(pfloat) );
 
     // Copy the data and convert it to boolean
-    socp_to_misocp(num_int_vars, n, m,
+    socp_to_ecos_bb(num_int_vars, n, m,
                     Gpr, Gjc, Gir,
                     Gpr_new, Gjc_new, Gir_new,
                     h, h_new);
@@ -90,7 +90,7 @@ misocp_pwork* misocp_setup(
     l += 2*num_int_vars;
 
     // Malloc the problem's memory
-    misocp_pwork* prob = (misocp_pwork*) malloc(sizeof(misocp_pwork));
+    ecos_bb_pwork* prob = (ecos_bb_pwork*) malloc(sizeof(ecos_bb_pwork));
 
     // Malloc the best optimal solution's memory
     prob->best_x = (pfloat*) malloc( n*sizeof(pfloat) );
@@ -129,7 +129,7 @@ misocp_pwork* misocp_setup(
 }
 
 // Performs the same function as ecos_cleanup
-void misocp_cleanup(misocp_pwork* prob){
+void ecos_bb_cleanup(ecos_bb_pwork* prob){
     // Free solver memory
     ECOS_cleanup(prob->ecos_prob, 0);
     free(prob->tmp_node_id);

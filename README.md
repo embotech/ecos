@@ -13,7 +13,7 @@ s.t. A*x = b
 where the last inequality is generalized, i.e. `h - G*x` belongs to the cone `K`.
 ECOS supports the positive orthant `R_+` and second-order cones `Q_n` defined as
 ```
-Q_n = { (t,x) | t >= || x ||_2 } 
+Q_n = { (t,x) | t >= || x ||_2 } 
 ```
 In the definition above, t is a scalar and `x` is in `R_{n-1}`. The cone `K` is therefore
 a direct product of the positive orthant and second-order cones:
@@ -184,7 +184,7 @@ ECOS returns the following variables
   x: primal variables
   y: dual variables for equality constraints
   s: slacks for Gx + s <= h, s \in K
-  z: dual variables for inequality constraints s \in K
+  z: dual variables for inequality constraints s \in K
 ```
 In addition, the struct `info` is returned which contains the following fields:
 ```
@@ -394,3 +394,11 @@ Negative numbers indicate that the problem could not be solved to the required a
 + -7: unknown problem in solver
 
 It is in general good practice to check the exitcode, in particular when solving optimization problems in an unsupervised, automated fashion (in a batch job, for example). Please report optimization problems for which ECOS struggles to converge to one of the authors.
+
+Extensions
+====
+
+Mixed Boolean ECOS
+----
+
+

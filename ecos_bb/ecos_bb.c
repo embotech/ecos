@@ -182,7 +182,7 @@ void initialize_root(misocp_pwork* prob){
     for (i=0; i < prob->num_int_vars; ++i){ prob->node_ids[i] = MI_STAR; }
 }
 
-int misocp_solve(misocp_pwork* prob){
+int ecos_bb_solve(misocp_pwork* prob){
     idxint i;
 
     prob->iter = 0;
