@@ -398,7 +398,31 @@ It is in general good practice to check the exitcode, in particular when solving
 Extensions
 ====
 
-Mixed Boolean ECOS
+Mixed Boolean ECOS (ECOS_BB)
 ----
+
+Mixed boolean ECOS is a branch and bound wrapper around ECOS that allows the user to solve problems where some of the variables are {0,1}. As with ECOS malloc and free are only used during setup() and cleanup().
+
+```
+pwork* ecos_bb_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint* q,
+                   pfloat* Gpr, idxint* Gjc, idxint* Gir,
+                   pfloat* Apr, idxint* Ajc, idxint* Air,
+                   pfloat* c, pfloat* h, pfloat* b, idxint num_bool_vars);
+```                   
+
+All inputs are exactly the same as ECOS except for the last arguement num_bool_vars.
+
+ECOS_bb will assume that the first num_bool_vars variables are boolean (i.e. x[0] to x[num_bool_vars-1] ).
+
+####Notes
+                   
+ECOS_BB has a worst case runtime of O(MI_MAXITER * MAXIT) where MI_MAXITER is the maximum number of iterations allowed by the branch and bound wrapper and MAXIT is the maximum number of ECOS iterations allowed per sub problem.
+
+Also, the memory required for ecos_bb is O(MI_MAXITER * num_bool_vars).
+
+The branch and bound algorithm is a direct translation of Stephan Boyd's [lecture slides](http://stanford.edu/class/ee364b/lectures/bb_slides.pdf) from EE364.
+
+
+
 
 

@@ -70,7 +70,7 @@ ecos_bb_pwork* ecos_bb_setup(
     idxint l, idxint ncones, idxint* q,
     pfloat* Gpr, idxint* Gjc, idxint* Gir,
     pfloat* Apr, idxint* Ajc, idxint* Air,
-    pfloat* c, pfloat* h, pfloat* b, idxint num_int_var);
+    pfloat* c, pfloat* h, pfloat* b, idxint num_bool_vars);
 
 int ecos_bb_solve(ecos_bb_pwork* prob);
 

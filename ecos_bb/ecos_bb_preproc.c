@@ -68,7 +68,7 @@ ecos_bb_pwork* ecos_bb_setup(
     idxint l, idxint ncones, idxint* q,
     pfloat* Gpr, idxint* Gjc, idxint* Gir,
     pfloat* Apr, idxint* Ajc, idxint* Air,
-    pfloat* c, pfloat* h, pfloat* b, idxint num_int_vars)
+    pfloat* c, pfloat* h, pfloat* b, idxint num_bool_vars)
 {
     idxint i;
    
