@@ -1,12 +1,12 @@
 #include "ecos.h"
-#include "misocp.h"
+#include "ecos_bb.h"
 #include "math.h"
 #include "equil.h"
 #include "spla.h"
 
 // Boolean vars only
 
-void branch(idxint curr_node_idx, misocp_pwork* prob){
+void branch(idxint curr_node_idx, ecos_bb_pwork* prob){
     idxint i;
 
     // Create right node
@@ -27,7 +27,7 @@ void branch(idxint curr_node_idx, misocp_pwork* prob){
 /*
  * Function to return the next node to be expanded
  */
-idxint get_next_node(misocp_pwork* prob){
+idxint get_next_node(ecos_bb_pwork* prob){
     idxint i;
     idxint next_node = -1;
     pfloat L = INFINITY;
@@ -40,7 +40,7 @@ idxint get_next_node(misocp_pwork* prob){
     return next_node;
 }
 
-pfloat get_global_L(misocp_pwork* prob){
+pfloat get_global_L(ecos_bb_pwork* prob){
     idxint i;
     pfloat L = INFINITY;
     for(i=0; i <= prob->iter; ++i) L = min(L,prob->nodes[i].L);
@@ -90,7 +90,7 @@ void set_prob(pwork* ecos_prob, char* node_id, idxint num_int_vars){
     set_equilibration(ecos_prob);
 }
 
-void get_bounds(idxint node_idx, misocp_pwork* prob){  
+void get_bounds(idxint node_idx, ecos_bb_pwork* prob){  
     idxint i, ret_code, branchable;
     set_prob(prob->ecos_prob, get_node_id(node_idx,prob), prob->num_int_vars);    
     ret_code = ECOS_solve(prob->ecos_prob);
@@ -144,18 +144,18 @@ void get_bounds(idxint node_idx, misocp_pwork* prob){
     //printf("%f, %f, %f, %f\n", prob->nodes[node_idx].L, prob->nodes[node_idx].U, prob->nodes[node_idx].U - prob->nodes[node_idx].L, prob->nodes[node_idx].U/prob->nodes[node_idx].L-1.0);
 }
 
-idxint should_continue(misocp_pwork* prob, idxint curr_node_idx){
+idxint should_continue(ecos_bb_pwork* prob, idxint curr_node_idx){
     return (prob->global_U - prob->global_L) > MI_ABS_EPS 
         && abs_2(prob->global_U / prob->global_L - 1.0) > MI_REL_EPS
         && curr_node_idx >= 0
         && prob->iter < MI_MAXITER;
 }
 
-void print_progress(misocp_pwork* prob){
+void print_progress(ecos_bb_pwork* prob){
     printf("%u \t%.2f \t\t%.2f \t\t%.2f\n", prob->iter, prob->global_L, prob->global_U, prob->global_U-prob->global_L);
 }
 
-int get_ret_code(misocp_pwork* prob){
+int get_ret_code(ecos_bb_pwork* prob){
     if ( prob->iter < MI_MAXITER){
         if ( isinf(prob->global_U) ) return MI_INFEASIBLE;
         else return MI_OPTIMAL_SOLN;
@@ -166,7 +166,7 @@ int get_ret_code(misocp_pwork* prob){
 }
 
 
-void print_node(misocp_pwork* prob, idxint i){
+void print_node(ecos_bb_pwork* prob, idxint i){
     int j;
     printf("Node info: %u : %f : %f : %u\nPartial id:", prob->nodes[i].status, 
         prob->nodes[i].L, prob->nodes[i].U, prob->nodes[i].split_idx);
@@ -174,7 +174,7 @@ void print_node(misocp_pwork* prob, idxint i){
     printf("\n");
 }
 
-void initialize_root(misocp_pwork* prob){
+void initialize_root(ecos_bb_pwork* prob){
     idxint i;
     prob->nodes[0].status = MI_NOT_SOLVED;
     prob->nodes[0].L = -INFINITY;
@@ -182,7 +182,7 @@ void initialize_root(misocp_pwork* prob){
     for (i=0; i < prob->num_int_vars; ++i){ prob->node_ids[i] = MI_STAR; }
 }
 
-int ecos_bb_solve(misocp_pwork* prob){
+int ecos_bb_solve(ecos_bb_pwork* prob){
     idxint i;
 
     prob->iter = 0;
