@@ -1,10 +1,9 @@
 #ifndef __ecos_bb_H__
 #define __ecos_bb_H__
 
-#define inline __inline
-
 #include "ecos.h"
 #include "spla.h"
+#include "glblopts.h"
 
 // ecos_bb configuration settings
 #define MI_ABS_EPS (1E-7)
