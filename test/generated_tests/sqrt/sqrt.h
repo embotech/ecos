@@ -34,7 +34,7 @@ typedef struct sqrt_sol {
 /* converts the 'sqrt' parameters into SOCP data
  *     allocates a qc_socp struct
  */
-qc_socp * qc_sqrt2socp(const sqrt_params * params, const sqrt_dims * dims);
+qc_socp * qc_sqrt2socp();
 
 /* assigns the pointers for the variables in 'sqrt' to point to the proper
  * memory locations in the solution vector

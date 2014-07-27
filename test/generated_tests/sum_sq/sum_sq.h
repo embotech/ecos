@@ -34,7 +34,7 @@ typedef struct sum_sq_sol {
 /* converts the 'sum_sq' parameters into SOCP data
  *     allocates a qc_socp struct
  */
-qc_socp * qc_sum_sq2socp(const sum_sq_params * params, const sum_sq_dims * dims);
+qc_socp * qc_sum_sq2socp();
 
 /* assigns the pointers for the variables in 'sum_sq' to point to the proper
  * memory locations in the solution vector

@@ -34,7 +34,7 @@ typedef struct inv_pos_sol {
 /* converts the 'inv_pos' parameters into SOCP data
  *     allocates a qc_socp struct
  */
-qc_socp * qc_inv_pos2socp(const inv_pos_params * params, const inv_pos_dims * dims);
+qc_socp * qc_inv_pos2socp();
 
 /* assigns the pointers for the variables in 'inv_pos' to point to the proper
  * memory locations in the solution vector
