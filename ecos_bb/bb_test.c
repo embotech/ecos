@@ -225,9 +225,9 @@ int main(){
 	printf("\nTest 1: %u\n=============\n", test_1());
 	printf("\nTest 2: %u\n=============\n", test_2());	
 	printf("\nTest 3: %u\n=============\n", test_3());	
-	printf("\nTest 3: %u\n=============\n", test_4());	
-	printf("\nTest 3: %u\n=============\n", test_5());
-	printf("\nTest 3: %u\n=============\n", test_6());		
+	printf("\nTest 4: %u\n=============\n", test_4());
+	printf("\nTest 5: %u\n=============\n", test_5());
+	printf("\nTest 6: %u\n=============\n", test_6());		
 	
 	return 0;
 }

@@ -70,8 +70,7 @@ ecos_bb_pwork* ecos_bb_setup(
     pfloat* Apr, idxint* Ajc, idxint* Air,
     pfloat* c, pfloat* h, pfloat* b, idxint num_bool_vars)
 {
-    idxint i;
-   
+    
     pfloat* Gpr_new, * h_new;
     idxint* Gjc_new, * Gir_new; 
 
@@ -124,7 +123,10 @@ ecos_bb_pwork* ecos_bb_setup(
     prob->G = prob->ecos_prob->G;
     prob->c = prob->ecos_prob->c;
     prob->b = prob->ecos_prob->b;
-
+    
+    /* switch off ecos prints */
+    prob->ecos_prob->stgs->verbose = 0;
+    
     return prob;
 }
 

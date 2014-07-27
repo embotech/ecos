@@ -32,7 +32,7 @@
 
 
 /* ECOS VERSION NUMBER - FORMAT: X.Y.Z --------------------------------- */
-#define ECOS_VERSION ("1.0.4")
+#define ECOS_VERSION ("1.0.5")
 
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
@@ -248,6 +248,18 @@ void ECOS_cleanup(pwork* w, idxint keepvars);
  * where x is the major, y the minor and zzz the build number
  */
 const char* ECOS_ver(void);
+    
+    
+/* ------------------- EXPERT LEVEL INTERFACES ---------------------- */
+
+/*
+ * Updates one element of the RHS vector h of inequalities
+ * After the call, w->h[idx] = value (but equilibrated)
+ */
+inline void ecos_updateDataEntry_h(pwork* w, idxint idx, pfloat value)
+{
+    w->h[idx] = value / w->Gequil[idx];
+}
 
 #ifdef __cplusplus
 }

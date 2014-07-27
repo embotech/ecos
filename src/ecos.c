@@ -510,7 +510,7 @@ void printProgress(stats* info)
 	{
 		/* print header at very first iteration */		
 #if PRINTLEVEL == 2
-		PRINTTEXT("\nECOS %s - (c) A. Domahidi, Automatic Control Laboratory, ETH Zurich, 2012-2014.\n\n", ECOS_VERSION);
+		PRINTTEXT("\nECOS %s - (c) A. Domahidi, ETH Zurich & embotech 2012-14. Support: ecos@embotech.com\n\n", ECOS_VERSION);
 #endif
 #if defined _WIN32 || defined _WIN64		
 		PRINTTEXT("It     pcost       dcost      gap   pres   dres    k/t    mu     step    IR\n");
@@ -740,7 +740,7 @@ void backscale(pwork *w)
 {
 	idxint i;
 #if defined EQUILIBRATE && EQUILIBRATE > 0
-    /* We performed a change of variables on x so this recovers it also */
+    /* We performed a change of variables on x so this unsets the equilibration */
 	for( i=0; i < w->n; i++ ){ w->x[i] /= (w->xequil[i] * w->tau); }
     for( i=0; i < w->p; i++ ){ w->y[i] /= (w->Aequil[i] * w->tau); }
 	for( i=0; i < w->m; i++ ){ w->z[i] /= (w->Gequil[i] * w->tau); }
@@ -1079,3 +1079,6 @@ idxint ECOS_solve(pwork* w)
 
 	return exitcode;
 }
+
+
+
