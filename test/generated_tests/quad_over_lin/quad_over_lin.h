@@ -34,7 +34,7 @@ typedef struct quad_over_lin_sol {
 /* converts the 'quad_over_lin' parameters into SOCP data
  *     allocates a qc_socp struct
  */
-qc_socp * qc_quad_over_lin2socp(const quad_over_lin_params * params, const quad_over_lin_dims * dims);
+qc_socp * qc_quad_over_lin2socp();
 
 /* assigns the pointers for the variables in 'quad_over_lin' to point to the proper
  * memory locations in the solution vector
