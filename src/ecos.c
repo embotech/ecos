@@ -1081,4 +1081,11 @@ idxint ECOS_solve(pwork* w)
 }
 
 
-
+/*
+ * Updates one element of the RHS vector h of inequalities
+ * After the call, w->h[idx] = value (but equilibrated)
+ */
+void ecos_updateDataEntry_h(pwork* w, idxint idx, pfloat value)
+{
+    w->h[idx] = value / w->Gequil[idx];
+}
