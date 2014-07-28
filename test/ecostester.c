@@ -32,6 +32,7 @@
 #include "feas_prob/feas.h"
 #include "unboundedProblems/unboundedLP1.h"
 #include "infeasibleProblems/infeasible1.h"
+#include "unboundedProblems/unboundedMaxSqrt.h"
 
 int tests_run = 0;
 
@@ -47,6 +48,7 @@ static char * all_tests() {
     mu_run_test(test_feas);
     mu_run_test(test_unboundedLP1);
     mu_run_test(test_infeasible1);
+    mu_run_test(test_unboundedMaxSqrt);
     return 0;
 }
 
