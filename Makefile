@@ -23,8 +23,15 @@ ecos: ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o equil.o
 	$(ARCHIVE) libecos.a *.o
 	- $(RANLIB) libecos.a
 
-ecos_bb: ldl amd ecos ecos_bb/bb_test.c
-	$(C) -o ecos_bb_test ecos_bb/bb_test.c libecos.a $(LIBS)
+ecos_bb: ldl amd ecos ecos_bb.o ecos_bb_preproc.o
+	$(ARCHIVE) libecos_bb.a *.o
+	- $(RANLIB) libecos_bb.a	
+
+ecos_bb.o: ecos_bb/ecos_bb.c ecos_bb/ecos_bb.h
+	$(C) -c ecos_bb/ecos_bb.c -o ecos_bb.o
+
+ecos_bb_preproc.o: ecos_bb/ecos_bb_preproc.c ecos_bb/ecos_bb.h
+	$(C) -c ecos_bb/ecos_bb_preproc.c -o ecos_bb_preproc.o
 
 ecos.o: src/ecos.c include/ecos.h
 	$(C) -c src/ecos.c -o ecos.o
@@ -81,6 +88,8 @@ inv_pos.o: test/generated_tests/inv_pos/inv_pos.c test/generated_tests/inv_pos/i
 sqrt.o: test/generated_tests/sqrt/sqrt.c test/generated_tests/sqrt/sqrt.h
 	$(C) $(TEST_INCLUDES) -c test/generated_tests/sqrt/sqrt.c -o $@
 
+ecos_bb_test: ecos_bb ecos_bb/bb_test.c
+	$(C) -o ecos_bb_test ecos_bb/bb_test.c libecos_bb.a $(LIBS)
 
 
 # remove object files, but keep the compiled programs and library archives
