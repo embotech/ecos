@@ -27,10 +27,10 @@ ecos_bb: ldl amd ecos ecos_bb.o ecos_bb_preproc.o
 	$(ARCHIVE) libecos_bb.a *.o
 	- $(RANLIB) libecos_bb.a	
 
-ecos_bb.o: ecos_bb/ecos_bb.c ecos_bb/ecos_bb.h
+ecos_bb.o: ecos_bb/ecos_bb.c
 	$(C) -c ecos_bb/ecos_bb.c -o ecos_bb.o
 
-ecos_bb_preproc.o: ecos_bb/ecos_bb_preproc.c ecos_bb/ecos_bb.h
+ecos_bb_preproc.o: ecos_bb/ecos_bb_preproc.c
 	$(C) -c ecos_bb/ecos_bb_preproc.c -o ecos_bb_preproc.o
 
 ecos.o: src/ecos.c include/ecos.h
