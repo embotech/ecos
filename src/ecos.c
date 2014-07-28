@@ -1087,5 +1087,9 @@ idxint ECOS_solve(pwork* w)
  */
 void ecos_updateDataEntry_h(pwork* w, idxint idx, pfloat value)
 {
+#if defined EQUILIBRATE && EQUILIBRATE > 0
     w->h[idx] = value / w->Gequil[idx];
+#else
+    w->h[idx] = value;
+#endif
 }

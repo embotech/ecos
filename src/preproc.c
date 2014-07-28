@@ -368,6 +368,11 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 void ECOS_cleanup(pwork* w, idxint keepvars)
 {
 	idxint i;
+    
+#if defined EQUILIBRATE && EQUILIBRATE > 0
+    /* unset equilibration */
+    unset_equilibration(w);
+#endif
 	
 	/* Free KKT related memory      ---            below are the corresponding MALLOCs                */
 	FREE(w->KKT->D);                /* mywork->KKT->D = (pfloat *)MALLOC(nK*sizeof(pfloat));          */

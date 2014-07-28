@@ -260,10 +260,14 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     }
 #endif
 
-    /* set up solver */
+    /* find out dimensions of cones */    
     l = (idxint)(*mxGetPr(dims_l)); numConicVariables += l;
-    q = mxGetPr(dims_q);
-    if( size_q[0] == 0 || size_q[1]==0 ){
+    if( dims_q != NULL) {
+        q = mxGetPr(dims_q);
+    } else {
+        q = NULL;
+    }
+    if( q == NULL || size_q[0] == 0 || size_q[1]==0 ){
         ncones = 0;
     } else {
         ncones = size_q[1] > size_q[0] ? size_q[1] : size_q[0];
