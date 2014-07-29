@@ -13,9 +13,6 @@ requirements:
     - python
     - numpy
 
-build:
-  script: python setup.py bdist_wheel
-
 test:
     requires:
         - nose
