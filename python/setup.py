@@ -1,4 +1,9 @@
-from distutils.core import setup, Extension
+try:
+    from setuptools import setup, Extension
+except ImportError:
+    print "Please use pip (https://pypi.python.org/pypi/pip) to install."
+    raise
+
 from glob import glob
 from platform import system
 from numpy import get_include
@@ -33,6 +38,8 @@ setup(
     license = "GPLv3",
     py_modules = ['ecos'],
     ext_modules = [_ecos],
-    requires = ["numpy (>= 1.7)",
-                "scipy (>= 0.12)"]
+    install_requires = [
+        "numpy >= 1.7",
+        "scipy >= 0.12"
+    ]
 )
