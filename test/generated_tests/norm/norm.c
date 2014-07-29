@@ -93,10 +93,16 @@ qc_socp * qc_norm2socp(const norm_params * params, const norm_dims * dims)
     /* convert the matrices to column compressed form */
     G_csc = qc_compress(&G_coo);
     if (!G_csc) return qc_socp_free(data);
+    /* free memory used for COO matrix, so it can be reassigned later */
+    free(data->Gi);
+    free(data->Gp);
+    free(data->Gx);
     /* reassign into data, pointer now owned by data */
     data->Gi = G_csc->i;
     data->Gp = G_csc->j;
     data->Gx = G_csc->v;
+    /* only free temp CSC pointer, but not its data */
+    free(G_csc);
 
     return data;
 }

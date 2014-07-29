@@ -27,7 +27,7 @@ typedef struct sqrt_dims {
 /* the solution struct
  *    users are responsible for keep track of the variable lengths
  */
-typedef struct sqrt_sol {
+typedef struct sqrt_vars {
     double x;
 } sqrt_vars;
   

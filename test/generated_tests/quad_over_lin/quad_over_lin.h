@@ -27,7 +27,7 @@ typedef struct quad_over_lin_dims {
 /* the solution struct
  *    users are responsible for keep track of the variable lengths
  */
-typedef struct quad_over_lin_sol {
+typedef struct quad_over_lin_vars {
     double * x;
 } quad_over_lin_vars;
   
