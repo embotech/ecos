@@ -1,0 +1,27 @@
+package:
+  name: ecos
+
+requirements:
+  build:
+    - python
+    - scipy
+    - numpy
+    - setuptools
+    - wheel
+
+  run:
+    - python
+    - numpy
+
+build:
+  script: python setup.py bdist_wheel
+
+test:
+    requires:
+        - nose
+    commands:
+        - nosetests --exe ecos
+about:
+  home: https://github.com/ifa-ethz/ecos
+  license: GPLv3
+  summary: Embedded cone solver for second-order cone programs
