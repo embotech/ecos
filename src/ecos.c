@@ -206,24 +206,7 @@ idxint checkExitConditions(pwork* w, idxint mode)
         w->info->dinf = 0;
         return ECOS_OPTIMAL + mode;
     }
-    
-    /* Primal infeasible? */
-    else if( (w->info->pinfres != NAN && w->info->pinfres < feastol) ||
-             ( w->tau < w->stgs->feastol && w->kap < w->stgs->feastol && w->info->pinfres < w->stgs->feastol) ){
-#if PRINTLEVEL > 0
-        if( w->stgs->verbose ) {
-            if( mode == 0) {
-                PRINTTEXT("\nPRIMAL INFEASIBLE (within feastol=%3.1e).", w->info->pinfres );
-            } else {
-                PRINTTEXT("\nClose to PRIMAL INFEASIBLE (within feastol=%3.1e).", w->info->pinfres );
-            }
-        }
-#endif
-        w->info->pinf = 1;
-        w->info->dinf = 0;
-        return ECOS_PINF + mode;
-    }
-    
+        
     /* Dual infeasible? */
     else if( (w->info->dinfres != NAN) && (w->info->dinfres < feastol) ){
 #if PRINTLEVEL > 0
@@ -240,6 +223,24 @@ idxint checkExitConditions(pwork* w, idxint mode)
         return ECOS_DINF + mode;
     }
     
+    /* Primal infeasible? */
+    else if( (w->info->pinfres != NAN && w->info->pinfres < feastol) ||
+            ( w->tau < w->stgs->feastol && w->kap < w->stgs->feastol && w->info->pinfres < w->stgs->feastol) ){
+#if PRINTLEVEL > 0
+        if( w->stgs->verbose ) {
+            if( mode == 0) {
+                PRINTTEXT("\nPRIMAL INFEASIBLE (within feastol=%3.1e).", w->info->pinfres );
+            } else {
+                PRINTTEXT("\nClose to PRIMAL INFEASIBLE (within feastol=%3.1e).", w->info->pinfres );
+            }
+        }
+#endif
+        w->info->pinf = 1;
+        w->info->dinf = 0;
+        return ECOS_PINF + mode;
+    }
+
+    
     /* Indicate if none of the above criteria are met */
     else {
         return ECOS_NOT_CONVERGED_YET;
@@ -249,26 +250,53 @@ idxint checkExitConditions(pwork* w, idxint mode)
 
 /*
  * Initializes the solver.
- *
- * This function assumes that the KKT matrix K is already in the form
- *
- *		[0  A'  G']
- * K =  [A  0   0 ]
- *      [G  0  -I ]
- *
- * The preprocessor/codegen takes care of this, we just have to be aware
- * of this implicit assumption.
  */
 idxint init(pwork* w)
 {
-	idxint i, KKT_FACTOR_RETURN_CODE;
+	idxint i, j, k, l, KKT_FACTOR_RETURN_CODE;
 	idxint* Pinv = w->KKT->Pinv;
+    pfloat rx, ry, rz;
 
 #if PROFILING > 1
 	timer tfactor, tkktsolve;
 #endif
 
+    /* set regularization parameter */
 	w->KKT->delta = w->stgs->delta;
+    
+    /* Initialize KKT matrix */
+    kkt_init(w->KKT->PKPt, w->KKT->PK, w->C);
+
+#if DEBUG > 0
+    dumpSparseMatrix(w->KKT->PKPt, "PKPt0.txt");
+#endif
+
+    
+    /* initialize RHS1 */
+	k = 0; j = 0;
+	for( i=0; i<w->n; i++ ){ w->KKT->RHS1[w->KKT->Pinv[k++]] = 0; }
+	for( i=0; i<w->p; i++ ){ w->KKT->RHS1[w->KKT->Pinv[k++]] = w->b[i]; }
+	for( i=0; i<w->C->lpc->p; i++ ){ w->KKT->RHS1[w->KKT->Pinv[k++]] = w->h[i]; j++; }
+	for( l=0; l<w->C->nsoc; l++ ){
+		for( i=0; i < w->C->soc[l].p; i++ ){ w->KKT->RHS1[w->KKT->Pinv[k++]] = w->h[j++]; }
+#if CONEMODE == 0
+		w->KKT->RHS1[w->KKT->Pinv[k++]] = 0;
+        w->KKT->RHS1[w->KKT->Pinv[k++]] = 0;
+#endif
+	}
+#if PRINTLEVEL > 2
+    PRINTTEXT("Written %d entries of RHS1\n", (int)k);
+#endif
+	
+	/* initialize RHS2 */
+	for( i=0; i<w->n; i++ ){ w->KKT->RHS2[w->KKT->Pinv[i]] = -w->c[i]; }
+	for( i=w->n; i<w->KKT->PKPt->n; i++ ){ w->KKT->RHS2[w->KKT->Pinv[i]] = 0; }
+    
+	/* get scalings of problem data */
+	rx = norm2(w->c, w->n); w->resx0 = MAX(1, rx);
+	ry = norm2(w->b, w->p); w->resy0 = MAX(1, ry);
+	rz = norm2(w->h, w->m); w->resz0 = MAX(1, rz);
+
 
 	/* Factor KKT matrix - this is needed in all 3 linear system solves */
 #if PROFILING > 1
@@ -482,7 +510,7 @@ void printProgress(stats* info)
 	{
 		/* print header at very first iteration */		
 #if PRINTLEVEL == 2
-		PRINTTEXT("\nECOS %s - (c) A. Domahidi, Automatic Control Laboratory, ETH Zurich, 2012-2014.\n\n", ECOS_VERSION);
+		PRINTTEXT("\nECOS %s - (c) A. Domahidi, ETH Zurich & embotech 2012-14. Support: ecos@embotech.com\n\n", ECOS_VERSION);
 #endif
 #if defined _WIN32 || defined _WIN64		
 		PRINTTEXT("It     pcost       dcost      gap   pres   dres    k/t    mu     step    IR\n");
@@ -711,11 +739,19 @@ pfloat lineSearch(pfloat* lambda, pfloat* ds, pfloat* dz, pfloat tau, pfloat dta
 void backscale(pwork *w)
 {
 	idxint i;
-    /* We performed a change of variables on x so this recovers it also */
+#if defined EQUILIBRATE && EQUILIBRATE > 0
+    /* We performed a change of variables on x so this unsets the equilibration */
 	for( i=0; i < w->n; i++ ){ w->x[i] /= (w->xequil[i] * w->tau); }
-	for( i=0; i < w->p; i++ ){ w->y[i] /= (w->Aequil[i] * w->tau); }
+    for( i=0; i < w->p; i++ ){ w->y[i] /= (w->Aequil[i] * w->tau); }
 	for( i=0; i < w->m; i++ ){ w->z[i] /= (w->Gequil[i] * w->tau); }
 	for( i=0; i < w->m; i++ ){ w->s[i] /= (w->Gequil[i] * w->tau); }
+#else
+    /* standard back scaling without equilibration */
+    for( i=0; i < w->n; i++ ){ w->x[i] /= w->tau; }
+    for( i=0; i < w->p; i++ ){ w->y[i] /= w->tau; }
+	for( i=0; i < w->m; i++ ){ w->z[i] /= w->tau; }
+	for( i=0; i < w->m; i++ ){ w->s[i] /= w->tau; }
+#endif
 }
 
 
@@ -1042,4 +1078,18 @@ idxint ECOS_solve(pwork* w)
 #endif
 
 	return exitcode;
+}
+
+
+/*
+ * Updates one element of the RHS vector h of inequalities
+ * After the call, w->h[idx] = value (but equilibrated)
+ */
+void ecos_updateDataEntry_h(pwork* w, idxint idx, pfloat value)
+{
+#if defined EQUILIBRATE && EQUILIBRATE > 0
+    w->h[idx] = value / w->Gequil[idx];
+#else
+    w->h[idx] = value;
+#endif
 }

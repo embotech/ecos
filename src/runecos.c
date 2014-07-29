@@ -43,6 +43,9 @@ int main(void)
 	
 	/* solve */	
 	exitflag = ECOS_solve(mywork);
+    
+    /* test second solve
+    exitflag = ECOS_solve(mywork); */
 
 	/* some statistics in milliseconds */
 #if PROFILING > 0

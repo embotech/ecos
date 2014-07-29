@@ -13,7 +13,7 @@ s.t. A*x = b
 where the last inequality is generalized, i.e. `h - G*x` belongs to the cone `K`.
 ECOS supports the positive orthant `R_+` and second-order cones `Q_n` defined as
 ```
-Q_n = { (t,x) | t >= || x ||_2 } 
+Q_n = { (t,x) | t >= || x ||_2 } 
 ```
 In the definition above, t is a scalar and `x` is in `R_{n-1}`. The cone `K` is therefore
 a direct product of the positive orthant and second-order cones:
@@ -39,6 +39,7 @@ Features of ECOS
 your embedded hardware.  
 + *ECOS comes with a Python interface*. This interface is built on top of
   [NUMPY](http://numpy.org) and [SCIPY](http://scipy.org/) and uses its sparse data structures.
++ *There is a Julia interface for ECOS*. [Julia](http://julialang.org) is a high-level, high-performance language for technical and scientific computing. You can pull the Julia interface [here](https://github.com/karanveerm/ecos.jl).
 + *ECOS is library-free*. No need to link any external library to ECOS, apart from `AMD` and `sparseLDL`, both
   from Timothy A. Davis, which are included in this project.
 
@@ -55,6 +56,7 @@ The following people have been, and are, involved in the development and mainten
 + Stephen Boyd (methods and maths)
 + Michael Grant (CVX interface)
 + Johan Löfberg (YALMIP interface)
++ Karanveer Mohan (Julia interface)
 
 The main technical idea behind ECOS is described in a short [paper](http://www.stanford.edu/~boyd/papers/ecos.html). More details are given in Alexander Domahidi's [PhD Thesis](http://e-collection.library.ethz.ch/view/eth:7611?q=domahidi) in Chapter 9.
 
@@ -107,6 +109,24 @@ Once the ECOS shim is installed, the CVX solver can be switched using the `cvx_s
 
 *IMPORTANT*: Not all of CVX's atoms are SOCP-representable. Some of the atoms implemented in CVX require the use of SDP cones. Some atoms that could be implemented with a second-order cone are instead implemented as SDPs, but these are automatically converted to SOC cones. See
 [Issue #8](https://github.com/ifa-ethz/ecos/issues/8) for more information.
+
+Using ECOS with CVXPY
+====
+
+[CVXPY](http://cvxpy.org) is a powerful Python modeling framework for convex optimization, similar to the MATLAB counterpart CVX. ECOS is one of the default solvers in CVXPY, so there is nothing special you have to do in order to use ECOS with CVXPY, besides specifying it as a solver. Here is a small [example](http://www.cvxpy.org/en/latest/tutorial/advanced/index.html#solve-method-options) from the CVXPY tutorial:
+
+```
+# Solving a problem with different solvers.
+x = Variable(2)
+obj = Minimize(norm(x, 2) + norm(x, 1))
+constraints = [x >= 2]
+prob = Problem(obj, constraints)
+
+# Solve with ECOS.
+prob.solve(solver=ECOS)
+print "optimal value with ECOS:", prob.value
+```
+
 
 Using ECOS with YALMIP
 ====
@@ -164,7 +184,7 @@ ECOS returns the following variables
   x: primal variables
   y: dual variables for equality constraints
   s: slacks for Gx + s <= h, s \in K
-  z: dual variables for inequality constraints s \in K
+  z: dual variables for inequality constraints s \in K
 ```
 In addition, the struct `info` is returned which contains the following fields:
 ```
@@ -374,3 +394,35 @@ Negative numbers indicate that the problem could not be solved to the required a
 + -7: unknown problem in solver
 
 It is in general good practice to check the exitcode, in particular when solving optimization problems in an unsupervised, automated fashion (in a batch job, for example). Please report optimization problems for which ECOS struggles to converge to one of the authors.
+
+Extensions
+====
+
+Mixed Boolean ECOS (ECOS_BB)
+----
+
+Mixed boolean ECOS is a branch and bound wrapper around ECOS that allows the user to solve problems where some of the variables are {0,1}. As with ECOS malloc and free are only used during setup() and cleanup().
+
+```
+pwork* ecos_bb_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint* q,
+                   pfloat* Gpr, idxint* Gjc, idxint* Gir,
+                   pfloat* Apr, idxint* Ajc, idxint* Air,
+                   pfloat* c, pfloat* h, pfloat* b, idxint num_bool_vars);
+```                   
+
+All inputs are exactly the same as ECOS except for the last arguement num_bool_vars.
+
+ECOS_bb will assume that the first num_bool_vars variables are boolean (i.e. x[0] to x[num_bool_vars-1] ).
+
+####Notes
+                   
+ECOS_BB has a worst case runtime of O(MI_MAXITER * MAXIT) where MI_MAXITER is the maximum number of iterations allowed by the branch and bound wrapper and MAXIT is the maximum number of ECOS iterations allowed per sub problem.
+
+Also, the memory required for ecos_bb is O(MI_MAXITER * num_bool_vars).
+
+The branch and bound algorithm is a direct translation of Stephan Boyd's [lecture slides](http://stanford.edu/class/ee364b/lectures/bb_slides.pdf) from EE364.
+
+
+
+
+

@@ -23,6 +23,9 @@ ecos: ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o equil.o
 	$(ARCHIVE) libecos.a *.o
 	- $(RANLIB) libecos.a
 
+ecos_bb: ldl amd ecos ecos_bb/bb_test.c
+	$(C) -o ecos_bb_test ecos_bb/bb_test.c libecos.a $(LIBS)
+
 ecos.o: src/ecos.c include/ecos.h
 	$(C) -c src/ecos.c -o ecos.o
 
@@ -56,7 +59,7 @@ demo: ldl amd ecos src/runecos.c
 TEST_OBJS = qcml_utils.o norm.o sq_norm.o sum_sq.o quad_over_lin.o inv_pos.o sqrt.o
 test: ldl amd ecos test/ecostester.c $(TEST_OBJS)
 	$(C) $(TEST_INCLUDES) -o ecostester test/ecostester.c libecos.a $(LIBS) $(TEST_OBJS)
-
+    
 qcml_utils.o: test/generated_tests/qcml_utils.c test/generated_tests/qcml_utils.h
 	$(C) $(TEST_INCLUDES) -c test/generated_tests/qcml_utils.c -o $@
 
@@ -77,6 +80,8 @@ inv_pos.o: test/generated_tests/inv_pos/inv_pos.c test/generated_tests/inv_pos/i
 
 sqrt.o: test/generated_tests/sqrt/sqrt.c test/generated_tests/sqrt/sqrt.h
 	$(C) $(TEST_INCLUDES) -c test/generated_tests/sqrt/sqrt.c -o $@
+
+
 
 # remove object files, but keep the compiled programs and library archives
 clean:

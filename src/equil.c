@@ -21,7 +21,7 @@
 
 #include "ecos.h"
 
-#if defined EQUIL_ITERS && (defined RUIZ_EQUIL || defined ALTERNATING_EQUIL )
+#if defined EQUILIBRATE && EQUILIBRATE > 0
 
 #include <math.h>
 

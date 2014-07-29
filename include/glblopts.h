@@ -89,4 +89,7 @@ typedef SuiteSparse_long idxint;
 #define FREE free
 #endif
 
+/* Other commonly used macros ----------------------------------------- */
+#define inline __inline
+
 #endif

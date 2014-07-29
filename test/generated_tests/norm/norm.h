@@ -34,7 +34,7 @@ typedef struct norm_vars {
 /* converts the 'norm' parameters into SOCP data
  *     allocates a qc_socp struct
  */
-qc_socp * qc_norm2socp(const norm_params * params, const norm_dims * dims);
+qc_socp * qc_norm2socp();
 
 /* assigns the pointers for the variables in 'norm' to point to the proper
  * memory locations in the solution vector

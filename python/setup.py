@@ -25,9 +25,9 @@ _ecos = Extension('_ecos', libraries = lib,
 
 setup(
     name = 'ecos',
-    version = '1.0.4',
-    author = 'Alex Domahidi, Eric Chu',
-    author_email = 'domahidi@control.ee.ethz.ch, echu@cs.stanford.edu',
+    version = '1.0.5',
+    author = 'Alexander Domahidi, Eric Chu',
+    author_email = 'domahidi@embotech.com, echu@cs.stanford.edu',
     url = 'http://github.com/ifa-ethz/ecos',
     description = 'This is the Python package for ECOS: Embedded Cone Solver. See Github page for more information.',
     license = "GPLv3",

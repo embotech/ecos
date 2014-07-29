@@ -33,7 +33,7 @@ except ImportError:
 
 # global data structures for problem
 c = np.array([-1.])
-h = np.array([1., -0.])
+h = np.array([4., -0.])
 G = sp.csc_matrix([1., -1.]).T.tocsc()
 A = sp.csc_matrix([1.])
 b = np.array([3.])
@@ -43,28 +43,30 @@ def check_solution(solution, expected):
   assert_almost_equals(solution, expected, places=5)
 
 def test_problems():
-  sol = ecos.solve(c, G, h, dims)
-  yield check_solution, sol['x'][0], 1
+  myopts = {'feastol': 2e-8, 'reltol': 2e-8, 'abstol': 2e-8, 'verbose':True};
+  sol = ecos.solve(c, G, h, dims, **myopts)
+  yield check_solution, sol['x'][0], 4
 
-  sol = ecos.solve(c, G, h, dims, A, b)
+  sol = ecos.solve(c, G, h, dims, A, b, **myopts)
   yield check_solution, sol['x'][0], 3
 
   new_dims = {'q':[2], 'l': 0}
-  sol = ecos.solve(c, G, h, new_dims)
-  yield check_solution, sol['x'][0], 0.5
+  sol = ecos.solve(c, G, h, new_dims, **myopts)
+  yield check_solution, sol['x'][0], 2
 
 if platform.python_version_tuple() < ('3','0','0'):
   def test_problems_with_longs():
     new_dims = {'q': [], 'l': long(2)}
-    sol = ecos.solve(c, G, h, new_dims)
-    yield check_solution, sol['x'][0], 1
+    myopts = {'feastol': 2e-8, 'reltol': 2e-8, 'abstol': 2e-8};
+    sol = ecos.solve(c, G, h, new_dims, **myopts)
+    yield check_solution, sol['x'][0], 4
 
-    sol = ecos.solve(c, G, h, new_dims, A, b)
+    sol = ecos.solve(c, G, h, new_dims, A, b, **myopts)
     yield check_solution, sol['x'][0], 3
 
     new_dims = {'q':[long(2)], 'l': 0}
-    sol = ecos.solve(c, G, h, new_dims)
-    yield check_solution, sol['x'][0], 0.5
+    sol = ecos.solve(c, G, h, new_dims, **myopts)
+    yield check_solution, sol['x'][0], 2
 
 def check_keyword(error_type, keyword, value):
   assert_raises(error_type, ecos.solve, c,G,h,dims, **{keyword: value})
