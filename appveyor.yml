@@ -55,7 +55,7 @@ build: false  # Not a C# project, build stuff at the test step instead.
 test_script:
   # Build the compiled extension and run the project tests
   - cd python
-  - "%CMD_IN_ENV% conda build ..\\appveyor\\conda-recipe --quiet"
+  - "%CMD_IN_ENV% conda build conda-recipe --quiet"
   - ps: "ls dist"
   - cd ..
 
