@@ -68,18 +68,11 @@ function InstallMiniconda ($python_version, $architecture, $python_home) {
     }
 }
 
-
-function InstallMinicondaPip ($python_home) {
-    $pip_path = $python_home + "\Scripts\pip.exe"
+function InstallCondaPackages ($python_home, $spec) {
     $conda_path = $python_home + "\Scripts\conda.exe"
-    if (-not(Test-Path $pip_path)) {
-        Write-Host "Installing pip..."
-        $args = "install --yes pip"
-        Write-Host $conda_path $args
-        Start-Process -FilePath "$conda_path" -ArgumentList $args -Wait -Passthru
-    } else {
-        Write-Host "pip already installed."
-    }
+    $args = "install --yes " + $spec
+    Write-Host ("conda " + $args)
+    Start-Process -FilePath "$conda_path" -ArgumentList $args -Wait -Passthru
 }
 
 function UpdateConda ($python_home) {
@@ -94,7 +87,7 @@ function UpdateConda ($python_home) {
 function main () {
     InstallMiniconda $env:PYTHON_VERSION $env:PYTHON_ARCH $env:PYTHON
     UpdateConda $env:PYTHON
-    InstallMinicondaPip $env:PYTHON
+    InstallCondaPackages $env:PYTHON "conda-build=1.4.0 pip"
 }
 
 main
