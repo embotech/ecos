@@ -4,14 +4,12 @@ package:
 requirements:
   build:
     - python
-    - scipy
     - numpy
-    - setuptools
-    - wheel
 
   run:
     - python
     - numpy
+    - scipy
 
 test:
     requires:
