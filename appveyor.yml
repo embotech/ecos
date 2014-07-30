@@ -6,7 +6,7 @@ environment:
     # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
     # /E:ON and /V:ON options are not enabled in the batch script intepreter
     # See: http://stackoverflow.com/a/13751649/163740
-    CMD_IN_ENV: "cmd /E:ON /V:ON /C ..\\appveyor\\run_with_env.cmd"
+    CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_env.cmd"
 
   matrix:
     - PYTHON: "C:\\Python27_32"
@@ -48,19 +48,14 @@ install:
   # done from inside the powershell script as it would require to restart
   # the parent CMD process).
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-  - cd python
   - "%CMD_IN_ENV% pip install wheel setuptools"
-  - cd ..
-
 
 build: false  # Not a C# project, build stuff at the test step instead.
 
 test_script:
   # Build the compiled extension and run the project tests
-  - cd python
-  - "%CMD_IN_ENV% conda build conda-recipe --quiet"
+  - "%CMD_IN_ENV% conda build .\appveyor\conda-recipe --quiet"
   - ps: "ls dist"
-  - cd ..
 
 artifacts:
   # Archive the generated wheel package in the ci.appveyor.com build report.
