@@ -55,6 +55,10 @@ demo: ldl amd ecos src/runecos.c
 	$(C) -o runecos src/runecos.c libecos.a $(LIBS)
 	echo ECOS successfully built. Type ./runecos to run demo problem.
 
+# Shared library
+shared: ldl amd ecos
+	$(C) -shared -o $(SHAREDNAME) ecos.o kkt.o cone.o preproc.o spla.o splamm.o timer.o equil.o -lldl -lamd -Lexternal/amd/ -Lexternal/ldl/ $(LIBS)
+
 # ECOS tester
 TEST_OBJS = qcml_utils.o norm.o sq_norm.o sum_sq.o quad_over_lin.o inv_pos.o sqrt.o
 test: ldl amd ecos test/ecostester.c $(TEST_OBJS)
