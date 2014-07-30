@@ -7,16 +7,20 @@
 
 ## GNU C Compiler
 #CC = gcc
-CFLAGS = -O2 -Wall -DLDL_LONG -DDLONG -Wextra #-ansi -ipo
+CFLAGS = -O2 -Wall -DLDL_LONG -DDLONG -Wextra -fPIC #-ansi -ipo
 
 UNAME := $(shell uname)
 
 ifeq ($(UNAME), Linux)
 # we're on a linux system, use accurate timer provided by clock_gettime()
 LIBS = -lm -lrt
+# shared library has extension .so
+SHAREDNAME = libecos.so
 else
 # we're on apple, no need to link rt library
 LIBS = -lm
+# shared library has extension .dylib
+SHAREDNAME = libecos.dylib
 endif
 
 
@@ -27,4 +31,4 @@ ARCHIVE = $(AR) $(ARFLAGS)
 RANLIB = ranlib
 
 ## WHICH FILES TO CLEAN UP
-CLEAN = *.o *.obj *.ln *.bb *.bbg *.da *.tcov *.gcov gmon.out *.bak *.d *.gcda *.gcno ecos_bb_test
+CLEAN = *.o *.obj *.ln *.bb *.bbg *.da *.tcov *.gcov gmon.out *.bak *.d *.gcda *.gcno libecos.a libecos.so libecos.dylib ecos_bb_test
