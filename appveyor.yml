@@ -49,7 +49,7 @@ install:
   # the parent CMD process).
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - "%CMD_IN_ENV% conda install --yes setuptools"
-  - "%CMD_IN_ENV$ pip install wheel"
+  - "%CMD_IN_ENV% pip install wheel"
 
 build: false  # Not a C# project, build stuff at the test step instead.
 
