@@ -18,7 +18,7 @@ test:
     requires:
         - nose
     commands:
-        - nosetests --exe ecos
+        - nosetests python/ecos
 about:
   home: https://github.com/ifa-ethz/ecos
   license: GPLv3
