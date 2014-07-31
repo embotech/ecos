@@ -5,6 +5,8 @@ requirements:
   build:
     - python
     - numpy
+    - setuptools
+    - pip
 
   run:
     - python
