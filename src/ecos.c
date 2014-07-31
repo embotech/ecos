@@ -762,7 +762,7 @@ void backscale(pwork *w)
 idxint ECOS_solve(pwork* w)
 {
 	idxint i, initcode, KKT_FACTOR_RETURN_CODE;
-	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap, pres_prev;
+	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap, pres_prev = 0.0;
 	idxint exitcode = ECOS_FATAL;
     
 #if DEBUG

@@ -7,7 +7,7 @@
 
 ## GNU C Compiler
 #CC = gcc
-CFLAGS = -O2 -Wall -DLDL_LONG -DDLONG -Wextra -fPIC #-ansi -ipo
+CFLAGS = -O2 -Wall -g -DLDL_LONG -DDLONG -Wextra -fPIC #-ansi -ipo
 
 UNAME := $(shell uname)
 
