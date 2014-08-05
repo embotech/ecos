@@ -571,7 +571,7 @@ void RHS_affine(pwork* w)
 
 	j = 0;
 	for( i=0; i < n; i++ ){ RHS[Pinv[j++]] = w->rx[i]; }
-	for( i=0; i < p; i++ ){ RHS[Pinv[j++]] = w->ry[i]; }
+	for( i=0; i < p; i++ ){ RHS[Pinv[j++]] = -w->ry[i]; }
 	for( i=0; i < w->C->lpc->p; i++ ){ RHS[Pinv[j++]] = w->s[i] - w->rz[i]; }
 	k = w->C->lpc->p;
 	for( l=0; l < w->C->nsoc; l++ ){
