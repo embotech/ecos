@@ -67,11 +67,11 @@ shared: ldl amd ecos
 	$(C) -shared -o $(SHAREDNAME) ecos.o kkt.o cone.o preproc.o spla.o splamm.o timer.o equil.o -lldl -lamd -Lexternal/amd/ -Lexternal/ldl/ $(LIBS)
 
 # ECOS tester
-TEST_OBJS = qcml_utils.o norm.o sq_norm.o sum_sq.o quad_over_lin.o inv_pos.o sqrt.o
+TEST_OBJS = qcml_utils.o norm.o sq_norm.o sum_sq.o quad_over_lin.o inv_pos.o
 .PHONY: test
 test: ldl amd ecos test/ecostester.c $(TEST_OBJS)
 	$(C) $(TEST_INCLUDES) -o ecostester test/ecostester.c libecos.a $(LIBS) $(TEST_OBJS)
-    
+
 qcml_utils.o: test/generated_tests/qcml_utils.c test/generated_tests/qcml_utils.h
 	$(C) $(TEST_INCLUDES) -c test/generated_tests/qcml_utils.c -o $@
 
@@ -89,11 +89,6 @@ sum_sq.o: test/generated_tests/sum_sq/sum_sq.c test/generated_tests/sum_sq/sum_s
 
 inv_pos.o: test/generated_tests/inv_pos/inv_pos.c test/generated_tests/inv_pos/inv_pos.h
 	$(C) $(TEST_INCLUDES) -c test/generated_tests/inv_pos/inv_pos.c -o $@
-
-sqrt.o: test/generated_tests/sqrt/sqrt.c test/generated_tests/sqrt/sqrt.h
-	$(C) $(TEST_INCLUDES) -c test/generated_tests/sqrt/sqrt.c -o $@
-
-
 
 # remove object files, but keep the compiled programs and library archives
 .PHONY: clean

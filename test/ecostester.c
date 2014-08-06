@@ -68,7 +68,7 @@ static char * all_tests() {
     mu_run_test(test_lp_beaconfd);
     mu_run_test(test_lp_blend);
     mu_run_test(test_lp_bnl1);
-    mu_run_test(test_unboundedMaxSqrt);
+/*    mu_run_test(test_unboundedMaxSqrt); */
     mu_run_test(test_emptyProblem);
     return 0;
 }

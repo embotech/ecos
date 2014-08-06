@@ -17,9 +17,7 @@ if __name__ == '__main__':
         minimize sum(square(x))
         x >= 0""", "sum_sq"),
     ("""variable x
-        minimize inv_pos(x)""", "inv_pos"),
-    ("""variable x
-        maximize sqrt(x)""", "sqrt")
+        minimize inv_pos(x)""", "inv_pos")
     ]
 
     p = QCML(debug=True)

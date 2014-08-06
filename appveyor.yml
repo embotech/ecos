@@ -54,11 +54,11 @@ build: false  # Not a C# project, build stuff at the test step instead.
 test_script:
   # Build the compiled extension and run the project tests
   - "%CMD_IN_ENV% conda build .\\appveyor\\conda-recipe --quiet"
-  - ps: "ls dist"
+  - python appveyor\move-wheel.py
 
 artifacts:
   # Archive the generated wheel package in the ci.appveyor.com build report.
-  - path: python\dist\*
+  - path: '*.whl'
 
 #on_success:
 #  - TODO: upload the content of dist/*.whl to a public wheelhouse
