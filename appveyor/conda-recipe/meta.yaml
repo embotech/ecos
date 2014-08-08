@@ -1,0 +1,31 @@
+package:
+  name: ecos
+  version: "1.0.5"
+
+requirements:
+  build:
+    - python
+    - numpy
+    - setuptools
+    - pip
+    - scipy
+
+  run:
+    - python
+    - numpy
+    - scipy
+
+test:
+    files:
+      - ..\..\python\test_interface.py
+    requires:
+      - nose
+      - setuptools
+    imports:
+      - ecos
+    commands:
+      - nosetests --exe test_interface.py
+about:
+  home: https://github.com/ifa-ethz/ecos
+  license: GPLv3
+  summary: Embedded cone solver for second-order cone programs

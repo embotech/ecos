@@ -27,7 +27,7 @@ typedef struct sq_norm_dims {
 /* the solution struct
  *    users are responsible for keep track of the variable lengths
  */
-typedef struct sq_norm_sol {
+typedef struct sq_norm_vars {
     double * x;
 } sq_norm_vars;
   

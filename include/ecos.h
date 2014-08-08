@@ -36,26 +36,26 @@
 
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
-#define MAXIT      (30)          /* maximum number of iterations         */
+#define MAXIT      (100)         /* maximum number of iterations         */
 #define FEASTOL    (1E-7)        /* primal/dual infeasibility tolerance  */
 #define ABSTOL     (1E-7)        /* absolute tolerance on duality gap    */
 #define RELTOL     (1E-7)        /* relative tolerance on duality gap    */
 #define FTOL_INACC (1E-4)        /* inaccurate solution feasibility tol. */
-#define ATOL_INACC (1E-5)        /* inaccurate solution absolute tol.    */
-#define RTOL_INACC (1E-5)        /* inaccurate solution relative tol.    */
+#define ATOL_INACC (5E-5)        /* inaccurate solution absolute tol.    */
+#define RTOL_INACC (5E-5)        /* inaccurate solution relative tol.    */
 #define GAMMA      (0.99)        /* scaling the final step length        */
 #define STATICREG  (1)           /* static regularization: 0:off, 1:on   */
-#define DELTASTAT  (1E-5)        /* regularization parameter             */
-#define DELTA      (1E-6)        /* dyn. regularization parameter        */
-#define EPS        (1E-14)  /* dyn. regularization threshold (do not 0!) */
+#define DELTASTAT  (1E-7)        /* regularization parameter             */
+#define DELTA      (2E-7)        /* dyn. regularization parameter        */
+#define EPS        (1E-13)  /* dyn. regularization threshold (do not 0!) */
 #define VERBOSE    (1)           /* bool for verbosity; PRINTLEVEL < 3   */
-#define NITREF     (5)       	 /* number of iterative refinement steps */
-#define IRERRFACT  (2)           /* factor by which IR should reduce err */
+#define NITREF     (9)       	 /* number of iterative refinement steps */
+#define IRERRFACT  (6)           /* factor by which IR should reduce err */
 #define LINSYSACC  (1E-14)       /* rel. accuracy of search direction    */
-#define SIGMAMIN   (0.0001)      /* always do some centering             */
-#define SIGMAMAX   (0.9999)      /* never fully center                   */
-#define STEPMIN    (0.0001)      /* smallest step that we do take        */
-#define STEPMAX    (0.9999) /* largest step allowed, also in affine dir. */
+#define SIGMAMIN   (1E-4)        /* always do some centering             */
+#define SIGMAMAX   (1.0)         /* never fully center                   */
+#define STEPMIN    (1E-6)        /* smallest step that we do take        */
+#define STEPMAX    (0.999)  /* largest step allowed, also in affine dir. */
 #define SAFEGUARD  (500)         /* Maximum increase in PRES before
                                                 ECOS_NUMERICS is thrown. */
 

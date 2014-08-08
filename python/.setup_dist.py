@@ -1,7 +1,13 @@
-from distutils.core import setup, Extension
+from __future__ import print_function
+try:
+    from setuptools import setup, Extension
+except ImportError:
+    print("Please use pip (https://pypi.python.org/pypi/pip) to install.")
+    raise
+
 from glob import glob
 from platform import system
-from numpy import get_include
+import numpy
 
 lib = []
 if system() == 'Linux':
@@ -14,7 +20,7 @@ _ecos = Extension('_ecos', libraries = lib,
                         ('PYTHON',None),
                         ('DLONG', None),
                         ('LDL_LONG', None)],
-                    include_dirs = ['include', get_include(),
+                    include_dirs = ['include', numpy.get_include(),
                         'external/amd/include',
                         'external/ldl/include',
                         'external/SuiteSparse_config'],
@@ -25,14 +31,16 @@ _ecos = Extension('_ecos', libraries = lib,
 
 setup(
     name = 'ecos',
-    version = '1.0.4',
-    author = 'Alex Domahidi, Eric Chu',
-    author_email = 'domahidi@control.ee.ethz.ch, echu@cs.stanford.edu',
+    version = '1.0.5',
+    author = 'Alexander Domahidi, Eric Chu',
+    author_email = 'domahidi@embotech.com, echu@cs.stanford.edu',
     url = 'http://github.com/ifa-ethz/ecos',
     description = 'This is the Python package for ECOS: Embedded Cone Solver. See Github page for more information.',
     license = "GPLv3",
     py_modules = ['ecos'],
     ext_modules = [_ecos],
-    requires = ["numpy (>= 1.7)",
-                "scipy (>= 0.12)"]
+    install_requires = [
+        "numpy >= 1.7",
+        "scipy >= 0.12"
+    ]
 )
