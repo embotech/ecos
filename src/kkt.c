@@ -186,7 +186,7 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
         
         /* maximum error (infinity norm of e) */
         nerr = MAX( nex, nez);
-        if( p > 0 ){ nerr = MAX( nerr, nez ); }
+        if( p > 0 ){ nerr = MAX( nerr, ney ); }
         
         /* CHECK WHETHER REFINEMENT BROUGHT DECREASE - if not undo and quit! */
         if( kItRef > 0 && nerr > nerr_prev ){
