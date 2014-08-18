@@ -18,14 +18,15 @@ amd:
 	( cd external/amd    ; $(MAKE) )
 	$(AR) -x external/amd/libamd.a
 
-# build ECOS
+# build ECOS #- $(RANLIB) libecos.a
 ecos: ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o equil.o
 	$(ARCHIVE) libecos.a *.o
-	- $(RANLIB) libecos.a
+	
 
+#- $(RANLIB) libecos_bb.a	
 ecos_bb: ldl amd ecos ecos_bb.o ecos_bb_preproc.o
 	$(ARCHIVE) libecos_bb.a *.o
-	- $(RANLIB) libecos_bb.a	
+	
 
 ecos_bb.o: ecos_bb/ecos_bb.c
 	$(C) -c ecos_bb/ecos_bb.c -o ecos_bb.o
@@ -88,8 +89,8 @@ inv_pos.o: test/generated_tests/inv_pos/inv_pos.c test/generated_tests/inv_pos/i
 sqrt.o: test/generated_tests/sqrt/sqrt.c test/generated_tests/sqrt/sqrt.h
 	$(C) $(TEST_INCLUDES) -c test/generated_tests/sqrt/sqrt.c -o $@
 
-ecos_bb_test: ecos_bb ecos_bb/bb_test.c
-	$(C) -o ecos_bb_test ecos_bb/bb_test.c libecos_bb.a $(LIBS)
+ecos_bb_test: ecos_bb
+	$(C) -L. -o ecos_bb_test ecos_bb/bb_test.c -lecos_bb $(LIBS)
 
 
 # remove object files, but keep the compiled programs and library archives

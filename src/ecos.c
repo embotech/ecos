@@ -1087,5 +1087,23 @@ idxint ECOS_solve(pwork* w)
  */
 void ecos_updateDataEntry_h(pwork* w, idxint idx, pfloat value)
 {
+#if EQUILIBRATE > 0
     w->h[idx] = value / w->Gequil[idx];
+#else 
+    w->h[idx] = value;
+#endif      
+}
+
+
+/*
+ * Updates one element of the OBJ vector c of inequalities
+ * After the call, w->c[idx] = value (but equilibrated)
+ */
+void ecos_updateDataEntry_c(pwork* w, idxint idx, pfloat value)
+{
+#if EQUILIBRATE > 0
+    w->c[idx] = value / w->xequil[idx];
+#else 
+    w->c[idx] = value;
+#endif      
 }

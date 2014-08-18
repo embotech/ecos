@@ -103,7 +103,7 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
         branchable = 1;
         // Figure out if x is already an integer solution
         for (i=0; i<prob->num_bool_vars; ++i){
-            prob->tmp_node_id[i] = (char) round( prob->ecos_prob->x[i] );
+            prob->tmp_node_id[i] = (char) pfloat_round( prob->ecos_prob->x[i] );
             branchable &= float_eqls( prob->ecos_prob->x[i] , (pfloat) prob->tmp_node_id[i]);
             //PRINTTEXT("branch: %f %f\n", prob->ecos_prob->x[i] , (pfloat) prob->tmp_node_id[i]);
         }
@@ -112,7 +112,7 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
 
         //PRINTTEXT("Orig Solve: %u\n", ret_code);for (i=0; i<prob->ecos_prob->n; ++i) PRINTTEXT("%f\n", prob->ecos_prob->x[i]);
 
-        if (branchable){ // Round and check feasibility
+        if (branchable){ // pfloat_round and check feasibility
             prob->nodes[node_idx].split_idx = get_branch_var(prob->ecos_prob->x, prob->num_bool_vars);
             prob->nodes[node_idx].status = MI_SOLVED_BRANCHABLE;  
             set_prob(prob->ecos_prob, prob->tmp_node_id, prob->num_bool_vars);
@@ -227,4 +227,10 @@ int ecos_bb_solve(ecos_bb_pwork* prob){
     return get_ret_code(prob);
 }
 
+void updateDataEntry_h(ecos_bb_pwork* w, idxint idx, pfloat value){
+    ecos_updateDataEntry_h(w->ecos_prob, idx + (2*w->num_bool_vars), value);
+}
 
+void updateDataEntry_c(ecos_bb_pwork* w, idxint idx, pfloat value){
+    ecos_updateDataEntry_c(w->ecos_prob, idx , value);
+}
