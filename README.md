@@ -21,6 +21,12 @@ a direct product of the positive orthant and second-order cones:
 K = R_+ x Q_n1 x ... x Q_nN
 ```
 
+License
+----
+
+ECOS is distributed under the [GNU General Public License v3.0](http://www.gnu.org/copyleft/gpl.html). Other licenses may be available upon request from [embotech](http://www.embotech.com).
+
+
 Features of ECOS
 ----
 
