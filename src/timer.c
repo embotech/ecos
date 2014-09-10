@@ -30,7 +30,7 @@
 
 #include "timer.h"
 
-#if PROFILING > 0
+//#if PROFILING > 0
 
 #if (defined WIN32 || _WIN64)
 
@@ -102,4 +102,4 @@ double toc(timer* t)
 #endif
 
 
-#endif
+//#endif

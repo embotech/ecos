@@ -152,10 +152,6 @@ idxint should_continue(ecos_bb_pwork* prob, idxint curr_node_idx){
         && prob->iter < MI_MAXITER;
 }
 
-void print_progress(ecos_bb_pwork* prob){
-    PRINTTEXT("%u \t%.2f \t\t%.2f \t\t%.2f\n", (int)prob->iter, prob->global_L, prob->global_U, prob->global_U-prob->global_L);
-}
-
 int get_ret_code(ecos_bb_pwork* prob){
     if ( prob->iter < MI_MAXITER){
         if ( isinf(prob->global_U) ) return MI_INFEASIBLE;
@@ -164,15 +160,6 @@ int get_ret_code(ecos_bb_pwork* prob){
         if ( isinf(prob->global_U) ) return MI_MAXITER_NO_SOLN;
         else return MI_MAXITER_FEASIBLE_SOLN;
     }
-}
-
-
-void print_node(ecos_bb_pwork* prob, idxint i){
-    int j;
-    PRINTTEXT("Node info: %u : %f : %f : %u\nPartial id:", prob->nodes[i].status, 
-        prob->nodes[i].L, prob->nodes[i].U, (int)prob->nodes[i].split_idx);
-    for (j=0; j<prob->num_bool_vars; ++j) PRINTTEXT("%i,", get_node_id(i,prob)[j]);
-    PRINTTEXT("\n");
 }
 
 void initialize_root(ecos_bb_pwork* prob){
@@ -197,10 +184,16 @@ int ecos_bb_solve(ecos_bb_pwork* prob){
     prob->global_L = prob->nodes[curr_node_idx].L;
     prob->global_U = prob->nodes[curr_node_idx].U;
 
+#if PRINTLEVEL > 0
     PRINTTEXT("Iter\tLower Bound\tUpper Bound\tGap\n");
     PRINTTEXT("================================================\n");
+#endif
+
     while ( should_continue(prob, curr_node_idx) ){
+
+#if PRINTLEVEL > 0
         print_progress(prob);
+#endif
 
         ++(prob->iter);
 
@@ -223,7 +216,11 @@ int ecos_bb_solve(ecos_bb_pwork* prob){
 
         curr_node_idx = get_next_node(prob);        
     }
+
+#if PRINTLEVEL > 0
     print_progress(prob);
+#endif
+
     return get_ret_code(prob);
 }
 
@@ -234,3 +231,19 @@ void updateDataEntry_h(ecos_bb_pwork* w, idxint idx, pfloat value){
 void updateDataEntry_c(ecos_bb_pwork* w, idxint idx, pfloat value){
     ecos_updateDataEntry_c(w->ecos_prob, idx , value);
 }
+
+// Print utility functions
+#if PRINTLEVEL > 0
+void print_progress(ecos_bb_pwork* prob){
+    PRINTTEXT("%u \t%.2f \t\t%.2f \t\t%.2f\n", (int)prob->iter, prob->global_L, prob->global_U, prob->global_U-prob->global_L);
+}
+
+
+void print_node(ecos_bb_pwork* prob, idxint i){
+    int j;
+    PRINTTEXT("Node info: %u : %f : %f : %u\nPartial id:", prob->nodes[i].status, 
+        prob->nodes[i].L, prob->nodes[i].U, (int)prob->nodes[i].split_idx);
+    for (j=0; j<prob->num_bool_vars; ++j) PRINTTEXT("%i,", get_node_id(i,prob)[j]);
+    PRINTTEXT("\n");
+}
+#endif
