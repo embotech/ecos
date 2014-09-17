@@ -167,6 +167,8 @@ void initialize_root(ecos_bb_pwork* prob){
     prob->nodes[0].status = MI_NOT_SOLVED;
     prob->nodes[0].L = -INFINITY;
     prob->nodes[0].U =  INFINITY;
+    prob->global_L = -INFINITY;
+    prob->global_U = INFINITY;
     for (i=0; i < prob->num_bool_vars; ++i){ prob->node_ids[i] = MI_STAR; }
 }
 
