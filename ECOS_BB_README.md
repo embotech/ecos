@@ -1,14 +1,52 @@
-Using ECOS_BB in C
+ECOS_BB OVERVIEW
 ====
-ECOS_BB is a mixed integer extension of ECOS with support for boolean variables only (full integer support is planned).
 
+ECOS_BB is a mixed integer extension of ECOS with support for boolean variables only (full integer support is planned). ECOS_BB solves convex second-order cone programs (SOCPs) of type
+
+```
+min  c'*x
+s.t. A*x = b
+     G*x <=_K h
+some x_i in {0,1}
+```
+where the last inequality is generalized, i.e. `h - G*x` belongs to the cone `K`.
+ECOS_BB supports the positive orthant `R_+` and second-order cones `Q_n` defined as
+```
+Q_n = { (t,x) | t >= || x ||_2 } 
+```
+In the definition above, t is a scalar and `x` is in `R_{n-1}`. The cone `K` is therefore
+a direct product of the positive orthant and second-order cones:
+```
+K = R_+ x Q_n1 x ... x Q_nN
+```
 As with ECOS, ECOS_BB is designed for embedded systems so it has hard bounds on runtime and memory footprint.
 
-ECOS_BB will call ecos_solve() on a relaxed subproblem at most (MI_MAXITER * MAXIT) times where MI_MAXITER is the maximum number of iterations allowed by the branch and bound wrapper and MAXIT is the maximum number of ECOS iterations allowed per sub problem. MI_MAXITER is set within the ecos_bb.h header and MAXIT is set within the ecos.h header.
+#### Runtime Constraints
 
-Also, the memory required for ecos_bb is O(MI_MAXITER * num_bool_vars).
+ECOS_BB will call ecos_solve() on a relaxed subproblem at most `(MI_MAXITER * MAXIT)` times where `MI_MAXITER` is the maximum number of iterations allowed by the branch and bound wrapper and `MAXIT` is the maximum number of ECOS iterations allowed per sub problem. `MI_MAXITER` is set within the ecos_bb.h header and `MAXIT` is set within the ecos.h header.
 
-The branch and bound algorithm is a direct translation of Stephan Boyd's [lecture slides](http://stanford.edu/class/ee364b/lectures/bb_slides.pdf) from EE364.
+#### Memory Constraints
+
+ECOS_BB stores each active constraint per boolean var as a *char*. Thus, ECOS_BB requires `num_bool_vars` *char*s to store the full set of constraints for one branch and bound node. Since branch and bound generates two nodes per iteration and one node can reuse the parent node's memory, ECOS_BB preallocates enough memory for `MI_MAXITER` nodes. Total memory requirements for ECOS_BB is `MI_MAXITER * num_bool_vars` *bytes* + memory necessary for the relaxed ECOS subproblem.
+
+Features of ECOS_BB
+----
+
++ *ECOS_BB runs on embedded platforms*. Written in ANSI C (except for the timing code),
+  it can be compiled for any platform for which a C compiler is available. Excluding the problem setup
+  part, no memory manager is needed for solving problem instances of same structure.
++ *ECOS_BB is efficient*. 
+    The branch and bound algorithm is a direct translation of Stephan Boyd's [lecture slides](http://stanford.edu/class/ee364b/lectures/bb_slides.pdf) from EE364. And has proven excellent performance in small to medium problems.
++ *ECOS_BB has a tiny footprint*. The ECOS_BB solver consists of 200 lines of C code on top of ECOS's 750 (excluding the problem setup
+   code).
++ *ECOS is numerically robust*. Using regularization and iterative refinement coupled with a carefully chosen
+  sparse representation of scaling matrices, millions of problem instances are solved reliably.
++ *ECOS is library-free*. No need to link any external library to ECOS, apart from `AMD` and `sparseLDL`, both
+  from Timothy A. Davis, which are included in this project.
+
+
+Using ECOS_BB in C
+====
 
 ECOS_BB exports 3 functions, see ecos_bb.h. You need to call these in the following sequence:
 
