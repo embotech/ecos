@@ -245,6 +245,8 @@ int test_7(){
 	// Answer: 
 	pfloat x[15] = {0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,32.38,0.00,0.00,0.00,
 		0.00,0.00,0.00};
+	pfloat x2[15] = {0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,86.798858,
+		0.000000,0.000000,0.000000};
 
 	idxint i, ret_code, pass;
 
@@ -256,13 +258,6 @@ int test_7(){
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 5);
-
-	printf("H :");
-	for (i=0; i<20; ++i){
-		//pass &= float_eqls(x[i] ,prob->best_x[i]);
-		printf("%f,", prob->ecos_prob->h[i]);
-	}
-	printf("\n,");
 
 	tic(&t);
 	ret_code = ecos_bb_solve(prob);
@@ -281,26 +276,21 @@ int test_7(){
 	updateDataEntry_h(prob, 1, -729.935);
 	updateDataEntry_h(prob, 2, 131.015);
 	updateDataEntry_h(prob, 3, -71.015);
-	updateDataEntry_h(prob, 4, 149.66 );
+	updateDataEntry_h(prob, 4, 149.66);
 	updateDataEntry_h(prob, 5, -89.66);
 	updateDataEntry_h(prob, 6, 61.165);
 	updateDataEntry_h(prob, 7, -1.165);
-	
-	printf("H :");
-	for (i=0; i<20; ++i){
-		//pass &= float_eqls(x[i] ,prob->best_x[i]);
-		printf("%f,", prob->ecos_prob->h[i]);
-	}
-	printf("\n,");
 
+	tic(&t);
 	ret_code = ecos_bb_solve(prob);
-	
+	msRuntime = toc(&t);
+
 	printf("Soln2 :");
 	for (i=0; i<n; ++i){
-		//pass &= float_eqls(x[i] ,prob->best_x[i]);
+		pass &= float_eqls(x2[i] ,prob->best_x[i]);
 		printf("%f,", prob->best_x[i]);
 	}
-	printf("\n,");
+	printf("Runtime: %f\n,", msRuntime);
 	
 	ecos_bb_cleanup(prob);
 
