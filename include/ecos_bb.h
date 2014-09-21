@@ -22,9 +22,9 @@
 #define MI_STAR (-1)
 
 #define MI_OPTIMAL_SOLN (0)
-#define MI_MAXITER_FEASIBLE_SOLN (1)
-#define MI_MAXITER_NO_SOLN (2)
-#define MI_INFEASIBLE (3)
+#define MI_MAXITER_FEASIBLE_SOLN (-1)
+#define MI_MAXITER_NO_SOLN (1)
+#define MI_INFEASIBLE (2)
 
 #ifdef __cplusplus
 extern "C" {
@@ -75,7 +75,7 @@ ecos_bb_pwork* ecos_bb_setup(
     pfloat* Apr, idxint* Ajc, idxint* Air,
     pfloat* c, pfloat* h, pfloat* b, idxint num_bool_vars);
 
-int ecos_bb_solve(ecos_bb_pwork* prob);
+idxint ecos_bb_solve(ecos_bb_pwork* prob);
 
 void ecos_bb_cleanup(ecos_bb_pwork* prob);
 

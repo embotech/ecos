@@ -172,7 +172,7 @@ void initialize_root(ecos_bb_pwork* prob){
     for (i=0; i < prob->num_bool_vars; ++i){ prob->node_ids[i] = MI_STAR; }
 }
 
-int ecos_bb_solve(ecos_bb_pwork* prob){
+idxint ecos_bb_solve(ecos_bb_pwork* prob){
     
     prob->iter = 0;
     
