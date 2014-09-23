@@ -28,44 +28,6 @@
 /* NEEDED FOR SQRT ----------------------------------------------------- */
 #include <math.h>
 
-#if defined(MATLAB_MEX_FILE)
-static int istate;
-extern int utIsInterruptPending();
-extern int utSetInterruptEnabled(int);
-void remove_handler(void)
-{
-    utSetInterruptEnabled(istate);
-}
-void install_handler(void) 
-{
-    istate = utSetInterruptEnabled(true);
-}
-int interrupted(void)
-{
-    return utIsInterruptPending();
-}
-#else
-#include <signal.h>
-static int int_detected;
-struct sigaction oact, act;
-void intHandler(int dummy) { 
-    int_detected=dummy?dummy:1; 
-}
-void remove_handler(void)
-{
-    sigaction(SIGINT,&oact,&act);
-}
-void install_handler(void) {
-    int_detected = 0;
-    act.sa_handler = intHandler;
-    sigaction(SIGINT,&act,&oact);
-}
-int interrupted(void)
-{
-    return int_detected;
-}
-#endif
-
 /* Some internal defines */
 #define ECOS_NOT_CONVERGED_YET (-87)  /* indicates no convergence yet    */
 
@@ -800,20 +762,16 @@ idxint ECOS_solve(pwork* w)
 {
 	idxint i, initcode, KKT_FACTOR_RETURN_CODE;
 	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap, pres_prev;
-	idxint exitcode = ECOS_FATAL;
+	idxint exitcode = ECOS_FATAL, interrupted;
     
 #if DEBUG
     char fn[20];
 #endif
 
+    init_ctrlc();
 #if (defined _WIN32 || defined _WIN64 )
 	/* sets width of exponent for floating point numbers to 2 instead of 3 */
 	unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);
-#endif
-
-    install_handler();
-#if PRINTLEVEL > 0
-        if( w->stgs->verbose ) PRINTTEXT("Ctrl-C handler installed.");
 #endif
 
 #if PROFILING > 0
@@ -887,6 +845,7 @@ idxint ECOS_solve(pwork* w)
 
 		/* Check termination criteria to full precision and exit if necessary */
 		exitcode = checkExitConditions( w, 0 );
+        interrupted = check_ctrlc();
         if( exitcode == ECOS_NOT_CONVERGED_YET ){
             
             /*
@@ -915,10 +874,10 @@ idxint ECOS_solve(pwork* w)
                 break;
             }
             /* MAXIT reached? */
-            else if( w->info->iter == w->stgs->maxit || interrupted() ){
+            else if( interrupted || w->info->iter == w->stgs->maxit ){
 
 #if PRINTLEVEL > 0                
-                const char *what = interrupted() ? "SIGINT intercepted" : "Maximum number of iterations reached";
+                const char *what = interrupted ? "SIGINT intercepted" : "Maximum number of iterations reached";
 #endif                
                 /* Determine whether current iterate is better than what we had so far */
                 if( compareStatistics( w->info, w->best_info) ){
@@ -938,10 +897,10 @@ idxint ECOS_solve(pwork* w)
                 /* Determine whether we have reached reduced precision */
                 exitcode = checkExitConditions( w, ECOS_INACC_OFFSET );
                 if( exitcode == ECOS_NOT_CONVERGED_YET ){
-                    exitcode = ECOS_MAXIT;
+                    exitcode = interrupted ? ECOS_SIGINT : ECOS_MAXIT;
 #if PRINTLEVEL > 0
                     if( w->stgs->verbose ) {
-                        const char* what = interrupted() ? "INTERRUPTED" : "RAN OUT OF ITERATIONS";
+                        const char* what = interrupted ? "INTERRUPTED" : "RAN OUT OF ITERATIONS";
                         PRINTTEXT("\n%s (reached feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", what, MAX(w->info->dres, w->info->pres), w->info->relgap, w->info->gap);
                     }
 #endif
@@ -1128,7 +1087,7 @@ idxint ECOS_solve(pwork* w)
 	if( w->stgs->verbose ) PRINTTEXT("\n\n");
 #endif
 
-    remove_handler();
+    remove_ctrlc();
 	return exitcode;
 }
 
