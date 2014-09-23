@@ -28,6 +28,43 @@
 /* NEEDED FOR SQRT ----------------------------------------------------- */
 #include <math.h>
 
+#if defined(MATLAB_MEX_FILE)
+static int istate;
+extern int utIsInterruptPending();
+extern int utSetInterruptEnabled(int);
+void remove_handler(void)
+{
+    utSetInterruptEnabled(istate);
+}
+void install_handler(void) 
+{
+    istate = utSetInterruptEnabled(true);
+}
+int interrupted(void)
+{
+    return utIsInterruptPending();
+}
+#else
+#include <signal.h>
+static int int_detected;
+struct sigaction oact, act;
+void intHandler(int dummy) { 
+    int_detected=dummy?dummy:1; 
+}
+void remove_handler(void)
+{
+    sigaction(SIGINT,&oact,&act);
+}
+void install_handler(void) {
+    int_detected = 0;
+    act.sa_handler = intHandler;
+    sigaction(SIGINT,&act,&oact);
+}
+int interrupted(void)
+{
+    return int_detected;
+}
+#endif
 
 /* Some internal defines */
 #define ECOS_NOT_CONVERGED_YET (-87)  /* indicates no convergence yet    */
@@ -774,6 +811,11 @@ idxint ECOS_solve(pwork* w)
 	unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);
 #endif
 
+    install_handler();
+#if PRINTLEVEL > 0
+        if( w->stgs->verbose ) PRINTTEXT("Ctrl-C handler installed.");
+#endif
+
 #if PROFILING > 0
 	timer tsolve;
 #endif
@@ -798,7 +840,7 @@ idxint ECOS_solve(pwork* w)
     
     
 	/* MAIN INTERIOR POINT LOOP ---------------------------------------------------------------------- */
-	for( w->info->iter = 0; w->info->iter <= w->stgs->maxit; w->info->iter++ ){
+	for( w->info->iter = 0; w->info->iter <= w->stgs->maxit ; w->info->iter++ ){
         
 		/* Compute residuals */
 		computeResiduals(w);
@@ -873,17 +915,22 @@ idxint ECOS_solve(pwork* w)
                 break;
             }
             /* MAXIT reached? */
-            else if( w->info->iter == w->stgs->maxit ){
-                
+            else if( w->info->iter == w->stgs->maxit || interrupted() ){
+
+#if PRINTLEVEL > 0                
+                const char *what = interrupted() ? "SIGINT intercepted" : "Maximum number of iterations reached";
+#endif                
                 /* Determine whether current iterate is better than what we had so far */
                 if( compareStatistics( w->info, w->best_info) ){
 #if PRINTLEVEL > 0
-                    if( w->stgs->verbose ) PRINTTEXT("Maximum number of iterations reached, stopping.\n");
+                    if( w->stgs->verbose ) 
+                        PRINTTEXT("%s, stopping.\n",what);
 #endif
                 } else
                 {
 #if PRINTLEVEL > 0
-                    if( w->stgs->verbose ) PRINTTEXT("Maximum number of iterations reached, recovering best iterate (%d) and stopping.\n", (int)w->best_info->iter);
+                    if( w->stgs->verbose ) 
+                        PRINTTEXT("%s, recovering best iterate (%d) and stopping.\n", what, (int)w->best_info->iter);
 #endif
                     restoreBestIterate( w );
                 }
@@ -893,10 +940,14 @@ idxint ECOS_solve(pwork* w)
                 if( exitcode == ECOS_NOT_CONVERGED_YET ){
                     exitcode = ECOS_MAXIT;
 #if PRINTLEVEL > 0
-                    if( w->stgs->verbose ) PRINTTEXT("\nRAN OUT OF ITERATIONS (reached feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", MAX(w->info->dres, w->info->pres), w->info->relgap, w->info->gap);
+                    if( w->stgs->verbose ) {
+                        const char* what = interrupted() ? "INTERRUPTED" : "RAN OUT OF ITERATIONS";
+                        PRINTTEXT("\n%s (reached feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", what, MAX(w->info->dres, w->info->pres), w->info->relgap, w->info->gap);
+                    }
 #endif
                 }
                 break;
+
             }
         } else {
             
@@ -1077,6 +1128,7 @@ idxint ECOS_solve(pwork* w)
 	if( w->stgs->verbose ) PRINTTEXT("\n\n");
 #endif
 
+    remove_handler();
 	return exitcode;
 }
 
