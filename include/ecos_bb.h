@@ -43,10 +43,12 @@ typedef struct node {
 typedef struct ecos_bb_pwork{
 	// Mixed integer data
 	idxint num_bool_vars;
+	idxint maxiter;
 	
 	node* nodes;
 	char* node_ids;
-	
+	idxint* bool_vars_idx;
+
 	pfloat* best_x;
 	pfloat global_U;
 	pfloat global_L;
@@ -73,7 +75,8 @@ ecos_bb_pwork* ecos_bb_setup(
     idxint l, idxint ncones, idxint* q,
     pfloat* Gpr, idxint* Gjc, idxint* Gir,
     pfloat* Apr, idxint* Ajc, idxint* Air,
-    pfloat* c, pfloat* h, pfloat* b, idxint num_bool_vars);
+    pfloat* c, pfloat* h, pfloat* b, 
+    idxint num_bool_vars, idxint* bool_vars_idx);
 
 idxint ecos_bb_solve(ecos_bb_pwork* prob);
 

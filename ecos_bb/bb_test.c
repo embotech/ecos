@@ -4,7 +4,7 @@
 #include "ecos_bb.c"
 #include "ecos_bb_preproc.c"
 
-int test_1(){
+int test_1a(){
 	idxint n = 2;
 	idxint m = 2;
 	pfloat feas_Gx[4] = {2.0, 3.0, 1.0, 4.0};
@@ -13,6 +13,8 @@ int test_1(){
 
 	pfloat feas_c[2] = {-1., -1.};
 	pfloat feas_h[2] = {4., 12.};
+
+	idxint bool_idx[1] = {0};
 
 	// Answer:
 	pfloat x[2] = {1.0, 2.0};
@@ -24,7 +26,9 @@ int test_1(){
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
-		feas_c, feas_h, NULL, 1);
+		feas_c, feas_h, NULL, 1, bool_idx);
+
+	printf("Passed setup \n");
 
 	ret_code = ecos_bb_solve(prob);
 	
@@ -33,7 +37,46 @@ int test_1(){
 	printf("Soln:");
 	for (i=0; i<n; ++i){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
-		printf("%f,", prob->best_x[i]);
+		printf("%f ", prob->best_x[i]);
+	}
+	ecos_bb_cleanup(prob);
+	return pass;
+}
+
+int test_1b(){
+	idxint n = 2;
+	idxint m = 2;
+	pfloat feas_Gx[4] = {2.0, 3.0, 1.0, 4.0};
+	idxint feas_Gp[3] = {0, 2, 4};
+	idxint feas_Gi[4] = {0, 1, 0, 1};
+
+	pfloat feas_c[2] = {-1., -1.};
+	pfloat feas_h[2] = {4., 12.};
+
+	idxint bool_idx[1] = {1};
+
+	// Answer:
+	pfloat x[2] = {1.5, 1.0};
+
+	idxint i, ret_code, pass;
+	
+	ecos_bb_pwork* prob = ecos_bb_setup(
+		n, m, 0, 
+		m, 0, NULL,
+		feas_Gx, feas_Gp, feas_Gi,
+		NULL, NULL, NULL,
+		feas_c, feas_h, NULL, 1, bool_idx);
+
+	printf("Passed setup \n");
+
+	ret_code = ecos_bb_solve(prob);
+	
+	pass = 1;
+
+	printf("Soln:");
+	for (i=0; i<n; ++i){
+		pass &= float_eqls(x[i] ,prob->best_x[i]);
+		printf("%f ", prob->best_x[i]);
 	}
 	ecos_bb_cleanup(prob);
 	return pass;
@@ -49,6 +92,8 @@ int test_2(){
 	pfloat feas_c[2] = {-1., -1.};
 	pfloat feas_h[2] = {4., 12.};
 
+	idxint bool_idx[2] = {0,1};
+
 	// Answer:
 	pfloat x[2] = {1.0, 1.0};
 	
@@ -59,7 +104,7 @@ int test_2(){
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
-		feas_c, feas_h, NULL, 2);
+		feas_c, feas_h, NULL, 2, bool_idx);
 
 	ret_code = ecos_bb_solve(prob);
 	
@@ -68,7 +113,7 @@ int test_2(){
 	printf("Soln:");
 	for (i=0; i<n; ++i){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
-		printf("%f,", prob->best_x[i]);
+		printf("%f ", prob->best_x[i]);
 	}
 	ecos_bb_cleanup(prob);
 	return pass;
@@ -85,6 +130,8 @@ int test_3(){
 	pfloat feas_c[2] = {1., -1.};
 	pfloat feas_h[2] = {4., 12.};
 
+	idxint bool_idx[1] = {0};
+
 	// Answer:
 	pfloat x[2] = {0.0, 3.0};
 
@@ -95,7 +142,7 @@ int test_3(){
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
-		feas_c, feas_h, NULL, 1);
+		feas_c, feas_h, NULL, 1, bool_idx);
 
 	ret_code = ecos_bb_solve(prob);
 	
@@ -104,7 +151,7 @@ int test_3(){
 	printf("Soln:");
 	for (i=0; i<n; ++i){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
-		printf("%f,", prob->best_x[i]);
+		printf("%f ", prob->best_x[i]);
 	}
 	ecos_bb_cleanup(prob);
 	return pass;
@@ -120,6 +167,8 @@ int test_4(){
 	pfloat feas_c[6] = {3, 5, 6, 9, 10, 10};
 	pfloat feas_h[3] = {-2, 2, -3};
 
+	idxint bool_idx[6] = {0,1,2,3,4,5};
+
 	// Answer: 
 	pfloat x[6] = {0,1,1,0,0,0};
 
@@ -131,7 +180,7 @@ int test_4(){
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
-		feas_c, feas_h, NULL, 6);
+		feas_c, feas_h, NULL, 6, bool_idx);
 
 	ret_code = ecos_bb_solve(prob);
 
@@ -140,7 +189,7 @@ int test_4(){
 	printf("Soln:");
 	for (i=0; i<n; ++i){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
-		printf("%f,", prob->best_x[i]);
+		printf("%f ", prob->best_x[i]);
 	}
 	
 	ecos_bb_cleanup(prob);
@@ -158,6 +207,8 @@ int test_5(){
 	pfloat feas_c[6] = {3, 5, 6, 9, -10, -10};
 	pfloat feas_h[3] = {-2, 2, -3};
 
+	idxint bool_idx[6] = {0,1,2,3,4,5};
+
 	// Answer: 
 	pfloat x[6] = {0,0,1,1,1,0};
 
@@ -168,7 +219,7 @@ int test_5(){
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
-	feas_c, feas_h, NULL, 6);
+	feas_c, feas_h, NULL, 6, bool_idx);
 
 	ret_code = ecos_bb_solve(prob);
 	
@@ -177,7 +228,7 @@ int test_5(){
 	printf("Soln:");
 	for (i=0; i<n; ++i){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
-		printf("%f,", prob->best_x[i]);
+		printf("%f ", prob->best_x[i]);
 	}
 
 	ecos_bb_cleanup(prob);
@@ -195,6 +246,8 @@ int test_6(){
 	pfloat feas_c[6] = {-3, -5, 6, 9, 10, -10};
 	pfloat feas_h[3] = {-2, 1, -3};
 
+	idxint bool_idx[6] = {0,1,2,3,4,5};
+
 	// Answer: 
 	pfloat x[6] = {0,1,1,1,1,0};
 
@@ -205,11 +258,11 @@ int test_6(){
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
-		feas_c, feas_h, NULL, 6);
+		feas_c, feas_h, NULL, 6, bool_idx);
 
 	printf("Obj:");
 	for (i=0; i<n; ++i){
-		printf("%f,", prob->ecos_prob->c[i]);
+		printf("%f ", prob->ecos_prob->c[i]);
 	}
 	printf("\n");
 
@@ -217,7 +270,7 @@ int test_6(){
 	
 	printf("Obj:");
 	for (i=0; i<n; ++i){
-		printf("%f,", prob->ecos_prob->c[i]);
+		printf("%f ", prob->ecos_prob->c[i]);
 	}
 	printf("\n");
 		
@@ -226,7 +279,7 @@ int test_6(){
 	printf("Soln:");
 	for (i=0; i<n; ++i){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
-		printf("%f,", prob->best_x[i]);
+		printf("%f ", prob->best_x[i]);
 	}
 	ecos_bb_cleanup(prob);
 	return pass;
@@ -241,6 +294,8 @@ int test_7(){
 
 	pfloat feas_c[15] = {0,0,0,0,0,0.127,0.9134,0.6324,0.0975,0.2785,0.873,0.0866,0.3676,0.9025,0.7215};
 	pfloat feas_h[29] = {-729.9349999999999,789.9349999999999,-71.015,131.015,-89.66,149.66,-1.165,61.165,9999,0,9999,0,9999,0,9999,0,9999,0,150,0,0,0,0,0,0,0,0,0,0};
+
+	idxint bool_idx[5] = {0,1,2,3,4};
 
 	// Answer: 
 	pfloat x[15] = {0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,32.38,0.00,0.00,0.00,
@@ -257,7 +312,7 @@ int test_7(){
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
-		feas_c, feas_h, NULL, 5);
+		feas_c, feas_h, NULL, 5, bool_idx);
 
 	tic(&t);
 	ret_code = ecos_bb_solve(prob);
@@ -265,12 +320,12 @@ int test_7(){
 
 	pass = 1;
 
-	printf("Soln:");
+	printf("Soln: ");
 	for (i=0; i<n; ++i){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
-		printf("%f,", prob->best_x[i]);
+		printf("%f ", prob->best_x[i]);
 	}
-	printf("Runtime: %f\n,", msRuntime);
+	printf("\nRuntime: %f\n", msRuntime);
 	
 	updateDataEntry_h(prob, 0, 789.935);
 	updateDataEntry_h(prob, 1, -729.935);
@@ -285,12 +340,12 @@ int test_7(){
 	ret_code = ecos_bb_solve(prob);
 	msRuntime = toc(&t);
 
-	printf("Soln2 :");
+	printf("Soln2: ");
 	for (i=0; i<n; ++i){
 		pass &= float_eqls(x2[i] ,prob->best_x[i]);
-		printf("%f,", prob->best_x[i]);
+		printf("%f ", prob->best_x[i]);
 	}
-	printf("Runtime: %f\n,", msRuntime);
+	printf("\nRuntime: %f\n", msRuntime);
 	
 	ecos_bb_cleanup(prob);
 
@@ -325,7 +380,7 @@ int test_8(){
 
 	printf("Soln:");
 	for (i=0; i<n; ++i){
-		printf("%f,", prob->x[i]);
+		printf("%f ", prob->x[i]);
 		pass &= float_eqls(x[i] ,prob->x[i]);
 	}
 
@@ -338,7 +393,8 @@ int test_8(){
 int main(){
 
 	printf("Pass: 1, Fail: 0\n=============\n");
-	printf("\nTest 1: %u\n=============\n", test_1());
+	printf("\nTest 1a: %u\n=============\n", test_1a());
+	printf("\nTest 1b: %u\n=============\n", test_1b());
 	printf("\nTest 2: %u\n=============\n", test_2());	
 	printf("\nTest 3: %u\n=============\n", test_3());	
 	printf("\nTest 4: %u\n=============\n", test_4());

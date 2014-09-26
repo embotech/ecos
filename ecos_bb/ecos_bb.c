@@ -68,7 +68,7 @@ idxint get_branch_var(pfloat* x, idxint num_bool_vars){
  * Updates the solver's lb and ub contraints for integer variables
  * to the bounds specified by the node
  */
-void set_prob(pwork* ecos_prob, char* node_id, idxint num_bool_vars){
+void set_prob(pwork* ecos_prob, char* node_id, idxint num_bool_vars, idxint* bool_idx){
     idxint i;
     //unset_equilibration(ecos_prob);
     for(i=0; i<num_bool_vars; ++i){
@@ -93,7 +93,7 @@ void set_prob(pwork* ecos_prob, char* node_id, idxint num_bool_vars){
 
 void get_bounds(idxint node_idx, ecos_bb_pwork* prob){  
     idxint i, ret_code, branchable;
-    set_prob(prob->ecos_prob, get_node_id(node_idx,prob), prob->num_bool_vars);    
+    set_prob(prob->ecos_prob, get_node_id(node_idx,prob), prob->num_bool_vars, prob->bool_vars_idx);    
     ret_code = ECOS_solve(prob->ecos_prob);
 
     
@@ -115,7 +115,7 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
         if (branchable){ // pfloat_round and check feasibility
             prob->nodes[node_idx].split_idx = get_branch_var(prob->ecos_prob->x, prob->num_bool_vars);
             prob->nodes[node_idx].status = MI_SOLVED_BRANCHABLE;  
-            set_prob(prob->ecos_prob, prob->tmp_node_id, prob->num_bool_vars);
+            set_prob(prob->ecos_prob, prob->tmp_node_id, prob->num_bool_vars, prob->bool_vars_idx);
             ret_code = ECOS_solve(prob->ecos_prob);
 
             //PRINTTEXT("Guess: %u\n", ret_code);for (i=0; i<prob->ecos_prob->n; ++i) PRINTTEXT("%f\n", prob->ecos_prob->x[i]);
@@ -149,7 +149,7 @@ idxint should_continue(ecos_bb_pwork* prob, idxint curr_node_idx){
     return (prob->global_U - prob->global_L) > MI_ABS_EPS 
         && abs_2(prob->global_U / prob->global_L - 1.0) > MI_REL_EPS
         && curr_node_idx >= 0
-        && prob->iter < MI_MAXITER;
+        && prob->iter < prob->maxiter;
 }
 
 int get_ret_code(ecos_bb_pwork* prob){
