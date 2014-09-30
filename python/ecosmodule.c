@@ -541,20 +541,32 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       case ECOS_OPTIMAL:
           infostring = "Optimal solution found";
           break;
+      case ECOS_OPTIMAL + ECOS_INACC_OFFSET:
+          infostring = "Close to optimal solution found";
+          break;
       case ECOS_MAXIT:
           infostring = "Maximum number of iterations reached";
           break;
       case ECOS_PINF:
           infostring = "Primal infeasible";
           break;
+      case ECOS_PINF + ECOS_INACC_OFFSET:
+          infostring = "Close to primal infeasible";
+          break;
       case ECOS_DINF:
           infostring = "Dual infeasible";
+          break;
+      case ECOS_DINF + ECOS_INACC_OFFSET:
+          infostring = "Close to dual infeasible";
           break;
       case ECOS_NUMERICS:
           infostring = "Run into numerical problems";
           break;
       case ECOS_OUTCONE:
           infostring = "PROBLEM: Multipliers leaving the cone";
+          break;
+      case ECOS_FATAL:
+          infostring = "PROBLEM: Fatal error during initialization";
           break;
       default:
           infostring = "UNKNOWN PROBLEM IN SOLVER";
