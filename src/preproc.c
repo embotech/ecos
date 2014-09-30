@@ -368,6 +368,11 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 void ECOS_cleanup(pwork* w, idxint keepvars)
 {
 	idxint i;
+    
+#if defined EQUILIBRATE && EQUILIBRATE > 0
+    /* unset equilibration */
+    unset_equilibration(w);
+#endif
 	
 	/* Free KKT related memory      ---            below are the corresponding MALLOCs                */
 	FREE(w->KKT->D);                /* mywork->KKT->D = (pfloat *)MALLOC(nK*sizeof(pfloat));          */
@@ -402,8 +407,10 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 		FREE(w->C->lpc->kkt_idx);
 		FREE(w->C->lpc->v);
 		FREE(w->C->lpc->w);
-		FREE(w->C->lpc);
 	}
+    /* C->lpc is always allocated, so we free it here. */
+    FREE(w->C->lpc);
+
 	for( i=0; i < w->C->nsoc; i++ ){
 		FREE(w->C->soc[i].q);
 		FREE(w->C->soc[i].skbar);
@@ -573,7 +580,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 
 
 	/* Second-order cones */
-	mywork->C->soc = (socone *)MALLOC(ncones*sizeof(socone));
+	mywork->C->soc = (ncones == 0) ? NULL : (socone *)MALLOC(ncones*sizeof(socone));
 	mywork->C->nsoc = ncones;
     cidx = 0;
     for( i=0; i<ncones; i++ ){
@@ -844,9 +851,9 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #endif
     	
 	/* get memory for residuals */
-	mywork->rx = (pfloat *)MALLOC(n*sizeof(pfloat));
-	mywork->ry = (pfloat *)MALLOC(p*sizeof(pfloat));
-	mywork->rz = (pfloat *)MALLOC(m*sizeof(pfloat));
+	mywork->rx = (n == 0) ? NULL : (pfloat *)MALLOC(n*sizeof(pfloat));
+	mywork->ry = (p == 0) ? NULL : (pfloat *)MALLOC(p*sizeof(pfloat));
+	mywork->rz = (m == 0) ? NULL : (pfloat *)MALLOC(m*sizeof(pfloat));
 	
     /* clean up */
     mywork->KKT->P = P;

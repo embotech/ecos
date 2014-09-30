@@ -27,7 +27,7 @@ typedef struct sum_sq_dims {
 /* the solution struct
  *    users are responsible for keep track of the variable lengths
  */
-typedef struct sum_sq_sol {
+typedef struct sum_sq_vars {
     double * x;
 } sum_sq_vars;
   

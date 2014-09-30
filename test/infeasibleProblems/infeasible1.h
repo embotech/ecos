@@ -30,6 +30,6 @@ else exitflag = ECOS_FATAL;
 /* clean up memory */
 ECOS_cleanup(mywork, 0);
  
-mu_assert("infeasible1: ECOS failed to produce outputflag OPTIMAL", exitflag == ECOS_PINF );
+mu_assert("infeasible1: ECOS failed to produce outputflag PRIMAL INFEASIBLE", exitflag == ECOS_PINF );
 return 0;
 }

@@ -27,7 +27,7 @@ typedef struct inv_pos_dims {
 /* the solution struct
  *    users are responsible for keep track of the variable lengths
  */
-typedef struct inv_pos_sol {
+typedef struct inv_pos_vars {
     double x;
 } inv_pos_vars;
   
