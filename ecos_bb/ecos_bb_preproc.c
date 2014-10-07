@@ -176,9 +176,9 @@ ecos_bb_pwork* ecos_bb_setup(
 }
 
 // Performs the same function as ecos_cleanup
-void ecos_bb_cleanup(ecos_bb_pwork* prob){
+void ecos_bb_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep){
     // Free solver memory
-    ECOS_cleanup(prob->ecos_prob, 0);
+    ECOS_cleanup(prob->ecos_prob, num_vars_keep);
     free(prob->tmp_node_id);
     free(prob->nodes);
     free(prob->node_ids);

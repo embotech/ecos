@@ -80,7 +80,7 @@ ecos_bb_pwork* ecos_bb_setup(
 
 idxint ecos_bb_solve(ecos_bb_pwork* prob);
 
-void ecos_bb_cleanup(ecos_bb_pwork* prob);
+void ecos_bb_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep);
 
 void updateDataEntry_h(ecos_bb_pwork* w, idxint idx, pfloat value);
 
