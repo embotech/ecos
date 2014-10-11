@@ -64,19 +64,19 @@ for k = 1:MAX_ITER
 
     history.r_norm(k)  = norm(x - z);
     history.s_norm(k)  = norm(-rho*(z - zold));
-
+    
     history.eps_pri(k) = sqrt(n)*ABSTOL + RELTOL*max(norm(x), norm(-z));
     history.eps_dual(k)= sqrt(n)*ABSTOL + RELTOL*norm(rho*u);
 
     if ~QUIET
-        fprintf('%3d\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.2f\n', k, ...
+        fprintf('%3d\t%10.8f\t%10.8f\t%10.8f\t%10.8f\t%10.8f\n', k, ...
             history.r_norm(k), history.eps_pri(k), ...
             history.s_norm(k), history.eps_dual(k), history.objval(k));
     end
-
+    
     if (history.r_norm(k) < history.eps_pri(k) && ...
        history.s_norm(k) < history.eps_dual(k))
-         break;
+        break;
     end
 end    
 end

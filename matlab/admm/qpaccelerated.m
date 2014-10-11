@@ -1,4 +1,4 @@
-function [z, history] = qpaccelerated(P, q, r, lb, ub, rho, alpha)
+function [z, history] = qpaccelerated(P, q, r, lb, ub, rho)
 
 % quadprog  Solve standard form box-constrained QP via ADMM
 %
@@ -30,6 +30,7 @@ QUIET    = 0;
 MAX_ITER = 1000;
 ABSTOL   = 1e-8;
 RELTOL   = 1e-4;
+alpha    = 1.0;
 
 n = size(P,1);
 
@@ -42,7 +43,7 @@ if ~QUIET
       'r norm', 'eps pri', 's norm', 'eps dual', 'objective');
 end
 
-for k = 1:MAX_ITER        
+for k = 1:MAX_ITER         
     if k > 1
         x = R \ (R' \ (rho*(z - u) - q));
     else
@@ -70,16 +71,16 @@ for k = 1:MAX_ITER
     history.eps_dual(k)= sqrt(n)*ABSTOL + RELTOL*norm(rho*u);
 
     if ~QUIET
-        fprintf('%3d\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.2f\n', k, ...
+        fprintf('%3d\t%10.8f\t%10.8f\t%10.8f\t%10.8f\t%10.8f\n', k, ...
             history.r_norm(k), history.eps_pri(k), ...
             history.s_norm(k), history.eps_dual(k), history.objval(k));
     end
 
     if (history.r_norm(k) < history.eps_pri(k) && ...
-       history.s_norm(k) < history.eps_dual(k))
-         break;
+        history.s_norm(k) < history.eps_dual(k))
+        break;
     end
-
+    
     alpha = (1 + sqrt(1 + 4*alphaold*alphaold))/2;
     z = z + (alphaold - 1)*(z - zold)/alpha;
     u = u + (alphaold - 1)*(u - uold)/alpha;
