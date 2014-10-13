@@ -68,7 +68,7 @@ if( any(strcmpi(what,'ecosmex')) || any(strcmpi(what,'all')) )
     fprintf('Linking...     ');
     clear ecos
     if( ispc )
-        cmd = sprintf('mex %s amd_1.obj amd_2.obj amd_aat.obj amd_control.obj amd_defaults.obj amd_dump.obj amd_global.obj amd_info.obj amd_order.obj amd_post_tree.obj amd_postorder.obj amd_preprocess.obj amd_valid.obj ldl.obj kkt.obj preproc.obj spla.obj cone.obj ecos.obj ctrlc.obj timer.obj splamm.obj equil.obj ecos_mex.obj -output "ecos"', d);
+        cmd = sprintf('mex %s -lut amd_1.obj amd_2.obj amd_aat.obj amd_control.obj amd_defaults.obj amd_dump.obj amd_global.obj amd_info.obj amd_order.obj amd_post_tree.obj amd_postorder.obj amd_preprocess.obj amd_valid.obj ldl.obj kkt.obj preproc.obj spla.obj cone.obj ecos.obj ctrlc.obj timer.obj splamm.obj equil.obj ecos_mex.obj -output "ecos"', d);
         eval(cmd);    
     elseif( ismac )
         cmd = sprintf('mex %s -lut -lm amd_1.o   amd_2.o   amd_aat.o   amd_control.o   amd_defaults.o   amd_dump.o   amd_global.o   amd_info.o   amd_order.o   amd_post_tree.o   amd_postorder.o   amd_preprocess.o   amd_valid.o     ldl.o   kkt.o   preproc.o   spla.o   cone.o   ecos.o ctrlc.o timer.o   splamm.o   equil.o  ecos_mex.o   -output "ecos"', d);

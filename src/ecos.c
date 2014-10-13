@@ -767,8 +767,7 @@ idxint ECOS_solve(pwork* w)
 #if DEBUG
     char fn[20];
 #endif
-
-    init_ctrlc();
+    
 #if (defined _WIN32 || defined _WIN64 )
 	/* sets width of exponent for floating point numbers to 2 instead of 3 */
 	unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);
@@ -786,6 +785,9 @@ idxint ECOS_solve(pwork* w)
     tic(&tsolve);
 #endif
 	
+    /* initialize ctrl-c support */
+    init_ctrlc();
+
 	/* Initialize solver */
     initcode = init(w);
 	if( initcode == ECOS_FATAL ){
