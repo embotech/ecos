@@ -5,13 +5,13 @@
 #include "spla.h"
 #include "glblopts.h"
 
-// ecos_bb configuration settings
+/* ecos_bb configuration settings */
 #define MI_ABS_EPS (1E-7)
 #define MI_REL_EPS (1E-2)
 #define MI_MAXITER (100)
 #define MI_INT_TOL (1E-5)
 
-// Flags
+/* Flags */
 #define MI_SOLVED_NON_BRANCHABLE (3)
 #define MI_SOLVED_BRANCHABLE (2)
 #define MI_NOT_SOLVED (1)
@@ -30,7 +30,7 @@
 extern "C" {
 #endif
 
-//#define INFINITY (1E999)
+/* #define INFINITY (1E999) */
 
 typedef struct node {
 	char status;
@@ -39,9 +39,9 @@ typedef struct node {
 	idxint split_idx;
 } node;
 
-// Wrapper for mixed integer module
+/* Wrapper for mixed integer module */
 typedef struct ecos_bb_pwork{
-	// Mixed integer data
+	/* Mixed integer data */
 	idxint num_bool_vars;
 	idxint maxiter;
 	
@@ -53,18 +53,18 @@ typedef struct ecos_bb_pwork{
 	pfloat global_U;
 	pfloat global_L;
 
-	// ECOS data
+	/* ECOS data */
 	pwork* ecos_prob;
 
-	// Modified pointers to ecos internals
-	// Use these to edit or reset the h variables
+	/* Modified pointers to ecos internals */
+	/* Use these to edit or reset the h variables */
 	spmat* A;
 	spmat* G;
 	pfloat* c;
 	pfloat* b;
 	pfloat* h;
 
-	// Tmp data
+	/* Tmp data */
 	char* tmp_node_id;
 	idxint iter;
 	
@@ -86,7 +86,7 @@ void updateDataEntry_h(ecos_bb_pwork* w, idxint idx, pfloat value);
 
 void updateDataEntry_c(ecos_bb_pwork* w, idxint idx, pfloat value);
 
-// Calculate the offset into the node_id array
+/* Calculate the offset into the node_id array */
 static inline char* get_node_id(idxint idx, ecos_bb_pwork* prob){
     return &prob->node_ids[prob->num_bool_vars * idx];
 }
@@ -101,10 +101,6 @@ static inline pfloat pfloat_round(pfloat number){
 
 static inline idxint float_eqls(pfloat a, pfloat b){
 	return abs_2(a - b) < MI_INT_TOL;
-}
-
-static inline pfloat min(pfloat a, pfloat b){
-	return a < b ? a : b;
 }
 
 #ifdef __cplusplus

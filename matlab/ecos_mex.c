@@ -459,6 +459,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
             case ECOS_NUMERICS:
                 outvar = mxCreateString("Numerical problems");
                 break;
+            case ECOS_SIGINT:
+                outvar = mxCreateString("Interrupted by user (CTRL-C)");
+                break;
             case ECOS_OUTCONE:
                 outvar = mxCreateString("PROBLEM: Mulitpliers leaving the cone");
                 break;

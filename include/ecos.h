@@ -30,6 +30,9 @@
 #include "timer.h"
 #endif
 
+#if CTRLC > 0
+#include "ctrlc.h"
+#endif
 
 /* ECOS VERSION NUMBER - FORMAT: X.Y.Z --------------------------------- */
 #define ECOS_VERSION ("1.0.5")
@@ -74,8 +77,8 @@
 #define ECOS_MAXIT    (-1)  /* Maximum number of iterations reached      */
 #define ECOS_NUMERICS (-2)  /* Search direction unreliable               */
 #define ECOS_OUTCONE  (-3)  /* s or z got outside the cone, numerics?    */
+#define ECOS_SIGINT   (-4)  /* solver interrupted by a signal/ctrl-c     */
 #define ECOS_FATAL    (-7)  /* Unknown problem in solver                 */
-
 
 #ifdef __cplusplus
 extern "C" {
