@@ -68,7 +68,7 @@ idxint get_branch_var(pfloat* x, idxint num_bool_vars){
  * Updates the solver's lb and ub contraints for integer variables
  * to the bounds specified by the node
  */
-void set_prob(pwork* ecos_prob, char* node_id, idxint num_bool_vars){
+void set_prob(pwork* ecos_prob, char* node_id, idxint num_bool_vars, idxint* bool_idx){
     idxint i;
     //unset_equilibration(ecos_prob);
     for(i=0; i<num_bool_vars; ++i){
@@ -93,7 +93,7 @@ void set_prob(pwork* ecos_prob, char* node_id, idxint num_bool_vars){
 
 void get_bounds(idxint node_idx, ecos_bb_pwork* prob){  
     idxint i, ret_code, branchable;
-    set_prob(prob->ecos_prob, get_node_id(node_idx,prob), prob->num_bool_vars);    
+    set_prob(prob->ecos_prob, get_node_id(node_idx,prob), prob->num_bool_vars, prob->bool_vars_idx);    
     ret_code = ECOS_solve(prob->ecos_prob);
 
     
@@ -103,7 +103,7 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
         branchable = 1;
         // Figure out if x is already an integer solution
         for (i=0; i<prob->num_bool_vars; ++i){
-            prob->tmp_node_id[i] = (char) round( prob->ecos_prob->x[i] );
+            prob->tmp_node_id[i] = (char) pfloat_round( prob->ecos_prob->x[i] );
             branchable &= float_eqls( prob->ecos_prob->x[i] , (pfloat) prob->tmp_node_id[i]);
             //PRINTTEXT("branch: %f %f\n", prob->ecos_prob->x[i] , (pfloat) prob->tmp_node_id[i]);
         }
@@ -112,10 +112,10 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
 
         //PRINTTEXT("Orig Solve: %u\n", ret_code);for (i=0; i<prob->ecos_prob->n; ++i) PRINTTEXT("%f\n", prob->ecos_prob->x[i]);
 
-        if (branchable){ // Round and check feasibility
+        if (branchable){ // pfloat_round and check feasibility
             prob->nodes[node_idx].split_idx = get_branch_var(prob->ecos_prob->x, prob->num_bool_vars);
             prob->nodes[node_idx].status = MI_SOLVED_BRANCHABLE;  
-            set_prob(prob->ecos_prob, prob->tmp_node_id, prob->num_bool_vars);
+            set_prob(prob->ecos_prob, prob->tmp_node_id, prob->num_bool_vars, prob->bool_vars_idx);
             ret_code = ECOS_solve(prob->ecos_prob);
 
             //PRINTTEXT("Guess: %u\n", ret_code);for (i=0; i<prob->ecos_prob->n; ++i) PRINTTEXT("%f\n", prob->ecos_prob->x[i]);
@@ -149,11 +149,7 @@ idxint should_continue(ecos_bb_pwork* prob, idxint curr_node_idx){
     return (prob->global_U - prob->global_L) > MI_ABS_EPS 
         && abs_2(prob->global_U / prob->global_L - 1.0) > MI_REL_EPS
         && curr_node_idx >= 0
-        && prob->iter < MI_MAXITER;
-}
-
-void print_progress(ecos_bb_pwork* prob){
-    PRINTTEXT("%u \t%.2f \t\t%.2f \t\t%.2f\n", (int)prob->iter, prob->global_L, prob->global_U, prob->global_U-prob->global_L);
+        && prob->iter < prob->maxiter;
 }
 
 int get_ret_code(ecos_bb_pwork* prob){
@@ -166,24 +162,17 @@ int get_ret_code(ecos_bb_pwork* prob){
     }
 }
 
-
-void print_node(ecos_bb_pwork* prob, idxint i){
-    int j;
-    PRINTTEXT("Node info: %u : %f : %f : %u\nPartial id:", prob->nodes[i].status, 
-        prob->nodes[i].L, prob->nodes[i].U, (int)prob->nodes[i].split_idx);
-    for (j=0; j<prob->num_bool_vars; ++j) PRINTTEXT("%i,", get_node_id(i,prob)[j]);
-    PRINTTEXT("\n");
-}
-
 void initialize_root(ecos_bb_pwork* prob){
     idxint i;
     prob->nodes[0].status = MI_NOT_SOLVED;
     prob->nodes[0].L = -INFINITY;
     prob->nodes[0].U =  INFINITY;
+    prob->global_L = -INFINITY;
+    prob->global_U = INFINITY;
     for (i=0; i < prob->num_bool_vars; ++i){ prob->node_ids[i] = MI_STAR; }
 }
 
-int ecos_bb_solve(ecos_bb_pwork* prob){
+idxint ecos_bb_solve(ecos_bb_pwork* prob){
     
     prob->iter = 0;
     
@@ -197,10 +186,16 @@ int ecos_bb_solve(ecos_bb_pwork* prob){
     prob->global_L = prob->nodes[curr_node_idx].L;
     prob->global_U = prob->nodes[curr_node_idx].U;
 
+#if PRINTLEVEL > 0
     PRINTTEXT("Iter\tLower Bound\tUpper Bound\tGap\n");
     PRINTTEXT("================================================\n");
+#endif
+
     while ( should_continue(prob, curr_node_idx) ){
+
+#if PRINTLEVEL > 0
         print_progress(prob);
+#endif
 
         ++(prob->iter);
 
@@ -223,8 +218,34 @@ int ecos_bb_solve(ecos_bb_pwork* prob){
 
         curr_node_idx = get_next_node(prob);        
     }
+
+#if PRINTLEVEL > 0
     print_progress(prob);
+#endif
+
     return get_ret_code(prob);
 }
 
+void updateDataEntry_h(ecos_bb_pwork* w, idxint idx, pfloat value){
+    ecos_updateDataEntry_h(w->ecos_prob, idx + (2*w->num_bool_vars), value);
+}
 
+void updateDataEntry_c(ecos_bb_pwork* w, idxint idx, pfloat value){
+    ecos_updateDataEntry_c(w->ecos_prob, idx , value);
+}
+
+// Print utility functions
+#if PRINTLEVEL > 0
+void print_progress(ecos_bb_pwork* prob){
+    PRINTTEXT("%u \t%.2f \t\t%.2f \t\t%.2f\n", (int)prob->iter, prob->global_L, prob->global_U, prob->global_U-prob->global_L);
+}
+
+
+void print_node(ecos_bb_pwork* prob, idxint i){
+    int j;
+    PRINTTEXT("Node info: %u : %f : %f : %u\nPartial id:", prob->nodes[i].status, 
+        prob->nodes[i].L, prob->nodes[i].U, (int)prob->nodes[i].split_idx);
+    for (j=0; j<prob->num_bool_vars; ++j) PRINTTEXT("%i,", get_node_id(i,prob)[j]);
+    PRINTTEXT("\n");
+}
+#endif

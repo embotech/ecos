@@ -21,3 +21,9 @@
 # Temp files cretated by text editors
 *~
 .DS_Store
+
+ecostester
+runecos
+python/build
+python/dist
+python/*.pyc

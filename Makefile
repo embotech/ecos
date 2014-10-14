@@ -2,7 +2,7 @@
 # Configuration of make process in ecos.mk
 
 include ecos.mk
-C = $(CC) $(CFLAGS) -DCTRLC=1 -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config
+C = $(CC) $(CFLAGS) -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config
 TEST_INCLUDES = -Itest -Itest/generated_tests
 
 # Compile all C code, including the C-callable routine
@@ -31,6 +31,9 @@ ecos: $(ECOS_OBJS)
 .PHONY: ecos_bb
 ecos_bb: ldl amd ecos ecos_bb/bb_test.c
 	$(C) -o ecos_bb_test ecos_bb/bb_test.c libecos.a $(LIBS)
+
+ecos_bb_preproc.o: ecos_bb/ecos_bb_preproc.c
+	$(C) -c ecos_bb/ecos_bb_preproc.c -o ecos_bb_preproc.o
 
 ecos.o: src/ecos.c include/ecos.h
 	$(C) -c src/ecos.c -o ecos.o
@@ -92,6 +95,12 @@ sum_sq.o: test/generated_tests/sum_sq/sum_sq.c test/generated_tests/sum_sq/sum_s
 
 inv_pos.o: test/generated_tests/inv_pos/inv_pos.c test/generated_tests/inv_pos/inv_pos.h
 	$(C) $(TEST_INCLUDES) -c test/generated_tests/inv_pos/inv_pos.c -o $@
+
+sqrt.o: test/generated_tests/sqrt/sqrt.c test/generated_tests/sqrt/sqrt.h
+	$(C) $(TEST_INCLUDES) -c test/generated_tests/sqrt/sqrt.c -o $@
+
+ecos_bb_test: ecos_bb
+	$(C) -L. -o ecos_bb_test ecos_bb/bb_test.c -lecos_bb $(LIBS)
 
 # remove object files, but keep the compiled programs and library archives
 .PHONY: clean
