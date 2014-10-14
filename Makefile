@@ -2,7 +2,7 @@
 # Configuration of make process in ecos.mk
 
 include ecos.mk
-C = $(CC) $(CFLAGS) -DCTRLC=1 -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config
+C = $(CC) $(CFLAGS) -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config
 TEST_INCLUDES = -Itest -Itest/generated_tests
 
 # Compile all C code, including the C-callable routine

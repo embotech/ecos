@@ -25,7 +25,7 @@
 
 #include "glblopts.h"
 
-//#if PROFILING > 0
+#if PROFILING > 0
 
 #if (defined _WIN32 || defined _WIN64 || defined _WINDLL )
 
@@ -68,7 +68,7 @@ typedef struct timer{
 void tic(timer* t);
 pfloat toc(timer* t);
 
-//#endif /* END IF PROFILING > 0 */
+#endif /* END IF PROFILING > 0 */
 
 #endif
 /* END IFDEF __TIMER_H__ */
