@@ -27,6 +27,13 @@
 
 /* NEEDED FOR SQRT ----------------------------------------------------- */
 #include <math.h>
+    
+#if (defined _WIN32 || defined _WIN64 )
+/* include stdio.h for _set_output_format */
+#include <stdio.h>
+#endif
+
+
 
 /* Some internal defines */
 #define ECOS_NOT_CONVERGED_YET (-87)  /* indicates no convergence yet    */
