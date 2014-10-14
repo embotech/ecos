@@ -28,7 +28,6 @@
 /* NEEDED FOR SQRT ----------------------------------------------------- */
 #include <math.h>
 
-
 /* Some internal defines */
 #define ECOS_NOT_CONVERGED_YET (-87)  /* indicates no convergence yet    */
 
@@ -763,12 +762,12 @@ idxint ECOS_solve(pwork* w)
 {
 	idxint i, initcode, KKT_FACTOR_RETURN_CODE;
 	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap, pres_prev;
-	idxint exitcode = ECOS_FATAL;
+	idxint exitcode = ECOS_FATAL, interrupted;
     
 #if DEBUG
     char fn[20];
 #endif
-
+    
 #if (defined _WIN32 || defined _WIN64 )
 	/* sets width of exponent for floating point numbers to 2 instead of 3 */
 	unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);
@@ -786,6 +785,9 @@ idxint ECOS_solve(pwork* w)
     tic(&tsolve);
 #endif
 	
+    /* initialize ctrl-c support */
+    init_ctrlc();
+
 	/* Initialize solver */
     initcode = init(w);
 	if( initcode == ECOS_FATAL ){
@@ -798,7 +800,7 @@ idxint ECOS_solve(pwork* w)
     
     
 	/* MAIN INTERIOR POINT LOOP ---------------------------------------------------------------------- */
-	for( w->info->iter = 0; w->info->iter <= w->stgs->maxit; w->info->iter++ ){
+	for( w->info->iter = 0; w->info->iter <= w->stgs->maxit ; w->info->iter++ ){
         
 		/* Compute residuals */
 		computeResiduals(w);
@@ -845,6 +847,7 @@ idxint ECOS_solve(pwork* w)
 
 		/* Check termination criteria to full precision and exit if necessary */
 		exitcode = checkExitConditions( w, 0 );
+        interrupted = check_ctrlc();
         if( exitcode == ECOS_NOT_CONVERGED_YET ){
             
             /*
@@ -873,17 +876,22 @@ idxint ECOS_solve(pwork* w)
                 break;
             }
             /* MAXIT reached? */
-            else if( w->info->iter == w->stgs->maxit ){
-                
+            else if( interrupted || w->info->iter == w->stgs->maxit ){
+
+#if PRINTLEVEL > 0                
+                const char *what = interrupted ? "SIGINT intercepted" : "Maximum number of iterations reached";
+#endif                
                 /* Determine whether current iterate is better than what we had so far */
                 if( compareStatistics( w->info, w->best_info) ){
 #if PRINTLEVEL > 0
-                    if( w->stgs->verbose ) PRINTTEXT("Maximum number of iterations reached, stopping.\n");
+                    if( w->stgs->verbose ) 
+                        PRINTTEXT("%s, stopping.\n",what);
 #endif
                 } else
                 {
 #if PRINTLEVEL > 0
-                    if( w->stgs->verbose ) PRINTTEXT("Maximum number of iterations reached, recovering best iterate (%d) and stopping.\n", (int)w->best_info->iter);
+                    if( w->stgs->verbose ) 
+                        PRINTTEXT("%s, recovering best iterate (%d) and stopping.\n", what, (int)w->best_info->iter);
 #endif
                     restoreBestIterate( w );
                 }
@@ -891,12 +899,16 @@ idxint ECOS_solve(pwork* w)
                 /* Determine whether we have reached reduced precision */
                 exitcode = checkExitConditions( w, ECOS_INACC_OFFSET );
                 if( exitcode == ECOS_NOT_CONVERGED_YET ){
-                    exitcode = ECOS_MAXIT;
+                    exitcode = interrupted ? ECOS_SIGINT : ECOS_MAXIT;
 #if PRINTLEVEL > 0
-                    if( w->stgs->verbose ) PRINTTEXT("\nRAN OUT OF ITERATIONS (reached feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", MAX(w->info->dres, w->info->pres), w->info->relgap, w->info->gap);
+                    if( w->stgs->verbose ) {
+                        const char* what = interrupted ? "INTERRUPTED" : "RAN OUT OF ITERATIONS";
+                        PRINTTEXT("\n%s (reached feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", what, MAX(w->info->dres, w->info->pres), w->info->relgap, w->info->gap);
+                    }
 #endif
                 }
                 break;
+
             }
         } else {
             
@@ -1077,6 +1089,7 @@ idxint ECOS_solve(pwork* w)
 	if( w->stgs->verbose ) PRINTTEXT("\n\n");
 #endif
 
+    remove_ctrlc();
 	return exitcode;
 }
 

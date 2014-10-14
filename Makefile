@@ -2,7 +2,7 @@
 # Configuration of make process in ecos.mk
 
 include ecos.mk
-C = $(CC) $(CFLAGS) -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config
+C = $(CC) $(CFLAGS) -DCTRLC=1 -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config
 TEST_INCLUDES = -Itest -Itest/generated_tests
 
 # Compile all C code, including the C-callable routine
@@ -22,8 +22,7 @@ amd:
 	$(AR) -x external/amd/libamd.a
 
 # build ECOS
-ECOS_OBJS = ecos.o kkt.o cone.o spla.o timer.o preproc.o splamm.o equil.o
-
+ECOS_OBJS = ecos.o kkt.o cone.o spla.o ctrlc.o timer.o preproc.o splamm.o equil.o
 .PHONY: ecos
 ecos: $(ECOS_OBJS)
 	$(ARCHIVE) libecos.a $(ECOS_OBJS) amd_*.o ldl*.o
@@ -53,6 +52,9 @@ spla.o: src/spla.c include/spla.h
 
 splamm.o: src/splamm.c include/splamm.h
 	$(C) -c src/splamm.c -o splamm.o
+
+ctrlc.o: src/ctrlc.c include/ctrlc.h
+	$(C) -c src/ctrlc.c -o ctrlc.o
 
 timer.o: src/timer.c include/timer.h
 	$(C) -c src/timer.c -o timer.o
