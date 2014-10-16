@@ -46,9 +46,11 @@
 #ifdef MATLAB_MEX_FILE
 #define MALLOC mxMalloc
 #define FREE mxFree
+#define CALLOC mxCalloc
 #else 
 #define MALLOC malloc
 #define FREE free
+#define CALLOC calloc
 #endif
 
 
