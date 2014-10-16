@@ -325,10 +325,12 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
     /* Switch between ecos_bb and ecos */
     if (opts_bool_idx != NULL){
-        bool_vars_idx = (idxint *)mxMalloc(num_bool_vars*sizeof(idxint));
-        for( i=0; i < num_bool_vars; ++i){ bool_vars_idx[i] = (idxint) (mxGetPr(opts_bool_idx))[i]; }
-
+        /* Shift the boolean indexes from matlab style (start at 1) to C style (start at 0) */
+        bool_vars_idx = (idxint *)mxMalloc(num_bool_vars*sizeof(idxint));        
+        for( i=0; i < num_bool_vars; ++i){ bool_vars_idx[i] = (idxint) ((mxGetPr(opts_bool_idx))[i] - 1); mexPrintf("\t%u : %u\n",i, bool_vars_idx[i]);}
+        
         bb_pwork = ecos_bb_setup(n, m, p, l, ncones, qint, Gpr, Gjc, Gir, Apr, Ajc, Air, cpr, hpr, bpr, num_bool_vars, bool_vars_idx);
+        
         mywork = bb_pwork->ecos_prob;
 
     }else{
