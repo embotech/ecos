@@ -1,47 +1,71 @@
-% Standard form QP example
-function qpdriver(n, m)
-fprintf('variables %g equality %g\n', n, m)
+% Driver for quadratic minimization with bounds and sparsity
+function qpdriver(P, q, r, lb, ub, lambda, beta, alpha, print)
 
-randn('state', 0);
-rand('state', 0);
+n = size(q, 1);
+     
+lambdaL1 = beta*lambda;
+lambdaL2 = (1 - beta)*lambda;
 
-% generate a well-conditioned positive definite matrix
-% (for faster convergence)
-P = rand(n, n);
-P = P'*P;
-P = (P + P')/2;
-%P = P + P';
-%[V D] = eig(P);
-%P = V*diag(1+rand(n,1))*V';
+rho = computeRho(P);
 
-q = randn(n,1);
-r = randn(1);
+%L2 regularization
 
-l = randn(n,1);
-u = randn(n,1);
-lb = min(l,u);
-ub = max(l,u);
+if lambdaL2 > 0
+  P = P + lambdaL2*eye(n);
+  q = q + lambdaL2*ones(n, 1);
+end
+
+fprintf('variables %g lambdaL1 %g lambdaL2 %g beta %g alpha %g rho %g\n', n, lambdaL1, lambdaL2, beta, alpha, rho);
+
+if lambdaL1 > 0
+  Pt = [P zeros(n,n); zeros(n, 2*n)];
+  qt = [q;lambdaL1*ones(n,1)];
+  I  = eye(n);
+  Aeq = [I -I;-I -I];
+  beq = zeros(2*n, 1);
+end
 
 %Add MOSEK path
 addpath /home/debasish/mosek/7/toolbox/r2013a/
 tic;
-mosekx = quadprog(P, q, [], [], [], [], lb, ub);
+if lambdaL1 > 0
+   mosekx = quadprog(Pt, qt, Aeq, beq, [], [], [], []);
+else
+   mosekx = quadprog(P, q, [], [], [], [], lb, ub);
+end
 mosekTime = toc;
 fprintf('mosek done\n');
+mosekx = mosekx(1:n);
 
 %Add ECOS path
 addpath /home/debasish/ecos/matlab
-[ecosx, ~, ~, ~, ~, ecosTime] = ecosqp(P,q,[],[],[],[],lb,ub, ecosoptimset('verbose', 0, 'feastol', 1e-8));
+
+if lambdaL1 > 0
+  [ecosx, ~, ~, ~, ~, ecosTime] = ecosqp(Pt, qt, Aeq, beq, [], [], [], [], ecosoptimset('verbose', 0, 'feastol', 1e-8));
+else 
+  [ecosx, ~, ~, ~, ~, ecosTime] = ecosqp(P,q,[],[],[],[],lb,ub, ecosoptimset('verbose', 0, 'feastol', 1e-8));
+end
+fprintf('ecos done\n');
+ecosx = ecosx(1:n);
 
 tic;
-[x history] = qpproximal(P, q, r, lb, ub, 1.0, 1.0);
+[x history admmIters] = qpproximal(P, q, r, [], [], lb, ub, rho, alpha, lambdaL1);
 admmTime = toc;
 
 tic;
-[xfast history] = qpaccelerated(P,q,r,lb,ub,1.0,1.0);
+[xfast history accIters] = qpaccelerated(P, q, r, [], [], lb, ub, rho, lambdaL1);
 admmFast = toc;
 
-fprintf('mosek-ecos norm %g\n', norm(mosekx - ecosx));
-fprintf('mosek-admm norm %g\n', norm(mosekx - x));
-fprintf('mosek-admmfast norm %g\n', norm(mosekx - xfast));
-fprintf('mosek %g ecos %g admm %g admmfast %g\n', mosekTime, ecosTime, admmTime, admmFast);
+if print
+fprintf('Mosek solution\n');
+mosekx
+fprintf('Proximal solution\n');
+x
+end
+
+fprintf('mosek-ecos norm %g\n', norm(mosekx - ecosx, Inf));
+fprintf('mosek-admm norm %g\n', norm(mosekx - x, Inf));
+fprintf('mosek-admmfast norm %g\n', norm(mosekx - xfast, Inf));
+fprintf('mosek %g ecos %g admm %g iters %g admmfast %g accIters %g\n', mosekTime, ecosTime, admmTime, admmIters, admmFast, accIters);
+
+end

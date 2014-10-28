@@ -1,4 +1,4 @@
-function [z, history] = qpaccelerated(P, q, r, lb, ub, rho)
+function [z, history, admmIters] = qpaccelerated(P, q, r, Aeq, beq, lb, ub, rho, lambdaSparse)
 
 % quadprog  Solve standard form box-constrained QP via ADMM
 %
@@ -26,10 +26,11 @@ function [z, history] = qpaccelerated(P, q, r, lb, ub, rho)
 % http://www.stanford.edu/~boyd/papers/distr_opt_stat_learning_admm.html
 %
     
-QUIET    = 0;
-MAX_ITER = 1000;
+QUIET    = 1;
+MAX_ITER = max(400, 20*size(P,1));
 ABSTOL   = 1e-8;
 RELTOL   = 1e-4;
+
 alpha    = 1.0;
 
 n = size(P,1);
@@ -38,25 +39,43 @@ x = zeros(n,1);
 z = zeros(n,1);
 u = zeros(n,1);
 
+admmIters = 0;
+    
 if ~QUIET
     fprintf('%3s\t%10s\t%10s\t%10s\t%10s\t%10s\n', 'iter', ...
       'r norm', 'eps pri', 's norm', 'eps dual', 'objective');
 end
 
-for k = 1:MAX_ITER         
-    if k > 1
-        x = R \ (R' \ (rho*(z - u) - q));
+equalities = size(Aeq, 1);
+
+if ~QUIET
+    fprintf('QpAccelerated gram %d equalities %d lambda %g\n', n, equalities, lambdaSparse);
+end
+
+if equalities > 0
+   [L, U] = lu([P + rho*eye(n), Aeq'; Aeq, zeros(equalities)]);
+else
+   R = chol(P + rho*eye(n));
+end
+
+for k = 1:MAX_ITER
+    if equalities > 0
+        xlambda = U \ (L \ [rho*(z - u) - q; beq]);
+        x = xlambda(1:n);
     else
-        R = chol(P + rho*eye(n));
         x = R \ (R' \ (rho*(z - u) - q));
     end
-    
+               
     % z-update with relaxation
     zold = z;
     uold = u;
     alphaold = alpha;
 
-    z = min(ub, max(lb, x + u));
+    if lambdaSparse > 0
+        z = shrinkage(x + u, lambdaSparse/rho);
+    else 
+        z = min(ub, max(lb, x + u));
+    end
     
     % u-update
     u = u + (x - z);
@@ -84,9 +103,6 @@ for k = 1:MAX_ITER
     alpha = (1 + sqrt(1 + 4*alphaold*alphaold))/2;
     z = z + (alphaold - 1)*(z - zold)/alpha;
     u = u + (alphaold - 1)*(u - uold)/alpha;
+    admmIters = admmIters + 1;
 end    
-end
-
-function obj = objective(P, q, r, x)
-    obj = 0.5*x'*P*x + q'*x + r;
 end

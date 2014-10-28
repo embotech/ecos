@@ -1,4 +1,4 @@
-function pdcotestQP( m,n )
+function pdcotestQP(m, n, alpha)
 % m=50;  n=100;  pdcotestQP( m,n );
 % Generates a random m by n QP problem
 %   min x'Hx + c'x  st. Ax = b, bl < x < bu,
@@ -11,9 +11,7 @@ function pdcotestQP( m,n )
 % 16 Sep 2003: "c" is now an explicit vector.
 %              It may be passed to pdco instead of function 'linobj'.
 %-----------------------------------------------------------------------
-
-  %[A,b,bl,bu,c,d1,d2,H] = toydata( m,n ); % Private function below
-  [A,b,bl,bu,c,d1,d2,H] = toydatadense(m, n);
+  [A,b,bl,bu,c,d1,d2,H] = toydatatest(m,n,1); % Private function below
   %Add MOSEK path
   addpath /home/debasish/mosek/7/toolbox/r2013a/
   tic;
@@ -21,8 +19,25 @@ function pdcotestQP( m,n )
   mosekTime = toc;
   	
   %Add ECOS path
-  addpath /home/debasish/cvxoptimizer/matlab
+  addpath /home/debasish/ecos/matlab
   [ecosx, ~, ~, ~, ~, ecosTime] = ecosqp(H,c,[],[],A,b,bl,bu,ecosoptimset('verbose', 0, 'feastol', 1e-8));
+
+  %Prepare gram matrix for equality constraint
+  
+  %Add ADMM path
+  addpath /home/debasish/ecos/matlab/admm
+  lambdaH = [H, A'; A, zeros(m)];
+
+  rho = computeRho(lambdaH);
+  fprintf('rho %g alpha %g\n', rho, alpha);
+  
+  tic;
+  [xadmm history admmIters] = qpproximal(H, c, randn(1), A, b, bl, bu, rho, alpha, 0.0);
+  admmTime = toc;
+  
+  tic;
+  [xacc history accIters] = qpaccelerated(H, c, randn(1), A, b, bl, bu, rho, 0.0);
+  accTime = toc;
   
 % D  = sum(A,1);   D(find(D==0)) = 1;
 % D  = sparse( 1:n, 1:n, 1./D, n, n );
@@ -54,18 +69,19 @@ function pdcotestQP( m,n )
   [x,y,z,inform,PDitns,CGitns,time] = ...
     pdco(objectivefunction,A,b,bl,bu,d1,d2,options,x0,y0,z0,xsize,zsize );
 
-  fprintf('QP time %g\n', time)
-  fprintf('mosek-ecos norm %g\n', norm(mosekx - ecosx))
-  fprintf('mosek-x norm %g\n' , norm(mosekx - x))
-  fprintf('mosek %g ecos %g pdco %g\n', mosekTime, ecosTime, time)
+  fprintf('mosek-ecos norm %g\n', norm(mosekx - ecosx, Inf));
+  fprintf('mosek-pdco norm %g\n', norm(mosekx - x, Inf));
+  fprintf('mosek-admm norm %g iters %g\n', norm(mosekx - xadmm, Inf), admmIters);
+  fprintf('mosek-accadmm norm %g iters %g\n', norm(mosekx - xacc, Inf), accIters);
+  fprintf('mosek %g ecos %g pdco %g admm %g admmacc %g\n', mosekTime, ecosTime, time, admmTime, accTime);
+  
   %disp('Waiting in pdcotestQP')
   %keyboard                   % Allow review of x,y,z, etc.
 %-----------------------------------------------------------------------
 % End function pdcotestQP
 %-----------------------------------------------------------------------
-function [A,b,bl,bu,c,d1,d2,H] = toydatatest(m, n)                               
 
-function [A,b,bl,bu,c,d1,d2,H] = toydata( m,n )
+function [A,b,bl,bu,c,d1,d2,H] = toydatatest(m,n, dense)
 
 %        [A,b,bl,bu,c,d1,d2] = toydata( m,n );
 %        defines an m by n matrix A, rhs vector b, and cost vector c
@@ -73,12 +89,16 @@ function [A,b,bl,bu,c,d1,d2,H] = toydata( m,n )
 
 %-----------------------------------------------------------------------
 % 12 Feb 2001: First version of toydata.m.
-% 30 Sep 2002: pdsco version modified for pdco.
+% 30 Sep 2002: pdco version modified for pdco.
 % 16 Sep 2003: c now generated.  It may be passed to pdco.m.
 % 23 Sep 2003: Simplified a bit to match pdcotestLS.m.
 %-----------------------------------------------------------------------
+  if dense > 0
+     fprintf('Generating Dense Hessian and Inequalities\n');
+  end
+  
+  %rand('state',10);
 
-  rand('state',10);
   density = 0.1;
   rc      = 1e-1;
 
@@ -87,7 +107,12 @@ function [A,b,bl,bu,c,d1,d2,H] = toydata( m,n )
   zn      = zeros(n,1);
   bigbnd  = 1e+30;
 
-  A       = sprand(m,n,density,rc);
+  if dense > 0
+      A = rand(m,n);
+  else                                 
+      A = sprand(m,n,density,rc);
+  end
+  
   x       = en;
 
   gamma   = 1e-3;       % Primal regularization
@@ -103,7 +128,13 @@ function [A,b,bl,bu,c,d1,d2,H] = toydata( m,n )
   bu      = 10*en;      % x < 10
 
   density = 0.05;
-  H       = sprand(n,n,density,rc);
+
+  if dense > 0
+      H = rand(n, n);                                
+  else                              
+      H = sprand(n,n,density,rc);
+  end
+  
   H       = H'*H;
   H       = (H+H')/2;
 % bl(1)   = - bigbnd;   % Test "free variable" (no bounds)
@@ -112,27 +143,3 @@ function [A,b,bl,bu,c,d1,d2,H] = toydata( m,n )
 %-----------------------------------------------------------------------
 % End private function toydata
 %-----------------------------------------------------------------------
-
-function [A,b,bl,bu,c,d1,d2,H] = toydatadense(m,n)
-      em      = ones(m,1);
-en      = ones(n,1);
-zn      = zeros(n,1);
-
-A       = rand(m,n);
-x       = en;
-
-gamma   = 1e-3;       % Primal regularization
-delta   = 1e-3;       % 1e-3 or 1e-4 for LP;  1 for Least squares.
-
-d1      = gamma;      % Can be scalar if D1 = d1*I.
-                                                  d2      = delta*em;
-
-b       = A*x;
-c       = rand(n,1);
-
-bl      = zn;         % x > 0
-bu      = 10*en;      % x < 10
-
-H       = rand(n,n);
-  H       = H'*H;
-  H       = (H+H')/2;

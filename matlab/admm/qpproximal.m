@@ -1,4 +1,4 @@
-function [z, history] = qpproximal(P, q, r, lb, ub, rho, alpha)
+function [z, history, admmIters] = qpproximal(P, q, r, Aeq, beq, lb, ub, rho, alpha, lambdaSparse)
 
 % quadprog  Solve standard form box-constrained QP via ADMM
 %
@@ -26,36 +26,53 @@ function [z, history] = qpproximal(P, q, r, lb, ub, rho, alpha)
 % http://www.stanford.edu/~boyd/papers/distr_opt_stat_learning_admm.html
 %
     
-QUIET    = 0;
-MAX_ITER = 1000;
+QUIET    = 1;
+
+MAX_ITER = max(400, 20*size(P,1));
 ABSTOL   = 1e-8;
 RELTOL   = 1e-4;
 
 n = size(P,1);
+equalities = size(Aeq, 1);
 
 x = zeros(n,1);
 z = zeros(n,1);
 u = zeros(n,1);
+
+admmIters = 0;
 
 if ~QUIET
     fprintf('%3s\t%10s\t%10s\t%10s\t%10s\t%10s\n', 'iter', ...
       'r norm', 'eps pri', 's norm', 'eps dual', 'objective');
 end
 
-for k = 1:MAX_ITER        
-    if k > 1
-        x = R \ (R' \ (rho*(z - u) - q));
+if equalities > 0
+   H = [P + rho*eye(n), Aeq'; Aeq, zeros(equalities)];
+   [L, U] = lu(H);
+else
+   R = chol(P + rho*eye(n));
+end
+
+for k = 1:MAX_ITER
+    if equalities > 0
+        scale = [rho*(z - u) - q;beq];
+        xlambda = U \ (L \ scale);
+        x = xlambda(1:n);
     else
-        R = chol(P + rho*eye(n));
         x = R \ (R' \ (rho*(z - u) - q));
-    end
-    
+    end          
+
     % z-update with relaxation
     zold = z;
     
     x_hat = alpha*x +(1-alpha)*zold;
-    z = min(ub, max(lb, x_hat + u));
     
+    if lambdaSparse > 0
+        z = shrinkage(x_hat + u, lambdaSparse/rho);
+    else 
+        z = min(ub, max(lb, x_hat + u));
+    end
+               
     % u-update
     u = u + (x_hat - z);
     
@@ -67,7 +84,7 @@ for k = 1:MAX_ITER
     
     history.eps_pri(k) = sqrt(n)*ABSTOL + RELTOL*max(norm(x), norm(-z));
     history.eps_dual(k)= sqrt(n)*ABSTOL + RELTOL*norm(rho*u);
-
+    
     if ~QUIET
         fprintf('%3d\t%10.8f\t%10.8f\t%10.8f\t%10.8f\t%10.8f\n', k, ...
             history.r_norm(k), history.eps_pri(k), ...
@@ -78,9 +95,7 @@ for k = 1:MAX_ITER
        history.s_norm(k) < history.eps_dual(k))
         break;
     end
+    
+    admmIters = admmIters + 1;
 end    
-end
-
-function obj = objective(P, q, r, x)
-    obj = 0.5*x'*P*x + q'*x + r;
 end
