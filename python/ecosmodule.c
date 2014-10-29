@@ -208,7 +208,7 @@ static PyObject *csolve(PyObject* self, PyObject *args, PyObject *kwargs)
       "Ax", "Ai", "Ap", "b",
       "verbose", "feastol", "abstol", "reltol",
       "feastol_inacc", "abstol_inacc", "reltol_inacc",
-      "max_iters", "bool_idx", "num_bool", NULL};
+      "max_iters", "integer_vars_idx", "num_bool", NULL};
   int intType, doubleType;
 
   /* parse the arguments and ensure they are the correct type */

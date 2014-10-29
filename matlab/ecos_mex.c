@@ -153,7 +153,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     {
       opts = nrhs==5 ? prhs[4] : prhs[6]; 
       
-      opts_bool_idx = opts ? mxGetField(opts, 0, "bool_vars_idx") : 0;
+      opts_bool_idx = opts ? mxGetField(opts, 0, "integer_vars_idx") : 0;
       if (opts_bool_idx != NULL){
         opts_bool_idx_size = mxGetDimensions(opts_bool_idx);
         /* Retrieve the number of boolean vars */
