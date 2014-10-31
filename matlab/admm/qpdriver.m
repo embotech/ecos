@@ -12,7 +12,6 @@ rho = computeRho(P);
 
 if lambdaL2 > 0
   P = P + lambdaL2*eye(n);
-  q = q + lambdaL2*ones(n, 1);
 end
 
 fprintf('variables %g lambdaL1 %g lambdaL2 %g beta %g alpha %g rho %g\n', n, lambdaL1, lambdaL2, beta, alpha, rho);
