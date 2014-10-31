@@ -142,11 +142,16 @@ minimize 0.5*x'*H*x + f'*x
 subject to Ax = b, lb <= x <= ub
 ```
 
-We did Matlab comparisons as MOSEK, ECOS and PDCO can be called from Matlab. ADMM based proximal algorithm and accelerated ADMM algorithm using Nesterov's idea are also implemented in Matlab. MOSEK and ECOS calls mex file and therefore should be more efficient implementations. The runtimes are as reported by tic/toc
+We did Matlab comparisons as MOSEK, ECOS and PDCO can be called from Matlab. ADMM based proximal algorithm 
+and accelerated ADMM algorithm using Nesterov's idea are also implemented in Matlab. MOSEK and ECOS calls mex file 
+and therefore should be more efficient implementations. The runtimes are as reported by tic/toc.
 
 ### Formulation1 comparisons
 
-The driver script is in matlab/admm/qprandom.m. The input to the script are rank, lambda, beta and alpha for ADMM over-relaxation. Badly conditioned gram matrices are generated in matlab through rand('state', 10). We run with lambda=0 for running Formulation1. The last line indicate the runtime and iterations for ADMM solvers compared to mosek and ecos. mosek solution is considered golden.
+The driver script is in matlab/admm/qprandom.m. The input to the script are rank, lambda, beta and alpha for ADMM 
+over-relaxation. Badly conditioned gram matrices are generated in matlab through rand('state', 10). We run with 
+lambda=0 for running Formulation1. The last line indicate the runtime and iterations for ADMM solvers compared to 
+mosek and ecos. mosek solution is considered golden.
 
 Rank=100
 
@@ -154,12 +159,10 @@ qprandom(100, 0.0, 0.99, 1.0, true)
 
 eigenMinApprox 0.000141167 eigenMaxApprox 2822.39 rho 53.1261 eigenMin 0.000141167 eigenMax 2481.31
 variables 100 lambdaL1 0 lambdaL2 0 beta 0.99 alpha 1 rho 53.1261
-mosek done
-ECOSQP: Time for Cholesky: 0.00 seconds
-ecos done
 mosek-ecos norm 0.000197934
 mosek-admm norm 9.26015e-06
 mosek-admmfast norm 2.0384e-08
+
 mosek 0.043701 ecos 0.0351161 admm 0.07394 iters 322 admmfast 0.22126 accIters 1084
 
 rank=500
@@ -168,9 +171,6 @@ qprandom(500, 0.0, 0.99, 1.0, true)
 
 eigenMinApprox 0.000135883 eigenMaxApprox 66971.1 rho 258.788 eigenMin 0.000135883 eigenMax 62618.1
 variables 500 lambdaL1 0 lambdaL2 0 beta 0.99 alpha 1 rho 258.788
-mosek done
-ECOSQP: Time for Cholesky: 0.01 seconds
-ecos done
 mosek-ecos norm 0.0016086
 mosek-admm norm 3.34802e-05
 mosek-admmfast norm 3.34802e-05
@@ -182,9 +182,6 @@ qprandom(1000, 0.0, 0.99, 1.0, true)
 
 eigenMinApprox 8.77638e-07 eigenMaxApprox 264517 rho 514.312 eigenMin 8.77638e-07 eigenMax 250499
 variables 1000 lambdaL1 0 lambdaL2 0 beta 0.99 alpha 1 rho 514.312
-mosek done
-ECOSQP: Time for Cholesky: 0.03 seconds
-ecos done
 mosek-ecos norm 4.57589e-05
 mosek-admm norm 3.16294e-05
 mosek-admmfast norm 3.16294e-05
