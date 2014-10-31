@@ -1,5 +1,5 @@
 Java/Scala drivers to Second Order Cone Programming (ECOS) Solver and Matlab comparisons of 
-ECOS with Proximal Algorithms (ADMM) and Interior Point Methods (MOSEK)
+ECOS with Proximal Algorithms (ADMM) and Interior Point Methods (MOSEK, PDCO)
 
 ====
 LICENSE
