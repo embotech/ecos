@@ -153,7 +153,7 @@ over-relaxation. Badly conditioned gram matrices are generated in matlab through
 lambda=0 for running Formulation1. The last line indicate the runtime and iterations for ADMM solvers compared to 
 mosek and ecos. mosek solution is considered golden.
 
-Rank=100
+###Rank=100
 
 qprandom(100, 0.0, 0.99, 1.0, true)
 
@@ -167,7 +167,7 @@ mosek-admmfast norm 2.0384e-08
 
 mosek 0.043701 ecos 0.0351161 admm 0.07394 iters 322 admmfast 0.22126 accIters 1084
 
-rank=500
+###Rank=500
 
 qprandom(500, 0.0, 0.99, 1.0, true)
 
@@ -181,7 +181,7 @@ mosek-admmfast norm 3.34802e-05
 
 mosek 0.398574 ecos 1.29301 admm 0.264346 iters 400 admmfast 0.413664 accIters 635
 
-rank=1000
+###Rank=1000
 
 qprandom(1000, 0.0, 0.99, 1.0, true)
 
@@ -205,7 +205,7 @@ The driver script is in matlab/admm/qprandom.m. The input to the script are rank
 Badly conditioned gram matrices are generated in matlab through rand('state', 10). We run with non-zero lambda for running Formulation1. 
 L1 regularization is computed as lambda*beta. L2 regularization is computed as lambda*(1-beta). 
 
-rank=100
+#Rank=100
 
 qprandom(100, 1.0, 0.99, 1.0, false)
 
@@ -219,7 +219,7 @@ mosek-admmfast norm 8.29321e-09
 
 mosek 0.245771 ecos 0.0895326 admm 0.080307 iters 499 admmfast 0.119292 accIters 771
 
-rank=500
+#Rank=500
 
 qprandom(500, 1.0, 0.99, 1.0, false)
 
@@ -233,7 +233,7 @@ mosek-admmfast norm 5.53243e-08
 
 mosek 1.78544 ecos 3.23721 admm 0.305345 iters 460 admmfast 0.527242 accIters 806
 
-rank=1000
+#Rank=1000
 
 qprandom(1000, 1.0, 0.99, 1.0, false)
 
@@ -261,7 +261,7 @@ alpha for over-relaxation of ADMM but it is fixed at 1.0
 
 ###PLSA and SVM formulations
 
-rank=100, equality=1
+###Rank=100, equality=1
 
 pdcotestQP(1, 100, 1.0)
 
@@ -275,7 +275,7 @@ mosek-accadmm norm 5.58596e-08 iters 1677
 
 mosek 0.039641 ecos 0.0341901 pdco 0.08 admm 0.041568 admmacc 0.239477
 
-rank=500, equality=1
+###Rank=500, equality=1
 
 pdcotestQP(1, 500, 1.0)
 
@@ -289,7 +289,7 @@ mosek-accadmm norm 1.31676e-05 iters 5545
 
 mosek 0.323458 ecos 2.89661 pdco 4.44 admm 0.647283 admmacc 3.56523
 
-rank=1000, equality=1
+###rank=1000, equality=1
 
 pdcotestQP(1, 1000, 1.0)
 
@@ -310,7 +310,7 @@ It is worth noting that both ADMM and PDCO are running LU factorization.
 
 ###Generic Quadratic Program with Equality and bound constraints
 
-rank=1000 equality=50
+###Rank=1000 equality=50
 
 pdcotestQP(50, 1000, 1.0)
 
