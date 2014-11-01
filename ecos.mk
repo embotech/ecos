@@ -1,5 +1,9 @@
 # Makefile configuration for ECOS
 
+# Whether to use Long or Int for index type
+# comment it out to use ints
+USE_LONG = 1
+
 ## Intel C Compiler
 #CC = icc
 #CFLAGS = -O3 -m64 -Wall -strict-ansi -DLDL_LONG -DDLONG
@@ -7,8 +11,17 @@
 
 ## GNU C Compiler
 #CC = gcc
-CFLAGS = -O2 -Wall -DLDL_LONG -DDLONG -DCTRLC=1 -Wextra -fPIC #-ansi -Werror #-ipo
 
+CLFAGS = -O2 - Wall -DCTRLC=1 -Wextra -fPIC #-ansi -Werror #-ipo
+ifdef USE_LONG
+CFLAGS += -DLDL_LONG -DDLONG
+LDL = ldll.o
+AMD = amd_l*.o amd_global.o
+else
+CFLAGS +=
+LDL = ldl.o
+AMD = amd_i*.o amd_global.o
+endif
 
 UNAME := $(shell uname)
 
@@ -24,17 +37,17 @@ endif
 
 ifeq ($(UNAME), Darwin)
 # we're on apple, no need to link rt library
-LIBS = -lm
+LDFLAGS = -lm
 # shared library has extension .dylib
 SHAREDNAME = libecos.dylib
 else ifeq ($(ISWINDOWS), 1)
 # we're on windows (cygwin or msys)
-LIBS = -lm
+LDFLAGS = -lm
 # shared library has extension .dll
 SHAREDNAME = libecos.dll
 else
 # we're on a linux system, use accurate timer provided by clock_gettime()
-LIBS = -lm -lrt
+LDFLAGS = -lm -lrt
 # shared library has extension .so
 SHAREDNAME = libecos.so
 endif
