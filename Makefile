@@ -52,7 +52,7 @@ equil.o             : include/equil.h
 # ECOS demo
 .PHONY: demo
 demo: runecos
-runecos: libecos.a src/runecos.c
+runecos: src/runecos.c libecos.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 	echo ECOS successfully built. Type ./runecos to run demo problem.
 
@@ -66,10 +66,10 @@ $(SHAREDNAME): $(LDL) $(AMD) $(ECOS_OBJS)
 TEST_OBJS = qcml_utils.o norm.o sq_norm.o sum_sq.o quad_over_lin.o inv_pos.o
 .PHONY: test
 test: ecostester ecos_bb_test
-ecostester: libecos.a test/ecostester.c $(TEST_OBJS)
+ecostester: test/ecostester.c $(TEST_OBJS) libecos.a
 	$(CC) $(CFLAGS) $(TEST_INCLUDES) -o $@ $^ $(LDFLAGS)
 
-ecos_bb_test: libecos_bb.a test/bb_test.c
+ecos_bb_test: test/bb_test.c libecos_bb.a 
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 %.o: test/generated_tests/%.c test/generated_tests/%.h
