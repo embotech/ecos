@@ -51,7 +51,7 @@ extern "C" {
 
 #ifndef SuiteSparse_long
 
-#if 0
+#if _WIN64
 
 #define SuiteSparse_long __int64
 #define SuiteSparse_long_max _I64_MAX

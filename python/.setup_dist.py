@@ -19,7 +19,8 @@ _ecos = Extension('_ecos', libraries = lib,
                     define_macros = [
                         ('PYTHON',None),
                         ('DLONG', None),
-                        ('LDL_LONG', None)],
+                        ('LDL_LONG', None),
+                        ('CTRLC', 1)],
                     include_dirs = ['include', numpy.get_include(),
                         'external/amd/include',
                         'external/ldl/include',
@@ -27,13 +28,14 @@ _ecos = Extension('_ecos', libraries = lib,
                     sources = ['ecosmodule.c',
                         'external/ldl/src/ldl.c'
                     ] + glob('external/amd/src/*.c')
-                      + glob('src/*.c'))
+                      + glob('src/*.c')
+                      + glob('ecos_bb/*.c'))
 
 setup(
     name = 'ecos',
     version = '1.0.5',
-    author = 'Alexander Domahidi, Eric Chu',
-    author_email = 'domahidi@embotech.com, echu@cs.stanford.edu',
+    author = 'Alexander Domahidi, Eric Chu, Han Wang',
+    author_email = 'domahidi@embotech.com, echu@cs.stanford.edu, hanwang2@stanford.edu',
     url = 'http://github.com/ifa-ethz/ecos',
     description = 'This is the Python package for ECOS: Embedded Cone Solver. See Github page for more information.',
     license = "GPLv3",

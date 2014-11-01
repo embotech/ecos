@@ -21,6 +21,7 @@
 #include "mex.h"
 #include "matrix.h"
 #include "ecos.h"
+#include "ecos_bb.h"
 
 /* THE mex-function */
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )  
@@ -37,6 +38,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     const mxArray* dims_l;
     const mxArray* dims_q;
     const mxArray* opts = NULL;
+    const mxArray* opts_bool_idx = NULL;
     const mxArray* opts_verbose = NULL;
     const mxArray* opts_feastol = NULL;
     const mxArray* opts_reltol = NULL;
@@ -51,6 +53,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     const mwSize *size_A;
     const mwSize *size_b;
     const mwSize *size_q;
+    const mwSize* opts_bool_idx_size = NULL;
     
     const mwSize ZERO[2] = {0, 0};
     
@@ -97,8 +100,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     idxint l;
     double *q;
     idxint *qint;
+    idxint *bool_vars_idx;
     idxint ncones;
     idxint numConicVariables = 0;
+    idxint num_bool_vars;
     
     /* options */
     idxint verbose;
@@ -120,6 +125,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     pfloat *bpr = NULL;
     
     pwork* mywork;
+    ecos_bb_pwork* bb_pwork;
     
 
 #ifdef MEXARGMUENTCHECKS     
@@ -146,6 +152,14 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     if( nrhs == 5 || nrhs == 7 )
     {
       opts = nrhs==5 ? prhs[4] : prhs[6]; 
+      
+      opts_bool_idx = opts ? mxGetField(opts, 0, "integer_vars_idx") : 0;
+      if (opts_bool_idx != NULL){
+        opts_bool_idx_size = mxGetDimensions(opts_bool_idx);
+        /* Retrieve the number of boolean vars */
+        num_bool_vars = (idxint) (opts_bool_idx_size[1] > opts_bool_idx_size[0] ? opts_bool_idx_size[1] : opts_bool_idx_size[0]);
+      }
+      
       opts_verbose = opts ? mxGetField(opts, 0, "verbose") : 0;
       opts_abstol = opts ? mxGetField(opts, 0, "abstol") : 0;
       opts_feastol = opts ? mxGetField(opts, 0, "feastol") : 0;
@@ -163,6 +177,13 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
     /* argument checking */
 #ifdef MEXARGMUENTCHECKS     
+    if (opts_bool_idx != NULL){
+        if (mxGetNumberOfDimensions(opts_bool_idx) != 2 ||
+                (opts_bool_idx_size[1] != 1 && opts_bool_idx_size[0] != 1)){
+            mexErrMsgTxt("Boolean index needs to be a vector");
+        }        
+    }
+    
     if( !mxIsDouble(c) || size_c[1] > 1 )
     {
         mexErrMsgTxt("First argument needs to be a column vector");
@@ -302,8 +323,21 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         mexErrMsgTxt("Number of rows does not match information given in dims");
     }
     
-    /* This calls ECOS setup function. */
-    mywork = ECOS_setup(n, m, p, l, ncones, qint, Gpr, Gjc, Gir, Apr, Ajc, Air, cpr, hpr, bpr);
+    /* Switch between ecos_bb and ecos */
+    if (opts_bool_idx != NULL){
+        /* Shift the boolean indexes from matlab style (start at 1) to C style (start at 0) */
+        bool_vars_idx = (idxint *)mxMalloc(num_bool_vars*sizeof(idxint));        
+        for( i=0; i < num_bool_vars; ++i){ bool_vars_idx[i] = (idxint) ((mxGetPr(opts_bool_idx))[i] - 1); mexPrintf("\t%u : %u\n",i, bool_vars_idx[i]);}
+        
+        bb_pwork = ecos_bb_setup(n, m, p, l, ncones, qint, Gpr, Gjc, Gir, Apr, Ajc, Air, cpr, hpr, bpr, num_bool_vars, bool_vars_idx);
+        
+        mywork = bb_pwork->ecos_prob;
+
+    }else{
+        /* This calls ECOS setup function. */
+        mywork = ECOS_setup(n, m, p, l, ncones, qint, Gpr, Gjc, Gir, Apr, Ajc, Air, cpr, hpr, bpr);
+    }    
+    
     if( mywork == NULL ){
         mexErrMsgTxt("Internal problem occurred in ECOS while setting up the problem.\nPlease send a bug report with data to Alexander Domahidi.\nEmail: domahidi@control.ee.ethz.ch");
     }
@@ -346,8 +380,13 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     }
       
     /* Solve! */    
-    exitcode = ECOS_solve(mywork);
-        
+    /* Switch between ecos_bb and ecos */
+    if (opts_bool_idx != NULL){
+        exitcode = ecos_bb_solve(bb_pwork);
+    }else{
+        exitcode = ECOS_solve(mywork);
+    }    
+            
     /* create output */
     /* x */
     if( nlhs > 0 ){
@@ -434,37 +473,59 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		mxSetField(plhs[2], 0, "iter", outvar);
         
         /* 13. infostring */
-        switch( exitcode ){
-            case ECOS_OPTIMAL:
-                outvar = mxCreateString("Optimal solution found");
-                break;
-            case (ECOS_OPTIMAL + ECOS_INACC_OFFSET):
-                outvar = mxCreateString("Optimal solution found within reduced tolerances");
-                break;
-            case ECOS_MAXIT:
-                outvar = mxCreateString("Maximum number of iterations reached");
-                break;
-            case ECOS_PINF:
-                outvar = mxCreateString("Certificate of primal infeasibility found");
-                break;
-            case (ECOS_PINF + ECOS_INACC_OFFSET):
-                outvar = mxCreateString("Certificate of primal infeasibility found within reduced tolerances");
-                break;
-            case ECOS_DINF:
-                outvar = mxCreateString("Certificate of dual infeasibility found");
-                break;
-            case (ECOS_DINF + ECOS_INACC_OFFSET):
-                outvar = mxCreateString("Certificate of dual infeasibility found within reduced tolerances");
-                break;
-            case ECOS_NUMERICS:
-                outvar = mxCreateString("Numerical problems");
-                break;
-            case ECOS_OUTCONE:
-                outvar = mxCreateString("PROBLEM: Mulitpliers leaving the cone");
-                break;
-            default:
-                outvar = mxCreateString("UNKNOWN PROBLEM IN SOLVER");
-        }		
+        if (opts_bool_idx != NULL){
+            switch( exitcode ){
+                case MI_OPTIMAL_SOLN:
+                    outvar = mxCreateString("Optimal branch and bound solution found");
+                    break;
+                case MI_MAXITER_FEASIBLE_SOLN:
+                    outvar = mxCreateString("Maximum iterations reached with feasible solution found");
+                    break;
+                case MI_MAXITER_NO_SOLN:
+                    outvar = mxCreateString("Maximum iterations reached with no feasible solution found");
+                    break;
+                case MI_INFEASIBLE:
+                    outvar = mxCreateString("Problem is infeasible");
+                    break;
+                default:
+                    outvar = mxCreateString("UNKNOWN PROBLEM IN BRANCH AND BOUND SOLVER");
+            }
+        }else{
+            switch( exitcode ){
+                case ECOS_OPTIMAL:
+                    outvar = mxCreateString("Optimal solution found");
+                    break;
+                case (ECOS_OPTIMAL + ECOS_INACC_OFFSET):
+                    outvar = mxCreateString("Optimal solution found within reduced tolerances");
+                    break;
+                case ECOS_MAXIT:
+                    outvar = mxCreateString("Maximum number of iterations reached");
+                    break;
+                case ECOS_PINF:
+                    outvar = mxCreateString("Certificate of primal infeasibility found");
+                    break;
+                case (ECOS_PINF + ECOS_INACC_OFFSET):
+                    outvar = mxCreateString("Certificate of primal infeasibility found within reduced tolerances");
+                    break;
+                case ECOS_DINF:
+                    outvar = mxCreateString("Certificate of dual infeasibility found");
+                    break;
+                case (ECOS_DINF + ECOS_INACC_OFFSET):
+                    outvar = mxCreateString("Certificate of dual infeasibility found within reduced tolerances");
+                    break;
+                case ECOS_NUMERICS:
+                    outvar = mxCreateString("Numerical problems");
+                    break;
+                case ECOS_SIGINT:
+                    outvar = mxCreateString("Interrupted by user (CTRL-C)");
+                    break;
+                case ECOS_OUTCONE:
+                    outvar = mxCreateString("PROBLEM: Mulitpliers leaving the cone");
+                    break;
+                default:
+                    outvar = mxCreateString("UNKNOWN PROBLEM IN SOLVER");
+            }       
+        }        
 		mxSetField(plhs[2], 0, "infostring", outvar);
         
 #if PROFILING > 0        
@@ -553,6 +614,12 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     }
     
     /* cleanup */
-    ECOS_cleanup(mywork, nlhs > 2? nlhs-1 : nlhs);
+    if (opts_bool_idx != NULL){
+        ecos_bb_cleanup(bb_pwork, nlhs > 2? nlhs-1 : nlhs);
+        mxFree(bool_vars_idx);
+    }else{
+        ECOS_cleanup(mywork, nlhs > 2? nlhs-1 : nlhs);    
+    }
+    
     mxFree(qint);
 }

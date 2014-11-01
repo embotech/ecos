@@ -27,6 +27,13 @@
 
 /* NEEDED FOR SQRT ----------------------------------------------------- */
 #include <math.h>
+    
+#if (defined _WIN32 || defined _WIN64 )
+/* include stdio.h for _set_output_format */
+#include <stdio.h>
+#endif
+
+
 
 /* Some internal defines */
 #define ECOS_NOT_CONVERGED_YET (-87)  /* indicates no convergence yet    */
@@ -762,7 +769,7 @@ idxint ECOS_solve(pwork* w)
 {
 	idxint i, initcode, KKT_FACTOR_RETURN_CODE;
 	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap, pres_prev;
-	idxint exitcode = ECOS_FATAL, interrupted;
+	idxint exitcode = ECOS_FATAL, interrupted = 0;
     
 #if DEBUG
     char fn[20];
@@ -786,7 +793,9 @@ idxint ECOS_solve(pwork* w)
 #endif
 	
     /* initialize ctrl-c support */
+#if CTRLC > 0
     init_ctrlc();
+#endif
 
 	/* Initialize solver */
     initcode = init(w);
@@ -847,7 +856,9 @@ idxint ECOS_solve(pwork* w)
 
 		/* Check termination criteria to full precision and exit if necessary */
 		exitcode = checkExitConditions( w, 0 );
+#if CTRLC > 0
         interrupted = check_ctrlc();
+#endif
         if( exitcode == ECOS_NOT_CONVERGED_YET ){
             
             /*
@@ -1089,7 +1100,9 @@ idxint ECOS_solve(pwork* w)
 	if( w->stgs->verbose ) PRINTTEXT("\n\n");
 #endif
 
+#if CTRLC > 0
     remove_ctrlc();
+#endif
 	return exitcode;
 }
 
@@ -1100,9 +1113,23 @@ idxint ECOS_solve(pwork* w)
  */
 void ecos_updateDataEntry_h(pwork* w, idxint idx, pfloat value)
 {
-#if defined EQUILIBRATE && EQUILIBRATE > 0
+#if EQUILIBRATE > 0
     w->h[idx] = value / w->Gequil[idx];
-#else
+#else 
     w->h[idx] = value;
-#endif
+#endif      
+}
+
+
+/*
+ * Updates one element of the OBJ vector c of inequalities
+ * After the call, w->c[idx] = value (but equilibrated)
+ */
+void ecos_updateDataEntry_c(pwork* w, idxint idx, pfloat value)
+{
+#if EQUILIBRATE > 0
+    w->c[idx] = value / w->xequil[idx];
+#else 
+    w->c[idx] = value;
+#endif      
 }

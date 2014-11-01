@@ -70,4 +70,5 @@ pfloat toc(timer* t);
 
 #endif /* END IF PROFILING > 0 */
 
-#endif /* END IFDEF __TIMER_H__ */
+#endif
+/* END IFDEF __TIMER_H__ */
