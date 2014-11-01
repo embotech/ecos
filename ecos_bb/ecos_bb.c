@@ -7,6 +7,22 @@
 
 #define MIN(X, Y)  ((X) < (Y) ? (X) : (Y))
 
+/* Print utility functions*/
+#if PRINTLEVEL > 0
+void print_progress(ecos_bb_pwork* prob){
+    PRINTTEXT("%u \t%.2f \t\t%.2f \t\t%.2f\n", (int)prob->iter, prob->global_L, prob->global_U, prob->global_U-prob->global_L);
+}
+
+
+void print_node(ecos_bb_pwork* prob, idxint i){
+    int j;
+    PRINTTEXT("Node info: %u : %f : %f : %u\nPartial id:", prob->nodes[i].status,
+        prob->nodes[i].L, prob->nodes[i].U, (int)prob->nodes[i].split_idx);
+    for (j=0; j<prob->num_bool_vars; ++j) PRINTTEXT("%i,", get_node_id(i,prob)[j]);
+    PRINTTEXT("\n");
+}
+#endif
+
 /* Boolean vars only*/
 
 void branch(idxint curr_node_idx, ecos_bb_pwork* prob){
@@ -20,12 +36,12 @@ void branch(idxint curr_node_idx, ecos_bb_pwork* prob){
     for(i=0; i < prob->num_bool_vars; ++i){
         get_node_id(prob->iter, prob)[i] = get_node_id(curr_node_idx, prob)[i];
     }
-    
+
     get_node_id(curr_node_idx, prob)[prob->nodes[curr_node_idx].split_idx] = MI_ZERO;
     get_node_id(prob->iter, prob)[prob->nodes[curr_node_idx].split_idx] = MI_ONE;
-    
+
     prob->nodes[curr_node_idx].status = MI_NOT_SOLVED;
-}   
+}
 
 /*
  * Function to return the next node to be expanded
@@ -66,7 +82,7 @@ idxint get_branch_var(pfloat* x, idxint num_bool_vars){
     return split_var;
 }
 
-/* 
+/*
  * Updates the solver's lb and ub contraints for integer variables
  * to the bounds specified by the node
  */
@@ -93,12 +109,12 @@ void set_prob(pwork* ecos_prob, char* node_id, idxint num_bool_vars, idxint* boo
     /*set_equilibration(ecos_prob);*/
 }
 
-void get_bounds(idxint node_idx, ecos_bb_pwork* prob){  
+void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
     idxint i, ret_code, branchable;
-    set_prob(prob->ecos_prob, get_node_id(node_idx,prob), prob->num_bool_vars, prob->bool_vars_idx);    
+    set_prob(prob->ecos_prob, get_node_id(node_idx,prob), prob->num_bool_vars, prob->bool_vars_idx);
     ret_code = ECOS_solve(prob->ecos_prob);
 
-    
+
     if (ret_code == ECOS_OPTIMAL){
         prob->nodes[node_idx].L = eddot(prob->ecos_prob->n, prob->ecos_prob->x, prob->ecos_prob->c);
 
@@ -116,7 +132,7 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
 
         if (branchable){ /* pfloat_round and check feasibility*/
             prob->nodes[node_idx].split_idx = get_branch_var(prob->ecos_prob->x, prob->num_bool_vars);
-            prob->nodes[node_idx].status = MI_SOLVED_BRANCHABLE;  
+            prob->nodes[node_idx].status = MI_SOLVED_BRANCHABLE;
             set_prob(prob->ecos_prob, prob->tmp_node_id, prob->num_bool_vars, prob->bool_vars_idx);
             ret_code = ECOS_solve(prob->ecos_prob);
 
@@ -125,7 +141,7 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
             if (ret_code == ECOS_OPTIMAL){
                 prob->nodes[node_idx].U = eddot(prob->ecos_prob->n, prob->ecos_prob->x, prob->ecos_prob->c);
             }else{
-                prob->nodes[node_idx].U = INFINITY;    
+                prob->nodes[node_idx].U = INFINITY;
             }
         }else{ /* This is already an integer solution*/
             prob->nodes[node_idx].status = MI_SOLVED_NON_BRANCHABLE;
@@ -148,7 +164,7 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
 }
 
 idxint should_continue(ecos_bb_pwork* prob, idxint curr_node_idx){
-    return (prob->global_U - prob->global_L) > MI_ABS_EPS 
+    return (prob->global_U - prob->global_L) > MI_ABS_EPS
         && abs_2(prob->global_U / prob->global_L - 1.0) > MI_REL_EPS
         && curr_node_idx >= 0
         && prob->iter < prob->maxiter;
@@ -158,7 +174,7 @@ int get_ret_code(ecos_bb_pwork* prob){
     if ( prob->iter < MI_MAXITER){
         if ( isinf(prob->global_U) ) return MI_INFEASIBLE;
         else return MI_OPTIMAL_SOLN;
-    } else { 
+    } else {
         if ( isinf(prob->global_U) ) return MI_MAXITER_NO_SOLN;
         else return MI_MAXITER_FEASIBLE_SOLN;
     }
@@ -175,9 +191,9 @@ void initialize_root(ecos_bb_pwork* prob){
 }
 
 idxint ecos_bb_solve(ecos_bb_pwork* prob){
-    
+
     prob->iter = 0;
-    
+
     /* Initialize to root node and execute steps 1 on slide 6 */
     /* of http://stanford.edu/class/ee364b/lectures/bb_slides.pdf*/
     initialize_root(prob);
@@ -218,7 +234,7 @@ idxint ecos_bb_solve(ecos_bb_pwork* prob){
         prob->global_L = get_global_L(prob);
         prob->global_U = MIN(prob->global_U, MIN(prob->nodes[curr_node_idx].U, prob->nodes[prob->iter].U));
 
-        curr_node_idx = get_next_node(prob);        
+        curr_node_idx = get_next_node(prob);
     }
 
 #if PRINTLEVEL > 0
@@ -235,19 +251,3 @@ void updateDataEntry_h(ecos_bb_pwork* w, idxint idx, pfloat value){
 void updateDataEntry_c(ecos_bb_pwork* w, idxint idx, pfloat value){
     ecos_updateDataEntry_c(w->ecos_prob, idx , value);
 }
-
-/* Print utility functions*/
-#if PRINTLEVEL > 0
-void print_progress(ecos_bb_pwork* prob){
-    PRINTTEXT("%u \t%.2f \t\t%.2f \t\t%.2f\n", (int)prob->iter, prob->global_L, prob->global_U, prob->global_U-prob->global_L);
-}
-
-
-void print_node(ecos_bb_pwork* prob, idxint i){
-    int j;
-    PRINTTEXT("Node info: %u : %f : %f : %u\nPartial id:", prob->nodes[i].status, 
-        prob->nodes[i].L, prob->nodes[i].U, (int)prob->nodes[i].split_idx);
-    for (j=0; j<prob->num_bool_vars; ++j) PRINTTEXT("%i,", get_node_id(i,prob)[j]);
-    PRINTTEXT("\n");
-}
-#endif
