@@ -25,7 +25,10 @@ function [z, history, admmIters] = qpaccelerated(P, q, r, Aeq, beq, lb, ub, rho,
 % More information can be found in the paper linked at:
 % http://www.stanford.edu/~boyd/papers/distr_opt_stat_learning_admm.html
 %
-    
+% z and u updates have been accelerated using Nesterov idea as described in the following
+% reference for comparisons with default ADMM
+% ftp://ftp.math.ucla.edu/pub/camreport/cam12-35.pdf   
+
 QUIET    = 1;
 MAX_ITER = max(400, 20*size(P,1));
 ABSTOL   = 1e-8;
