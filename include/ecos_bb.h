@@ -30,7 +30,7 @@
 extern "C" {
 #endif
 
-/* #define INFINITY (1E999) */
+#define INFINITY (1.0/0.0)
 
 typedef struct node {
 	char status;
@@ -43,15 +43,15 @@ typedef struct node {
 typedef struct ecos_bb_pwork{
 	/* Mixed integer data */
 	idxint num_bool_vars;
+	idxint num_int_vars;
 	idxint maxiter;
 	
 	node* nodes;
-	char* node_ids;
-	idxint* bool_vars_idx;
+	char* bool_node_ids;
+	pfloat* int_node_ids;
 
-	pfloat* best_x;
-	pfloat global_U;
-	pfloat global_L;
+	idxint* bool_vars_idx;
+	idxint* int_vars_idx;
 
 	/* ECOS data */
 	pwork* ecos_prob;
@@ -64,31 +64,54 @@ typedef struct ecos_bb_pwork{
 	pfloat* b;
 	pfloat* h;
 
-	/* Tmp data */
-	char* tmp_node_id;
-	idxint iter;
+	/* best iterate seen so far */
+    /* variables */
+    pfloat* best_x;  /* primal variables                    */
+    pfloat* best_y;  /* multipliers for equality constaints */
+    pfloat* best_z;  /* multipliers for conic inequalities  */
+    pfloat* best_s;  /* slacks for conic inequalities       */
+    pfloat best_kap; /* kappa (homogeneous embedding)       */
+	pfloat best_tau; /* tau (homogeneous embedding)         */
+    pfloat best_cx;
+    pfloat best_by;
+    pfloat best_hz;
+    stats* best_info; /* info of best iterate               */
+	pfloat global_U;
+	pfloat global_L;
 	
+	/* Tmp data */
+	char* tmp_bool_node_id;
+	pfloat* tmp_int_node_id;
+	idxint iter;
+
+	/* Stored pointers to prevent memory leaks */
+	pfloat* Gpr_new;
+	idxint* Gjc_new;
+	idxint* Gir_new;
+	pfloat* h_new;
+
 } ecos_bb_pwork;
 
-ecos_bb_pwork* ecos_bb_setup(
+ecos_bb_pwork* ECOS_BB_setup(
     idxint n, idxint m, idxint p, 
     idxint l, idxint ncones, idxint* q,
     pfloat* Gpr, idxint* Gjc, idxint* Gir,
     pfloat* Apr, idxint* Ajc, idxint* Air,
     pfloat* c, pfloat* h, pfloat* b, 
-    idxint num_bool_vars, idxint* bool_vars_idx);
+    idxint num_bool_vars, idxint* bool_vars_idx,
+    idxint num_int_vars, idxint* int_vars_idx);
 
-idxint ecos_bb_solve(ecos_bb_pwork* prob);
+idxint ECOS_BB_solve(ecos_bb_pwork* prob);
 
-void ecos_bb_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep);
+void ECOS_BB_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep);
 
 void updateDataEntry_h(ecos_bb_pwork* w, idxint idx, pfloat value);
 
 void updateDataEntry_c(ecos_bb_pwork* w, idxint idx, pfloat value);
 
 /* Calculate the offset into the node_id array */
-static inline char* get_node_id(idxint idx, ecos_bb_pwork* prob){
-    return &prob->node_ids[prob->num_bool_vars * idx];
+static inline char* get_bool_node_id(idxint idx, ecos_bb_pwork* prob){
+    return &prob->bool_node_ids[prob->num_bool_vars * idx];
 }
 
 static inline pfloat abs_2(pfloat number){

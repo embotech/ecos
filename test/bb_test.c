@@ -19,16 +19,16 @@ int test_1a(){
 
 	idxint i, ret_code, pass;
 	
-	ecos_bb_pwork* prob = ecos_bb_setup(
+	ecos_bb_pwork* prob = ECOS_BB_setup(
 		n, m, 0, 
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
-		feas_c, feas_h, NULL, 1, bool_idx);
+		feas_c, feas_h, NULL, 1, bool_idx, 0 , NULL);
 
 	printf("Passed setup \n");
 
-	ret_code = ecos_bb_solve(prob);
+	ret_code = ECOS_BB_solve(prob);
 	
 	pass = 1;
 
@@ -37,7 +37,7 @@ int test_1a(){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
 		printf("%f ", prob->best_x[i]);
 	}
-	ecos_bb_cleanup(prob, 0);
+	ECOS_BB_cleanup(prob, 0);
 	return pass;
 }
 
@@ -58,16 +58,16 @@ int test_1b(){
 
 	idxint i, ret_code, pass;
 	
-	ecos_bb_pwork* prob = ecos_bb_setup(
+	ecos_bb_pwork* prob = ECOS_BB_setup(
 		n, m, 0, 
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
-		feas_c, feas_h, NULL, 1, bool_idx);
+		feas_c, feas_h, NULL, 1, bool_idx, 0 , NULL);
 
 	printf("Passed setup \n");
 
-	ret_code = ecos_bb_solve(prob);
+	ret_code = ECOS_BB_solve(prob);
 	
 	pass = 1;
 
@@ -76,7 +76,7 @@ int test_1b(){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
 		printf("%f ", prob->best_x[i]);
 	}
-	ecos_bb_cleanup(prob, 0);
+	ECOS_BB_cleanup(prob, 0);
 	return pass;
 }
 
@@ -97,14 +97,14 @@ int test_2(){
 	
 	idxint i, ret_code, pass;
 
-	ecos_bb_pwork* prob = ecos_bb_setup(
+	ecos_bb_pwork* prob = ECOS_BB_setup(
 		n, m, 0, 
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
-		feas_c, feas_h, NULL, 2, bool_idx);
+		feas_c, feas_h, NULL, 2, bool_idx, 0 , NULL);
 
-	ret_code = ecos_bb_solve(prob);
+	ret_code = ECOS_BB_solve(prob);
 	
 	pass = 1;
 
@@ -113,7 +113,7 @@ int test_2(){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
 		printf("%f ", prob->best_x[i]);
 	}
-	ecos_bb_cleanup(prob, 0);
+	ECOS_BB_cleanup(prob, 0);
 	return pass;
 }
 
@@ -135,14 +135,14 @@ int test_3(){
 
 	idxint i, ret_code, pass;
 	
-	ecos_bb_pwork* prob = ecos_bb_setup(
+	ecos_bb_pwork* prob = ECOS_BB_setup(
 		n, m, 0, 
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
-		feas_c, feas_h, NULL, 1, bool_idx);
+		feas_c, feas_h, NULL, 1, bool_idx, 0 , NULL);
 
-	ret_code = ecos_bb_solve(prob);
+	ret_code = ECOS_BB_solve(prob);
 	
 	pass = 1;
 
@@ -151,7 +151,7 @@ int test_3(){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
 		printf("%f ", prob->best_x[i]);
 	}
-	ecos_bb_cleanup(prob, 0);
+	ECOS_BB_cleanup(prob, 0);
 	return pass;
 }
 
@@ -173,14 +173,14 @@ int test_4(){
 	idxint i, ret_code, pass;
 
 	
-	ecos_bb_pwork* prob = ecos_bb_setup(
+	ecos_bb_pwork* prob = ECOS_BB_setup(
 		n, m, 0, 
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
-		feas_c, feas_h, NULL, 6, bool_idx);
+		feas_c, feas_h, NULL, 6, bool_idx, 0, NULL);
 
-	ret_code = ecos_bb_solve(prob);
+	ret_code = ECOS_BB_solve(prob);
 
 	pass = 1;
 	
@@ -190,7 +190,7 @@ int test_4(){
 		printf("%f ", prob->best_x[i]);
 	}
 	
-	ecos_bb_cleanup(prob, 0);
+	ECOS_BB_cleanup(prob, 0);
 	return pass;
 }
 
@@ -212,14 +212,14 @@ int test_5(){
 
 	idxint i, ret_code, pass;
 
-	ecos_bb_pwork* prob = ecos_bb_setup(
+	ecos_bb_pwork* prob = ECOS_BB_setup(
 		n, m, 0, 
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
-	feas_c, feas_h, NULL, 6, bool_idx);
+	feas_c, feas_h, NULL, 6, bool_idx, 0, NULL);
 
-	ret_code = ecos_bb_solve(prob);
+	ret_code = ECOS_BB_solve(prob);
 	
 	pass = 1;
 	
@@ -229,7 +229,7 @@ int test_5(){
 		printf("%f ", prob->best_x[i]);
 	}
 
-	ecos_bb_cleanup(prob, 0);
+	ECOS_BB_cleanup(prob, 0);
 
 	return pass;
 }
@@ -251,12 +251,12 @@ int test_6(){
 
 	idxint i, ret_code, pass;
 
-	ecos_bb_pwork* prob = ecos_bb_setup(
+	ecos_bb_pwork* prob = ECOS_BB_setup(
 		n, m, 0, 
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
-		feas_c, feas_h, NULL, 6, bool_idx);
+		feas_c, feas_h, NULL, 6, bool_idx, 0, NULL);
 
 	printf("Obj:");
 	for (i=0; i<n; ++i){
@@ -264,7 +264,7 @@ int test_6(){
 	}
 	printf("\n");
 
-	ret_code = ecos_bb_solve(prob);
+	ret_code = ECOS_BB_solve(prob);
 	
 	printf("Obj:");
 	for (i=0; i<n; ++i){
@@ -279,7 +279,7 @@ int test_6(){
 		pass &= float_eqls(x[i] ,prob->best_x[i]);
 		printf("%f ", prob->best_x[i]);
 	}
-	ecos_bb_cleanup(prob, 0);
+	ECOS_BB_cleanup(prob, 0);
 	return pass;
 }
 
@@ -305,15 +305,15 @@ int test_7(){
 
 	timer t;
 
-	ecos_bb_pwork* prob = ecos_bb_setup(
+	ecos_bb_pwork* prob = ECOS_BB_setup(
 		n, m, 0, 
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
-		feas_c, feas_h, NULL, 5, bool_idx);
+		feas_c, feas_h, NULL, 5, bool_idx, 0, NULL);
 
 	tic(&t);
-	ret_code = ecos_bb_solve(prob);
+	ret_code = ECOS_BB_solve(prob);
 	pfloat msRuntime = toc(&t);
 
 	pass = 1;
@@ -335,7 +335,7 @@ int test_7(){
 	updateDataEntry_h(prob, 7, -1.165);
 
 	tic(&t);
-	ret_code = ecos_bb_solve(prob);
+	ret_code = ECOS_BB_solve(prob);
 	msRuntime = toc(&t);
 
 	printf("Soln2: ");
@@ -345,7 +345,7 @@ int test_7(){
 	}
 	printf("\nRuntime: %f\n", msRuntime);
 	
-	ecos_bb_cleanup(prob, 0);
+	ECOS_BB_cleanup(prob, 0);
 
 	return pass;
 }

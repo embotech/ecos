@@ -30,7 +30,8 @@ int contains(idxint idx, idxint num_int, idxint* bool_vars_idx){
  * USES MALLOC
  */ 
 void socp_to_ecos_bb(
-    idxint num_int, idxint* bool_vars_idx, 
+    idxint num_bool_vars, idxint* bool_vars_idx, 
+    idxint num_int_vars, idxint* int_vars_idx, 
     idxint n, idxint m,
     pfloat* Gpr_in, idxint* Gjc_in, idxint* Gir_in,
     pfloat* Gpr_out, idxint* Gjc_out, idxint* Gir_out,
@@ -43,8 +44,8 @@ void socp_to_ecos_bb(
         Gjc_out[i] = Gjc_in[i];
     }
 
-    /* Now insert the new zeros and expand the column indices as needed*/
-    for (j=0; j<num_int; ++j){
+    /* Now insert the new zeros and expand the column indices as needed for BOOLEAN vars*/
+    for (j=0; j<num_bool_vars; ++j){
         k = bool_vars_idx[j];
         Gpr_out[ Gjc_out[k] ] = -1;
         Gpr_out[ Gjc_out[k] + 1 ] = 1;
@@ -63,25 +64,45 @@ void socp_to_ecos_bb(
         }
     }
 
+    /* Now insert the new zeros and expand the column indices as needed for INTEGER vars*/
+    for (j=num_bool_vars; j<(num_bool_vars + num_int_vars); ++j){
+        k = int_vars_idx[j];
+        Gpr_out[ Gjc_out[k] ] = -1;
+        Gpr_out[ Gjc_out[k] + 1 ] = 1;
+
+        Gir_out[ Gjc_out[k] ] = 2*j;
+        Gir_out[ Gjc_out[k] + 1 ] = 2*j + 1;
+
+        /* Set lower bound to 0*/
+        h_out[ 2*j ] = -INFINITY;     
+
+        /* Set upper bound to 1*/
+        h_out[ 2*j + 1] = INFINITY;     
+
+        for (i=(k+1); i<=n; ++i){
+            Gjc_out[i] += 2;
+        }
+    }
+
     /* Now fill in the remainder of the array*/
     for (i=0; i<n; ++i){
-        if ( contains(i, num_int, bool_vars_idx) ){
+        if ( contains(i, num_bool_vars, bool_vars_idx) || 
+             contains(i,  num_int_vars, int_vars_idx) ){
             for(j=0; j<(Gjc_in[i+1] - Gjc_in[i]); ++j){
                 Gpr_out[Gjc_out[i]+2+j] = Gpr_in[Gjc_in[i]+j];
-                Gir_out[Gjc_out[i]+2+j] = Gir_in[Gjc_in[i]+j] + 2*num_int;
+                Gir_out[Gjc_out[i]+2+j] = Gir_in[Gjc_in[i]+j] + 2*num_bool_vars + 2*num_int_vars;
             }
-
         } else {
             for(j=0; j<(Gjc_in[i+1] - Gjc_in[i]); ++j){
                 Gpr_out[Gjc_out[i]+j] = Gpr_in[Gjc_in[i]+j];
-                Gir_out[Gjc_out[i]+j] = Gir_in[Gjc_in[i]+j] + 2*num_int;
+                Gir_out[Gjc_out[i]+j] = Gir_in[Gjc_in[i]+j] + 2*num_bool_vars + 2*num_int_vars;
             }
         }
     }
 
     /* Copy the remaining entries of b*/
     for (i=0; i<m; ++i){
-        h_out[2*num_int+i] = h_in[i];
+        h_out[2*(num_bool_vars + num_int_vars) + i] = h_in[i];
     }
 
 #if PRINTLEVEL >= 3
@@ -106,73 +127,74 @@ void socp_to_ecos_bb(
 
 }
 
-
-/* We assume that the first num_int column vars are booleans, otherwise all 
- * arguements are exactly the same as ECOS
- * Boolean vars only
-*/
-ecos_bb_pwork* ecos_bb_setup(
+ecos_bb_pwork* ECOS_BB_setup(
     idxint n, idxint m, idxint p, 
     idxint l, idxint ncones, idxint* q,
     pfloat* Gpr, idxint* Gjc, idxint* Gir,
     pfloat* Apr, idxint* Ajc, idxint* Air,
     pfloat* c, pfloat* h, pfloat* b, 
-    idxint num_bool_vars, idxint* bool_vars_idx)
+    idxint num_bool_vars, idxint* bool_vars_idx,
+    idxint num_int_vars, idxint* int_vars_idx)
 {
-    
-    pfloat* Gpr_new, * h_new;
-    idxint* Gjc_new, * Gir_new; 
+    /* MALLOC the problem's memory*/
+    ecos_bb_pwork* prob = (ecos_bb_pwork*) MALLOC(sizeof(ecos_bb_pwork));    
 
-    idxint new_G_size = Gjc[n] + 2 * num_bool_vars;
-    Gpr_new = (pfloat *) MALLOC( new_G_size * sizeof(pfloat) );
-    Gjc_new = (idxint *) MALLOC( (n+1) * sizeof(idxint) );
-    Gir_new = (idxint *) MALLOC( new_G_size * sizeof(idxint) );
-    h_new = (pfloat *) MALLOC( (m + 2 * num_bool_vars ) * sizeof(pfloat) );
+    idxint new_G_size = Gjc[n] + 2 * num_bool_vars + 2 * num_int_vars;
+    prob->Gpr_new = (pfloat *) MALLOC( new_G_size * sizeof(pfloat) );
+    prob->Gjc_new = (idxint *) MALLOC( (n+1) * sizeof(idxint) );
+    prob->Gir_new = (idxint *) MALLOC( new_G_size * sizeof(idxint) );
+    prob->h_new   = (pfloat *) MALLOC( (m + 2 * num_bool_vars + 2 * num_int_vars) * sizeof(pfloat) );
 
     /* Copy the data and convert it to boolean*/
     socp_to_ecos_bb(num_bool_vars, bool_vars_idx,
+                    num_int_vars, int_vars_idx,
                     n, m,
                     Gpr, Gjc, Gir,
-                    Gpr_new, Gjc_new, Gir_new,
-                    h, h_new);
-    m += 2*num_bool_vars;
-    l += 2*num_bool_vars;
-
-    /* MALLOC the problem's memory*/
-    ecos_bb_pwork* prob = (ecos_bb_pwork*) MALLOC(sizeof(ecos_bb_pwork));
+                    prob->Gpr_new, prob->Gjc_new, prob->Gir_new,
+                    h, prob->h_new);
+    m += 2*(num_bool_vars + num_int_vars);
+    l += 2*(num_bool_vars + num_int_vars);    
 
     /* Default the maxiter to global declared in the header file*/
     prob->maxiter = MI_MAXITER;
 
-    /* MALLOC the best optimal solution's memory*/
-    prob->best_x = (pfloat*) MALLOC( n*sizeof(pfloat) );
-
     /* MALLOC the initial node's book keeping data #(2*maxIter)*/
     prob->nodes = (node*) CALLOC( MI_MAXITER, sizeof(node) );
 
-    /* MALLOC the id array*/
-    prob->node_ids = (char*) MALLOC( MI_MAXITER*num_bool_vars*sizeof(char) );
+    /* MALLOC the id arrays*/
+    prob->bool_node_ids = (char*)  MALLOC( MI_MAXITER*num_bool_vars*sizeof(char) );
+    prob->int_node_ids = (pfloat*) MALLOC( 2*MI_MAXITER*num_int_vars*sizeof(pfloat) );
 
     /* MALLOC the tmp node id*/
-    prob->tmp_node_id = (char*) MALLOC( num_bool_vars*sizeof(char) );
+    prob->tmp_bool_node_id = (char*) MALLOC( num_bool_vars*sizeof(char) );
+    prob->tmp_int_node_id = (pfloat*) MALLOC( 2*num_int_vars*sizeof(pfloat) );
 
     /* Store the pointer to the boolean idx*/
     prob->bool_vars_idx = bool_vars_idx;
+    prob->int_vars_idx = int_vars_idx;
+
+    /* MALLOC the best optimal solution's memory*/
+    prob->best_x = (pfloat*) MALLOC( n*sizeof(pfloat) );
+    prob->best_y = (pfloat*) MALLOC( p*sizeof(pfloat) );
+    prob->best_z = (pfloat*) MALLOC( m*sizeof(pfloat) );
+    prob->best_s = (pfloat*) MALLOC( m*sizeof(pfloat) );
+    prob->best_info = (stats*) MALLOC( sizeof(stats) );
 
     /* Setup the ecos solver*/
     prob->ecos_prob = ECOS_setup(
         n, m, p, l, ncones, q,
-        Gpr_new, Gjc_new, Gir_new,
+        prob->Gpr_new, prob->Gjc_new, prob->Gir_new,
         Apr, Ajc, Air,
-        c, h_new, b);
+        c, prob->h_new, b);
 
     /* Store the number of integer variables in the problem*/
     prob->num_bool_vars = num_bool_vars;
+    prob->num_int_vars = num_int_vars;
 
     prob->global_U = INFINITY;
 
     /* offset the h pointer for the user*/
-    prob->h = &prob->ecos_prob->h[2 * num_bool_vars];
+    prob->h = &prob->ecos_prob->h[ 2*(num_bool_vars + num_int_vars) ];
 
     /* Map the other variables*/
     prob->A = prob->ecos_prob->A;
@@ -187,13 +209,19 @@ ecos_bb_pwork* ecos_bb_setup(
 }
 
 /* Performs the same function as ecos_cleanup*/
-void ecos_bb_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep){
+void ECOS_BB_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep){
     /* FREE solver memory*/
     ECOS_cleanup(prob->ecos_prob, num_vars_keep);
-    FREE(prob->tmp_node_id);
+    FREE(prob->tmp_bool_node_id);
+    FREE(prob->tmp_int_node_id);
     FREE(prob->nodes);
-    FREE(prob->node_ids);
+    FREE(prob->bool_node_ids);
+    FREE(prob->int_node_ids);
     FREE(prob->best_x);
+    FREE(prob->best_y);
+    FREE(prob->best_z);
+    FREE(prob->best_s);
+    FREE(prob->best_info);
     FREE(prob);
 }
 
