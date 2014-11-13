@@ -185,9 +185,9 @@ dims.q - vector with dimensions of second order cones
 The length of `dims.q` determines the number of second order cones. If you do not have a cone in your problem, use
 the empty matrix `[ ]` instead, for example `dims.q = [ ]` if you do not have second-order cones. 
 
-`opts` is a struct that passes in auxiliary settings. Valid field names for `opts` are `integer_vars_idx`, `verbose`, `abstol`, `feastol`, `reltol`, abstol_inacc`, `feastol_inacc`, `reltol_inacc`, `maxit`.
+`opts` is a struct that passes in auxiliary settings. Valid field names for `opts` are `bool_vars_idx`, `int_vars_idx`, `verbose`, `abstol`, `feastol`, `reltol`, abstol_inacc`, `feastol_inacc`, `reltol_inacc`, `maxit`.
 
-ECOS supports integer programming in Matlab with `opts.integer_vars_idx`, an array of the indices of integer variables.
+ECOS supports boolean and integer programming in Matlab with `opts.int_vars_idx`, an array of the indices of integer variables, and `opts.bool_vars_idx`, an array of the indices of boolean variables.
 
 After a solve,
 ECOS returns the following variables
