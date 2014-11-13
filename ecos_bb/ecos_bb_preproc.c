@@ -125,7 +125,7 @@ ecos_bb_pwork* ECOS_BB_setup(
     PRINTTEXT("  *                                                              *\n");
     PRINTTEXT("  * NOTE: This module is an extension of ECOS by Domahidi et al. *\n");
     PRINTTEXT("  *                                                              *\n");
-    PRINTTEXT("  * (C) Han Wang, Stanford University 2012-14.                   *\n");
+    PRINTTEXT("  * (C) Han Wang, Stanford University 2014.                      *\n");
     PRINTTEXT("  *                     Email: hanwang2@stanford.edu             *\n");
     PRINTTEXT("  ****************************************************************\n");
     PRINTTEXT("\n\n");
@@ -133,8 +133,8 @@ ecos_bb_pwork* ECOS_BB_setup(
     PRINTTEXT("   Boolean variables (num_bool_vars): %d\n", (int) num_bool_vars);
     PRINTTEXT("   Integer variables ( num_int_vars): %d\n", (int) num_int_vars);
     PRINTTEXT("- - - - - - - - - - - - - - -\n");
-    PRINTTEXT("   Boolean var indices: "); for( i=0; i<num_bool_vars; ++i) PRINTTEXT("%u ", bool_vars_idx[i]); PRINTTEXT("\n");
-    PRINTTEXT("   Integer var indices: "); for( i=0; i<num_int_vars; ++i) PRINTTEXT("%u ", int_vars_idx[i]); PRINTTEXT("\n");
+    PRINTTEXT("   Boolean var indices: "); for( i=0; i<num_bool_vars; ++i) PRINTTEXT("%u ", (unsigned int) bool_vars_idx[i]); PRINTTEXT("\n");
+    PRINTTEXT("   Integer var indices: "); for( i=0; i<num_int_vars; ++i) PRINTTEXT("%u ", (unsigned int) int_vars_idx[i]); PRINTTEXT("\n");
     PRINTTEXT("\n");
     
 #endif   
