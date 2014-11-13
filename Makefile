@@ -1,6 +1,9 @@
 # Makefile for ECOS
-# Configuration of make process in ecos.mk
 
+# Disable implicit rules such as 'make ecos' when 'ecos.o' exists
+.SUFFIXES:
+
+# Configuration of make process in ecos.mk
 include ecos.mk
 CFLAGS += -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config
 TEST_INCLUDES = -Itest -Itest/generated_tests
