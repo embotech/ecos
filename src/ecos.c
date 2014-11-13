@@ -770,6 +770,26 @@ idxint ECOS_solve(pwork* w)
 	idxint i, initcode, KKT_FACTOR_RETURN_CODE;
 	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap, pres_prev;
 	idxint exitcode = ECOS_FATAL, interrupted = 0;
+
+
+#if PRINTLEVEL >= 3
+    printSparseMatrix(w->G);
+
+    PRINTTEXT("h: ");
+    for (i=0; i<  w->m; ++i){
+        PRINTTEXT("%.2f ", w->h[i] );
+    }
+    PRINTTEXT("\n");
+
+    PRINTTEXT("n: %u\n", w->n);
+    PRINTTEXT("m: %u\n", w->m);
+    PRINTTEXT("p: %u\n", w->p);
+
+    PRINTTEXT("\n");
+#endif
+
+
+
     
 #if DEBUG
     char fn[20];

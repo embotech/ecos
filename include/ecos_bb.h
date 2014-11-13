@@ -26,17 +26,20 @@
 #define MI_MAXITER_NO_SOLN (1)
 #define MI_INFEASIBLE (2)
 
+#define MAX_FLOAT_INT (8388608) //Max integer and all smaller integer representable by single precision
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define INFINITY (1.0/0.0)
+//#define INFINITY (1.0/0.0)
 
 typedef struct node {
 	char status;
 	pfloat L;
 	pfloat U;
 	idxint split_idx;
+	pfloat split_val;
 } node;
 
 /* Wrapper for mixed integer module */
@@ -66,15 +69,12 @@ typedef struct ecos_bb_pwork{
 
 	/* best iterate seen so far */
     /* variables */
-    pfloat* best_x;  /* primal variables                    */
-    pfloat* best_y;  /* multipliers for equality constaints */
-    pfloat* best_z;  /* multipliers for conic inequalities  */
-    pfloat* best_s;  /* slacks for conic inequalities       */
-    pfloat best_kap; /* kappa (homogeneous embedding)       */
-	pfloat best_tau; /* tau (homogeneous embedding)         */
-    pfloat best_cx;
-    pfloat best_by;
-    pfloat best_hz;
+    pfloat* x;  /* primal variables                    */
+    pfloat* y;  /* multipliers for equality constaints */
+    pfloat* z;  /* multipliers for conic inequalities  */
+    pfloat* s;  /* slacks for conic inequalities       */
+    pfloat kap; /* kappa (homogeneous embedding)       */
+	pfloat tau; /* tau (homogeneous embedding)         */
     stats* best_info; /* info of best iterate               */
 	pfloat global_U;
 	pfloat global_L;
@@ -114,12 +114,24 @@ static inline char* get_bool_node_id(idxint idx, ecos_bb_pwork* prob){
     return &prob->bool_node_ids[prob->num_bool_vars * idx];
 }
 
+static inline pfloat* get_int_node_id(idxint idx, ecos_bb_pwork* prob){
+    return &prob->int_node_ids[prob->num_int_vars * idx * 2];
+}
+
 static inline pfloat abs_2(pfloat number){
 	return number < 0.0 ? -number : number;
 }
 
 static inline pfloat pfloat_round(pfloat number){
     return (number >= 0) ? (int)(number + 0.5) : (int)(number - 0.5);
+}
+
+static inline pfloat pfloat_ceil(pfloat number){
+	return (pfloat) (number < 0 ? (int) number : (int) (number+(1-MI_INT_TOL)) );
+}
+
+static inline pfloat pfloat_floor(pfloat number){
+    return (pfloat) (number < 0 ? (int) (number-(1-MI_INT_TOL)) : (int) number);
 }
 
 static inline idxint float_eqls(pfloat a, pfloat b){

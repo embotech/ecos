@@ -64,6 +64,8 @@ void socp_to_ecos_bb(
         }
     }
 
+
+
     /* Now insert the new zeros and expand the column indices as needed for INTEGER vars*/
     for (j=num_bool_vars; j<(num_bool_vars + num_int_vars); ++j){
         k = int_vars_idx[j];
@@ -74,10 +76,10 @@ void socp_to_ecos_bb(
         Gir_out[ Gjc_out[k] + 1 ] = 2*j + 1;
 
         /* Set lower bound to 0*/
-        h_out[ 2*j ] = -INFINITY;     
+        h_out[ 2*j ] = MAX_FLOAT_INT;     
 
         /* Set upper bound to 1*/
-        h_out[ 2*j + 1] = INFINITY;     
+        h_out[ 2*j + 1] = MAX_FLOAT_INT;     
 
         for (i=(k+1); i<=n; ++i){
             Gjc_out[i] += 2;
@@ -105,26 +107,6 @@ void socp_to_ecos_bb(
         h_out[2*(num_bool_vars + num_int_vars) + i] = h_in[i];
     }
 
-#if PRINTLEVEL >= 3
-    PRINTTEXT("Gjc_out: ");
-    for (i=0; i<=n; ++i){
-        PRINTTEXT("%u ", Gjc_out[i] );
-    }
-    PRINTTEXT("\n");
-
-    PRINTTEXT("Gpr_out: ");
-    for (i=0; i<Gjc_out[n]; ++i){
-        PRINTTEXT("%f.2 ", Gpr_out[i] );
-    }
-    PRINTTEXT("\n");
-
-    PRINTTEXT("Gir_out: ");
-    for (i=0; i<Gjc_out[n]; ++i){
-        PRINTTEXT("%u ", Gir_out[i] );
-    }
-    PRINTTEXT("\n");
-#endif
-
 }
 
 ecos_bb_pwork* ECOS_BB_setup(
@@ -136,10 +118,14 @@ ecos_bb_pwork* ECOS_BB_setup(
     idxint num_bool_vars, idxint* bool_vars_idx,
     idxint num_int_vars, idxint* int_vars_idx)
 {
+    int i;
+
+    PRINTTEXT("m: %u\n", m);
+
     /* MALLOC the problem's memory*/
     ecos_bb_pwork* prob = (ecos_bb_pwork*) MALLOC(sizeof(ecos_bb_pwork));    
 
-    idxint new_G_size = Gjc[n] + 2 * num_bool_vars + 2 * num_int_vars;
+    idxint new_G_size = Gjc[n] + (2 * num_bool_vars) + (2 * num_int_vars);
     prob->Gpr_new = (pfloat *) MALLOC( new_G_size * sizeof(pfloat) );
     prob->Gjc_new = (idxint *) MALLOC( (n+1) * sizeof(idxint) );
     prob->Gir_new = (idxint *) MALLOC( new_G_size * sizeof(idxint) );
@@ -154,6 +140,8 @@ ecos_bb_pwork* ECOS_BB_setup(
                     h, prob->h_new);
     m += 2*(num_bool_vars + num_int_vars);
     l += 2*(num_bool_vars + num_int_vars);    
+
+    PRINTTEXT("m: %u\n", m);
 
     /* Default the maxiter to global declared in the header file*/
     prob->maxiter = MI_MAXITER;
@@ -174,11 +162,22 @@ ecos_bb_pwork* ECOS_BB_setup(
     prob->int_vars_idx = int_vars_idx;
 
     /* MALLOC the best optimal solution's memory*/
-    prob->best_x = (pfloat*) MALLOC( n*sizeof(pfloat) );
-    prob->best_y = (pfloat*) MALLOC( p*sizeof(pfloat) );
-    prob->best_z = (pfloat*) MALLOC( m*sizeof(pfloat) );
-    prob->best_s = (pfloat*) MALLOC( m*sizeof(pfloat) );
+    prob->x = (pfloat*) MALLOC( n*sizeof(pfloat) );
+    prob->y = (pfloat*) MALLOC( p*sizeof(pfloat) );
+    prob->z = (pfloat*) MALLOC( m*sizeof(pfloat) );
+    prob->s = (pfloat*) MALLOC( m*sizeof(pfloat) );
     prob->best_info = (stats*) MALLOC( sizeof(stats) );
+
+#if PRINTLEVEL >= 4
+    printSparseMatrix(prob->ecos_prob->G);
+
+    PRINTTEXT("h: ");
+    for (i=0; i< prob->ecos_prob->m; ++i){
+        PRINTTEXT("%.2f ", prob->ecos_prob->h[i] );
+    }
+    PRINTTEXT("\n");
+#endif
+
 
     /* Setup the ecos solver*/
     prob->ecos_prob = ECOS_setup(
@@ -204,7 +203,22 @@ ecos_bb_pwork* ECOS_BB_setup(
     
     /* switch off ecos prints */
     prob->ecos_prob->stgs->verbose = 0;
-    
+
+
+#if PRINTLEVEL >= 3
+    PRINTTEXT("ECOS G: ");
+    printSparseMatrix(prob->G);
+
+    PRINTTEXT("ECOS h: ");
+    for (i=0; i<m; ++i){
+        PRINTTEXT("%.2f ", prob->ecos_prob->h[i] );
+    }
+    PRINTTEXT("\n");
+
+
+    PRINTTEXT("\n");
+#endif
+
     return prob;
 }
 
@@ -217,10 +231,10 @@ void ECOS_BB_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep){
     FREE(prob->nodes);
     FREE(prob->bool_node_ids);
     FREE(prob->int_node_ids);
-    FREE(prob->best_x);
-    FREE(prob->best_y);
-    FREE(prob->best_z);
-    FREE(prob->best_s);
+    FREE(prob->x);
+    FREE(prob->y);
+    FREE(prob->z);
+    FREE(prob->s);
     FREE(prob->best_info);
     FREE(prob);
 }

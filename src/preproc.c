@@ -515,6 +515,12 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     for( i=0; i<ncones; i++ ){
         PRINTTEXT("    Size of SOC #%02d: %d\n", (int)(i+1), (int)q[i]);
     }
+    PRINTTEXT("h: ");
+    for (i=0; i<m; ++i){
+        PRINTTEXT("%.2f ", h[i] );
+    }
+    PRINTTEXT("\n");
+    
 #endif
 	
 	/* get work data structure */

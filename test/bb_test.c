@@ -2,7 +2,48 @@
 #include "ecos.h"
 #include "ecos_bb.h"
 
-int test_1a(){
+
+int test_1a_int(){
+	idxint n = 2;
+	idxint m = 4;
+	pfloat feas_Gx[6] = {2.0, 3.0, -1, 1.0, 4.0, -1};
+	idxint feas_Gp[3] = {0, 3, 6};
+	idxint feas_Gi[6] = {0, 1, 2, 0, 1, 3};
+
+	pfloat feas_c[2] = {-1., -1.};
+	pfloat feas_h[4] = {4., 12., 0. , 0.};
+
+	idxint int_idx[2] = {0,1};
+
+	/* Answer: */
+	pfloat x[2] = {0.0, 3.0};
+
+	idxint i, ret_code, pass;
+	
+	ecos_bb_pwork* prob = ECOS_BB_setup(
+		n, m, 0, 
+		m, 0, NULL,
+		feas_Gx, feas_Gp, feas_Gi,
+		NULL, NULL, NULL,
+		feas_c, feas_h, NULL, 0 , NULL, 2, int_idx);
+
+	printf("Passed setup \n");
+
+	ret_code = ECOS_BB_solve(prob);
+	
+	pass = 1;
+
+	printf("Soln:");
+	for (i=0; i<n; ++i){
+		pass &= float_eqls(x[i] ,prob->x[i]);
+		printf("%f ", prob->x[i]);
+	}
+	ECOS_BB_cleanup(prob, 0);
+	return pass;
+}
+
+
+int test_1a_bool(){
 	idxint n = 2;
 	idxint m = 2;
 	pfloat feas_Gx[4] = {2.0, 3.0, 1.0, 4.0};
@@ -34,8 +75,8 @@ int test_1a(){
 
 	printf("Soln:");
 	for (i=0; i<n; ++i){
-		pass &= float_eqls(x[i] ,prob->best_x[i]);
-		printf("%f ", prob->best_x[i]);
+		pass &= float_eqls(x[i] ,prob->x[i]);
+		printf("%f ", prob->x[i]);
 	}
 	ECOS_BB_cleanup(prob, 0);
 	return pass;
@@ -73,8 +114,8 @@ int test_1b(){
 
 	printf("Soln:");
 	for (i=0; i<n; ++i){
-		pass &= float_eqls(x[i] ,prob->best_x[i]);
-		printf("%f ", prob->best_x[i]);
+		pass &= float_eqls(x[i] ,prob->x[i]);
+		printf("%f ", prob->x[i]);
 	}
 	ECOS_BB_cleanup(prob, 0);
 	return pass;
@@ -110,8 +151,8 @@ int test_2(){
 
 	printf("Soln:");
 	for (i=0; i<n; ++i){
-		pass &= float_eqls(x[i] ,prob->best_x[i]);
-		printf("%f ", prob->best_x[i]);
+		pass &= float_eqls(x[i] ,prob->x[i]);
+		printf("%f ", prob->x[i]);
 	}
 	ECOS_BB_cleanup(prob, 0);
 	return pass;
@@ -148,8 +189,8 @@ int test_3(){
 
 	printf("Soln:");
 	for (i=0; i<n; ++i){
-		pass &= float_eqls(x[i] ,prob->best_x[i]);
-		printf("%f ", prob->best_x[i]);
+		pass &= float_eqls(x[i] ,prob->x[i]);
+		printf("%f ", prob->x[i]);
 	}
 	ECOS_BB_cleanup(prob, 0);
 	return pass;
@@ -186,8 +227,8 @@ int test_4(){
 	
 	printf("Soln:");
 	for (i=0; i<n; ++i){
-		pass &= float_eqls(x[i] ,prob->best_x[i]);
-		printf("%f ", prob->best_x[i]);
+		pass &= float_eqls(x[i] ,prob->x[i]);
+		printf("%f ", prob->x[i]);
 	}
 	
 	ECOS_BB_cleanup(prob, 0);
@@ -225,8 +266,8 @@ int test_5(){
 	
 	printf("Soln:");
 	for (i=0; i<n; ++i){
-		pass &= float_eqls(x[i] ,prob->best_x[i]);
-		printf("%f ", prob->best_x[i]);
+		pass &= float_eqls(x[i] ,prob->x[i]);
+		printf("%f ", prob->x[i]);
 	}
 
 	ECOS_BB_cleanup(prob, 0);
@@ -276,8 +317,8 @@ int test_6(){
 
 	printf("Soln:");
 	for (i=0; i<n; ++i){
-		pass &= float_eqls(x[i] ,prob->best_x[i]);
-		printf("%f ", prob->best_x[i]);
+		pass &= float_eqls(x[i] ,prob->x[i]);
+		printf("%f ", prob->x[i]);
 	}
 	ECOS_BB_cleanup(prob, 0);
 	return pass;
@@ -320,8 +361,8 @@ int test_7(){
 
 	printf("Soln: ");
 	for (i=0; i<n; ++i){
-		pass &= float_eqls(x[i] ,prob->best_x[i]);
-		printf("%f ", prob->best_x[i]);
+		pass &= float_eqls(x[i] ,prob->x[i]);
+		printf("%f ", prob->x[i]);
 	}
 	printf("\nRuntime: %f\n", msRuntime);
 	
@@ -340,8 +381,8 @@ int test_7(){
 
 	printf("Soln2: ");
 	for (i=0; i<n; ++i){
-		pass &= float_eqls(x2[i] ,prob->best_x[i]);
-		printf("%f ", prob->best_x[i]);
+		pass &= float_eqls(x2[i] ,prob->x[i]);
+		printf("%f ", prob->x[i]);
 	}
 	printf("\nRuntime: %f\n", msRuntime);
 	
@@ -391,15 +432,17 @@ int test_8(){
 int main(){
 
 	printf("Pass: 1, Fail: 0\n=============\n");
-	printf("\nTest 1a: %u\n=============\n", test_1a());
-	printf("\nTest 1b: %u\n=============\n", test_1b());
-	printf("\nTest 2: %u\n=============\n", test_2());	
-	printf("\nTest 3: %u\n=============\n", test_3());	
-	printf("\nTest 4: %u\n=============\n", test_4());
-	printf("\nTest 5: %u\n=============\n", test_5());
-	printf("\nTest 6: %u\n=============\n", test_6());	
-	printf("\nTest 7: %u\n=============\n", test_7());		
-	printf("\nTest 8: %u\n=============\n", test_8());		
+	printf("\nTest 1a: %u\n=============\n", test_1a_bool());
+	printf("\nTest 1a: %u\n=============\n", test_1a_int());
+	
+	// printf("\nTest 1b: %u\n=============\n", test_1b());
+	// printf("\nTest 2: %u\n=============\n", test_2());	
+	// printf("\nTest 3: %u\n=============\n", test_3());	
+	// printf("\nTest 4: %u\n=============\n", test_4());
+	// printf("\nTest 5: %u\n=============\n", test_5());
+	// printf("\nTest 6: %u\n=============\n", test_6());	
+	// printf("\nTest 7: %u\n=============\n", test_7());		
+	// printf("\nTest 8: %u\n=============\n", test_8());		
 	
 	return 0;
 }
