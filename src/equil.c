@@ -179,10 +179,11 @@ void use_alternating_norm_equilibration(pwork *w)
     if(num_G_rows > 0)
         equilibrate_cols(w->xequil, w->G);
 
-    /* equilibrate the c vector */
+    /* equilibrate the c vector
     for(i = 0; i < num_cols; i++) {
         w->c[i] /= w->xequil[i];
-    }
+    }  */
+        
     /* equilibrate the b vector */
     for(i = 0; i < num_A_rows; i++) {
         w->b[i] /= w->Aequil[i];
@@ -292,10 +293,11 @@ void use_ruiz_equilibration(pwork *w)
         }
     }
 
-    /* equilibrate the c vector */
+    /* equilibrate the c vector 
     for(i = 0; i < num_cols; i++) {
         w->c[i] /= w->xequil[i];
-    }
+    } */
+
     /* equilibrate the b vector */
     for(i = 0; i < num_A_rows; i++) {
         w->b[i] /= w->Aequil[i];

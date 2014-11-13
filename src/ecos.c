@@ -751,6 +751,7 @@ void backscale(pwork *w)
     for( i=0; i < w->p; i++ ){ w->y[i] /= (w->Aequil[i] * w->tau); }
 	for( i=0; i < w->m; i++ ){ w->z[i] /= (w->Gequil[i] * w->tau); }
 	for( i=0; i < w->m; i++ ){ w->s[i] /= (w->Gequil[i] * w->tau); }
+    for( i=0; i < w->n; i++ ){ w->c[i] *= w->xequil[i]; }
 #else
     /* standard back scaling without equilibration */
     for( i=0; i < w->n; i++ ){ w->x[i] /= w->tau; }
@@ -770,7 +771,11 @@ idxint ECOS_solve(pwork* w)
 	idxint i, initcode, KKT_FACTOR_RETURN_CODE;
 	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap, pres_prev;
 	idxint exitcode = ECOS_FATAL, interrupted = 0;
-    
+
+#if defined EQUILIBRATE && EQUILIBRATE > 0   
+    for(i = 0; i <w->n; i++) { w->c[i] /= w->xequil[i]; }
+#endif
+
 #if DEBUG
     char fn[20];
 #endif
@@ -1127,9 +1132,5 @@ void ecos_updateDataEntry_h(pwork* w, idxint idx, pfloat value)
  */
 void ecos_updateDataEntry_c(pwork* w, idxint idx, pfloat value)
 {
-#if EQUILIBRATE > 0
-    w->c[idx] = value / w->xequil[idx];
-#else 
     w->c[idx] = value;
-#endif      
 }

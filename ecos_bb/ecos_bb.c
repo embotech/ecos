@@ -19,9 +19,22 @@ void print_ecos_solution(ecos_bb_pwork* prob){
     PRINTTEXT("\n");
 }
 
+void print_ecos_xequil(ecos_bb_pwork* prob){
+    int i; PRINTTEXT("ecos->xequil: ");
+    for (i=0; i<prob->ecos_prob->n; ++i) PRINTTEXT("%.2f ", prob->ecos_prob->xequil[i] );
+    PRINTTEXT("\n");
+}
+
+
 void print_ecos_h(ecos_bb_pwork* prob){
     int i; PRINTTEXT("ecos->h: ");
     for (i=0; i<prob->ecos_prob->m; ++i) PRINTTEXT("%.2f ", prob->ecos_prob->h[i] );
+    PRINTTEXT("\n");
+}
+
+void print_ecos_c(ecos_bb_pwork* prob){
+    int i; PRINTTEXT("ecos->c: ");
+    for (i=0; i<prob->ecos_prob->n; ++i) PRINTTEXT("%.2f ", prob->ecos_prob->c[i] );
     PRINTTEXT("\n");
 }
 
@@ -32,7 +45,7 @@ void print_node(ecos_bb_pwork* prob, idxint i){
         PRINTTEXT("%i ", get_bool_node_id(i, prob)[j] );
     PRINTTEXT(" | ");
     for(j=0; j < prob->num_int_vars; ++j) 
-        PRINTTEXT("(%.2f, %.2f) ", get_int_node_id(i, prob)[2*j], get_int_node_id(i, prob)[2*j+1] );
+        PRINTTEXT("(%.2f, %.2f) ", -get_int_node_id(i, prob)[2*j], get_int_node_id(i, prob)[2*j+1] );
     PRINTTEXT("\n");
 }
 #endif
@@ -238,6 +251,14 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
         }
 
         if (prob->nodes[node_idx].U < prob->global_U){
+
+#if MI_PRINTLEVEL > 1
+            PRINTTEXT("New optimal solution, U: %.2f\n", prob->nodes[node_idx].U);
+            print_ecos_xequil(prob);
+            print_ecos_c(prob);
+            print_ecos_solution(prob);
+#endif      
+
             store_solution(prob);
             prob->global_U = prob->nodes[node_idx].U;
         }

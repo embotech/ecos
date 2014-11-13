@@ -3,20 +3,20 @@
 #include "ecos_bb.h"
 
 
-int test_1a_int(){
+int test_1a_bool(){
 	idxint n = 2;
-	idxint m = 4;
-	pfloat feas_Gx[6] = {2.0, 3.0, -1, 1.0, 4.0, -1};
-	idxint feas_Gp[3] = {0, 3, 6};
-	idxint feas_Gi[6] = {0, 1, 2, 0, 1, 3};
+	idxint m = 2;
+	pfloat feas_Gx[4] = {2.0, 3.0, 1.0, 4.0};
+	idxint feas_Gp[3] = {0, 2, 4};
+	idxint feas_Gi[4] = {0, 1, 0, 1};
 
-	pfloat feas_c[2] = {-1., -1.};
-	pfloat feas_h[4] = {4., 12., 0. , 0.};
+	pfloat feas_c[2] = {-1.1, -1.};
+	pfloat feas_h[2] = {4., 12.};
 
-	idxint int_idx[2] = {0,1};
+	idxint bool_idx[1] = {0};
 
 	/* Answer: */
-	pfloat x[2] = {0.0, 3.0};
+	pfloat x[2] = {1.0, 2.0};
 
 	idxint i, ret_code, pass;
 	
@@ -25,7 +25,7 @@ int test_1a_int(){
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
-		feas_c, feas_h, NULL, 0 , NULL, 2, int_idx);
+		feas_c, feas_h, NULL, 1, bool_idx, 0 , NULL);
 
 	printf("Passed setup \n");
 
@@ -42,21 +42,20 @@ int test_1a_int(){
 	return pass;
 }
 
-
-int test_1a_bool(){
+int test_1a_int(){
 	idxint n = 2;
-	idxint m = 2;
-	pfloat feas_Gx[4] = {2.0, 3.0, 1.0, 4.0};
-	idxint feas_Gp[3] = {0, 2, 4};
-	idxint feas_Gi[4] = {0, 1, 0, 1};
+	idxint m = 4;
+	pfloat feas_Gx[6] = {2.0, 3.0, -1, 1.0, 4.0, -1};
+	idxint feas_Gp[3] = {0, 3, 6};
+	idxint feas_Gi[6] = {0, 1, 2, 0, 1, 3};
 
-	pfloat feas_c[2] = {-1., -1.};
-	pfloat feas_h[2] = {4., 12.};
+	pfloat feas_c[2] = {-1., -1.1};
+	pfloat feas_h[4] = {4., 12., 0. , 0.};
 
-	idxint bool_idx[1] = {0};
+	idxint int_idx[2] = {0,1};
 
 	/* Answer: */
-	pfloat x[2] = {1.0, 2.0};
+	pfloat x[2] = {0.0, 3.0};
 
 	idxint i, ret_code, pass;
 	
@@ -65,7 +64,7 @@ int test_1a_bool(){
 		m, 0, NULL,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
-		feas_c, feas_h, NULL, 1, bool_idx, 0 , NULL);
+		feas_c, feas_h, NULL, 0 , NULL, 2, int_idx);
 
 	printf("Passed setup \n");
 
@@ -337,7 +336,7 @@ int test_7(){
 	idxint bool_idx[5] = {0,1,2,3,4};
 
 	/* Answer: */ 
-	pfloat x[15] = {0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,32.38,0.00,0.00,0.00,
+	pfloat x[15] = {0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,32.383266,0.00,0.00,0.00,
 		0.00,0.00,0.00};
 	pfloat x2[15] = {0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,86.798858,
 		0.000000,0.000000,0.000000};
@@ -360,7 +359,7 @@ int test_7(){
 	pass = 1;
 
 	printf("Soln: ");
-	for (i=0; i<n; ++i){
+	for (i=5; i<n; ++i){
 		pass &= float_eqls(x[i] ,prob->x[i]);
 		printf("%f ", prob->x[i]);
 	}
@@ -380,7 +379,7 @@ int test_7(){
 	msRuntime = toc(&t);
 
 	printf("Soln2: ");
-	for (i=0; i<n; ++i){
+	for (i=5; i<n; ++i){
 		pass &= float_eqls(x2[i] ,prob->x[i]);
 		printf("%f ", prob->x[i]);
 	}
@@ -391,58 +390,18 @@ int test_7(){
 	return pass;
 }
 
-int test_8(){
-	idxint n = 3;
-	idxint m = 8;
-	pfloat feas_Gx[10] = {1,-1,9999,-9999,1,1,-1,1,1,-1};
-	idxint feas_Gp[4] = {0,4,7,10};
-	idxint feas_Gi[10] = {0,1,2,3,2,4,6,3,5,7};
-
-	pfloat feas_c[3] = {0,-1,1};
-	pfloat feas_h[10] = {1,0,9999,0,10,12,0,0};
-
-	/* Answer: */
-	pfloat x[3] = {0,10,0};
-
-	idxint i, ret_code, pass;
-
-	pwork* prob = ECOS_setup(
-		n, m, 0, 
-		m, 0, NULL,
-		feas_Gx, feas_Gp, feas_Gi,
-		NULL, NULL, NULL,
-		feas_c, feas_h, NULL);
-
-	ret_code = ECOS_solve(prob);
-			
-	pass = 1;
-
-	printf("Soln:");
-	for (i=0; i<n; ++i){
-		printf("%f ", prob->x[i]);
-		pass &= float_eqls(x[i] ,prob->x[i]);
-	}
-
-	ECOS_cleanup(prob,0);
-	
-	return pass;
-}
-
 
 int main(){
 
 	printf("Pass: 1, Fail: 0\n=============\n");
-	printf("\nTest 1a: %u\n=============\n", test_1a_bool());
-	printf("\nTest 1a: %u\n=============\n", test_1a_int());
-	
-	printf("\nTest 1b: %u\n=============\n", test_1b());
-	printf("\nTest 2: %u\n=============\n", test_2());	
-	printf("\nTest 3: %u\n=============\n", test_3());	
-	printf("\nTest 4: %u\n=============\n", test_4());
-	printf("\nTest 5: %u\n=============\n", test_5());
-	printf("\nTest 6: %u\n=============\n", test_6());	
-	printf("\nTest 7: %u\n=============\n", test_7());		
-	printf("\nTest 8: %u\n=============\n", test_8());		
-	
+	printf("\n\nTest 1aBoolean: %u\n=============\n", test_1a_bool());
+	printf("\n\nTest 1aInteger: %u\n=============\n", test_1a_int());
+	printf("\n\nTest 1b: %u\n=============\n", test_1b());
+	printf("\n\nTest 2: %u\n=============\n", test_2());	
+	printf("\n\nTest 3: %u\n=============\n", test_3());	
+	printf("\n\nTest 4: %u\n=============\n", test_4());
+	printf("\n\nTest 5: %u\n=============\n", test_5());
+	printf("\n\nTest 6: %u\n=============\n", test_6());	
+	printf("\n\nTest 7: %u\n=============\n", test_7());			
 	return 0;
 }
