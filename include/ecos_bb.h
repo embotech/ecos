@@ -6,7 +6,7 @@
 #include "glblopts.h"
 
 /* Print verbosity */
-#define MI_PRINTLEVEL (1)
+#define MI_PRINTLEVEL (3)
 
 /* ecos_bb configuration settings */
 #define MI_ABS_EPS (1E-7)
@@ -29,13 +29,12 @@
 #define MI_MAXITER_NO_SOLN (1)
 #define MI_INFEASIBLE (2)
 
-#define MAX_FLOAT_INT (8388608) //Max integer and all smaller integer representable by single precision
+/*Max integer and all smaller integer representable by single precision*/
+#define MAX_FLOAT_INT (8388608) 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-//#define INFINITY (1.0/0.0)
 
 typedef struct node {
 	char status;

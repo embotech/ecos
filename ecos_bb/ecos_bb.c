@@ -61,10 +61,14 @@ void branch(idxint curr_node_idx, ecos_bb_pwork* prob){
         get_bool_node_id(prob->iter, prob)[split_idx] = MI_ONE;
     }else{
         split_idx -= prob->num_bool_vars;
+
+        /* Left branch constrain UB */
         get_int_node_id(curr_node_idx, prob)[split_idx*2 + 1] = 
-            pfloat_floor( prob->nodes[curr_node_idx].split_val ); // Left branch constrain UB
+            pfloat_floor( prob->nodes[curr_node_idx].split_val ); 
+        
+        /* Right branch constrain LB */
         get_int_node_id(prob->iter, prob)[split_idx*2 ] = 
-            -pfloat_ceil( prob->nodes[curr_node_idx].split_val ); // Right branch constrain LB
+            -pfloat_ceil( prob->nodes[curr_node_idx].split_val ); 
     }
     
     prob->nodes[curr_node_idx].status = MI_NOT_SOLVED;
@@ -249,7 +253,7 @@ idxint should_continue(ecos_bb_pwork* prob, idxint curr_node_idx){
     return (prob->global_U - prob->global_L) > MI_ABS_EPS
         && abs_2(prob->global_U / prob->global_L - 1.0) > MI_REL_EPS
         && curr_node_idx >= 0
-        && prob->iter < prob->maxiter;
+        && prob->iter < (prob->maxiter-1);
 }
 
 int get_ret_code(ecos_bb_pwork* prob){
@@ -304,18 +308,13 @@ idxint ECOS_BB_solve(ecos_bb_pwork* prob){
         /* and nodes[prob->iter] with rightNode */
         branch(curr_node_idx, prob);
 
-        /*PRINTTEXT("curr_node_idx: %u\n", curr_node_idx);*/
-
         /* Step 3*/
         get_bounds(curr_node_idx, prob);
         get_bounds(prob->iter, prob);
 
-        /*for (i=0; i <= prob->iter; ++i) print_node(prob, i);*/
-
         /* Step 4*/
         prob->global_L = get_global_L(prob);
-        //prob->global_U = MIN(prob->global_U, MIN(prob->nodes[curr_node_idx].U, prob->nodes[prob->iter].U));
-
+        
         curr_node_idx = get_next_node(prob);
     }
     load_solution(prob);

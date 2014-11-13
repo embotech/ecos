@@ -64,8 +64,6 @@ void socp_to_ecos_bb(
         }
     }
 
-
-
     /* Now insert the new zeros and expand the column indices as needed for INTEGER vars*/
     for (j=num_bool_vars; j<(num_bool_vars + num_int_vars); ++j){
         k = int_vars_idx[j];
@@ -120,6 +118,28 @@ ecos_bb_pwork* ECOS_BB_setup(
 {
     int i;
 
+#if MI_PRINTLEVEL > 2
+    PRINTTEXT("\n");        
+    PRINTTEXT("  ****************************************************************\n");
+    PRINTTEXT("  * ECOS_BB: Embedded Conic Solver Branch and bound module       *\n");
+    PRINTTEXT("  *                                                              *\n");
+    PRINTTEXT("  * NOTE: This module is an extension of ECOS by Domahidi et al. *\n");
+    PRINTTEXT("  *                                                              *\n");
+    PRINTTEXT("  * (C) Han Wang, Stanford University 2012-14.                   *\n");
+    PRINTTEXT("  *                     Email: hanwang2@stanford.edu             *\n");
+    PRINTTEXT("  ****************************************************************\n");
+    PRINTTEXT("\n\n");
+    PRINTTEXT("PROBLEM SUMMARY:\n");
+    PRINTTEXT("   Boolean variables (num_bool_vars): %d\n", (int) num_bool_vars);
+    PRINTTEXT("   Integer variables ( num_int_vars): %d\n", (int) num_int_vars);
+    PRINTTEXT("- - - - - - - - - - - - - - -\n");
+    PRINTTEXT("   Boolean var indices: "); for( i=0; i<num_bool_vars; ++i) PRINTTEXT("%u ", bool_vars_idx[i]); PRINTTEXT("\n");
+    PRINTTEXT("   Integer var indices: "); for( i=0; i<num_int_vars; ++i) PRINTTEXT("%u ", int_vars_idx[i]); PRINTTEXT("\n");
+    PRINTTEXT("\n");
+    
+#endif   
+
+
     /* MALLOC the problem's memory*/
     ecos_bb_pwork* prob = (ecos_bb_pwork*) MALLOC(sizeof(ecos_bb_pwork));    
 
@@ -164,17 +184,6 @@ ecos_bb_pwork* ECOS_BB_setup(
     prob->s = (pfloat*) MALLOC( m*sizeof(pfloat) );
     prob->best_info = (stats*) MALLOC( sizeof(stats) );
 
-#if PRINTLEVEL >= 4
-    printSparseMatrix(prob->ecos_prob->G);
-
-    PRINTTEXT("h: ");
-    for (i=0; i< prob->ecos_prob->m; ++i){
-        PRINTTEXT("%.2f ", prob->ecos_prob->h[i] );
-    }
-    PRINTTEXT("\n");
-#endif
-
-
     /* Setup the ecos solver*/
     prob->ecos_prob = ECOS_setup(
         n, m, p, l, ncones, q,
@@ -201,10 +210,13 @@ ecos_bb_pwork* ECOS_BB_setup(
     prob->ecos_prob->stgs->verbose = 0;
 
 
-#if PRINTLEVEL >= 3
-    PRINTTEXT("ECOS G: ");
-    printSparseMatrix(prob->G);
+#if MI_PRINTLEVEL > 2
 
+#if  PRINTLEVEL > 2
+    PRINTTEXT("ECOS G:\n");
+    printSparseMatrix(prob->ecos_prob->G);
+#endif
+    
     PRINTTEXT("ECOS h: ");
     for (i=0; i<m; ++i){
         PRINTTEXT("%.2f ", prob->ecos_prob->h[i] );

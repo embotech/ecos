@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include "mex.h"
 #include "matrix.h"
 #include "ecos.h"
@@ -39,6 +38,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     const mxArray* dims_q;
     const mxArray* opts = NULL;
     const mxArray* opts_bool_idx = NULL;
+    const mxArray* opts_int_idx = NULL;
     const mxArray* opts_verbose = NULL;
     const mxArray* opts_feastol = NULL;
     const mxArray* opts_reltol = NULL;
@@ -54,6 +54,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     const mwSize *size_b;
     const mwSize *size_q;
     const mwSize* opts_bool_idx_size = NULL;
+    const mwSize* opts_int_idx_size = NULL;
     
     const mwSize ZERO[2] = {0, 0};
     
@@ -100,10 +101,12 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     idxint l;
     double *q;
     idxint *qint;
-    idxint *bool_vars_idx;
+    idxint *bool_vars_idx = NULL;
+    idxint *int_vars_idx = NULL;
     idxint ncones;
     idxint numConicVariables = 0;
-    idxint num_bool_vars;
+    idxint num_bool_vars = 0;
+    idxint num_int_vars = 0;
     
     /* options */
     idxint verbose;
@@ -153,11 +156,20 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     {
       opts = nrhs==5 ? prhs[4] : prhs[6]; 
       
-      opts_bool_idx = opts ? mxGetField(opts, 0, "integer_vars_idx") : 0;
+      opts_bool_idx = opts ? mxGetField(opts, 0, "bool_vars_idx") : 0;
       if (opts_bool_idx != NULL){
         opts_bool_idx_size = mxGetDimensions(opts_bool_idx);
         /* Retrieve the number of boolean vars */
         num_bool_vars = (idxint) (opts_bool_idx_size[1] > opts_bool_idx_size[0] ? opts_bool_idx_size[1] : opts_bool_idx_size[0]);
+        mexPrintf("Num bool vars: %u\n", num_bool_vars );
+      }
+
+      opts_int_idx = opts ? mxGetField(opts, 0, "int_vars_idx") : 0;
+      if (opts_int_idx != NULL){
+        opts_int_idx_size = mxGetDimensions(opts_int_idx);
+        /* Retrieve the number of boolean vars */
+        num_int_vars = (idxint) (opts_int_idx_size[1] > opts_int_idx_size[0] ? opts_int_idx_size[1] : opts_int_idx_size[0]);
+        mexPrintf("Num int vars: %u\n", num_int_vars );
       }
       
       opts_verbose = opts ? mxGetField(opts, 0, "verbose") : 0;
@@ -324,15 +336,22 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     }
     
     /* Switch between ecos_bb and ecos */
-    if (opts_bool_idx != NULL){
-        /* Shift the boolean indexes from matlab style (start at 1) to C style (start at 0) */
-        bool_vars_idx = (idxint *)mxMalloc(num_bool_vars*sizeof(idxint));        
-        for( i=0; i < num_bool_vars; ++i){ bool_vars_idx[i] = (idxint) ((mxGetPr(opts_bool_idx))[i] - 1); mexPrintf("\t%u : %u\n",i, bool_vars_idx[i]);}
+    if (opts_bool_idx != NULL || opts_int_idx != NULL){
+        if (num_bool_vars > 0){
+            /* Shift the boolean indexes from matlab style (start at 1) to C style (start at 0) */
+            bool_vars_idx = (idxint *)mxMalloc(num_bool_vars*sizeof(idxint));        
+            for( i=0; i < num_bool_vars; ++i){ bool_vars_idx[i] = (idxint) ((mxGetPr(opts_bool_idx))[i] - 1); mexPrintf("\t%u : %u\n",i, bool_vars_idx[i]);}
+        }
+
+        if (num_int_vars > 0){
+            /* Shift the integer indexes from matlab style (start at 1) to C style (start at 0) */
+            int_vars_idx = (idxint *)mxMalloc(num_int_vars*sizeof(idxint));        
+            for( i=0; i < num_int_vars; ++i){ int_vars_idx[i] = (idxint) ((mxGetPr(opts_int_idx))[i] - 1); mexPrintf("\t%u : %u\n",i, int_vars_idx[i]);}
+        }
         
-        bb_pwork = ecos_bb_setup(n, m, p, l, ncones, qint, Gpr, Gjc, Gir, Apr, Ajc, Air, cpr, hpr, bpr, num_bool_vars, bool_vars_idx);
+        bb_pwork = ECOS_BB_setup(n, m, p, l, ncones, qint, Gpr, Gjc, Gir, Apr, Ajc, Air, cpr, hpr, bpr, num_bool_vars, bool_vars_idx, num_int_vars, int_vars_idx);
         
         mywork = bb_pwork->ecos_prob;
-
     }else{
         /* This calls ECOS setup function. */
         mywork = ECOS_setup(n, m, p, l, ncones, qint, Gpr, Gjc, Gir, Apr, Ajc, Air, cpr, hpr, bpr);
@@ -381,8 +400,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
       
     /* Solve! */    
     /* Switch between ecos_bb and ecos */
-    if (opts_bool_idx != NULL){
-        exitcode = ecos_bb_solve(bb_pwork);
+    if (opts_bool_idx != NULL || opts_int_idx != NULL){
+        mywork->stgs->verbose = 0; /* Disable prints */
+        exitcode = ECOS_BB_solve(bb_pwork);
     }else{
         exitcode = ECOS_solve(mywork);
     }    
@@ -473,7 +493,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		mxSetField(plhs[2], 0, "iter", outvar);
         
         /* 13. infostring */
-        if (opts_bool_idx != NULL){
+        if (opts_bool_idx != NULL || opts_int_idx != NULL){
             switch( exitcode ){
                 case MI_OPTIMAL_SOLN:
                     outvar = mxCreateString("Optimal branch and bound solution found");
@@ -615,8 +635,13 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
     /* cleanup */
     if (opts_bool_idx != NULL){
-        ecos_bb_cleanup(bb_pwork, nlhs > 2? nlhs-1 : nlhs);
-        mxFree(bool_vars_idx);
+        ECOS_BB_cleanup(bb_pwork, nlhs > 2? nlhs-1 : nlhs);
+        if (bool_vars_idx != NULL){
+            mxFree(bool_vars_idx);    
+        }
+        if (int_vars_idx != NULL){
+            mxFree(int_vars_idx);    
+        }
     }else{
         ECOS_cleanup(mywork, nlhs > 2? nlhs-1 : nlhs);    
     }
