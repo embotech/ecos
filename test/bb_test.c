@@ -435,14 +435,14 @@ int main(){
 	printf("\nTest 1a: %u\n=============\n", test_1a_bool());
 	printf("\nTest 1a: %u\n=============\n", test_1a_int());
 	
-	// printf("\nTest 1b: %u\n=============\n", test_1b());
-	// printf("\nTest 2: %u\n=============\n", test_2());	
-	// printf("\nTest 3: %u\n=============\n", test_3());	
-	// printf("\nTest 4: %u\n=============\n", test_4());
-	// printf("\nTest 5: %u\n=============\n", test_5());
-	// printf("\nTest 6: %u\n=============\n", test_6());	
-	// printf("\nTest 7: %u\n=============\n", test_7());		
-	// printf("\nTest 8: %u\n=============\n", test_8());		
+	printf("\nTest 1b: %u\n=============\n", test_1b());
+	printf("\nTest 2: %u\n=============\n", test_2());	
+	printf("\nTest 3: %u\n=============\n", test_3());	
+	printf("\nTest 4: %u\n=============\n", test_4());
+	printf("\nTest 5: %u\n=============\n", test_5());
+	printf("\nTest 6: %u\n=============\n", test_6());	
+	printf("\nTest 7: %u\n=============\n", test_7());		
+	printf("\nTest 8: %u\n=============\n", test_8());		
 	
 	return 0;
 }

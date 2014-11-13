@@ -5,6 +5,9 @@
 #include "spla.h"
 #include "glblopts.h"
 
+/* Print verbosity */
+#define MI_PRINTLEVEL (1)
+
 /* ecos_bb configuration settings */
 #define MI_ABS_EPS (1E-7)
 #define MI_REL_EPS (1E-2)

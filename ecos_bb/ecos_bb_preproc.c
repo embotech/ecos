@@ -120,8 +120,6 @@ ecos_bb_pwork* ECOS_BB_setup(
 {
     int i;
 
-    PRINTTEXT("m: %u\n", m);
-
     /* MALLOC the problem's memory*/
     ecos_bb_pwork* prob = (ecos_bb_pwork*) MALLOC(sizeof(ecos_bb_pwork));    
 
@@ -140,8 +138,6 @@ ecos_bb_pwork* ECOS_BB_setup(
                     h, prob->h_new);
     m += 2*(num_bool_vars + num_int_vars);
     l += 2*(num_bool_vars + num_int_vars);    
-
-    PRINTTEXT("m: %u\n", m);
 
     /* Default the maxiter to global declared in the header file*/
     prob->maxiter = MI_MAXITER;
