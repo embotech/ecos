@@ -10,8 +10,8 @@
 
 /* ecos_bb configuration settings */
 #define MI_ABS_EPS (1E-7)
-#define MI_REL_EPS (1E-2)
-#define MI_MAXITER (100)
+#define MI_REL_EPS (1E-6)
+#define MI_MAXITER (10000)
 #define MI_INT_TOL (1E-5)
 
 /* Flags */
