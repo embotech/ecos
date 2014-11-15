@@ -92,6 +92,9 @@ typedef struct ecos_bb_pwork{
 	idxint* Gir_new;
 	pfloat* h_new;
 
+	/* settings struct */
+	settings* stgs;
+	
 } ecos_bb_pwork;
 
 ecos_bb_pwork* ECOS_BB_setup(

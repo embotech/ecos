@@ -55,8 +55,10 @@ void branch(idxint curr_node_idx, ecos_bb_pwork* prob){
     idxint i, split_idx = prob->nodes[curr_node_idx].split_idx;
 
 #if MI_PRINTLEVEL > 1
-    PRINTTEXT("Branching->\t");
-    print_node(prob, curr_node_idx);
+    if (prob->stgs->verbose) {
+        PRINTTEXT("Branching->\t");
+        print_node(prob, curr_node_idx);
+    }   
 #endif
 
     /* Create right node*/
@@ -87,8 +89,10 @@ void branch(idxint curr_node_idx, ecos_bb_pwork* prob){
     prob->nodes[curr_node_idx].status = MI_NOT_SOLVED;
 
 #if MI_PRINTLEVEL > 1
-    PRINTTEXT(" Left-> \t "); print_node(prob, curr_node_idx);
-    PRINTTEXT(" Right->\t "); print_node(prob, prob->iter);
+    if (prob->stgs->verbose) {
+        PRINTTEXT(" Left-> \t "); print_node(prob, curr_node_idx);
+        PRINTTEXT(" Right->\t "); print_node(prob, prob->iter);
+    }
 #endif
 }
 
@@ -168,7 +172,7 @@ void set_prob(ecos_bb_pwork* prob, char* bool_node_id, pfloat* int_node_id){
     }
 
 #if MI_PRINTLEVEL > 1
-    print_ecos_h(prob);
+    if (prob->stgs->verbose){ print_ecos_h(prob); }
 #endif
 
 }
@@ -206,8 +210,8 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
     set_prob( prob, get_bool_node_id(node_idx,prob), get_int_node_id(node_idx, prob) );
     ret_code = ECOS_solve(prob->ecos_prob);
 
-#if MI_PRINTLEVEL > 1
-    print_ecos_solution(prob);
+#if MI_PRINTLEVEL > 1 
+    if (prob->stgs->verbose){ print_ecos_solution(prob); }
 #endif
 
     if (ret_code == ECOS_OPTIMAL){
@@ -230,14 +234,14 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
             prob->nodes[node_idx].status = MI_SOLVED_BRANCHABLE;
 
 #if MI_PRINTLEVEL > 1
-            PRINTTEXT("Rounded Solution:\n");
+            if (prob->stgs->verbose){ PRINTTEXT("Rounded Solution:\n"); }
 #endif
 
             set_prob(prob, prob->tmp_bool_node_id, prob->tmp_int_node_id);
             ret_code = ECOS_solve(prob->ecos_prob);
 
 #if MI_PRINTLEVEL > 1
-            print_ecos_solution(prob);
+            if (prob->stgs->verbose){ print_ecos_solution(prob); }
 #endif
 
             if (ret_code == ECOS_OPTIMAL){
@@ -253,10 +257,12 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
         if (prob->nodes[node_idx].U < prob->global_U){
 
 #if MI_PRINTLEVEL > 1
-            PRINTTEXT("New optimal solution, U: %.2f\n", prob->nodes[node_idx].U);
-            print_ecos_xequil(prob);
-            print_ecos_c(prob);
-            print_ecos_solution(prob);
+            if (prob->stgs->verbose){ 
+                PRINTTEXT("New optimal solution, U: %.2f\n", prob->nodes[node_idx].U);
+                print_ecos_xequil(prob);
+                print_ecos_c(prob);
+                print_ecos_solution(prob); 
+            }
 #endif      
 
             store_solution(prob);
@@ -301,8 +307,10 @@ void initialize_root(ecos_bb_pwork* prob){
 idxint ECOS_BB_solve(ecos_bb_pwork* prob){
 
 #if MI_PRINTLEVEL > 0
-    PRINTTEXT("Iter\tLower Bound\tUpper Bound\tGap\n");
-    PRINTTEXT("================================================\n");
+    if (prob->stgs->verbose){ 
+        PRINTTEXT("Iter\tLower Bound\tUpper Bound\tGap\n");
+        PRINTTEXT("================================================\n");
+    }
 #endif
 
     /* Initialize to root node and execute steps 1 on slide 6 */
@@ -319,7 +327,7 @@ idxint ECOS_BB_solve(ecos_bb_pwork* prob){
     while ( should_continue(prob, curr_node_idx) ){
 
 #if MI_PRINTLEVEL > 0
-        print_progress(prob);
+        if (prob->stgs->verbose){ print_progress(prob); }
 #endif
 
         ++(prob->iter);
@@ -341,7 +349,7 @@ idxint ECOS_BB_solve(ecos_bb_pwork* prob){
     load_solution(prob);
 
 #if MI_PRINTLEVEL > 0
-    print_progress(prob);
+    if (prob->stgs->verbose){ print_progress(prob); }
 #endif
 
     return get_ret_code(prob);

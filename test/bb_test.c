@@ -26,6 +26,7 @@ int test_1a_bool(){
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 1, bool_idx, 0 , NULL);
+	prob->stgs->verbose = 0;
 
 	printf("Passed setup \n");
 
@@ -65,7 +66,7 @@ int test_1a_int(){
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 0 , NULL, 2, int_idx);
-
+	prob->stgs->verbose = 0;
 	printf("Passed setup \n");
 
 	ret_code = ECOS_BB_solve(prob);
@@ -104,7 +105,7 @@ int test_1b(){
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 1, bool_idx, 0 , NULL);
-
+	prob->stgs->verbose = 0;
 	printf("Passed setup \n");
 
 	ret_code = ECOS_BB_solve(prob);
@@ -143,7 +144,7 @@ int test_2(){
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 2, bool_idx, 0 , NULL);
-
+	prob->stgs->verbose = 0;
 	ret_code = ECOS_BB_solve(prob);
 	
 	pass = 1;
@@ -181,7 +182,7 @@ int test_3(){
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 1, bool_idx, 0 , NULL);
-
+	prob->stgs->verbose = 0;
 	ret_code = ECOS_BB_solve(prob);
 	
 	pass = 1;
@@ -219,7 +220,7 @@ int test_4(){
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 6, bool_idx, 0, NULL);
-
+	prob->stgs->verbose = 0;
 	ret_code = ECOS_BB_solve(prob);
 
 	pass = 1;
@@ -258,7 +259,7 @@ int test_5(){
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 	feas_c, feas_h, NULL, 6, bool_idx, 0, NULL);
-
+	prob->stgs->verbose = 0;
 	ret_code = ECOS_BB_solve(prob);
 	
 	pass = 1;
@@ -297,7 +298,7 @@ int test_6(){
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 6, bool_idx, 0, NULL);
-
+	prob->stgs->verbose = 0;
 	printf("Obj:");
 	for (i=0; i<n; ++i){
 		printf("%f ", prob->ecos_prob->c[i]);
@@ -351,7 +352,7 @@ int test_7(){
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 5, bool_idx, 0, NULL);
-
+	prob->stgs->verbose = 0;
 	tic(&t);
 	ret_code = ECOS_BB_solve(prob);
 	pfloat msRuntime = toc(&t);

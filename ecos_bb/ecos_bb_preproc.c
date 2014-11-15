@@ -209,6 +209,20 @@ ecos_bb_pwork* ECOS_BB_setup(
     /* switch off ecos prints */
     prob->ecos_prob->stgs->verbose = 0;
 
+    /* settings */
+    prob->stgs = (settings *) MALLOC(sizeof(settings));
+    prob->stgs->maxit = MAXIT;
+    prob->stgs->gamma = GAMMA;    
+    prob->stgs->delta = DELTA;
+    prob->stgs->eps = EPS;
+    prob->stgs->nitref = NITREF;
+    prob->stgs->abstol = ABSTOL;  
+    prob->stgs->feastol = FEASTOL;
+    prob->stgs->reltol = RELTOL;
+    prob->stgs->abstol_inacc = ATOL_INACC;
+    prob->stgs->feastol_inacc = FTOL_INACC;
+    prob->stgs->reltol_inacc = RTOL_INACC;
+    prob->stgs->verbose = VERBOSE;
 
 #if MI_PRINTLEVEL > 2
 
@@ -244,6 +258,7 @@ void ECOS_BB_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep){
     FREE(prob->z);
     FREE(prob->s);
     FREE(prob->best_info);
+    FREE(prob->stgs);
     FREE(prob);
 }
 
