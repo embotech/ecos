@@ -21,6 +21,7 @@
 # Temp files cretated by text editors
 *~
 .DS_Store
+__.SYMDEF
 
 ecostester
 runecos
