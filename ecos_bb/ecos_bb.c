@@ -7,6 +7,11 @@
 
 #define MIN(X, Y)  ((X) < (Y) ? (X) : (Y))
 
+/* define INFINITY for MSFT */
+#ifdef _MSC_VER
+#define INFINITY (DBL_MAX+DBL_MAX)
+#endif
+
 /* Print utility functions*/
 #if MI_PRINTLEVEL > 0
 void print_progress(ecos_bb_pwork* prob){
@@ -41,10 +46,10 @@ void print_ecos_c(ecos_bb_pwork* prob){
 void print_node(ecos_bb_pwork* prob, idxint i){
     int j; PRINTTEXT("Node info: %u : %.2f : %.2f : %u : %.2f Partial id:", prob->nodes[i].status,
         prob->nodes[i].L, prob->nodes[i].U, (int)prob->nodes[i].split_idx, prob->nodes[i].split_val);
-    for(j=0; j < prob->num_bool_vars; ++j) 
+    for(j=0; j < prob->num_bool_vars; ++j)
         PRINTTEXT("%i ", get_bool_node_id(i, prob)[j] );
     PRINTTEXT(" | ");
-    for(j=0; j < prob->num_int_vars; ++j) 
+    for(j=0; j < prob->num_int_vars; ++j)
         PRINTTEXT("(%.2f, %.2f) ", -get_int_node_id(i, prob)[2*j], get_int_node_id(i, prob)[2*j+1] );
     PRINTTEXT("\n");
 }
@@ -58,7 +63,7 @@ void branch(idxint curr_node_idx, ecos_bb_pwork* prob){
     if (prob->stgs->verbose) {
         PRINTTEXT("Branching->\t");
         print_node(prob, curr_node_idx);
-    }   
+    }
 #endif
 
     /* Create right node*/
@@ -66,9 +71,9 @@ void branch(idxint curr_node_idx, ecos_bb_pwork* prob){
     prob->nodes[prob->iter].status = MI_NOT_SOLVED;
 
     /* Copy over the node id*/
-    for(i=0; i < prob->num_bool_vars; ++i) 
+    for(i=0; i < prob->num_bool_vars; ++i)
         get_bool_node_id(prob->iter, prob)[i] = get_bool_node_id(curr_node_idx, prob)[i];
-    for(i=0; i < prob->num_int_vars*2; ++i) 
+    for(i=0; i < prob->num_int_vars*2; ++i)
         get_int_node_id(prob->iter, prob)[i] = get_int_node_id(curr_node_idx, prob)[i];
 
     if (split_idx < prob->num_bool_vars){
@@ -78,14 +83,14 @@ void branch(idxint curr_node_idx, ecos_bb_pwork* prob){
         split_idx -= prob->num_bool_vars;
 
         /* Left branch constrain UB */
-        get_int_node_id(curr_node_idx, prob)[split_idx*2 + 1] = 
-            pfloat_floor( prob->nodes[curr_node_idx].split_val ); 
-        
+        get_int_node_id(curr_node_idx, prob)[split_idx*2 + 1] =
+            pfloat_floor( prob->nodes[curr_node_idx].split_val );
+
         /* Right branch constrain LB */
-        get_int_node_id(prob->iter, prob)[split_idx*2 ] = 
-            -pfloat_ceil( prob->nodes[curr_node_idx].split_val ); 
+        get_int_node_id(prob->iter, prob)[split_idx*2 ] =
+            -pfloat_ceil( prob->nodes[curr_node_idx].split_val );
     }
-    
+
     prob->nodes[curr_node_idx].status = MI_NOT_SOLVED;
 
 #if MI_PRINTLEVEL > 1
@@ -124,12 +129,13 @@ pfloat get_global_L(ecos_bb_pwork* prob){
  */
 void get_branch_var(ecos_bb_pwork* prob, idxint* split_idx, pfloat* split_val){
     idxint i;
-    pfloat x, y, d = 1.0;
+    pfloat x, y, d;
+    d = 1.0;
     for (i=0; i<(prob->num_bool_vars + prob->num_int_vars); ++i){
         if (i < prob->num_bool_vars ){
             y = prob->ecos_prob->x[ prob->bool_vars_idx[i] ];
             x = y;
-        }else{
+        } else {
             y = prob->ecos_prob->x[ prob->int_vars_idx[i] ];
             x = y - pfloat_floor(y);
         }
@@ -167,7 +173,7 @@ void set_prob(ecos_bb_pwork* prob, char* bool_node_id, pfloat* int_node_id){
 
     /* Set integer bounds */
     for(i=0; i<prob->num_int_vars; ++i){
-        ecos_updateDataEntry_h(prob->ecos_prob, 2*(i + prob->num_bool_vars) , int_node_id[2*i] ); 
+        ecos_updateDataEntry_h(prob->ecos_prob, 2*(i + prob->num_bool_vars) , int_node_id[2*i] );
         ecos_updateDataEntry_h(prob->ecos_prob, 2*(i + prob->num_bool_vars)+1 , int_node_id[2*i+1] );
     }
 
@@ -210,13 +216,13 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
     set_prob( prob, get_bool_node_id(node_idx,prob), get_int_node_id(node_idx, prob) );
     ret_code = ECOS_solve(prob->ecos_prob);
 
-#if MI_PRINTLEVEL > 1 
+#if MI_PRINTLEVEL > 1
     if (prob->stgs->verbose){ print_ecos_solution(prob); }
 #endif
 
     if (ret_code == ECOS_OPTIMAL){
         prob->nodes[node_idx].L = eddot(prob->ecos_prob->n, prob->ecos_prob->x, prob->ecos_prob->c);
-        
+
         /* Figure out if x is already an integer solution*/
         branchable = 1;
         for (i=0; i<prob->num_bool_vars; ++i){
@@ -257,13 +263,13 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
         if (prob->nodes[node_idx].U < prob->global_U){
 
 #if MI_PRINTLEVEL > 1
-            if (prob->stgs->verbose){ 
+            if (prob->stgs->verbose){
                 PRINTTEXT("New optimal solution, U: %.2f\n", prob->nodes[node_idx].U);
                 print_ecos_xequil(prob);
                 print_ecos_c(prob);
-                print_ecos_solution(prob); 
+                print_ecos_solution(prob);
             }
-#endif      
+#endif
 
             store_solution(prob);
             prob->global_U = prob->nodes[node_idx].U;
@@ -304,10 +310,10 @@ void initialize_root(ecos_bb_pwork* prob){
     for (i=0; i < prob->num_int_vars; ++i) {prob->int_node_ids[2*i] = MAX_FLOAT_INT; prob->int_node_ids[2*i+1] = MAX_FLOAT_INT;}
 }
 
-idxint ECOS_BB_solve(ecos_bb_pwork* prob){
+idxint ECOS_BB_solve(ecos_bb_pwork* prob) {
 
 #if MI_PRINTLEVEL > 0
-    if (prob->stgs->verbose){ 
+    if (prob->stgs->verbose){
         PRINTTEXT("Iter\tLower Bound\tUpper Bound\tGap\n");
         PRINTTEXT("================================================\n");
     }
@@ -343,7 +349,7 @@ idxint ECOS_BB_solve(ecos_bb_pwork* prob){
 
         /* Step 4*/
         prob->global_L = get_global_L(prob);
-        
+
         curr_node_idx = get_next_node(prob);
     }
     load_solution(prob);

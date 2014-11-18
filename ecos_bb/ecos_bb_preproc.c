@@ -10,7 +10,7 @@
 #define MALLOC mxMalloc
 #define FREE mxFree
 #define CALLOC mxCalloc
-#else 
+#else
 #define MALLOC malloc
 #define FREE free
 #define CALLOC calloc
@@ -28,10 +28,10 @@ int contains(idxint idx, idxint num_int, idxint* bool_vars_idx){
 /* Augments the G and b arrays to take lb and ub constraints
  * for all of the variables marked integer
  * USES MALLOC
- */ 
+ */
 void socp_to_ecos_bb(
-    idxint num_bool_vars, idxint* bool_vars_idx, 
-    idxint num_int_vars, idxint* int_vars_idx, 
+    idxint num_bool_vars, idxint* bool_vars_idx,
+    idxint num_int_vars, idxint* int_vars_idx,
     idxint n, idxint m,
     pfloat* Gpr_in, idxint* Gjc_in, idxint* Gir_in,
     pfloat* Gpr_out, idxint* Gjc_out, idxint* Gir_out,
@@ -54,10 +54,10 @@ void socp_to_ecos_bb(
         Gir_out[ Gjc_out[k] + 1 ] = 2*j + 1;
 
         /* Set lower bound to 0*/
-        h_out[ 2*j ] = 0;     
+        h_out[ 2*j ] = 0;
 
         /* Set upper bound to 1*/
-        h_out[ 2*j + 1] = 1;     
+        h_out[ 2*j + 1] = 1;
 
         for (i=(k+1); i<=n; ++i){
             Gjc_out[i] += 2;
@@ -74,10 +74,10 @@ void socp_to_ecos_bb(
         Gir_out[ Gjc_out[k] + 1 ] = 2*j + 1;
 
         /* Set lower bound to 0*/
-        h_out[ 2*j ] = MAX_FLOAT_INT;     
+        h_out[ 2*j ] = MAX_FLOAT_INT;
 
         /* Set upper bound to 1*/
-        h_out[ 2*j + 1] = MAX_FLOAT_INT;     
+        h_out[ 2*j + 1] = MAX_FLOAT_INT;
 
         for (i=(k+1); i<=n; ++i){
             Gjc_out[i] += 2;
@@ -86,7 +86,7 @@ void socp_to_ecos_bb(
 
     /* Now fill in the remainder of the array*/
     for (i=0; i<n; ++i){
-        if ( contains(i, num_bool_vars, bool_vars_idx) || 
+        if ( contains(i, num_bool_vars, bool_vars_idx) ||
              contains(i,  num_int_vars, int_vars_idx) ){
             for(j=0; j<(Gjc_in[i+1] - Gjc_in[i]); ++j){
                 Gpr_out[Gjc_out[i]+2+j] = Gpr_in[Gjc_in[i]+j];
@@ -108,18 +108,17 @@ void socp_to_ecos_bb(
 }
 
 ecos_bb_pwork* ECOS_BB_setup(
-    idxint n, idxint m, idxint p, 
+    idxint n, idxint m, idxint p,
     idxint l, idxint ncones, idxint* q,
     pfloat* Gpr, idxint* Gjc, idxint* Gir,
     pfloat* Apr, idxint* Ajc, idxint* Air,
-    pfloat* c, pfloat* h, pfloat* b, 
+    pfloat* c, pfloat* h, pfloat* b,
     idxint num_bool_vars, idxint* bool_vars_idx,
     idxint num_int_vars, idxint* int_vars_idx)
 {
-    int i;
-
 #if MI_PRINTLEVEL > 2
-    PRINTTEXT("\n");        
+    int i;
+    PRINTTEXT("\n");
     PRINTTEXT("  ****************************************************************\n");
     PRINTTEXT("  * ECOS_BB: Embedded Conic Solver Branch and bound module       *\n");
     PRINTTEXT("  *                                                              *\n");
@@ -136,12 +135,12 @@ ecos_bb_pwork* ECOS_BB_setup(
     PRINTTEXT("   Boolean var indices: "); for( i=0; i<num_bool_vars; ++i) PRINTTEXT("%u ", (unsigned int) bool_vars_idx[i]); PRINTTEXT("\n");
     PRINTTEXT("   Integer var indices: "); for( i=0; i<num_int_vars; ++i) PRINTTEXT("%u ", (unsigned int) int_vars_idx[i]); PRINTTEXT("\n");
     PRINTTEXT("\n");
-    
-#endif   
+
+#endif
 
 
     /* MALLOC the problem's memory*/
-    ecos_bb_pwork* prob = (ecos_bb_pwork*) MALLOC(sizeof(ecos_bb_pwork));    
+    ecos_bb_pwork* prob = (ecos_bb_pwork*) MALLOC(sizeof(ecos_bb_pwork));
 
     idxint new_G_size = Gjc[n] + (2 * num_bool_vars) + (2 * num_int_vars);
     prob->Gpr_new = (pfloat *) MALLOC( new_G_size * sizeof(pfloat) );
@@ -157,7 +156,7 @@ ecos_bb_pwork* ECOS_BB_setup(
                     prob->Gpr_new, prob->Gjc_new, prob->Gir_new,
                     h, prob->h_new);
     m += 2*(num_bool_vars + num_int_vars);
-    l += 2*(num_bool_vars + num_int_vars);    
+    l += 2*(num_bool_vars + num_int_vars);
 
     /* Default the maxiter to global declared in the header file*/
     prob->maxiter = MI_MAXITER;
@@ -205,18 +204,18 @@ ecos_bb_pwork* ECOS_BB_setup(
     prob->G = prob->ecos_prob->G;
     prob->c = prob->ecos_prob->c;
     prob->b = prob->ecos_prob->b;
-    
+
     /* switch off ecos prints */
     prob->ecos_prob->stgs->verbose = 0;
 
     /* settings */
     prob->stgs = (settings *) MALLOC(sizeof(settings));
     prob->stgs->maxit = MAXIT;
-    prob->stgs->gamma = GAMMA;    
+    prob->stgs->gamma = GAMMA;
     prob->stgs->delta = DELTA;
     prob->stgs->eps = EPS;
     prob->stgs->nitref = NITREF;
-    prob->stgs->abstol = ABSTOL;  
+    prob->stgs->abstol = ABSTOL;
     prob->stgs->feastol = FEASTOL;
     prob->stgs->reltol = RELTOL;
     prob->stgs->abstol_inacc = ATOL_INACC;
@@ -230,7 +229,7 @@ ecos_bb_pwork* ECOS_BB_setup(
     PRINTTEXT("ECOS G:\n");
     printSparseMatrix(prob->ecos_prob->G);
 #endif
-    
+
     PRINTTEXT("ECOS h: ");
     for (i=0; i<m; ++i){
         PRINTTEXT("%.2f ", prob->ecos_prob->h[i] );
@@ -261,6 +260,3 @@ void ECOS_BB_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep){
     FREE(prob->stgs);
     FREE(prob);
 }
-
-
-

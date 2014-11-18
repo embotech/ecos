@@ -72,7 +72,7 @@ test: ecostester ecos_bb_test
 ecostester: test/ecostester.c $(TEST_OBJS) libecos.a
 	$(CC) $(CFLAGS) $(TEST_INCLUDES) -o $@ $^ $(LDFLAGS)
 
-ecos_bb_test: test/bb_test.c libecos_bb.a 
+ecos_bb_test: test/bb_test.c libecos_bb.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 %.o: test/generated_tests/%.c test/generated_tests/%.h
