@@ -7,9 +7,11 @@
 
 #define MIN(X, Y)  ((X) < (Y) ? (X) : (Y))
 
-/* define INFINITY for MSFT */
+/* define INFINITY and isinf for MSFT */
 #ifdef _MSC_VER
 #define INFINITY (DBL_MAX+DBL_MAX)
+/* this will also return true if x is nan, but we don't check that anyway */
+#define isinf(x) (!_finite(x))
 #endif
 
 /* Print utility functions*/
@@ -129,7 +131,7 @@ pfloat get_global_L(ecos_bb_pwork* prob){
  */
 void get_branch_var(ecos_bb_pwork* prob, idxint* split_idx, pfloat* split_val){
     idxint i;
-    pfloat x, y, d;
+    pfloat x, y, d, ambiguity;
     d = 1.0;
     for (i=0; i<(prob->num_bool_vars + prob->num_int_vars); ++i){
         if (i < prob->num_bool_vars ){
@@ -139,7 +141,7 @@ void get_branch_var(ecos_bb_pwork* prob, idxint* split_idx, pfloat* split_val){
             y = prob->ecos_prob->x[ prob->int_vars_idx[i] ];
             x = y - pfloat_floor(y);
         }
-        pfloat ambiguity = abs_2(x-0.5);
+        ambiguity = abs_2(x-0.5);
         if ( ambiguity < d){
             *split_idx = i;
             *split_val = y;
@@ -311,6 +313,7 @@ void initialize_root(ecos_bb_pwork* prob){
 }
 
 idxint ECOS_BB_solve(ecos_bb_pwork* prob) {
+    idxint curr_node_idx = 0;
 
 #if MI_PRINTLEVEL > 0
     if (prob->stgs->verbose){
@@ -323,7 +326,6 @@ idxint ECOS_BB_solve(ecos_bb_pwork* prob) {
     /* of http://stanford.edu/class/ee364b/lectures/bb_slides.pdf*/
     prob->iter = 0;
     initialize_root(prob);
-    idxint curr_node_idx = 0;
     /*print_node(prob, curr_node_idx);*/
     get_bounds(curr_node_idx, prob);
 
