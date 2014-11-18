@@ -7,13 +7,6 @@
 
 #define MIN(X, Y)  ((X) < (Y) ? (X) : (Y))
 
-/* define INFINITY and isinf for MSFT */
-#ifdef _MSC_VER
-#define INFINITY (DBL_MAX+DBL_MAX)
-/* this will also return true if x is nan, but we don't check that anyway */
-#define isinf(x) (!_finite(x))
-#endif
-
 /* Print utility functions*/
 #if MI_PRINTLEVEL > 0
 void print_progress(ecos_bb_pwork* prob){

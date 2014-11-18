@@ -30,7 +30,14 @@
 #define MI_INFEASIBLE (2)
 
 /*Max integer and all smaller integer representable by single precision*/
-#define MAX_FLOAT_INT (8388608) 
+#define MAX_FLOAT_INT (8388608)
+
+/* define INFINITY and isinf for MSFT */
+#ifdef _MSC_VER
+#define INFINITY (DBL_MAX+DBL_MAX)
+/* this will also return true if x is nan, but we don't check that anyway */
+#define isinf(x) (!_finite(x))
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,7 +57,7 @@ typedef struct ecos_bb_pwork{
 	idxint num_bool_vars;
 	idxint num_int_vars;
 	idxint maxiter;
-	
+
 	node* nodes;
 	char* bool_node_ids;
 	pfloat* int_node_ids;
@@ -80,7 +87,7 @@ typedef struct ecos_bb_pwork{
     stats* best_info; /* info of best iterate               */
 	pfloat global_U;
 	pfloat global_L;
-	
+
 	/* Tmp data */
 	char* tmp_bool_node_id;
 	pfloat* tmp_int_node_id;
@@ -94,15 +101,15 @@ typedef struct ecos_bb_pwork{
 
 	/* settings struct */
 	settings* stgs;
-	
+
 } ecos_bb_pwork;
 
 ecos_bb_pwork* ECOS_BB_setup(
-    idxint n, idxint m, idxint p, 
+    idxint n, idxint m, idxint p,
     idxint l, idxint ncones, idxint* q,
     pfloat* Gpr, idxint* Gjc, idxint* Gir,
     pfloat* Apr, idxint* Ajc, idxint* Air,
-    pfloat* c, pfloat* h, pfloat* b, 
+    pfloat* c, pfloat* h, pfloat* b,
     idxint num_bool_vars, idxint* bool_vars_idx,
     idxint num_int_vars, idxint* int_vars_idx);
 
