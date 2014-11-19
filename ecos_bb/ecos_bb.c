@@ -163,6 +163,11 @@ void set_prob(ecos_bb_pwork* prob, char* bool_node_id, pfloat* int_node_id){
                 ecos_updateDataEntry_h(prob->ecos_prob, 2*i, 0.0);/*ecos_prob->h[2*i] = 0.0;*/
                 ecos_updateDataEntry_h(prob->ecos_prob, 2*i+1, 1.0);/*ecos_prob->h[2*i + 1] = 1.0;*/
                 break;
+			default:
+#if MI_PRINTLEVEL > 1
+				PRINTTEXT("Illegal boolean setting arguments passed: %u \n", bool_node_id[i]);
+#endif
+				break;
         }
     }
 
@@ -229,11 +234,11 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
         branchable = 1;
         if (ret_code == ECOS_OPTIMAL){
             for (i=0; i<prob->num_bool_vars; ++i){
-                prob->tmp_bool_node_id[i] = (char) pfloat_round( prob->ecos_prob->x[i] );
+                prob->tmp_bool_node_id[i] = (char) pfloat_round( prob->ecos_prob->x[prob->bool_vars_idx[i]] );
                 branchable &= float_eqls( prob->ecos_prob->x[i] , (pfloat) prob->tmp_bool_node_id[i] );
             }
             for (i=0; i<prob->num_int_vars; ++i){
-                prob->tmp_int_node_id[2*i + 1] = pfloat_round( prob->ecos_prob->x[i] );
+				prob->tmp_int_node_id[2 * i + 1] = pfloat_round(prob->ecos_prob->x[prob->bool_vars_idx[i]]);
                 prob->tmp_int_node_id[2*i] = -(prob->tmp_int_node_id[2*i + 1]);
                 branchable &= float_eqls( prob->ecos_prob->x[i] , prob->tmp_int_node_id[2*i + 1] );
             }
