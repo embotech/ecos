@@ -62,6 +62,7 @@ The following people have been, and are, involved in the development and mainten
 + Michael Grant (CVX interface)
 + Johan Löfberg (YALMIP interface)
 + João Felipe Santos, Iain Dunning (Julia inteface)
++ Han Wang (ECOS branch and bound wrapper)
 
 The main technical idea behind ECOS is described in a short [paper](http://www.stanford.edu/~boyd/papers/ecos.html). More details are given in Alexander Domahidi's [PhD Thesis](http://e-collection.library.ethz.ch/view/eth:7611?q=domahidi) in Chapter 9.
 
@@ -343,7 +344,7 @@ These are the same fields as in the Matlab case. If the fields are omitted or
 empty, they default to 0.
 The argument `kwargs` can include the keywords
 `feastol`, `abstol`, `reltol`, `feastol_inacc`, `abstol_innac`, and `reltol_inacc` for tolerance values,
-`max_iters` for the maximum number of iterations, the Boolean `verbose`, and `integer_vars_idx` a Numpy array of `int`s which index the integer variables.
+`max_iters` for the maximum number of iterations, the Boolean `verbose`, `bool_vars_idx`, a list of `int`s which index the boolean variables, and `int_vars_idx`, a list of `int`s which index the integer variables.
 The arguments `A`, `b`, and `kwargs` are optional.
 
 The returned object is a dictionary containing the fields `solution['x']`, `solution['y']`, `solution['s']`, `solution['z']`, and `solution['info']`.
