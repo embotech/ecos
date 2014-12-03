@@ -35,11 +35,11 @@
 #endif
 
 /* ECOS VERSION NUMBER - FORMAT: X.Y.Z --------------------------------- */
-#define ECOS_VERSION ("1.0.5")
+#define ECOS_VERSION ("1.1.0")
 
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
-#define MAXIT      (100)         /* maximum number of iterations         */
+#define MAXIT      (100)          /* maximum number of iterations         */
 #define FEASTOL    (1E-7)        /* primal/dual infeasibility tolerance  */
 #define ABSTOL     (1E-7)        /* absolute tolerance on duality gap    */
 #define RELTOL     (1E-7)        /* relative tolerance on duality gap    */
@@ -261,6 +261,11 @@ const char* ECOS_ver(void);
  */
 void ecos_updateDataEntry_h(pwork* w, idxint idx, pfloat value);
 
+/*
+ * Updates one element of the OBJ vector c of inequalities
+ * After the call, w->c[idx] = value (but equilibrated)
+ */
+void ecos_updateDataEntry_c(pwork* w, idxint idx, pfloat value);
 
 #ifdef __cplusplus
 }

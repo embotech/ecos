@@ -81,7 +81,7 @@ void pinv(idxint n, idxint* p, idxint* pinv);
 spmat* copySparseMatrix(spmat* A);
 
 /* ============================= DEBUG FUNCTIONS ======================= */
-#if PRINTLEVEL > 2
+#if PRINTLEVEL > 0
 
 /**
  * Prints a dense matrix.

@@ -1,8 +1,7 @@
 Embedded Conic Solver (ECOS)
 ====
 
-[![Build Status](https://travis-ci.org/ifa-ethz/ecos.svg?branch=master)](https://travis-ci.org/ifa-ethz/ecos)
-[![Build status](https://ci.appveyor.com/api/projects/status/689y0hsljr7i1vbp)](https://ci.appveyor.com/project/echu/ecos)
+[![Build Status](https://travis-ci.org/embotech/ecos.svg?branch=master)](https://travis-ci.org/embotech/ecos)
 
 ECOS is a numerical software for solving convex second-order cone programs (SOCPs) of type
 ```
@@ -63,6 +62,7 @@ The following people have been, and are, involved in the development and mainten
 + Michael Grant (CVX interface)
 + Johan Löfberg (YALMIP interface)
 + João Felipe Santos, Iain Dunning (Julia inteface)
++ Han Wang (ECOS branch and bound wrapper)
 
 The main technical idea behind ECOS is described in a short [paper](http://www.stanford.edu/~boyd/papers/ecos.html). More details are given in Alexander Domahidi's [PhD Thesis](http://e-collection.library.ethz.ch/view/eth:7611?q=domahidi) in Chapter 9.
 
@@ -174,7 +174,7 @@ Calling ECOS from MATLAB
 
 You can directly call ECOS from Matlab using its native interface:
 ```
-[x,y,info,s,z] = ecos(c,G,h,dims,A,b)
+[x,y,info,s,z] = ecos(c,G,h,dims,A,b,opts)
 ```
 It takes the problem data `c,G,h,A,b` and some dimension information that is given in the struct `dims`. Note that
 `A` and `G` have to be given in sparse format. The equality constraints defined by `A` and `b` are optional and can be
@@ -184,7 +184,13 @@ dims.l - scalar, dimension of positive orthant (LP-cone) R_+
 dims.q - vector with dimensions of second order cones
 ```
 The length of `dims.q` determines the number of second order cones. If you do not have a cone in your problem, use
-the empty matrix `[ ]` instead, for example `dims.q = [ ]` if you do not have second-order cones. After a solve,
+the empty matrix `[ ]` instead, for example `dims.q = [ ]` if you do not have second-order cones. 
+
+`opts` is a struct that passes in auxiliary settings. Valid field names for `opts` are `bool_vars_idx`, `int_vars_idx`, `verbose`, `abstol`, `feastol`, `reltol`, abstol_inacc`, `feastol_inacc`, `reltol_inacc`, `maxit`.
+
+ECOS supports boolean and integer programming in Matlab with `opts.int_vars_idx`, an array of the indices of integer variables, and `opts.bool_vars_idx`, an array of the indices of boolean variables.
+
+After a solve,
 ECOS returns the following variables
 ```
   x: primal variables
@@ -286,7 +292,7 @@ where we assume that `H` is positive definite. This is the standard formulation 
 directly call ECOS. We do provide a MATLAB interface called `ecosqp` that automatically does this transformation for you,
 and has the exact same interface as `quadprog`. Hence you can just use
 ```
-[x,fval,exitflag,output,lambda,t] = ecosqp(H,f,A,b,Aeq,beq,lb,ub)
+[x,fval,exitflag,output,lambda,t] = ecosqp(H,f,A,b,Aeq,beq,lb,ub,opts)
 ```
 to solve (QP). See `help ecosqp` for more details. The last output argument, `t`, gives the solution time.
 
@@ -338,7 +344,7 @@ These are the same fields as in the Matlab case. If the fields are omitted or
 empty, they default to 0.
 The argument `kwargs` can include the keywords
 `feastol`, `abstol`, `reltol`, `feastol_inacc`, `abstol_innac`, and `reltol_inacc` for tolerance values,
-`max_iters` for the maximum number of iterations, and the Boolean `verbose`.
+`max_iters` for the maximum number of iterations, the Boolean `verbose`, `bool_vars_idx`, a list of `int`s which index the boolean variables, and `int_vars_idx`, a list of `int`s which index the integer variables.
 The arguments `A`, `b`, and `kwargs` are optional.
 
 The returned object is a dictionary containing the fields `solution['x']`, `solution['y']`, `solution['s']`, `solution['z']`, and `solution['info']`.
@@ -401,34 +407,113 @@ Negative numbers indicate that the problem could not be solved to the required a
 
 It is in general good practice to check the exitcode, in particular when solving optimization problems in an unsupervised, automated fashion (in a batch job, for example). Please report optimization problems for which ECOS struggles to converge to one of the authors.
 
-Extensions
+
+EXTENSIONS
 ====
 
-Mixed Boolean ECOS (ECOS_BB)
+Mixed Integer SOCP
+
+ECOS_BB is a mixed integer extension of ECOS with support for boolean variables only (full integer support is planned). ECOS_BB solves convex second-order cone programs (SOCPs) of type
+
+```
+min  c'*x
+s.t. A*x = b
+     G*x <=_K h
+some x_i in {0,1}
+```
+where the last inequality is generalized, i.e. `h - G*x` belongs to the cone `K`.
+ECOS_BB supports the positive orthant `R_+` and second-order cones `Q_n` defined as
+```
+Q_n = { (t,x) | t >= || x ||_2 } 
+```
+In the definition above, t is a scalar and `x` is in `R_{n-1}`. The cone `K` is therefore
+a direct product of the positive orthant and second-order cones:
+```
+K = R_+ x Q_n1 x ... x Q_nN
+```
+As with ECOS, ECOS_BB is designed for embedded systems so it has hard bounds on runtime and memory footprint.
+
+#### Runtime Constraints
+
+ECOS_BB will call ecos_solve() on a relaxed subproblem at most `(MI_MAXITER * MAXIT)` times where `MI_MAXITER` is the maximum number of iterations allowed by the branch and bound wrapper and `MAXIT` is the maximum number of ECOS iterations allowed per sub problem. `MI_MAXITER` is set within the ecos_bb.h header and `MAXIT` is set within the ecos.h header.
+
+#### Memory Constraints
+
+ECOS_BB stores each active constraint per boolean var as a *char*. Thus, ECOS_BB requires `num_bool_vars` *char*s to store the full set of constraints for one branch and bound node. Since branch and bound generates two nodes per iteration and one node can reuse the parent node's memory, ECOS_BB preallocates enough memory for `MI_MAXITER` nodes. Total memory requirements for ECOS_BB is `MI_MAXITER * num_bool_vars` *bytes* + memory necessary for the relaxed ECOS subproblem.
+
+Features of ECOS_BB
 ----
 
-Mixed boolean ECOS is a branch and bound wrapper around ECOS that allows the user to solve problems where some of the variables are {0,1}. As with ECOS malloc and free are only used during setup() and cleanup().
++ *ECOS_BB runs on embedded platforms*. Written in ANSI C (except for the timing code),
+  it can be compiled for any platform for which a C compiler is available. Excluding the problem setup
+  part, no memory manager is needed for solving problem instances of same structure.
++ *ECOS_BB is efficient*. 
+    The branch and bound algorithm is a direct translation of Stephan Boyd's [lecture slides](http://stanford.edu/class/ee364b/lectures/bb_slides.pdf) from EE364. And has proven excellent performance in small to medium problems.
++ *ECOS_BB has a tiny footprint*. The ECOS_BB solver consists of 200 lines of C code on top of ECOS's 750 (excluding the problem setup
+   code).
++ *ECOS is numerically robust*. Using regularization and iterative refinement coupled with a carefully chosen
+  sparse representation of scaling matrices, millions of problem instances are solved reliably.
++ *ECOS is library-free*. No need to link any external library to ECOS, apart from `AMD` and `sparseLDL`, both
+  from Timothy A. Davis, which are included in this project.
 
+
+Using ECOS_BB in C
+====
+
+ECOS_BB exports 3 functions, see ecos_bb.h. You need to call these in the following sequence:
+
+1. Setup
+----
+
+Setup allocates memory for ECOS_BB, computes the fill-in reducing ordering and provides other initialization necessary before solve can start. Use the following function to initialize ECOS_BB:
 ```
 pwork* ecos_bb_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint* q,
                    pfloat* Gpr, idxint* Gjc, idxint* Gir,
                    pfloat* Apr, idxint* Ajc, idxint* Air,
                    pfloat* c, pfloat* h, pfloat* b, idxint num_bool_vars);
-```                   
+```
+where you have to pass the following arguments:
 
-All inputs are exactly the same as ECOS except for the last arguement num_bool_vars.
+* `n` is the number of variables,
+* `m` is the number of inequality constraints (dimension 1 of the matrix `G` and the length of the vector `h`),
+* `p` is the number of equality constraints (can be 0)
+* `l` is the dimension of the positive orthant, i.e. in `Gx+s=h, s in K`, the first `l` elements of `s` are `>=0`
+* `ncones` is the number of second-order cones present in `K`
+* `q` is an array of integers of length `ncones`, where each element defines the dimension of the cone
+* `Gpr`, `Gjc`, `Gir` are the the data, the column index, and the row index arrays, respectively, for the matrix `G` represented in column compressed storage (CCS) format (Google it if you need more information on this format, it is one of the standard sparse matrix representations)
+* `Apr`, `Ajc`, `Air` is the CCS representation of the matrix `A` (can be all `NULL` if no equalities are present)
+* `c` is an array of type `pfloat` of size `n`
+* `h` is an array of type `pfloat` of size `m`
+* `b` is an array of type `pfloat` of size `p` (can be `NULL` if no equalities are present)
+* `num_bool_vars` is the number of boolean variables in this problem. ECOS_bb will assume that the first num_bool_vars variables are boolean (i.e. x[0] to x[num_bool_vars-1] ).
 
-ECOS_bb will assume that the first num_bool_vars variables are boolean (i.e. x[0] to x[num_bool_vars-1] ).
+The setup function returns a struct of type ```ecos_bb_pwork```, which you need to define first.
 
-####Notes
-                   
-ECOS_BB has a worst case runtime of O(MI_MAXITER * MAXIT) where MI_MAXITER is the maximum number of iterations allowed by the branch and bound wrapper and MAXIT is the maximum number of ECOS iterations allowed per sub problem.
+2. Solve
+----
+After the initialization is done, you can call the solve function, which contains the branch and bound wrapper around the internal point method, by
+```idxint ecos_bb_solve(ecos_bb_pwork* w);```
+The return value is an integer, see below.
 
-Also, the memory required for ecos_bb is O(MI_MAXITER * num_bool_vars).
+3. Cleanup
+----
+Call
+```void ecos_bb_cleanup(ecos_bb_pwork* w);```
+to free all allocated memory.
 
-The branch and bound algorithm is a direct translation of Stephan Boyd's [lecture slides](http://stanford.edu/class/ee364b/lectures/bb_slides.pdf) from EE364.
+Exitcodes
+====
+ECOS_BB defines a number of exitcodes that indicate the quality of the returned solution. In general, positive values indicate that the solver has converged within the given tolerance. More specifically,
 
++ 0: optimal
++ 1: max iterations reached no solution has been found
++ 2: problem is proven infeasible
 
+Negative numbers indicate that the problem could not be solved to the required accuracy (the returned iterate might still be satisfactory - please do check the duality gap etc.)
+
++ -1: maximum number of iterations reached, but a feasible solution has been discovered
+
+It is in general good practice to check the exitcode, in particular when solving optimization problems in an unsupervised, automated fashion (in a batch job, for example). Please report optimization problems for which ECOS_BB struggles to converge to one of the authors.                   
 
 
 

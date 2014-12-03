@@ -89,7 +89,7 @@ for i = testnr
     pars.eps = 1e-6;
     pars.bigeps = 1e-6/10;
     pars.errors = 1;
-    if( 1 )
+    if( 0 )
         [x_s,y_s,info_ss] = sedumi(At',b,c,K,pars);
         sedumi_fval = c'*x_s;
         relerr_s = abs((sedumi_fval - objval.(test_name))/objval.(test_name));

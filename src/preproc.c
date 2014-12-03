@@ -46,9 +46,11 @@
 #ifdef MATLAB_MEX_FILE
 #define MALLOC mxMalloc
 #define FREE mxFree
+#define CALLOC mxCalloc
 #else 
 #define MALLOC malloc
 #define FREE free
+#define CALLOC calloc
 #endif
 
 
@@ -480,7 +482,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	timer tmattranspose;
 	timer tordering;
 #endif
-
+    
 #if PROFILING > 0
 	tic(&tsetup);
 #endif
@@ -499,8 +501,8 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	PRINTTEXT("  *                                                                             *\n");
 	PRINTTEXT("  *       Written during a summer visit at Stanford University with S. Boyd.    *\n");
 	PRINTTEXT("  *                                                                             *\n");
-	PRINTTEXT("  * (C) Alexander Domahidi, Automatic Control Laboratory, ETH Zurich, 2012-13.  *\n");
-	PRINTTEXT("  *                     Email: domahidi@control.ee.ethz.ch                      *\n");
+	PRINTTEXT("  * (C) Alexander Domahidi, ETH Zurich & embotech GmbH, Switzerland, 2012-14.   *\n");
+	PRINTTEXT("  *                     Email: domahidi@embotech.com                            *\n");
 	PRINTTEXT("  *******************************************************************************\n");
 	PRINTTEXT("\n\n");
     PRINTTEXT("PROBLEM SUMMARY:\n");
@@ -513,6 +515,8 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     for( i=0; i<ncones; i++ ){
         PRINTTEXT("    Size of SOC #%02d: %d\n", (int)(i+1), (int)q[i]);
     }
+    PRINTTEXT("\n");
+    
 #endif
 	
 	/* get work data structure */
@@ -552,7 +556,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     mywork->best_z = (pfloat *)MALLOC(m*sizeof(pfloat));
     mywork->best_s = (pfloat *)MALLOC(m*sizeof(pfloat));
     mywork->best_info = (stats *)MALLOC(sizeof(stats));
-
+    
 	/* cones */
 	mywork->C = (cone *)MALLOC(sizeof(cone));
 #if PRINTLEVEL > 2
@@ -615,7 +619,6 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     PRINTTEXT("Memory allocated for info struct\n");
 #endif
 
-    
 #if defined EQUILIBRATE && EQUILIBRATE > 0
     /* equilibration vector */
     mywork->xequil = (pfloat *)MALLOC(n*sizeof(pfloat));
@@ -698,10 +701,6 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #if PRINTLEVEL > 2
     PRINTTEXT("Transposed G\n");
 #endif
-    
-
-
-     
   
     /* set up KKT system */
 #if PROFILING > 1
@@ -714,7 +713,6 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #if PRINTLEVEL > 2
     PRINTTEXT("Created upper part of KKT matrix K\n");
 #endif
-    
     
 	/* 
      * Set up KKT system related data
@@ -762,6 +760,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     PRINTTEXT("Created memory for KKT-related data\n");    
 #endif
     
+
     
     /* calculate ordering of KKT matrix using AMD */
 	P = (idxint *)MALLOC(nK*sizeof(idxint));
