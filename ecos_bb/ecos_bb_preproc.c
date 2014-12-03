@@ -114,7 +114,8 @@ ecos_bb_pwork* ECOS_BB_setup(
     pfloat* Apr, idxint* Ajc, idxint* Air,
     pfloat* c, pfloat* h, pfloat* b,
     idxint num_bool_vars, idxint* bool_vars_idx,
-    idxint num_int_vars, idxint* int_vars_idx)
+    idxint num_int_vars, idxint* int_vars_idx,
+    settings_bb* stgs)
 {
 #if MI_PRINTLEVEL > 2
     int i;
@@ -138,9 +139,17 @@ ecos_bb_pwork* ECOS_BB_setup(
 
 #endif
 
-
     /* MALLOC the problem's memory*/
     ecos_bb_pwork* prob = (ecos_bb_pwork*) MALLOC(sizeof(ecos_bb_pwork));
+
+    if (stgs == NULL){
+        stgs = get_default_ECOS_BB_settings();
+        prob->default_settings = 1;
+    }else{
+        prob->default_settings = 0;
+    }
+    prob->stgs = stgs;
+
 
     idxint new_G_size = Gjc[n] + (2 * num_bool_vars) + (2 * num_int_vars);
     prob->Gpr_new = (pfloat *) MALLOC( new_G_size * sizeof(pfloat) );
@@ -158,15 +167,12 @@ ecos_bb_pwork* ECOS_BB_setup(
     m += 2*(num_bool_vars + num_int_vars);
     l += 2*(num_bool_vars + num_int_vars);
 
-    /* Default the maxiter to global declared in the header file*/
-    prob->maxiter = MI_MAXITER;
-
     /* MALLOC the initial node's book keeping data #(2*maxIter)*/
-    prob->nodes = (node*) CALLOC( MI_MAXITER, sizeof(node) );
+    prob->nodes = (node*) CALLOC( prob->stgs->maxit, sizeof(node) );
 
     /* MALLOC the id arrays*/
-    prob->bool_node_ids = (char*)  MALLOC( MI_MAXITER*num_bool_vars*sizeof(char) );
-    prob->int_node_ids = (pfloat*) MALLOC( 2*MI_MAXITER*num_int_vars*sizeof(pfloat) );
+    prob->bool_node_ids = (char*)  MALLOC( prob->stgs->maxit*num_bool_vars*sizeof(char) );
+    prob->int_node_ids = (pfloat*) MALLOC( 2*prob->stgs->maxit*num_int_vars*sizeof(pfloat) );
 
     /* MALLOC the tmp node id*/
     prob->tmp_bool_node_id = (char*) MALLOC( num_bool_vars*sizeof(char) );
@@ -209,23 +215,11 @@ ecos_bb_pwork* ECOS_BB_setup(
     prob->ecos_prob->stgs->verbose = 0;
 
     /* settings */
-    prob->stgs = (settings *) MALLOC(sizeof(settings));
-    prob->stgs->maxit = MAXIT;
-    prob->stgs->gamma = GAMMA;
-    prob->stgs->delta = DELTA;
-    prob->stgs->eps = EPS;
-    prob->stgs->nitref = NITREF;
-    prob->stgs->abstol = ABSTOL;
-    prob->stgs->feastol = FEASTOL;
-    prob->stgs->reltol = RELTOL;
-    prob->stgs->abstol_inacc = ATOL_INACC;
-    prob->stgs->feastol_inacc = FTOL_INACC;
-    prob->stgs->reltol_inacc = RTOL_INACC;
-    prob->stgs->verbose = VERBOSE;
+    prob->ecos_stgs = prob->ecos_prob->stgs;
 
 #if MI_PRINTLEVEL > 2
 
-#if  PRINTLEVEL > 2
+#if PRINTLEVEL > 2
     PRINTTEXT("ECOS G:\n");
     printSparseMatrix(prob->ecos_prob->G);
 #endif
@@ -257,6 +251,16 @@ void ECOS_BB_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep){
     FREE(prob->z);
     FREE(prob->s);
     FREE(prob->best_info);
-    FREE(prob->stgs);
+    if (prob->default_settings){FREE(prob->stgs);}
     FREE(prob);
 }
+
+settings_bb* get_default_ECOS_BB_settings(){
+    settings_bb* stgs = (settings_bb*) MALLOC( sizeof(settings_bb) );
+    stgs->maxit = MI_MAXITER;           
+    stgs->verbose = 1;         
+    stgs->abs_tol_gap = MI_ABS_EPS;     
+    stgs->rel_tol_gap = MI_REL_EPS;
+    stgs->integer_tol = MI_INT_TOL;
+    return stgs;
+};

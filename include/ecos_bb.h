@@ -6,7 +6,7 @@
 #include "glblopts.h"
 
 /* Print verbosity */
-#define MI_PRINTLEVEL (3)
+#define MI_PRINTLEVEL (1)
 
 /* ecos_bb configuration settings */
 #define MI_ABS_EPS (1E-6)
@@ -43,6 +43,14 @@
 extern "C" {
 #endif
 
+typedef struct settings_bb{
+	idxint maxit;               /* maximum number of iterations         */
+    idxint verbose;             /* verbosity bool for PRINTLEVEL < 3    */
+	pfloat abs_tol_gap;			/* termination criteria |U-L|    		*/
+	pfloat rel_tol_gap;			/* termination criteria for |U-L|/|L| < 3    */
+	pfloat integer_tol; 		/* integer rounding tolerance */
+} settings_bb;
+
 typedef struct node {
 	char status;
 	pfloat L;
@@ -56,7 +64,6 @@ typedef struct ecos_bb_pwork{
 	/* Mixed integer data */
 	idxint num_bool_vars;
 	idxint num_int_vars;
-	idxint maxiter;
 
 	node* nodes;
 	char* bool_node_ids;
@@ -100,7 +107,9 @@ typedef struct ecos_bb_pwork{
 	pfloat* h_new;
 
 	/* settings struct */
-	settings* stgs;
+	settings* ecos_stgs;
+	settings_bb* stgs;
+	idxint default_settings;
 
 } ecos_bb_pwork;
 
@@ -111,7 +120,8 @@ ecos_bb_pwork* ECOS_BB_setup(
     pfloat* Apr, idxint* Ajc, idxint* Air,
     pfloat* c, pfloat* h, pfloat* b,
     idxint num_bool_vars, idxint* bool_vars_idx,
-    idxint num_int_vars, idxint* int_vars_idx);
+    idxint num_int_vars, idxint* int_vars_idx,
+    settings_bb* stgs);
 
 idxint ECOS_BB_solve(ecos_bb_pwork* prob);
 
@@ -120,6 +130,8 @@ void ECOS_BB_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep);
 void updateDataEntry_h(ecos_bb_pwork* w, idxint idx, pfloat value);
 
 void updateDataEntry_c(ecos_bb_pwork* w, idxint idx, pfloat value);
+
+settings_bb* get_default_ECOS_BB_settings();
 
 /* Calculate the offset into the node_id array */
 static inline char* get_bool_node_id(idxint idx, ecos_bb_pwork* prob){
@@ -138,16 +150,16 @@ static inline pfloat pfloat_round(pfloat number){
     return (number >= 0) ? (int)(number + 0.5) : (int)(number - 0.5);
 }
 
-static inline pfloat pfloat_ceil(pfloat number){
-	return (pfloat) (number < 0 ? (int) number : (int) (number+(1-MI_INT_TOL)) );
+static inline pfloat pfloat_ceil(pfloat number, pfloat integer_tol){
+	return (pfloat) (number < 0 ? (int) number : (int) (number+(1-integer_tol)) );
 }
 
-static inline pfloat pfloat_floor(pfloat number){
-    return (pfloat) (number < 0 ? (int) (number-(1-MI_INT_TOL)) : (int) number);
+static inline pfloat pfloat_floor(pfloat number, pfloat integer_tol){
+    return (pfloat) (number < 0 ? (int) (number-(1-integer_tol)) : (int) number);
 }
 
-static inline idxint float_eqls(pfloat a, pfloat b){
-	return abs_2(a - b) < MI_INT_TOL;
+static inline idxint float_eqls(pfloat a, pfloat b, pfloat integer_tol){
+	return abs_2(a - b) < integer_tol;
 }
 
 #ifdef __cplusplus

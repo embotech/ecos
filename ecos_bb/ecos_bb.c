@@ -80,11 +80,11 @@ void branch(idxint curr_node_idx, ecos_bb_pwork* prob){
 
         /* Left branch constrain UB */
         get_int_node_id(curr_node_idx, prob)[split_idx*2 + 1] =
-            pfloat_floor( prob->nodes[curr_node_idx].split_val );
+            pfloat_floor( prob->nodes[curr_node_idx].split_val, prob->stgs->integer_tol );
 
         /* Right branch constrain LB */
         get_int_node_id(prob->iter, prob)[split_idx*2 ] =
-            -pfloat_ceil( prob->nodes[curr_node_idx].split_val );
+            -pfloat_ceil( prob->nodes[curr_node_idx].split_val, prob->stgs->integer_tol  );
     }
 
     prob->nodes[curr_node_idx].status = MI_NOT_SOLVED;
@@ -133,7 +133,7 @@ void get_branch_var(ecos_bb_pwork* prob, idxint* split_idx, pfloat* split_val){
             x = y;
         } else {
             y = prob->ecos_prob->x[ prob->int_vars_idx[i] ];
-            x = y - pfloat_floor(y);
+            x = y - pfloat_floor(y, prob->stgs->integer_tol );
         }
         ambiguity = abs_2(x-0.5);
         if ( ambiguity < d){
@@ -237,12 +237,12 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
         if (ret_code == ECOS_OPTIMAL){
             for (i=0; i<prob->num_bool_vars; ++i){
                 prob->tmp_bool_node_id[i] = (char) pfloat_round( prob->ecos_prob->x[prob->bool_vars_idx[i]] );
-                branchable &= float_eqls( prob->ecos_prob->x[i] , (pfloat) prob->tmp_bool_node_id[i] );
+                branchable &= float_eqls( prob->ecos_prob->x[i] , (pfloat) prob->tmp_bool_node_id[i], prob->stgs->integer_tol );
             }
             for (i=0; i<prob->num_int_vars; ++i){
-				prob->tmp_int_node_id[2 * i + 1] = pfloat_round(prob->ecos_prob->x[prob->int_vars_idx[i]]);
+				prob->tmp_int_node_id[2 * i + 1] = pfloat_round(prob->ecos_prob->x[prob->int_vars_idx[i]] );
                 prob->tmp_int_node_id[2*i] = -(prob->tmp_int_node_id[2*i + 1]);
-                branchable &= float_eqls( prob->ecos_prob->x[i] , prob->tmp_int_node_id[2*i + 1] );
+                branchable &= float_eqls( prob->ecos_prob->x[i] , prob->tmp_int_node_id[2*i + 1], prob->stgs->integer_tol );
             }
             branchable = !branchable;
         }
@@ -300,14 +300,14 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
 }
 
 idxint should_continue(ecos_bb_pwork* prob, idxint curr_node_idx){
-    return (prob->global_U - prob->global_L) > MI_ABS_EPS
-        && abs_2(prob->global_U / prob->global_L - 1.0) > MI_REL_EPS
+    return (prob->global_U - prob->global_L) > prob->stgs->abs_tol_gap
+        && abs_2(prob->global_U / prob->global_L - 1.0) > prob->stgs->rel_tol_gap
         && curr_node_idx >= 0
-        && prob->iter < (prob->maxiter-1);
+        && prob->iter < (prob->stgs->maxit-1);
 }
 
 int get_ret_code(ecos_bb_pwork* prob){
-    if ( prob->iter < MI_MAXITER){
+    if ( prob->iter < prob->stgs->maxit ){
         if ( isinf(prob->global_U) ) return MI_INFEASIBLE;
         else return MI_OPTIMAL_SOLN;
     } else {
