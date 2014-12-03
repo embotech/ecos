@@ -63,6 +63,7 @@ void branch(idxint curr_node_idx, ecos_bb_pwork* prob){
 
     /* Create right node*/
     prob->nodes[prob->iter].L = prob->nodes[curr_node_idx].L;
+    prob->nodes[prob->iter].U = prob->nodes[curr_node_idx].U;
     prob->nodes[prob->iter].status = MI_NOT_SOLVED;
 
     /* Copy over the node id*/
@@ -212,7 +213,8 @@ void load_solution(ecos_bb_pwork* prob){
 }
 
 void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
-    idxint i, ret_code, branchable;
+    idxint i, ret_code, branchable, viable_rounded_sol;
+    viable_rounded_sol = 0;
     set_prob( prob, get_bool_node_id(node_idx,prob), get_int_node_id(node_idx, prob) );
     ret_code = ECOS_solve(prob->ecos_prob);
 
@@ -223,11 +225,11 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
     }
 #endif
 
-
     if (ret_code == ECOS_OPTIMAL || 
         ret_code == ECOS_INACC_OFFSET || 
         ret_code == ECOS_MAXIT ||
-        ret_code == ECOS_NUMERICS ){
+        ret_code == ECOS_NUMERICS )
+    {
         prob->nodes[node_idx].L = eddot(prob->ecos_prob->n, prob->ecos_prob->x, prob->ecos_prob->c);
 
         /* Figure out if x is already an integer solution if the solution had no numerical errors*/
@@ -258,37 +260,21 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
 
 #if MI_PRINTLEVEL > 1
             if (prob->stgs->verbose){ print_ecos_solution(prob); }
-            if (ret_code != ECOS_OPTIMAL && ret_code != ECOS_PINF && ret_code != ECOS_OPTIMAL){
+            if (ret_code != ECOS_OPTIMAL && ret_code != ECOS_PINF && ret_code != ECOS_DINF){
                 PRINTTEXT("Exit code: %u\n", ret_code);
             }
 #endif
-
             if (ret_code == ECOS_OPTIMAL){
                 /* Use the node's U as tmp storage */
                 prob->nodes[node_idx].U = eddot(prob->ecos_prob->n, prob->ecos_prob->x, prob->ecos_prob->c);
-
-#if MI_PRINTLEVEL > 1
-                if (prob->stgs->verbose){
-                    PRINTTEXT("New optimal solution, U: %.2f\n", prob->nodes[node_idx].U);
-                    print_ecos_xequil(prob);
-                    print_ecos_c(prob);
-                    print_ecos_solution(prob);
-                }
-#endif
-
-                store_solution(prob);
-                prob->global_U = prob->nodes[node_idx].U;
+                viable_rounded_sol = 1;
             }
-
-            /* Reset the node's U back to INF because it was not originally feasible */
-            prob->nodes[node_idx].U = INFINITY;
         }else{ /* This is already an integer solution*/
             prob->nodes[node_idx].status = MI_SOLVED_NON_BRANCHABLE;
             prob->nodes[node_idx].U = eddot(prob->ecos_prob->n, prob->ecos_prob->x, prob->ecos_prob->c);
         }
 
         if (prob->nodes[node_idx].U < prob->global_U){
-
 #if MI_PRINTLEVEL > 1
             if (prob->stgs->verbose){
                 PRINTTEXT("New optimal solution, U: %.2f\n", prob->nodes[node_idx].U);
@@ -297,9 +283,13 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
                 print_ecos_solution(prob);
             }
 #endif
-
             store_solution(prob);
             prob->global_U = prob->nodes[node_idx].U;
+        }
+
+        if (viable_rounded_sol){
+            /* Reset the node's U back to INF because it was not originally feasible */
+            prob->nodes[node_idx].U = INFINITY; 
         }
 
     }else { /*Assume node infeasible*/

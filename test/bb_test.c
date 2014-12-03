@@ -259,7 +259,7 @@ int test_5(){
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 	feas_c, feas_h, NULL, 6, bool_idx, 0, NULL);
-	prob->stgs->verbose = 0;
+	prob->stgs->verbose = 1;
 	ret_code = ECOS_BB_solve(prob);
 	
 	pass = 1;
