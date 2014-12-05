@@ -117,6 +117,8 @@ ecos_bb_pwork* ECOS_BB_setup(
     idxint num_int_vars, idxint* int_vars_idx,
     settings_bb* stgs)
 {
+    idxint new_G_size;
+
 #if MI_PRINTLEVEL > 2
     int i;
     PRINTTEXT("\n");
@@ -151,7 +153,7 @@ ecos_bb_pwork* ECOS_BB_setup(
     prob->stgs = stgs;
 
 
-    idxint new_G_size = Gjc[n] + (2 * num_bool_vars) + (2 * num_int_vars);
+    new_G_size = Gjc[n] + (2 * num_bool_vars) + (2 * num_int_vars);
     prob->Gpr_new = (pfloat *) MALLOC( new_G_size * sizeof(pfloat) );
     prob->Gjc_new = (idxint *) MALLOC( (n+1) * sizeof(idxint) );
     prob->Gir_new = (idxint *) MALLOC( new_G_size * sizeof(idxint) );
