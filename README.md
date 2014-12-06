@@ -148,208 +148,6 @@ Ufo= [norm(x) <= 2, norm(x+1) <= 2];
 plot(Ufo,x,'y',1000,sdpsettings('solver','ecos'))
 ```
 
-
-
-Using ECOS in MATLAB
-====
-
-
-Compiling ECOS for MATLAB
-----
-
-ECOS comes with a makefile which resides in the `matlab` subdirectory of the code. To build ECOS for MATLAB:
-```matlab
-cd <ecos-directory>/matlab
-makemex
-```
-You should now have a binary file `ecos.[ending]`, with a platform-specific ending. This is the solver binary.
-Add the directory `<ecos-directory>/matlab` to your path to be able to call ECOS from any place. The command
-```matlab
-makemex clean
-```
-deletes unecessary files that were produced during compilation.
-
-Calling ECOS from MATLAB
-----
-
-You can directly call ECOS from Matlab using its native interface:
-```
-[x,y,info,s,z] = ecos(c,G,h,dims,A,b,opts)
-```
-It takes the problem data `c,G,h,A,b` and some dimension information that is given in the struct `dims`. Note that
-`A` and `G` have to be given in sparse format. The equality constraints defined by `A` and `b` are optional and can be
-omitted. The `dims` structure has the following fields:
-```
-dims.l - scalar, dimension of positive orthant (LP-cone) R_+
-dims.q - vector with dimensions of second order cones
-```
-The length of `dims.q` determines the number of second order cones. If you do not have a cone in your problem, use
-the empty matrix `[ ]` instead, for example `dims.q = [ ]` if you do not have second-order cones. 
-
-`opts` is a struct that passes in auxiliary settings. Valid field names for `opts` are `bool_vars_idx`, `int_vars_idx`, `verbose`, `abstol`, `feastol`, `reltol`, abstol_inacc`, `feastol_inacc`, `reltol_inacc`, `maxit`.
-
-ECOS supports boolean and integer programming in Matlab with `opts.int_vars_idx`, an array of the indices of integer variables, and `opts.bool_vars_idx`, an array of the indices of boolean variables.
-
-After a solve,
-ECOS returns the following variables
-```
-  x: primal variables
-  y: dual variables for equality constraints
-  s: slacks for Gx + s <= h, s \in K
-  z: dual variables for inequality constraints s \in K
-```
-In addition, the struct `info` is returned which contains the following fields:
-```
-    exitflag: 0=OPTIMAL, 1=PRIMAL INFEASIBLE, etc. (see exitcodes section in this readme)
-  infostring: gives information about the status of solution
-       pcost: value of primal objective
-       dcost: value of dual objective
-        pres: primal residual on inequalities and equalities
-        dres: dual residual
-        pinf: primal infeasibility measure
-        dinf: dual infeasibility measure
-     pinfres: NaN
-     dinfres: 3.9666e+15
-         gap: duality gap
-      relgap: relative duality gap
-          r0: ???
-      numerr: numerical error?
-        iter: number of iterations
-      timing: struct with timing information
-```
-
-### Example: L1 minimization (Linear Programming)
-
-In the following, we show how to solve a L1 minimization problem, which arises for example in sparse signal
-reconstruction problems (compressed sensing):
-```
-    minimize  ||x||_1         (L1)
-  subject to  Ax = b
-```
-where `x` is in `R^n`, `A` in `R^{m x n}` with `m <= n`. We use the epigraph reformulation to express the L1-norm of `x`,
-```
-    x <= u
-   -x <= u
-```
-where `u` is in `R^n`, and we minimize `sum(u)`. Hence the optimization variables are stacked as follows:
-```
-   z = [x; u]
-```
-With this reformulation, (L1) can be written as linear program (LP),
-```
-  minimize   c'*z
-  subject to Atilde*z = b;    (LP)
-             Gx <= h
-```
-where the inequality is w.r.t. the positive orthant. The following MATLAB code generates a random instance of this problem
-and calls ECOS to solve the problem:
-```
-% set dimensions and sparsity of A
-n = 1000;
-m = 10;
-density = 0.01;
-
-% linear term
-c = [zeros(n,1); ones(n,1)];
-
-% equality constraints
-A = sprandn(m,n,density);
-Atilde = [A, zeros(m,n)];
-b = randn(m,1);
-
-% linear inequality constraints
-I = speye(n);
-G = [  I -I;
-      -I -I];
-h = zeros(2*n,1);
-
-% cone dimensions (LP cone only)
-dims.l = 2*n;
-dims.q = [];
-
-% call solver
-fprintf('Calling solver...');
-z = ecos(c,G,h,dims,Atilde,b);
-x = z(1:n);
-u = z(n+1:2*n);
-nnzx = sum(abs(x) > 1e-8);
-
-% print sparsity info
-fprintf('Optimal x has %d/%d (%4.2f%%) non-zero (>1e-8 in abs. value) entries.\n', nnzx , n,  nnzx/n*100);
-```
-
-### Example: Quadratic Programming
-
-In this example, we consider problems of form
-```
-  minimize 0.5*x'*H*x + f'*x
-subject to A*x <= b                (QP)
-           Aeq*x = beq
-           lb <= x <= ub
-```
-where we assume that `H` is positive definite. This is the standard formulation that also MATLAB's built-in solver
-`quadprog` uses. To deal with the quadratic objective, you have to reformulate it into a second-order cone constraint to
-directly call ECOS. We do provide a MATLAB interface called `ecosqp` that automatically does this transformation for you,
-and has the exact same interface as `quadprog`. Hence you can just use
-```
-[x,fval,exitflag,output,lambda,t] = ecosqp(H,f,A,b,Aeq,beq,lb,ub,opts)
-```
-to solve (QP). See `help ecosqp` for more details. The last output argument, `t`, gives the solution time.
-
-Using ECOS in Python
-====
-
-Compiling ECOS for Python
-----
-To create the Python interface, you need [Numpy](http://www.numpy.org/) and [Scipy](http://www.scipy.org/). For installation instructions, see their respective pages. Once those are installed, the following lines of code should work:
-```
-cd <ecos-directory>/python
-python setup.py install
-```
-You may need `sudo` privileges for a global installation.
-
-### Windows installation
-Windows users may experience some extreme pain when installing ECOS for
-Python 2.7. We suggest switching to Linux or Mac OSX.
-
-If you must use (or insist on using) Windows, we suggest using
-the [Miniconda](http://repo.continuum.io/miniconda/)
-distribution to minimize this pain.
-
-If during the installation process, you see the error message
-`Unable to find vcvarsall.bat`, you will need to install
-[Microsoft Visual Studio Express 2008](go.microsoft.com/?linkid=7729279),
-since *Python 2.7* is built against the 2008 compiler.
-
-If using a newer version of Python, you can use a newer version of
-Visual Studio. For instance, Python 3.3 is built against [Visual Studio
-2010](http://go.microsoft.com/?linkid=9709949).
-
-Calling ECOS from Python
-----
-After installing the ECOS interface, you must import the module with
-```
-import ecos
-```
-This module provides a single function `ecos` with one of the following calling sequences:
-```
-solution = ecos.solve(c,G,h,dims)
-solution = ecos.solve(c,G,h,dims,A,b,**kwargs)
-```
-The arguments `c`, `h`, and `b` are Numpy arrays (i.e., matrices with a single
-column).  The arguments `G` and `A` are Scipy *sparse* matrices in CSR format;
-if they are not of the proper format, ECOS will attempt to convert them.  The
-argument `dims` is a dictionary with two fields, `dims['l']` and `dims['q']`.
-These are the same fields as in the Matlab case. If the fields are omitted or
-empty, they default to 0.
-The argument `kwargs` can include the keywords
-`feastol`, `abstol`, `reltol`, `feastol_inacc`, `abstol_innac`, and `reltol_inacc` for tolerance values,
-`max_iters` for the maximum number of iterations, the Boolean `verbose`, `bool_vars_idx`, a list of `int`s which index the boolean variables, and `int_vars_idx`, a list of `int`s which index the integer variables.
-The arguments `A`, `b`, and `kwargs` are optional.
-
-The returned object is a dictionary containing the fields `solution['x']`, `solution['y']`, `solution['s']`, `solution['z']`, and `solution['info']`.
-The first four are Numpy arrays containing the relevant solution. The last field contains a dictionary with the same fields as the `info` struct in the MATLAB interface.
-
 Using ECOS in C
 ====
 ECOS exports 3 functions, see ecos.h. You need to call these in the following sequence:
@@ -470,7 +268,7 @@ Setup allocates memory for ECOS_BB, computes the fill-in reducing ordering and p
 pwork* ecos_bb_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint* q,
                    pfloat* Gpr, idxint* Gjc, idxint* Gir,
                    pfloat* Apr, idxint* Ajc, idxint* Air,
-                   pfloat* c, pfloat* h, pfloat* b, idxint num_bool_vars);
+                   pfloat* c, pfloat* h, pfloat* b, idxint num_bool_vars, settings_bb* stgs);
 ```
 where you have to pass the following arguments:
 
@@ -486,6 +284,7 @@ where you have to pass the following arguments:
 * `h` is an array of type `pfloat` of size `m`
 * `b` is an array of type `pfloat` of size `p` (can be `NULL` if no equalities are present)
 * `num_bool_vars` is the number of boolean variables in this problem. ECOS_bb will assume that the first num_bool_vars variables are boolean (i.e. x[0] to x[num_bool_vars-1] ).
+* `settings_bb` is a struct with custom settings. This argument can be `NULL` if default settings are desired.
 
 The setup function returns a struct of type ```ecos_bb_pwork```, which you need to define first.
 
