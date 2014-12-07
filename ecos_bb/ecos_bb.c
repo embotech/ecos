@@ -48,6 +48,13 @@ void print_node(ecos_bb_pwork* prob, idxint i){
         PRINTTEXT("(%.2f, %.2f) ", -get_int_node_id(i, prob)[2*j], get_int_node_id(i, prob)[2*j+1] );
     PRINTTEXT("\n");
 }
+
+void print_stats(ecos_bb_pwork* prob){
+    PRINTTEXT("\tPcost: %.2f \n", prob->info->pcost);
+    PRINTTEXT("\tDcost: %.2f \n", prob->info->dcost);
+    PRINTTEXT("\tE_Pcost: %.2f \n", prob->ecos_prob->info->pcost);
+    PRINTTEXT("\tE_Dcost: %.2f \n", prob->ecos_prob->info->dcost);
+}
 #endif
 
 
@@ -195,7 +202,7 @@ void store_solution(ecos_bb_pwork* prob){
     for(i=0; i<prob->ecos_prob->m; ++i) prob->s[i] = prob->ecos_prob->s[i];
     prob->kap  =  prob->ecos_prob->kap ;
     prob->tau  =  prob->ecos_prob->tau ;
-    *(prob->best_info) = *(prob->ecos_prob->best_info);
+    *(prob->info) = *(prob->ecos_prob->info);
 }
 
 /*
@@ -209,7 +216,7 @@ void load_solution(ecos_bb_pwork* prob){
     for(i=0; i<prob->ecos_prob->m; ++i) prob->ecos_prob->s[i] = prob->s[i];
     prob->ecos_prob->kap = prob->kap;
     prob->ecos_prob->tau = prob->tau;
-    *(prob->ecos_prob->best_info) = *(prob->best_info);
+    *(prob->ecos_prob->info) = *(prob->info);
 }
 
 void get_bounds(idxint node_idx, ecos_bb_pwork* prob){

@@ -189,7 +189,7 @@ ecos_bb_pwork* ECOS_BB_setup(
     prob->y = (pfloat*) MALLOC( p*sizeof(pfloat) );
     prob->z = (pfloat*) MALLOC( m*sizeof(pfloat) );
     prob->s = (pfloat*) MALLOC( m*sizeof(pfloat) );
-    prob->best_info = (stats*) MALLOC( sizeof(stats) );
+    prob->info = (stats*) MALLOC( sizeof(stats) );
 
     /* Setup the ecos solver*/
     prob->ecos_prob = ECOS_setup(
@@ -252,7 +252,7 @@ void ECOS_BB_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep){
     FREE(prob->y);
     FREE(prob->z);
     FREE(prob->s);
-    FREE(prob->best_info);
+    FREE(prob->info);
     if (prob->default_settings){FREE(prob->stgs);}
     FREE(prob);
 }
