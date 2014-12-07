@@ -6,7 +6,7 @@
 #include "glblopts.h"
 
 /* Print verbosity */
-#define MI_PRINTLEVEL (1)
+#define MI_PRINTLEVEL (3)
 
 /* ecos_bb configuration settings */
 #define MI_ABS_EPS (1E-6)
@@ -91,7 +91,7 @@ typedef struct ecos_bb_pwork{
     pfloat* s;  /* slacks for conic inequalities       */
     pfloat kap; /* kappa (homogeneous embedding)       */
 	pfloat tau; /* tau (homogeneous embedding)         */
-    stats* best_info; /* info of best iterate               */
+    stats* info; /* info of best iterate               */
 	pfloat global_U;
 	pfloat global_L;
 
