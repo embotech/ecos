@@ -22,7 +22,7 @@ int contains(idxint idx, idxint num_int, idxint* bool_vars_idx){
     for (i=0; i<num_int; ++i){
         ans += (bool_vars_idx[i] == idx);
     }
-    return ans;
+    return (int) ans;
 }
 
 /* Augments the G and b arrays to take lb and ub constraints
@@ -118,6 +118,7 @@ ecos_bb_pwork* ECOS_BB_setup(
     settings_bb* stgs)
 {
     idxint new_G_size;
+    ecos_bb_pwork* prob;
 
 #if MI_PRINTLEVEL > 2
     int i;
@@ -142,7 +143,7 @@ ecos_bb_pwork* ECOS_BB_setup(
 #endif
 
     /* MALLOC the problem's memory*/
-    ecos_bb_pwork* prob = (ecos_bb_pwork*) MALLOC(sizeof(ecos_bb_pwork));
+    prob = (ecos_bb_pwork*) MALLOC(sizeof(ecos_bb_pwork));
 
     if (stgs == NULL){
         stgs = get_default_ECOS_BB_settings();
