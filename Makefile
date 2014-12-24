@@ -42,15 +42,15 @@ libecos_bb.a: $(ECOS_BB_OBJS) $(LDL) $(AMD)
 
 ecos_bb.o           : include/ecos_bb.h
 ecos_bb_preproc.o   : include/ecos_bb.h
-ecos.o              : include/ecos.h
-kkt.o               : include/kkt.h
-cone.o              : include/cone.h
-preproc.o           :
-spla.o              : include/spla.h
-splamm.o            : include/splamm.h
-ctrlc.o             : include/ctrlc.h
-timer.o             : include/timer.h
-equil.o             : include/equil.h
+ecos.o              : include/ecos.h include/glblopts.h include/cone.h
+kkt.o               : include/kkt.h include/glblopts.h include/cone.h include/ecos.h
+cone.o              : include/cone.h include/glblopts.h include/ecos.h
+preproc.o           : include/glblopts.h include/cone.h include/ecos.h
+spla.o              : include/spla.h include/glblopts.h include/cone.h include/ecos.h
+splamm.o            : include/splamm.h include/glblopts.h include/cone.h include/ecos.h
+ctrlc.o             : include/ctrlc.h include/glblopts.h include/cone.h include/ecos.h
+timer.o             : include/timer.h include/glblopts.h include/cone.h include/ecos.h
+equil.o             : include/equil.h include/glblopts.h include/cone.h include/ecos.h
 
 # ECOS demo
 .PHONY: demo
