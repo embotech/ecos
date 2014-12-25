@@ -40,9 +40,9 @@
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
 #define MAXIT      (100)          /* maximum number of iterations         */
-#define FEASTOL    (1E-7)        /* primal/dual infeasibility tolerance  */
-#define ABSTOL     (1E-7)        /* absolute tolerance on duality gap    */
-#define RELTOL     (1E-7)        /* relative tolerance on duality gap    */
+#define FEASTOL    (1E-8)        /* primal/dual infeasibility tolerance  */
+#define ABSTOL     (1E-8)        /* absolute tolerance on duality gap    */
+#define RELTOL     (1E-8)        /* relative tolerance on duality gap    */
 #define FTOL_INACC (1E-4)        /* inaccurate solution feasibility tol. */
 #define ATOL_INACC (5E-5)        /* inaccurate solution absolute tol.    */
 #define RTOL_INACC (5E-5)        /* inaccurate solution relative tol.    */
@@ -251,8 +251,8 @@ void ECOS_cleanup(pwork* w, idxint keepvars);
  * where x is the major, y the minor and zzz the build number
  */
 const char* ECOS_ver(void);
-    
-    
+
+
 /* ------------------- EXPERT LEVEL INTERFACES ---------------------- */
 
 /*
