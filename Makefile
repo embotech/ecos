@@ -6,7 +6,7 @@
 # Configuration of make process in ecos.mk
 include ecos.mk
 CFLAGS += -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config
-TEST_INCLUDES = -Itest -Itest/generated_tests
+TEST_INCLUDES = -Itest -Itest/generated
 
 # Compile all C code, including the C-callable routine
 .PHONY: all
@@ -75,10 +75,10 @@ ecostester: test/ecostester.c $(TEST_OBJS) libecos.a
 ecos_bb_test: test/bb_test.c libecos_bb.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-%.o: test/generated_tests/%.c test/generated_tests/%.h
+%.o: test/generated/%.c test/generated/%.h
 	$(CC) $(CFLAGS) $(TEST_INCLUDES) -c $< -o $@
 
-%.o: test/generated_tests/*/%.c test/generated_tests/*/%.h
+%.o: test/generated/*/%.c test/generated/*/%.h
 	$(CC) $(CFLAGS) $(TEST_INCLUDES) -c $< -o $@
 
 
