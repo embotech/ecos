@@ -1,7 +1,7 @@
 /*
  * ECOS - Embedded Conic Solver.
- * Copyright (C) 2012-14 Alexander Domahidi [domahidi@control.ee.ethz.ch],
- * Automatic Control Laboratory, ETH Zurich.
+ * Copyright (C) 2012-2015 A. Domahidi [domahidi@embotech.com],
+ * Automatic Control Lab, ETH Zurich & embotech GmbH, Zurich, Switzerland.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 
 /*
  * Interface for ECOS signal handling.
+ * 
+ * This module is (c) Michael Grant, [mcg@cvxr.com] contributed by Github PR #82
  */
 
 #ifndef __CTRLC_H__

@@ -1,3 +1,28 @@
+/*
+ * ECOS - Embedded Conic Solver.
+ * Copyright (C) 2012-2015 A. Domahidi [domahidi@embotech.com],
+ * Automatic Control Lab, ETH Zurich & embotech GmbH, Zurich, Switzerland.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
+/*
+ * The branch and bound module is (c) Han Wang, Stanford University, 
+ * [hanwang2@stanford.edu] 
+ */
+
 #ifndef __ecos_bb_H__
 #define __ecos_bb_H__
 
@@ -29,7 +54,7 @@
 #define MI_MAXITER_NO_SOLN (1)
 #define MI_INFEASIBLE (2)
 
-/*Max integer and all smaller integer representable by single precision*/
+/* Max integer and all smaller integer representable by single precision */
 #define MAX_FLOAT_INT (8388608)
 
 /* define INFINITY and isinf for MSFT */
