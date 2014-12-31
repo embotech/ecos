@@ -78,30 +78,12 @@ pages={3071-3076}
 }
 ```
 
-Using ECOS with CVXPY
-====
-
-[CVXPY](http://cvxpy.org) is a powerful Python modeling framework for convex optimization, similar to the MATLAB counterpart CVX. ECOS is one of the default solvers in CVXPY, so there is nothing special you have to do in order to use ECOS with CVXPY, besides specifying it as a solver. Here is a small [example](http://www.cvxpy.org/en/latest/tutorial/advanced/index.html#solve-method-options) from the CVXPY tutorial:
-
-```
-# Solving a problem with different solvers.
-x = Variable(2)
-obj = Minimize(norm(x, 2) + norm(x, 1))
-constraints = [x >= 2]
-prob = Problem(obj, constraints)
-
-# Solve with ECOS.
-prob.solve(solver=ECOS)
-print "optimal value with ECOS:", prob.value
-```
-
-
-Using ECOS in MATLAB
+Using ECOS in MATLAB (native or with CVX or YALMIP)
 ====
 
 Please refer to the repository [ecos-matlab](https://github.com/embotech/ecos-matlab) hosting the ECOS Matlab interface repository.
 
-Using ECOS in Python
+Using ECOS in Python (native or with CVXPY)
 ====
 
 Please refer to the repository [ecos-python](https://github.com/embotech/ecos-python) hosting the ECOS Python interface repository.
