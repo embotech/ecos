@@ -3,6 +3,8 @@ Embedded Conic Solver (ECOS)
 
 [![Build Status](https://travis-ci.org/embotech/ecos.svg?branch=master)](https://travis-ci.org/embotech/ecos)
 
+**Visit www.embotech.com/ECOS for detailed information on ECOS.**
+
 ECOS is a numerical software for solving convex second-order cone programs (SOCPs) of type
 ```
 min  c'*x
@@ -42,6 +44,7 @@ ECOS has numerous interfaces, each hosted in a separate git repository. The core
 
 * [MATLAB interface](https://github.com/embotech/ecos-matlab)
 * [Python interface](https://github.com/embotech/ecos-python)
+* [Julia interface](https://github.com/JuliaOpt/ECOS.jl)
 
 Please refer to the corresponding repositories or the [embotech documentation](https://www.embotech.com/ECOS) for information on how to install and use the software.
 
