@@ -3,6 +3,8 @@ Embedded Conic Solver (ECOS)
 
 [![Build Status](https://travis-ci.org/embotech/ecos.svg?branch=master)](https://travis-ci.org/embotech/ecos)
 
+**Visit www.embotech.com/ECOS for detailed information on ECOS.**
+
 ECOS is a numerical software for solving convex second-order cone programs (SOCPs) of type
 ```
 min  c'*x
