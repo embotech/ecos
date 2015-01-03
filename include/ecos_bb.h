@@ -37,7 +37,7 @@
 #define MI_ABS_EPS (1E-6)
 #define MI_REL_EPS (1E-3)
 #define MI_MAXITER (1000)
-#define MI_INT_TOL (1E-5)
+#define MI_INT_TOL (FTOL_INACC)
 
 /* Flags */
 #define MI_SOLVED_NON_BRANCHABLE (3)
