@@ -59,6 +59,7 @@
 
 /* define INFINITY and isinf for MSFT */
 #ifdef _MSC_VER
+#include "float.h"
 #define INFINITY (DBL_MAX+DBL_MAX)
 /* this will also return true if x is nan, but we don't check that anyway */
 #define isinf(x) (!_finite(x))
