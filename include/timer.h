@@ -1,7 +1,7 @@
 /*
  * ECOS - Embedded Conic Solver.
- * Copyright (C) 2012-14 Alexander Domahidi [domahidi@control.ee.ethz.ch],
- * Automatic Control Laboratory, ETH Zurich.
+ * Copyright (C) 2012-2015 A. Domahidi [domahidi@embotech.com],
+ * Automatic Control Lab, ETH Zurich & embotech GmbH, Zurich, Switzerland.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -70,4 +70,5 @@ pfloat toc(timer* t);
 
 #endif /* END IF PROFILING > 0 */
 
-#endif /* END IFDEF __TIMER_H__ */
+#endif
+/* END IFDEF __TIMER_H__ */

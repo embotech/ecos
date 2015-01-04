@@ -1,7 +1,7 @@
 /*
  * ECOS - Embedded Conic Solver.
- * Copyright (C) 2012-14 Alexander Domahidi [domahidi@control.ee.ethz.ch],
- * Automatic Control Laboratory, ETH Zurich.
+ * Copyright (C) 2012-2015 A. Domahidi [domahidi@embotech.com],
+ * Automatic Control Lab, ETH Zurich & embotech GmbH, Zurich, Switzerland.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,14 +35,14 @@
 #endif
 
 /* ECOS VERSION NUMBER - FORMAT: X.Y.Z --------------------------------- */
-#define ECOS_VERSION ("1.0.5")
+#define ECOS_VERSION ("1.1.0")
 
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
-#define MAXIT      (100)         /* maximum number of iterations         */
-#define FEASTOL    (1E-7)        /* primal/dual infeasibility tolerance  */
-#define ABSTOL     (1E-7)        /* absolute tolerance on duality gap    */
-#define RELTOL     (1E-7)        /* relative tolerance on duality gap    */
+#define MAXIT      (100)          /* maximum number of iterations         */
+#define FEASTOL    (1E-8)        /* primal/dual infeasibility tolerance  */
+#define ABSTOL     (1E-8)        /* absolute tolerance on duality gap    */
+#define RELTOL     (1E-8)        /* relative tolerance on duality gap    */
 #define FTOL_INACC (1E-4)        /* inaccurate solution feasibility tol. */
 #define ATOL_INACC (5E-5)        /* inaccurate solution absolute tol.    */
 #define RTOL_INACC (5E-5)        /* inaccurate solution relative tol.    */
@@ -251,8 +251,8 @@ void ECOS_cleanup(pwork* w, idxint keepvars);
  * where x is the major, y the minor and zzz the build number
  */
 const char* ECOS_ver(void);
-    
-    
+
+
 /* ------------------- EXPERT LEVEL INTERFACES ---------------------- */
 
 /*
@@ -261,6 +261,11 @@ const char* ECOS_ver(void);
  */
 void ecos_updateDataEntry_h(pwork* w, idxint idx, pfloat value);
 
+/*
+ * Updates one element of the OBJ vector c of inequalities
+ * After the call, w->c[idx] = value (but equilibrated)
+ */
+void ecos_updateDataEntry_c(pwork* w, idxint idx, pfloat value);
 
 #ifdef __cplusplus
 }

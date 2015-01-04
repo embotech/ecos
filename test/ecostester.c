@@ -28,8 +28,9 @@
 /* Include Tests */
 #include "MPC/MPC01.h"
 #include "MPC/MPC02.h"
-#include "generated_tests/generated_tests.h"
-#include "feas_prob/feas.h"
+#include "cvxpyProblems/githubIssue98.h"
+#include "generated/generated_tests.h"
+#include "feasibilityProblems/feas.h"
 #include "unboundedProblems/unboundedLP1.h"
 #include "infeasibleProblems/infeasible1.h"
 #include "unboundedProblems/unboundedMaxSqrt.h"
@@ -70,6 +71,7 @@ static char * all_tests() {
     mu_run_test(test_lp_bnl1);
 /*    mu_run_test(test_unboundedMaxSqrt); */
     mu_run_test(test_emptyProblem);
+    mu_run_test(test_issue98);
     return 0;
 }
 
