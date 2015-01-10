@@ -645,7 +645,7 @@ void RHS_combined(pwork* w)
 pfloat lineSearch(pfloat* lambda, pfloat* ds, pfloat* dz, pfloat tau, pfloat dtau, pfloat kap, pfloat dkap, cone* C, kkt* KKT)
 {
 	idxint i, j, cone_start, conesize;
-	pfloat rhomin, sigmamin, alpha, lknorm, lknorminv, rhonorm, sigmanorm, conic_step, temp;
+	pfloat rhomin, sigmamin, alpha, lknorm2, lknorm, lknorminv, rhonorm, sigmanorm, conic_step, temp;
 	pfloat lkbar_times_dsk, lkbar_times_dzk, factor;
 	pfloat* lk;
 	pfloat* dsk;
@@ -694,7 +694,11 @@ pfloat lineSearch(pfloat* lambda, pfloat* ds, pfloat* dz, pfloat tau, pfloat dta
 		lk = lambda + cone_start;  dsk = ds + cone_start;  dzk = dz + cone_start;
 
 		/* normalize */
-		lknorm = sqrt( lk[0]*lk[0] - eddot(conesize-1, lk+1, lk+1) );
+		lknorm2 = lk[0]*lk[0] - eddot(conesize-1, lk+1, lk+1);
+		if (lknorm2 <= 0.0)
+			continue;
+
+		lknorm = sqrt( lknorm2 );
 		for( j=0; j < conesize; j++ ){ lkbar[j] = lk[j] / lknorm; }
 		lknorminv = 1.0 / lknorm;
 
