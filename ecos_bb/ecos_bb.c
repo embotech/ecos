@@ -45,8 +45,12 @@ void print_ecos_solution(ecos_bb_pwork* prob){
 }
 
 void print_ecos_xequil(ecos_bb_pwork* prob){
+#if EQUILIBRATE > 0
     int i; PRINTTEXT("ecos->xequil: ");
     for (i=0; i<prob->ecos_prob->n; ++i) PRINTTEXT("%.2f ", prob->ecos_prob->xequil[i] );
+#else 
+    PRINTTEXT("ecos->xequil: 1, (equilibration dissabled) ");
+#endif
     PRINTTEXT("\n");
 }
 
