@@ -51,7 +51,7 @@ extern bool utSetInterruptEnabled(bool);
 /* METHODS are the same for both */
 void init_ctrlc(void);
 void remove_ctrlc(void);
-bool check_ctrlc(void);
+int check_ctrlc(void);
 
 #else /* CTRLC = 0 */
 

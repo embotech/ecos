@@ -38,15 +38,15 @@
 static int istate;
 void init_ctrlc(void) 
 {
-    istate = utSetInterruptEnabled(true);
+    istate = (int)utSetInterruptEnabled(true);
 }
 void remove_ctrlc(void)
 {
-    utSetInterruptEnabled(istate);
+    utSetInterruptEnabled((bool)istate);
 }
-bool check_ctrlc(void)
+int check_ctrlc(void)
 {
-    return utIsInterruptPending();
+    return (int)utIsInterruptPending();
 }
 
 #elif defined _WIN32 || defined _WIN64
