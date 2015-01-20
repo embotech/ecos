@@ -44,7 +44,7 @@ void remove_ctrlc(void)
 {
     utSetInterruptEnabled(istate);
 }
-int check_ctrlc(void)
+bool check_ctrlc(void)
 {
     return utIsInterruptPending();
 }
@@ -85,6 +85,8 @@ void init_ctrlc(void)
 {
     int_detected = 0;
     struct sigaction act;
+    act.sa_flags = 0;
+    sigemptyset(&act.sa_mask);
     act.sa_handler = handle_ctrlc;
     sigaction(SIGINT,&act,&oact);
 }

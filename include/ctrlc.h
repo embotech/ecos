@@ -33,8 +33,8 @@
 #if defined MATLAB_MEX_FILE
 
 /* No header file available here; define the prototypes ourselves */
-extern int utIsInterruptPending();
-extern int utSetInterruptEnabled(int);
+extern bool utIsInterruptPending(void);
+extern bool utSetInterruptEnabled(bool);
 
 #elif (defined _WIN32 || defined _WIN64 || defined _WINDLL )
 
@@ -51,7 +51,7 @@ extern int utSetInterruptEnabled(int);
 /* METHODS are the same for both */
 void init_ctrlc(void);
 void remove_ctrlc(void);
-int check_ctrlc(void);
+bool check_ctrlc(void);
 
 #else /* CTRLC = 0 */
 
