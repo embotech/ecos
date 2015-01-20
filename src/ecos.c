@@ -750,7 +750,7 @@ void backscale(pwork *w)
 	for( i=0; i < w->n; i++ ){ w->x[i] /= (w->xequil[i] * w->tau); }
     for( i=0; i < w->p; i++ ){ w->y[i] /= (w->Aequil[i] * w->tau); }
 	for( i=0; i < w->m; i++ ){ w->z[i] /= (w->Gequil[i] * w->tau); }
-	for( i=0; i < w->m; i++ ){ w->s[i] /= (w->Gequil[i] * w->tau); }
+	for( i=0; i < w->m; i++ ){ w->s[i] *= (w->Gequil[i] / w->tau); }
     for( i=0; i < w->n; i++ ){ w->c[i] *= w->xequil[i]; }
 #else
     /* standard back scaling without equilibration */

@@ -6,17 +6,20 @@
   %Structure for the results
   results = {{'Problem name','Iter','Flag','Norm Residual','Complementarity','Conic Infeasiblity'}}
 
-  for problem_index = 1:length(standard_form_problems)
+  %for problem_index = 1:length(standard_form_problems)
+
+  for problem_index = 1:10
     
     %Get the problem form UFGET
     problem_uf_ix = standard_form_problems(problem_index);
     P = UFget(problem_uf_ix);
       
 	fprintf('Problem name %s\n',P.name)
-    A = P.A;
+    A = P.A; 
     b = P.b;
     c = P.aux.c;
-	[p,n] = size(A);
+	
+    [p,n] = size(A);
 	m = n;
 	G     = -speye(n);
 	h     = zeros(n,1);
@@ -30,7 +33,7 @@
 	comp = s'*z;
 	conic_infeas = min(min(s),min(z));
 
-	fprintf('Residuals: primal %3.3e, dual %3.3e complementarity %3.3e conic infeas $3.3e \n',pres,dres,comp,conic_infeas)
+	fprintf('Residuals: primal %3.3e, dual %3.3e complementarity %3.3e conic infeas %3.3e \n',pres,dres,comp,conic_infeas)
 
 	results = {results{:},{P.name,info.iter,info.exitflag,lin_res,comp,conic_infeas}}; 
 end
