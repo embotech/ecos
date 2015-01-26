@@ -10,12 +10,12 @@ qc_socp * qc_quad_over_lin2socp()
      */
 
     /* all local variables */
-    long i;  /* loop index */
-    long *q_ptr;
-    long *A_row_ptr, *A_col_ptr;
-    long *G_row_ptr, *G_col_ptr;
-    double *A_data_ptr, *G_data_ptr;
-    long nnzA, nnzG;
+    idxint i;  /* loop index */
+    idxint *q_ptr;
+    idxint *A_row_ptr, *A_col_ptr;
+    idxint *G_row_ptr, *G_col_ptr;
+    pfloat *A_data_ptr, *G_data_ptr;
+    idxint nnzA, nnzG;
     qc_matrix *G_csc;
     qc_matrix G_coo;
     
@@ -29,11 +29,11 @@ qc_socp * qc_quad_over_lin2socp()
     data->n = 4;
 
     /* allocate c vector */
-    data->c = (double *) calloc(data->n, sizeof(double));
+    data->c = (pfloat *) calloc(data->n, sizeof(pfloat));
     if (!data->c) return qc_socp_free(data);
 
     /* allocate h vector */
-    data->h = (double *) calloc(data->m, sizeof(double));
+    data->h = (pfloat *) calloc(data->m, sizeof(pfloat));
     if (!data->h) return qc_socp_free(data);
 
     /* allocate b vector */
@@ -41,9 +41,9 @@ qc_socp * qc_quad_over_lin2socp()
 
     /* allocate G matrix */
     nnzG =  + 8;
-    data->Gx = (double *) malloc(nnzG * sizeof(double));
-    data->Gp = (long *) malloc(nnzG * sizeof(long));
-    data->Gi = (long *) malloc(nnzG * sizeof(long));
+    data->Gx = (pfloat *) malloc(nnzG * sizeof(pfloat));
+    data->Gp = (idxint *) malloc(nnzG * sizeof(idxint));
+    data->Gi = (idxint *) malloc(nnzG * sizeof(idxint));
     if ((!data->Gx) || (!data->Gp) || (!data->Gi)) return qc_socp_free(data);
     G_data_ptr = data->Gx;
     G_row_ptr = data->Gi;
@@ -61,7 +61,7 @@ qc_socp * qc_quad_over_lin2socp()
     /* allocate the cone sizes */
     data->l = 3;
     data->nsoc = 1;
-    data->q = (long *) malloc(data->nsoc * sizeof(long));
+    data->q = (idxint *) malloc(data->nsoc * sizeof(idxint));
     if(!data->q) return qc_socp_free(data);
 
     /* initialize the cone */
@@ -112,7 +112,7 @@ qc_socp * qc_quad_over_lin2socp()
     return data;
 }
 
-void qc_socp2quad_over_lin(double * x, quad_over_lin_vars * vars, const quad_over_lin_dims * dims)
+void qc_socp2quad_over_lin(pfloat * x, quad_over_lin_vars * vars, const quad_over_lin_dims * dims)
 {
     /*
      * recovers the problem variables from the solver variable 'x'

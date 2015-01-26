@@ -28,7 +28,7 @@ typedef struct sq_norm_dims {
  *    users are responsible for keep track of the variable lengths
  */
 typedef struct sq_norm_vars {
-    double * x;
+    pfloat * x;
 } sq_norm_vars;
   
 /* converts the 'sq_norm' parameters into SOCP data
@@ -39,7 +39,7 @@ qc_socp * qc_sq_norm2socp();
 /* assigns the pointers for the variables in 'sq_norm' to point to the proper
  * memory locations in the solution vector
  */
-void qc_socp2sq_norm(double * x, sq_norm_vars * vars, const sq_norm_dims * dims);
+void qc_socp2sq_norm(pfloat * x, sq_norm_vars * vars, const sq_norm_dims * dims);
 
 #ifdef __cplusplus
 }
