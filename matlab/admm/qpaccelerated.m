@@ -107,8 +107,9 @@ for k = 1:MAX_ITER
     end
     
     alpha = (1 + sqrt(1 + 4*alphaold*alphaold))/2;
-    zHat = z + (alphaold - 1)*(z - zold)/alpha;
-    uHat = u + (alphaold - 1)*(u - uold)/alpha;
+    factor = (alphaold - 1)/alpha;           
+    zHat = z + factor*(z - zold);
+    uHat = u + factor*(u - uold);
     admmIters = admmIters + 1;
 end    
 end
