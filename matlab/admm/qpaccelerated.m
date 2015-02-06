@@ -42,6 +42,9 @@ x = zeros(n,1);
 z = zeros(n,1);
 u = zeros(n,1);
 
+uHat = zeros(n,1);
+zHat = zeros(n,1);
+
 admmIters = 0;
     
 if ~QUIET
@@ -63,10 +66,10 @@ end
 
 for k = 1:MAX_ITER
     if equalities > 0
-        xlambda = U \ (L \ [rho*(z - u) - q; beq]);
+        xlambda = U \ (L \ [rho*(zHat - uHat) - q; beq]);
         x = xlambda(1:n);
     else
-        x = R \ (R' \ (rho*(z - u) - q));
+        x = R \ (R' \ (rho*(zHat - uHat) - q));
     end
                
     % z-update with relaxation
@@ -75,13 +78,13 @@ for k = 1:MAX_ITER
     alphaold = alpha;
 
     if lambdaSparse > 0
-        z = shrinkage(x + u, lambdaSparse/rho);
+        z = shrinkage(x + uHat, lambdaSparse/rho);
     else 
-        z = min(ub, max(lb, x + u));
+        z = min(ub, max(lb, x + uHat));
     end
     
     % u-update
-    u = u + (x - z);
+    u = uHat + (x - z);
     
     % diagnostics, reporting, termination checks
     history.objval(k)  = objective(P, q, r, x);
@@ -104,8 +107,8 @@ for k = 1:MAX_ITER
     end
     
     alpha = (1 + sqrt(1 + 4*alphaold*alphaold))/2;
-    z = z + (alphaold - 1)*(z - zold)/alpha;
-    u = u + (alphaold - 1)*(u - uold)/alpha;
+    zHat = z + (alphaold - 1)*(z - zold)/alpha;
+    uHat = u + (alphaold - 1)*(u - uold)/alpha;
     admmIters = admmIters + 1;
 end    
 end
