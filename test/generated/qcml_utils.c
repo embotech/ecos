@@ -39,7 +39,7 @@ qc_matrix *qc_spfree(qc_matrix *A)
 }
 
 /* allocate memory for a coo matrix */
-qc_matrix *qc_spalloc (long m, long n, long nnz, int triplet)
+qc_matrix *qc_spalloc (idxint m, idxint n, idxint nnz, int triplet)
 {
   /* allocate the coo struct */
   qc_matrix *A = (qc_matrix *) calloc (1, sizeof (qc_matrix)) ;
@@ -47,22 +47,22 @@ qc_matrix *qc_spalloc (long m, long n, long nnz, int triplet)
   A->m = m ;                              /* define dimensions and nzmax */
   A->n = n ;
   A->nnz = triplet ? nnz : -1 ;
-  A->j = (long *) malloc (triplet ? (nnz * sizeof(long)) : ((n+1) * sizeof(long))) ;
-  A->i = (long *) malloc (nnz * sizeof (long)) ;
-  A->v = (double *) malloc (nnz * sizeof (double)) ;
+  A->j = (idxint *) malloc (triplet ? (nnz * sizeof(idxint)) : ((n+1) * sizeof(idxint))) ;
+  A->i = (idxint *) malloc (nnz * sizeof (idxint)) ;
+  A->v = (pfloat *) malloc (nnz * sizeof (pfloat)) ;
   return ((!A->v || !A->i || !A->j) ? qc_spfree(A) : A);
 }
 
 /* p [0..n] = cumulative sum of c [0..n-1], and then copy p [0..n-1] into c */
-void cumsum (long *p, long *c, long n)
+void cumsum (idxint *p, idxint *c, idxint n)
 {
-  /* performs a cumulative sum; may overflow if exceed long storage (4GB
+  /* performs a cumulative sum; may overflow if exceed idxint storage (4GB
    * worth of nonzerors)
    *
    * although could write c[i] += c[i-1], we don't. the extra workspace allows
    * the compiler to optimize the code
    */
-  long i, nz = 0 ;
+  idxint i, nz = 0 ;
   if (!p || !c) return ;          /* check inputs */
   for (i = 0 ; i < n ; i++)
   {
@@ -79,10 +79,10 @@ void cumsum (long *p, long *c, long n)
  */
 int remove_dup (qc_matrix *A)
 {
-  long i, j, p, q, nz = 0, n, m, *Ap, *Ai, *w ;
-  double *Ax ;
+  idxint i, j, p, q, nz = 0, n, m, *Ap, *Ai, *w ;
+  pfloat *Ax ;
   m = A->m ; n = A->n ; Ap = A->j ; Ai = A->i ; Ax = A->v ;
-  w = (long *) malloc (m * sizeof (long)) ;   /* get workspace */
+  w = (idxint *) malloc (m * sizeof (idxint)) ;   /* get workspace */
   if (!w) return 0;                           /* out of memory */
   for (i = 0 ; i < m ; i++) w [i] = -1 ;      /* row i not yet seen */
   for (j = 0 ; j < n ; j++)
@@ -114,8 +114,8 @@ int remove_dup (qc_matrix *A)
  * removes duplicate entires as a last step */
 qc_matrix *qc_compress (const qc_matrix *T)
 {
-  long m, n, nnz, p, k, *Cp, *Ci, *w, *Ti, *Tj ;
-  double *Cx, *Tx ;
+  idxint m, n, nnz, p, k, *Cp, *Ci, *w, *Ti, *Tj ;
+  pfloat *Cx, *Tx ;
   qc_matrix *C ;
   
   if (T->v == NULL) return NULL;
@@ -125,7 +125,7 @@ qc_matrix *qc_compress (const qc_matrix *T)
   if (!C) return NULL;
   
   /* create temporary workspace */
-  w = (long *) calloc (n, sizeof(long));
+  w = (idxint *) calloc (n, sizeof(idxint));
   if (!w) {
     free(C->i);
     free(C->j);

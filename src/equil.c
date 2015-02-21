@@ -342,7 +342,7 @@ void set_equilibration(pwork *w)
 void unset_equilibration(pwork *w)
 {
     idxint i;
-    idxint num_cols = w->A ? w->A->n : w->G->n;
+    //idxint num_cols = w->A ? w->A->n : w->G->n;
     idxint num_A_rows = w->A ? w->A->m : 0;
     idxint num_G_rows = w->G->m;
 
@@ -351,10 +351,11 @@ void unset_equilibration(pwork *w)
     if(num_G_rows > 0)
         restore(w->Gequil, w->xequil, w->G);
 
-    /* unequilibrate the c vector */
+    /* unequilibrate the c vector 
     for(i = 0; i < num_cols; i++) {
         w->c[i] *= w->xequil[i];
-    }
+    }*/
+
     /* unequilibrate the b vector */
     for(i = 0; i < num_A_rows; i++) {
         w->b[i] *= w->Aequil[i];

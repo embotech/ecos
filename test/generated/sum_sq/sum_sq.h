@@ -28,7 +28,7 @@ typedef struct sum_sq_dims {
  *    users are responsible for keep track of the variable lengths
  */
 typedef struct sum_sq_vars {
-    double * x;
+    pfloat * x;
 } sum_sq_vars;
   
 /* converts the 'sum_sq' parameters into SOCP data
@@ -39,7 +39,7 @@ qc_socp * qc_sum_sq2socp();
 /* assigns the pointers for the variables in 'sum_sq' to point to the proper
  * memory locations in the solution vector
  */
-void qc_socp2sum_sq(double * x, sum_sq_vars * vars, const sum_sq_dims * dims);
+void qc_socp2sum_sq(pfloat * x, sum_sq_vars * vars, const sum_sq_dims * dims);
 
 #ifdef __cplusplus
 }

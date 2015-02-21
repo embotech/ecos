@@ -38,15 +38,15 @@
 static int istate;
 void init_ctrlc(void) 
 {
-    istate = utSetInterruptEnabled(true);
+    istate = (int)utSetInterruptEnabled(true);
 }
 void remove_ctrlc(void)
 {
-    utSetInterruptEnabled(istate);
+    utSetInterruptEnabled((bool)istate);
 }
 int check_ctrlc(void)
 {
-    return utIsInterruptPending();
+    return (int)utIsInterruptPending();
 }
 
 #elif defined _WIN32 || defined _WIN64
@@ -85,6 +85,8 @@ void init_ctrlc(void)
 {
     int_detected = 0;
     struct sigaction act;
+    act.sa_flags = 0;
+    sigemptyset(&act.sa_mask);
     act.sa_handler = handle_ctrlc;
     sigaction(SIGINT,&act,&oact);
 }

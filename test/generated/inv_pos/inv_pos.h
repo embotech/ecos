@@ -28,7 +28,7 @@ typedef struct inv_pos_dims {
  *    users are responsible for keep track of the variable lengths
  */
 typedef struct inv_pos_vars {
-    double x;
+    pfloat x;
 } inv_pos_vars;
   
 /* converts the 'inv_pos' parameters into SOCP data
@@ -39,7 +39,7 @@ qc_socp * qc_inv_pos2socp();
 /* assigns the pointers for the variables in 'inv_pos' to point to the proper
  * memory locations in the solution vector
  */
-void qc_socp2inv_pos(double * x, inv_pos_vars * vars, const inv_pos_dims * dims);
+void qc_socp2inv_pos(pfloat * x, inv_pos_vars * vars, const inv_pos_dims * dims);
 
 #ifdef __cplusplus
 }

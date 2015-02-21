@@ -28,7 +28,7 @@ typedef struct quad_over_lin_dims {
  *    users are responsible for keep track of the variable lengths
  */
 typedef struct quad_over_lin_vars {
-    double * x;
+    pfloat * x;
 } quad_over_lin_vars;
   
 /* converts the 'quad_over_lin' parameters into SOCP data
@@ -39,7 +39,7 @@ qc_socp * qc_quad_over_lin2socp();
 /* assigns the pointers for the variables in 'quad_over_lin' to point to the proper
  * memory locations in the solution vector
  */
-void qc_socp2quad_over_lin(double * x, quad_over_lin_vars * vars, const quad_over_lin_dims * dims);
+void qc_socp2quad_over_lin(pfloat * x, quad_over_lin_vars * vars, const quad_over_lin_dims * dims);
 
 #ifdef __cplusplus
 }
