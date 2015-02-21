@@ -64,22 +64,13 @@ void socp_to_ecos_bb(
 {
     idxint i, j, k;
 
-    PRINTTEXT("=Inside SOCP to ECOS=\n");
-    PRINTTEXT("Gpr=");for (i=0;i<Gjc_in[n];i++){PRINTTEXT("%f,",Gpr_in[i]);}PRINTTEXT("\n");        
-    PRINTTEXT("Gir=");for (i=0;i<Gjc_in[n];i++){PRINTTEXT("%u,",Gir_in[i]);}PRINTTEXT("\n");        
-    PRINTTEXT("Gjc=");for (i=0;i<=n;i++){PRINTTEXT("%u,",Gjc_in[i]);}PRINTTEXT("\n");        
-
-
     /* First map in the column pointers, remember Gir_out[0]=0*/
     for (i=0; i<=n; ++i){
         Gjc_out[i] = Gjc_in[i];
     }
 
-    PRINTTEXT("=1=\n");
-
     j=0;
     for (i=0; i<n; ++i){
-        PRINTTEXT("i=%u\n",i);
         if (contains(i, num_bool_vars, bool_vars_idx)){
             Gpr_out[ Gjc_out[i] ] = -1;
             Gpr_out[ Gjc_out[i] + 1 ] = 1;
@@ -138,18 +129,10 @@ void socp_to_ecos_bb(
         }
     }
 
-
-    PRINTTEXT("Gpr=");for (i=0;i<Gjc_out[n];i++){PRINTTEXT("%f,",Gpr_out[i]);}PRINTTEXT("\n");        
-    PRINTTEXT("Gir=");for (i=0;i<Gjc_out[n];i++){PRINTTEXT("%u,",Gir_out[i]);}PRINTTEXT("\n");        
-    PRINTTEXT("Gjc=");for (i=0;i<=n;i++){PRINTTEXT("%u,",Gjc_out[i]);}PRINTTEXT("\n");        
-
     /* Copy the remaining entries of b*/
     for (i=0; i<m; ++i){
         h_out[2*(num_bool_vars + num_int_vars) + i] = h_in[i];
     }
-
-    PRINTTEXT("=5=\n");
-
 }
 
 ecos_bb_pwork* ECOS_BB_setup(
@@ -185,12 +168,13 @@ ecos_bb_pwork* ECOS_BB_setup(
     PRINTTEXT("   Integer var indices: "); for( i=0; i<num_int_vars; ++i) PRINTTEXT("%u ", (unsigned int) int_vars_idx[i]); PRINTTEXT("\n");
     PRINTTEXT("\n");
 
-#endif
-
-    
+    PRINTTEXT("n=%u\n",n);    
+    PRINTTEXT("m=%u\n",m);
     PRINTTEXT("Gpr=");for (i=0;i<Gjc[n];i++){PRINTTEXT("%f,",Gpr[i]);}PRINTTEXT("\n");        
     PRINTTEXT("Gir=");for (i=0;i<Gjc[n];i++){PRINTTEXT("%u,",Gir[i]);}PRINTTEXT("\n");        
     PRINTTEXT("Gjc=");for (i=0;i<=n;i++){PRINTTEXT("%u,",Gjc[i]);}PRINTTEXT("\n");        
+#endif
+
 
 
     /* MALLOC the problem's memory*/
@@ -204,11 +188,11 @@ ecos_bb_pwork* ECOS_BB_setup(
     }
     prob->stgs = stgs;
 
-    new_G_size = Gjc[n] + (2 * num_bool_vars) + (2 * num_int_vars);
-    prob->Gpr_new = (pfloat *) MALLOC( new_G_size * sizeof(pfloat) );
+    new_G_size = Gjc[n] + (2*num_bool_vars) + (2*num_int_vars);
+    prob->Gpr_new = (pfloat *) MALLOC( new_G_size*sizeof(pfloat) );
     prob->Gjc_new = (idxint *) MALLOC( (n+1) * sizeof(idxint) );
-    prob->Gir_new = (idxint *) MALLOC( new_G_size * sizeof(idxint) );
-    prob->h_new   = (pfloat *) MALLOC( (m + 2 * num_bool_vars + 2 * num_int_vars) * sizeof(pfloat) );
+    prob->Gir_new = (idxint *) MALLOC( new_G_size*sizeof(idxint) );
+    prob->h_new   = (pfloat *) MALLOC( (m + 2*num_bool_vars + 2*num_int_vars) * sizeof(pfloat) );
 
     /* Copy the data and convert it to boolean*/
     socp_to_ecos_bb(num_bool_vars, bool_vars_idx,
@@ -219,9 +203,6 @@ ecos_bb_pwork* ECOS_BB_setup(
                     h, prob->h_new);
     m += 2*(num_bool_vars + num_int_vars);
     l += 2*(num_bool_vars + num_int_vars);
-
-    PRINTTEXT("n=%u\n",n);    
-    PRINTTEXT("m=%u\n",m);
 
     /* MALLOC the initial node's book keeping data #(2*maxIter)*/
     prob->nodes = (node*) CALLOC( prob->stgs->maxit, sizeof(node) );
@@ -252,8 +233,6 @@ ecos_bb_pwork* ECOS_BB_setup(
         prob->Gpr_new, prob->Gjc_new, prob->Gir_new,
         Apr, Ajc, Air,
         c, prob->h_new, b);
-
-    PRINTTEXT("==========\n");
 
     /* Store the number of integer variables in the problem*/
     prob->num_bool_vars = num_bool_vars;
