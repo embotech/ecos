@@ -64,71 +64,91 @@ void socp_to_ecos_bb(
 {
     idxint i, j, k;
 
+    PRINTTEXT("=Inside SOCP to ECOS=\n");
+    PRINTTEXT("Gpr=");for (i=0;i<Gjc_in[n];i++){PRINTTEXT("%f,",Gpr_in[i]);}PRINTTEXT("\n");        
+    PRINTTEXT("Gir=");for (i=0;i<Gjc_in[n];i++){PRINTTEXT("%u,",Gir_in[i]);}PRINTTEXT("\n");        
+    PRINTTEXT("Gjc=");for (i=0;i<=n;i++){PRINTTEXT("%u,",Gjc_in[i]);}PRINTTEXT("\n");        
+
+
     /* First map in the column pointers, remember Gir_out[0]=0*/
     for (i=0; i<=n; ++i){
         Gjc_out[i] = Gjc_in[i];
     }
 
-    /* Now insert the new zeros and expand the column indices as needed for BOOLEAN vars*/
-    for (j=0; j<num_bool_vars; ++j){
-        k = bool_vars_idx[j];
-        Gpr_out[ Gjc_out[k] ] = -1;
-        Gpr_out[ Gjc_out[k] + 1 ] = 1;
+    PRINTTEXT("=1=\n");
 
-        Gir_out[ Gjc_out[k] ] = 2*j;
-        Gir_out[ Gjc_out[k] + 1 ] = 2*j + 1;
-
-        /* Set lower bound to 0*/
-        h_out[ 2*j ] = 0;
-
-        /* Set upper bound to 1*/
-        h_out[ 2*j + 1] = 1;
-
-        for (i=(k+1); i<=n; ++i){
-            Gjc_out[i] += 2;
-        }
-    }
-
-    /* Now insert the new zeros and expand the column indices as needed for INTEGER vars*/
-    for (j=num_bool_vars; j<(num_bool_vars + num_int_vars); ++j){
-        k = int_vars_idx[j];
-        Gpr_out[ Gjc_out[k] ] = -1;
-        Gpr_out[ Gjc_out[k] + 1 ] = 1;
-
-        Gir_out[ Gjc_out[k] ] = 2*j;
-        Gir_out[ Gjc_out[k] + 1 ] = 2*j + 1;
-
-        /* Set lower bound to 0*/
-        h_out[ 2*j ] = MAX_FLOAT_INT;
-
-        /* Set upper bound to 1*/
-        h_out[ 2*j + 1] = MAX_FLOAT_INT;
-
-        for (i=(k+1); i<=n; ++i){
-            Gjc_out[i] += 2;
-        }
-    }
-
-    /* Now fill in the remainder of the array*/
+    j=0;
     for (i=0; i<n; ++i){
-        if ( contains(i, num_bool_vars, bool_vars_idx) ||
-             contains(i,  num_int_vars, int_vars_idx) ){
-            for(j=0; j<(Gjc_in[i+1] - Gjc_in[i]); ++j){
-                Gpr_out[Gjc_out[i]+2+j] = Gpr_in[Gjc_in[i]+j];
-                Gir_out[Gjc_out[i]+2+j] = Gir_in[Gjc_in[i]+j] + 2*num_bool_vars + 2*num_int_vars;
+        PRINTTEXT("i=%u\n",i);
+        if (contains(i, num_bool_vars, bool_vars_idx)){
+            Gpr_out[ Gjc_out[i] ] = -1;
+            Gpr_out[ Gjc_out[i] + 1 ] = 1;
+
+            Gir_out[ Gjc_out[i] ] = 2*j;
+            Gir_out[ Gjc_out[i] + 1 ] = 2*j + 1;
+
+            /* Set lower bound to 0*/
+            h_out[ 2*j ] = 0;
+
+            /* Set upper bound to 1*/
+            h_out[ 2*j + 1] = 1;
+
+            /* Expand the following arrays */
+            for (k=(i+1); k<=n; ++k){
+                Gjc_out[k] += 2;
             }
-        } else {
-            for(j=0; j<(Gjc_in[i+1] - Gjc_in[i]); ++j){
-                Gpr_out[Gjc_out[i]+j] = Gpr_in[Gjc_in[i]+j];
-                Gir_out[Gjc_out[i]+j] = Gir_in[Gjc_in[i]+j] + 2*num_bool_vars + 2*num_int_vars;
+
+            /* Now fill in the array */
+            for(k=0; k<(Gjc_in[i+1] - Gjc_in[i]); ++k){
+                Gpr_out[Gjc_out[i]+2+k] = Gpr_in[Gjc_in[i]+k];
+                Gir_out[Gjc_out[i]+2+k] = Gir_in[Gjc_in[i]+k] + 2*num_bool_vars + 2*num_int_vars;
+            }
+
+            ++j;
+        }else if (contains(i, num_int_vars, int_vars_idx)){
+            Gpr_out[ Gjc_out[i] ] = -1;
+            Gpr_out[ Gjc_out[i] + 1 ] = 1;
+
+            Gir_out[ Gjc_out[i] ] = 2*j;
+            Gir_out[ Gjc_out[i] + 1 ] = 2*j + 1;
+
+            /* Set lower bound to 0*/
+            h_out[ 2*j ] = MAX_FLOAT_INT;
+
+            /* Set upper bound to 1*/
+            h_out[ 2*j + 1] = MAX_FLOAT_INT;
+
+            /* Expand the following arrays */
+            for (k=(i+1); k<=n; ++k){
+                Gjc_out[k] += 2;
+            }
+
+            /* Now fill in the array */
+            for(k=0; k<(Gjc_in[i+1] - Gjc_in[i]); ++k){
+                Gpr_out[Gjc_out[i]+2+k] = Gpr_in[Gjc_in[i]+k];
+                Gir_out[Gjc_out[i]+2+k] = Gir_in[Gjc_in[i]+k] + 2*num_bool_vars + 2*num_int_vars;
+            }
+
+            ++j;
+        }else{
+            for(k=0; k<(Gjc_in[i+1] - Gjc_in[i]); ++k){
+                Gpr_out[Gjc_out[i]+k] = Gpr_in[Gjc_in[i]+k];
+                Gir_out[Gjc_out[i]+k] = Gir_in[Gjc_in[i]+k] + 2*num_bool_vars + 2*num_int_vars;
             }
         }
     }
+
+
+    PRINTTEXT("Gpr=");for (i=0;i<Gjc_out[n];i++){PRINTTEXT("%f,",Gpr_out[i]);}PRINTTEXT("\n");        
+    PRINTTEXT("Gir=");for (i=0;i<Gjc_out[n];i++){PRINTTEXT("%u,",Gir_out[i]);}PRINTTEXT("\n");        
+    PRINTTEXT("Gjc=");for (i=0;i<=n;i++){PRINTTEXT("%u,",Gjc_out[i]);}PRINTTEXT("\n");        
 
     /* Copy the remaining entries of b*/
     for (i=0; i<m; ++i){
         h_out[2*(num_bool_vars + num_int_vars) + i] = h_in[i];
     }
+
+    PRINTTEXT("=5=\n");
 
 }
 
@@ -167,6 +187,12 @@ ecos_bb_pwork* ECOS_BB_setup(
 
 #endif
 
+    
+    PRINTTEXT("Gpr=");for (i=0;i<Gjc[n];i++){PRINTTEXT("%f,",Gpr[i]);}PRINTTEXT("\n");        
+    PRINTTEXT("Gir=");for (i=0;i<Gjc[n];i++){PRINTTEXT("%u,",Gir[i]);}PRINTTEXT("\n");        
+    PRINTTEXT("Gjc=");for (i=0;i<=n;i++){PRINTTEXT("%u,",Gjc[i]);}PRINTTEXT("\n");        
+
+
     /* MALLOC the problem's memory*/
     prob = (ecos_bb_pwork*) MALLOC(sizeof(ecos_bb_pwork));
 
@@ -177,7 +203,6 @@ ecos_bb_pwork* ECOS_BB_setup(
         prob->default_settings = 0;
     }
     prob->stgs = stgs;
-
 
     new_G_size = Gjc[n] + (2 * num_bool_vars) + (2 * num_int_vars);
     prob->Gpr_new = (pfloat *) MALLOC( new_G_size * sizeof(pfloat) );
@@ -194,6 +219,9 @@ ecos_bb_pwork* ECOS_BB_setup(
                     h, prob->h_new);
     m += 2*(num_bool_vars + num_int_vars);
     l += 2*(num_bool_vars + num_int_vars);
+
+    PRINTTEXT("n=%u\n",n);    
+    PRINTTEXT("m=%u\n",m);
 
     /* MALLOC the initial node's book keeping data #(2*maxIter)*/
     prob->nodes = (node*) CALLOC( prob->stgs->maxit, sizeof(node) );
@@ -217,12 +245,15 @@ ecos_bb_pwork* ECOS_BB_setup(
     prob->s = (pfloat*) MALLOC( m*sizeof(pfloat) );
     prob->info = (stats*) MALLOC( sizeof(stats) );
 
+
     /* Setup the ecos solver*/
     prob->ecos_prob = ECOS_setup(
         n, m, p, l, ncones, q,
         prob->Gpr_new, prob->Gjc_new, prob->Gir_new,
         Apr, Ajc, Air,
         c, prob->h_new, b);
+
+    PRINTTEXT("==========\n");
 
     /* Store the number of integer variables in the problem*/
     prob->num_bool_vars = num_bool_vars;
