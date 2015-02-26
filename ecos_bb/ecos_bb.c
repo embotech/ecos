@@ -68,14 +68,24 @@ void print_ecos_c(ecos_bb_pwork* prob){
 }
 
 void print_node(ecos_bb_pwork* prob, idxint i){
-    int j; PRINTTEXT("Node info: %u : %.2f : %.2f : %u : %.2f Partial id:", prob->nodes[i].status,
-        prob->nodes[i].L, prob->nodes[i].U, (int)prob->nodes[i].split_idx, prob->nodes[i].split_val);
-    for(j=0; j < prob->num_bool_vars; ++j)
-        PRINTTEXT("%i ", get_bool_node_id(i, prob)[j] );
-    PRINTTEXT(" | ");
-    for(j=0; j < prob->num_int_vars; ++j)
-        PRINTTEXT("(%.2f, %.2f) ", -get_int_node_id(i, prob)[2*j], get_int_node_id(i, prob)[2*j+1] );
-    PRINTTEXT("\n");
+    if (i==-1){
+        int j; PRINTTEXT("Node info: TMP, Partial id:");
+        for(j=0; j < prob->num_bool_vars; ++j)
+            PRINTTEXT("%i ", prob->tmp_bool_node_id[j] );
+        PRINTTEXT(" | ");
+        for(j=0; j < prob->num_int_vars; ++j)
+            PRINTTEXT("(%.2f, %.2f) ", -prob->tmp_int_node_id[2*j], prob->tmp_int_node_id[2*j+1] );
+        PRINTTEXT("\n");
+    }else{
+        int j; PRINTTEXT("Node info: %u : %.2f : %.2f : %u : %.2f Partial id:", prob->nodes[i].status,
+            prob->nodes[i].L, prob->nodes[i].U, (int)prob->nodes[i].split_idx, prob->nodes[i].split_val);
+        for(j=0; j < prob->num_bool_vars; ++j)
+            PRINTTEXT("%i ", get_bool_node_id(i, prob)[j] );
+        PRINTTEXT(" | ");
+        for(j=0; j < prob->num_int_vars; ++j)
+            PRINTTEXT("(%.2f, %.2f) ", -get_int_node_id(i, prob)[2*j], get_int_node_id(i, prob)[2*j+1] );
+        PRINTTEXT("\n");
+    }
 }
 
 void print_stats(ecos_bb_pwork* prob){
@@ -168,7 +178,7 @@ void get_branch_var(ecos_bb_pwork* prob, idxint* split_idx, pfloat* split_val){
             y = prob->ecos_prob->x[ prob->bool_vars_idx[i] ];
             x = y;
         } else {
-            y = prob->ecos_prob->x[ prob->int_vars_idx[i] ];
+            y = prob->ecos_prob->x[ prob->int_vars_idx[i-prob->num_bool_vars] ];
             x = y - pfloat_floor(y, prob->stgs->integer_tol );
         }
         ambiguity = abs_2(x-0.5);
@@ -178,6 +188,9 @@ void get_branch_var(ecos_bb_pwork* prob, idxint* split_idx, pfloat* split_val){
             d = ambiguity;
         }
     }
+#if MI_PRINTLEVEL > 1
+    PRINTTEXT("split_idx:%u, split_val:%f\n", *split_idx, *split_val);
+#endif
 }
 
 /*
@@ -251,13 +264,14 @@ void load_solution(ecos_bb_pwork* prob){
 void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
     idxint i, ret_code, branchable, viable_rounded_sol;
     viable_rounded_sol = 0;
+    
     set_prob( prob, get_bool_node_id(node_idx,prob), get_int_node_id(node_idx, prob) );
     ret_code = ECOS_solve(prob->ecos_prob);
 
 #if MI_PRINTLEVEL > 1
     if (prob->stgs->verbose){ print_ecos_solution(prob); }
     if (ret_code != ECOS_OPTIMAL && ret_code != ECOS_PINF && ret_code != ECOS_DINF){
-        PRINTTEXT("Exit code: %u\n", ret_code);
+        PRINTTEXT("1Exit code: %u\n", ret_code);
     }
 #endif
 
@@ -268,27 +282,30 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
     {
         prob->nodes[node_idx].L = eddot(prob->ecos_prob->n, prob->ecos_prob->x, prob->ecos_prob->c);
 
-        /* Figure out if x is already an integer solution if the solution had no numerical errors*/
+        /* Figure out if x is already an integer solution 
+            if the solution had no numerical errors*/
         branchable = 1;
-        if (ret_code == ECOS_OPTIMAL){
-            for (i=0; i<prob->num_bool_vars; ++i){
-                prob->tmp_bool_node_id[i] = (char) pfloat_round( prob->ecos_prob->x[prob->bool_vars_idx[i]] );
-                branchable &= float_eqls( prob->ecos_prob->x[i] , (pfloat) prob->tmp_bool_node_id[i], prob->stgs->integer_tol );
-            }
-            for (i=0; i<prob->num_int_vars; ++i){
-				prob->tmp_int_node_id[2 * i + 1] = pfloat_round(prob->ecos_prob->x[prob->int_vars_idx[i]] );
-                prob->tmp_int_node_id[2*i] = -(prob->tmp_int_node_id[2*i + 1]);
-                branchable &= float_eqls( prob->ecos_prob->x[i] , prob->tmp_int_node_id[2*i + 1], prob->stgs->integer_tol );
-            }
-            branchable = !branchable;
+        for (i=0; i<prob->num_bool_vars; ++i){
+            prob->tmp_bool_node_id[i] = (char) pfloat_round( prob->ecos_prob->x[prob->bool_vars_idx[i]] );
+            branchable &= float_eqls( prob->ecos_prob->x[i] , (pfloat) prob->tmp_bool_node_id[i], prob->stgs->integer_tol );
         }
+        for (i=0; i<prob->num_int_vars; ++i){
+            prob->tmp_int_node_id[2 * i + 1] = pfloat_round(prob->ecos_prob->x[prob->int_vars_idx[i]] );
+            prob->tmp_int_node_id[2*i] = -(prob->tmp_int_node_id[2*i + 1]);
+            branchable &= float_eqls( prob->ecos_prob->x[i] , prob->tmp_int_node_id[2*i + 1], prob->stgs->integer_tol );
+        }
+        branchable = !branchable;        
+
+#if MI_PRINTLEVEL > 1
+        if (prob->stgs->verbose){ PRINTTEXT("Is branchable: %u\n",branchable); }
+#endif
 
         if (branchable){ /* pfloat_round and check feasibility*/
             get_branch_var(prob, &(prob->nodes[node_idx].split_idx), &(prob->nodes[node_idx].split_val) );
             prob->nodes[node_idx].status = MI_SOLVED_BRANCHABLE;
 
 #if MI_PRINTLEVEL > 1
-            if (prob->stgs->verbose){ PRINTTEXT("Rounded Solution:\n"); }
+            if (prob->stgs->verbose){ print_node(prob,-1); PRINTTEXT("Rounded Solution:\n"); }
 #endif
 
             set_prob(prob, prob->tmp_bool_node_id, prob->tmp_int_node_id);
@@ -297,7 +314,7 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
 #if MI_PRINTLEVEL > 1
             if (prob->stgs->verbose){ print_ecos_solution(prob); }
             if (ret_code != ECOS_OPTIMAL && ret_code != ECOS_PINF && ret_code != ECOS_DINF){
-                PRINTTEXT("Exit code: %u\n", ret_code);
+                PRINTTEXT("2Exit code: %u\n", ret_code);
             }
 #endif
             if (ret_code == ECOS_OPTIMAL){
