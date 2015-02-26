@@ -18,7 +18,7 @@ static char * test_norm()
 
     /* set up data */
     mywork = ECOS_setup(data->n, data->m, data->p,
-        data->l, data->nsoc, data->q,
+        data->l, data->nsoc, data->q, 0,
         data->Gx, data->Gp, data->Gi,
         data->Ax, data->Ap, data->Ai,
         data->c, data->h, data->b);
@@ -48,7 +48,7 @@ static char * test_quad_over_lin()
 
     /* set up data */
     mywork = ECOS_setup(data->n, data->m, data->p,
-        data->l, data->nsoc, data->q,
+        data->l, data->nsoc, data->q, 0,
         data->Gx, data->Gp, data->Gi,
         data->Ax, data->Ap, data->Ai,
         data->c, data->h, data->b);
@@ -78,7 +78,7 @@ static char * test_sq_norm()
 
     /* set up data */
     mywork = ECOS_setup(data->n, data->m, data->p,
-        data->l, data->nsoc, data->q,
+        data->l, data->nsoc, data->q, 0,
         data->Gx, data->Gp, data->Gi,
         data->Ax, data->Ap, data->Ai,
         data->c, data->h, data->b);
@@ -108,7 +108,7 @@ static char * test_sum_sq()
 
     /* set up data */
     mywork = ECOS_setup(data->n, data->m, data->p,
-        data->l, data->nsoc, data->q,
+        data->l, data->nsoc, data->q, 0,
         data->Gx, data->Gp, data->Gi,
         data->Ax, data->Ap, data->Ai,
         data->c, data->h, data->b);
@@ -138,7 +138,7 @@ static char * test_inv_pos()
 
     /* set up data */
     mywork = ECOS_setup(data->n, data->m, data->p,
-        data->l, data->nsoc, data->q,
+        data->l, data->nsoc, data->q, 0, 
         data->Gx, data->Gp, data->Gi,
         data->Ax, data->Ap, data->Ai,
         data->c, data->h, data->b);

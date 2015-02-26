@@ -24,7 +24,7 @@ idxint exitflag;
 printf("======================================= lp_bnl1 =======================================\n");
  
 /* set up data */
-mywork = ECOS_setup(lp_bnl1_n, lp_bnl1_m, lp_bnl1_p, lp_bnl1_l, lp_bnl1_ncones, lp_bnl1_q,
+mywork = ECOS_setup(lp_bnl1_n, lp_bnl1_m, lp_bnl1_p, lp_bnl1_l, lp_bnl1_ncones, lp_bnl1_q, 0,
                     lp_bnl1_Gpr, lp_bnl1_Gjc, lp_bnl1_Gir,
                     lp_bnl1_Apr, lp_bnl1_Ajc, lp_bnl1_Air,
                     lp_bnl1_c, lp_bnl1_h, lp_bnl1_b);

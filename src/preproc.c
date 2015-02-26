@@ -99,6 +99,7 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
      *     + Gt->nnz (nnz of inequality constraint matrix)
      *     + C->lpc.p (nnz of LP cone)
      *     + 3*[sum(C->soc[i].p)+1] (nnz of expanded soc scalings)
+     *     + 6*C->nexc (3x3 hessian of the exponential cone)
      */
 	nnzK = (At ? At->nnz : 0) + Gt->nnz + C->lpc->p;
 #if STATICREG == 1
@@ -111,6 +112,12 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
         nnzK += (C->soc[i].p*(C->soc[i].p+1))/2;
 #endif
 	}
+
+#ifdef EXPCONE
+    nnzK += 6*C->nexc;
+#endif
+
+
 #if PRINTLEVEL > 2
     PRINTTEXT("Non-zeros in KKT matrix: %d\n", (int) nnzK);
 #endif
@@ -150,6 +157,15 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
         Sign[ks] = -1;      /* (3,3) block has -1 sign if all dense */
     }
 #endif
+#ifdef EXPCONE //In the case CONEMODE != 0 this is marginally inneficient
+    //Set the signs of the regularization of the expcone block
+    for(ks=nK-3*C->nexc;ks<nK;)
+    {
+        Sign[ks++] = -1;
+    }
+#endif
+
+
 #if DEBUG > 0
     if (ks!=nK) {
         PRINTTEXT("ks = %d, whereas nK = %d - exiting.", (int)ks, (int)nK);
@@ -347,6 +363,57 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 		cone_strt += C->soc[l].p;
 	}
 #endif
+#ifdef EXPCONE
+    /* Exponential cones - copy in G' and set up the scaling matrix
+     * which has a dense structure (only upper half part is shown):
+     *
+     *  k is the index of the entry in Kip, Kir
+     *  If the dense form of the socp cones is used the exponential cones start 
+     *  at row n+p+linear_vars+socp_vars.
+     *  If the sparse form of the socp cones is used then the exponential cones will 
+     *  start at row n+p+linear_vars+socp_vars+2*number_socp_cones
+     *  In either case cone_strt will have value equal to socp_vars+linear_vars.
+     */
+
+    //At this point cone_strt = sum(q)+l
+    
+     idxint exp_cone_strt = cone_strt;
+#if CONEMODE == 0
+    exp_cone_strt += 2*C->nsoc; 
+#endif
+     for( l=0; l < C->nexc; l++ ){            
+
+        /* go column-wise about it */
+		for( j=0; j < 3; j++ ){	
+            row = Gt->jc[cone_strt+j];
+            row_stop = Gt->jc[cone_strt+j+1];
+            if( row <= row_stop ){
+                Kjc[n+p+exp_cone_strt+j] = k;
+                while( row++ < row_stop ){
+                    Kir[k] = Gt->ir[i];
+                    Kpr[k++] = Gt->pr[i++];
+                }
+            }
+
+            //Save the index of the start of the column for the permutation
+            C->expc[l].colstart[j] = k; 
+            /* top of the column */
+            for (r=0; r<j; r++) {
+                Kir[k] = n+p+exp_cone_strt+r;
+                Kpr[k] = 0.0;
+                k++;
+            }
+            /*diagonal*/
+            Kir[k]   = n+p+exp_cone_strt+j;
+            Kpr[k++] = -1.0;
+        }
+        
+        /* prepare index for next cone */
+		cone_strt += 3;
+        exp_cone_strt += 3;
+	} 
+#endif
+
 
 #if PRINTLEVEL > 2
     PRINTTEXT("CREATEKKT: Written %d KKT entries\n", (int)k);
@@ -427,6 +494,11 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 	if( w->C->nsoc > 0 ){
 		FREE(w->C->soc);
 	}
+#ifdef EXPCONE
+    if(w->C->nexc > 0){
+        FREE(w->C->expc);
+    }
+#endif
 	FREE(w->C);
 
 	/* free stuff from pwork */
@@ -466,7 +538,7 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
  * Sets up all data structures needed.
  * Replace by codegen
  */
-pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint* q,
+pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint* q, idxint nexc,
                    pfloat* Gpr, idxint* Gjc, idxint* Gir,
                    pfloat* Apr, idxint* Ajc, idxint* Air,
                    pfloat* c, pfloat* h, pfloat* b)
@@ -519,6 +591,9 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     for( i=0; i<ncones; i++ ){
         PRINTTEXT("    Size of SOC #%02d: %d\n", (int)(i+1), (int)q[i]);
     }
+#if defined EXPCONE
+    PRINTTEXT("          Number of EXCs: %d\n", (int)nexc);
+#endif
     PRINTTEXT("\n");
 
 #endif
@@ -534,6 +609,9 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->m = m;
 	mywork->p = p;
     mywork->D = l + ncones;
+#ifdef EXPCONE
+    mywork->D = mywork->D + 3*nexc; 
+#endif 
 #if PRINTLEVEL > 2
     PRINTTEXT("Set dimensions\n");
 #endif
@@ -611,6 +689,35 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     PRINTTEXT("Memory allocated for second-order cones\n");
 #endif
 
+#ifdef EXPCONE
+    /* Exponential cones */
+    mywork->C->nexc  = nexc;
+    mywork->C->expc  = (expcone *)MALLOC(nexc*sizeof(expcone));
+    mywork->C->fexv  = cidx+l;
+#if PRINTLEVEL > 2
+    PRINTTEXT("Memory allocated for exponential cones\n");
+#endif
+#endif
+    
+    /* The number of conic variables has to equal l+sum(q)+3*nexp else terminate*/
+#ifdef EXPCONE
+    if(cidx+l+3*nexc!=m)
+    {
+#if PRINTLEVEL > 2
+        PRINTTEXT("Number of conic variables does not match l+sum(q)+3*nexc\n");
+#endif
+        return NULL;
+    }
+#else
+    if(cidx+l!=m)
+    {
+#if PRINTLEVEL > 2
+        PRINTTEXT("Number of conic variables does not match l+sum(q)\n");
+#endif
+        return NULL;
+    }
+#endif
+ 
 	/* info struct */
     mywork->info = (stats *)MALLOC(sizeof(stats));
 #if PROFILING > 1
@@ -648,6 +755,13 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->stgs->feastol_inacc = FTOL_INACC;
 	mywork->stgs->reltol_inacc = RTOL_INACC;
     mywork->stgs->verbose = VERBOSE;
+    #ifdef EXPCONE
+   	mywork->stgs->max_bk_iter = MAX_BK;
+    mywork->stgs->bk_scale    = BK_SCALE;
+    mywork->stgs->centrality  = CENTRALITY;
+#endif
+
+
 #if PRINTLEVEL > 2
     PRINTTEXT("Written settings\n");
 #endif

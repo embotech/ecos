@@ -24,7 +24,7 @@ idxint exitflag;
 printf("====================================== lp_25fv47 ======================================\n");
  
 /* set up data */
-mywork = ECOS_setup(lp_25fv47_n, lp_25fv47_m, lp_25fv47_p, lp_25fv47_l, lp_25fv47_ncones, lp_25fv47_q,
+mywork = ECOS_setup(lp_25fv47_n, lp_25fv47_m, lp_25fv47_p, lp_25fv47_l, lp_25fv47_ncones, lp_25fv47_q, 0,
                     lp_25fv47_Gpr, lp_25fv47_Gjc, lp_25fv47_Gir,
                     lp_25fv47_Apr, lp_25fv47_Ajc, lp_25fv47_Air,
                     lp_25fv47_c, lp_25fv47_h, lp_25fv47_b);

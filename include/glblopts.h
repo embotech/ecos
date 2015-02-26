@@ -53,6 +53,9 @@ typedef double pfloat;              /* for numerical values  */
 #define NAN ((double)0x7ff8000000000000)
 #endif
 
+/* Exponential cone */
+#define EXPCONE       /*When defined the exponential cone solver code is enabled*/
+
 /* SYSTEM INCLUDES FOR PRINTING ---------------------------------------- */
 #if PRINTLEVEL > 0
 #ifdef MATLAB_MEX_FILE

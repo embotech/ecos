@@ -24,7 +24,7 @@ static char * test_issue98()
 
     /* set up data */
     mywork = ECOS_setup(5, 11, 0,
-        6, 1, q,
+        6, 1, q, 0,
         Gx, Gp, Gi,
         NULL, NULL, NULL,
         c, h, NULL);

@@ -22,7 +22,7 @@
 #include "cone.h"
 #include "spla.h"
 #include "ecos.h"
-
+#include "expcone.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -89,9 +89,41 @@ void bring2cone(cone* C, pfloat* r, pfloat* s)
 		s[i] = r[i] + alpha; i++;
 		for( j=1; j < C->soc[l].p; j++ ){ s[i] = r[i]; i++; }
 	}
-
 }
 
+#ifdef EXPCONE
+
+//Sets the initial point to the jordan algebra identity e times scaling for the symmetric cones
+//And the central ray for the exponential cone, scaled by scaling
+void unitInitialization(cone* C, pfloat* s, pfloat* z, pfloat scaling)
+{
+    idxint i,l,j;
+
+    /* LP cone */
+    for( i=0; i < C->lpc->p; i++ ){
+        s[i] = scaling;
+        z[i] = scaling;
+    }
+
+    /* Second-order cone */
+    for( l=0; l < C->nsoc; l++ ){
+        s[i] = scaling; z[i] = scaling;  i++;
+        for( j=1; j < C->soc[l].p; j++ ){ s[i] = 0.0; z[i] = 0.0; i++; }
+    }
+    /* Exponential cone */
+    for(l=0;l<C->nexc;l++)
+    {
+       s[i]   = scaling*(-1.051383945322714);
+       s[i+1] = scaling*(1.258967884768947);
+       s[i+2] = scaling*(0.556409619469370);
+       z[i]   = scaling*(-1.051383945322714);
+       z[i+1] = scaling*(1.258967884768947);
+       z[i+2] = scaling*(0.556409619469370);
+       i=i+3;
+    }
+}
+
+#endif
 
 
 /**
@@ -99,7 +131,11 @@ void bring2cone(cone* C, pfloat* r, pfloat* s)
  * Returns OUTSIDE_CONE as soon as any multiplier or slack leaves the cone,
  * as this indicates severe problems.
  */
+#ifdef EXPCONE
+idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda, pfloat mu)
+#else
 idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
+#endif
 {
 	idxint i, l, k, p; /*, pm1; */
 	pfloat sres, zres, snorm, znorm, gamma, one_over_2gamma;
@@ -178,17 +214,63 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
 		/* increase offset for next cone */
 		k += C->soc[l].p;
 	}
-
+#ifdef EXPCONE
+       /*Exponential cones*/
+        k = C->fexv;
+        for(l=0;l<C->nexc;l++)
+        {
+            evalExpHessian(z+k, C->expc[l].v, mu);
+            evalExpGradient(z+k, C->expc[l].g);
+            k+=3;
+        }
+#endif	
 	/* lambda = W*z */
 	scale(z, C, lambda);
 
 	return INSIDE_CONE;
 }
 
+#ifdef EXPCONE
+//Evaulates log(s) + log(z) + log(t) + log(k) + logbarriersocp - (D+1)
+pfloat evalSymmetricBarrierValue(pfloat* siter, pfloat *ziter, pfloat tauIter, pfloat kapIter, cone* C, pfloat D)
+{
+   pfloat barrier = 0.0;
+   idxint j,k,l; 
+   pfloat normAccumS = 0.0;   
+   pfloat normAccumZ = 0.0;
+   idxint socDim;
+   //Positive orthant barrier
+   for(k=0;k<C->lpc->p;k++)
+        barrier -= (log(siter[k])+log(ziter[k]));
+
+    barrier-=(log(tauIter)+log(kapIter));
+    //Socp cones
+    for(l=0;l<C->nsoc;l++)
+    {
+        socDim = C->soc[l].p;
+        normAccumS = 0.0;
+        normAccumZ = 0.0;
+        normAccumS = siter[k]*siter[k]; //Root variable of the socp cone
+        normAccumZ = ziter[k]*ziter[k]; 
+        k++;
+        for(j=1;j<socDim;j++)
+        {
+            normAccumS -= siter[k]*siter[k];             
+            normAccumZ -= ziter[k]*ziter[k]; 
+            k++;
+        }
+        barrier-=0.5*log(normAccumS);        
+        barrier-=0.5*log(normAccumZ);
+        
+    }
+    return barrier-D-1;
+}
+#endif
 
 /**
  * Fast multiplication by scaling matrix.
  * Returns lambda = W*z
+ * The exponential variables are not touched.
  */
 void scale(pfloat* z, cone* C, pfloat* lambda)
 {
@@ -321,8 +403,10 @@ void scale2add(pfloat *x, pfloat* y, cone* C)
         cone_start += conesize;
     }
 #endif
+#ifdef EXPCONE
+    scaleToAddExpcone(y,x,C->expc,C->nexc,cone_start);
+#endif
 }
-
 
 /**
  * Fast left-division by scaling matrix.
@@ -467,4 +551,10 @@ void unstretch(idxint n, idxint p, cone *C, idxint *Pinv, pfloat *Px, pfloat *dx
         k += 2;
 #endif
     }
+#ifdef EXPCONE
+    for( l=0; l<C->nexc; l++)
+    { 
+        for( i=0; i<3; i++ ){ dz[j++] = Px[Pinv[k++]]; }
+    }
+#endif
 }

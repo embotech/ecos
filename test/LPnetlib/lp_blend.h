@@ -24,7 +24,7 @@ idxint exitflag;
 printf("====================================== lp_blend ======================================\n");
  
 /* set up data */
-mywork = ECOS_setup(lp_blend_n, lp_blend_m, lp_blend_p, lp_blend_l, lp_blend_ncones, lp_blend_q,
+mywork = ECOS_setup(lp_blend_n, lp_blend_m, lp_blend_p, lp_blend_l, lp_blend_ncones, lp_blend_q, 0,
                     lp_blend_Gpr, lp_blend_Gjc, lp_blend_Gir,
                     lp_blend_Apr, lp_blend_Ajc, lp_blend_Air,
                     lp_blend_c, lp_blend_h, lp_blend_b);

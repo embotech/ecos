@@ -24,6 +24,7 @@
 #define __CONE_H__
 
 #include "glblopts.h"
+#include "expcone.h"
 
 #define CONEMODE (0)  /* 0: expand to sparse cones (ECOS standard)       */
                       /* 1: dense cones (slow for big cones)             */
@@ -73,6 +74,12 @@ typedef struct cone{
 	lpcone* lpc;	    /* LP cone					    */
 	socone* soc;	    /* Second-Order cone            */
 	idxint nsoc;        /* number of second-order cones */
+#ifdef EXPCONE
+    expcone* expc;       /* array of exponential cones*/
+    idxint nexc;         /* number of exponential cones*/
+    idxint fexv;         /* Index of first slack variable
+                          * corresponding to an exponential cone */
+#endif
 } cone;
 
 
@@ -89,14 +96,30 @@ typedef struct cone{
  */
 void bring2cone(cone* C, pfloat* r, pfloat* s);
 
+#ifdef EXPCONE
+//When there are exponential variables in the definition of the problem 
+//the initialization strategy changes to using the central ray for all 
+//cones.
+void unitInitialization(cone* C, pfloat* s, pfloat* z, pfloat scaling);
+#endif
 
 /**
  * Update scalings.
  * Returns OUTSIDE_CONE as soon as any multiplier or slack leaves the cone,
  * as this indicates severe problems.
+ * When compiled with EXPCONE it calculates the value of muH(z_e) with 
+ * z_e the dual slacks for the exponential cone
+ * and stores the Hessian in the cone structure. 
  */
+#ifdef EXPCONE
+idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda, pfloat mu);
+#else
 idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda);
+#endif
 
+#ifdef EXPCONE
+pfloat evalSymmetricBarrierValue(pfloat* siter, pfloat *ziter, pfloat tauIter, pfloat kapIter, cone* C, pfloat D);
+#endif
 
 /**
  * Fast multiplication by scaling matrix.
@@ -110,7 +133,6 @@ void scale(pfloat* z, cone* C, pfloat* lambda);
  * Computes y += W^2*x;
  */
 void scale2add(pfloat *x, pfloat* y, cone* C);
-
 
 /**
  * Fast left-division by scaling matrix.
