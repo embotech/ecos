@@ -459,6 +459,12 @@ void computeResiduals(pwork *w)
 	w->by = w->p > 0 ? eddot(w->p, w->b, w->y) : 0.0;
 	w->hz = eddot(w->m, w->h, w->z);
 	w->rt = w->kap + w->cx + w->by + w->hz;
+
+    /* Norms of x y z */
+    w->nx = norm2(w->x,w->n);
+    w->ny = norm2(w->y,w->p);
+    w->ns = norm2(w->s,w->m);
+    w->nz = norm2(w->z,w->m);    
 }
 
 
@@ -485,11 +491,11 @@ void updateStatistics(pwork* w)
 	else if( info->dcost > 0 ){ info->relgap = info->gap / info->dcost; }
 	else info->relgap = NAN;
 
-	/* residuals */
-    nry = w->p > 0 ? norm2(w->ry, w->p)/w->resy0 : 0.0;
-    nrz = norm2(w->rz, w->m)/w->resz0;
+    /* residuals */
+    nry = w->p > 0 ? norm2(w->ry, w->p)/MAX(w->resy0+w->nx,1) : 0.0;
+    nrz = norm2(w->rz, w->m)/MAX(w->resz0+w->nx+w->ns,1);
 	info->pres = MAX(nry, nrz) / w->tau;
-	info->dres = norm2(w->rx, w->n)/w->resx0 / w->tau;
+	info->dres = norm2(w->rx, w->n)/MAX(w->resx0+w->ny+w->nz,1) / w->tau; 
 
 	/* infeasibility measures
      *
@@ -497,8 +503,9 @@ void updateStatistics(pwork* w)
      * info->pinfres = w->hz + w->by < 0 ? w->hresx / w->resx0 / (-w->hz - w->by) : NAN;
      * info->dinfres = w->cx < 0 ? MAX(w->hresy/w->resy0, w->hresz/w->resz0) / (-w->cx) : NAN;
      */
-    info->pinfres = w->hz + w->by < 0 ? w->hresx/w->resx0 / (-w->hz - w->by) : NAN;
-    info->dinfres = w->cx < 0 ? MAX(w->hresy/w->resy0, w->hresz/w->resz0) / (-w->cx) : NAN;
+    info->pinfres = (w->hz + w->by)/MAX(w->ny+w->nz,1) < -w->stgs->reltol ? w->hresx / MAX(w->ny+w->nz,1) : NAN;
+    info->dinfres = w->cx/MAX(w->nx,1) < -w->stgs->reltol ? MAX(w->hresy/MAX(w->nx,1), w->hresz/MAX(w->nx+w->ns,1)) : NAN;
+       
 
 
 #if PRINTLEVEL > 2
@@ -1026,8 +1033,11 @@ idxint ECOS_solve(pwork* w)
 		dtauaff = (w->rt - w->kap + eddot(w->n, w->c, w->KKT->dx2) + eddot(w->p, w->b, w->KKT->dy2) + eddot(w->m, w->h, w->KKT->dz2)) / dtau_denom;
 
 		/* dzaff = dz2 + dtau_aff*dz1 */
-		for( i=0; i<w->m; i++ ){ w->W_times_dzaff[i] = w->KKT->dz2[i] + dtauaff*w->KKT->dz1[i]; }
-		scale(w->W_times_dzaff, w->C, w->W_times_dzaff);
+        /* let dz2   = dzaff  we use this in the linesearch for unsymmetric cones*/
+        /* and w_times_dzaff = Wdz_aff*/
+        /* and dz2 = dz2+dtau_aff*dz1 will store the unscaled dz*/
+		for( i=0; i<w->m; i++ ){ w->KKT->dz2[i] = w->KKT->dz2[i] + dtauaff*w->KKT->dz1[i]; }
+		scale(w->KKT->dz2, w->C, w->W_times_dzaff);
 
 		/* W\dsaff = -W*dzaff -lambda; */
 		for( i=0; i<w->m; i++ ){ w->dsaff_by_W[i] = -w->W_times_dzaff[i] - w->lambda[i]; }
@@ -1077,9 +1087,11 @@ idxint ECOS_solve(pwork* w)
 
 		/* Line search on combined direction */
 		w->info->step = lineSearch(w->lambda, w->dsaff_by_W, w->W_times_dzaff, w->tau, dtau, w->kap, dkap, w->C, w->KKT) * w->stgs->gamma;
-
-		/* ds = W*ds_by_W */
+        
+        //Bring ds to the final unscaled form
+	    /* ds = W*ds_by_W */
 		scale(w->dsaff_by_W, w->C, w->dsaff);
+
 
 		/* Update variables */
 		for( i=0; i < w->n; i++ ){ w->x[i] += w->info->step * w->KKT->dx2[i]; }
