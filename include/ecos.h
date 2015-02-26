@@ -197,6 +197,9 @@ typedef struct pwork{
 	/* residuals */
 	pfloat *rx;   pfloat *ry;   pfloat *rz;   pfloat rt;
 	pfloat hresx;  pfloat hresy;  pfloat hresz;
+ 
+    /* norm iterates */
+    pfloat nx,ny,nz,ns; 
 
 	/* temporary storage */
 	pfloat cx;  pfloat by;  pfloat hz;  pfloat sz;
