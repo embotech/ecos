@@ -33,6 +33,7 @@
 #include "feasibilityProblems/feas.h"
 #include "unboundedProblems/unboundedLP1.h"
 #include "infeasibleProblems/infeasible1.h"
+#include "infeasibleProblems/infeasible2.h"
 #include "unboundedProblems/unboundedMaxSqrt.h"
 #include "emptyProblem/emptyProblem.h"
 #include "LPnetlib/lp_25fv47.h"
@@ -59,6 +60,7 @@ static char * all_tests() {
     mu_run_test(test_feas);
     mu_run_test(test_unboundedLP1);
     mu_run_test(test_infeasible1);
+    mu_run_test(test_infeasible2);
     mu_run_test(test_lp_25fv47);
     mu_run_test(test_lp_adlittle);
     mu_run_test(test_lp_afiro);
