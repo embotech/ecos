@@ -47,7 +47,7 @@
 #define MALLOC mxMalloc
 #define FREE mxFree
 #define CALLOC mxCalloc
-#else 
+#else
 #define MALLOC malloc
 #define FREE free
 #define CALLOC calloc
@@ -82,8 +82,8 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 	pfloat *Kpr;
 	idxint *Kjc, *Kir;
     idxint *Sign;
-	
-	/* Dimension of KKT matrix 
+
+	/* Dimension of KKT matrix
      *   =   n (number of variables)
      *     + p (number of equality constraints)
      *     + m (number of inequality constraints)
@@ -93,8 +93,8 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 #if CONEMODE == 0
     nK += 2*C->nsoc;
 #endif
-    
-    /* Number of non-zeros in KKT matrix 
+
+    /* Number of non-zeros in KKT matrix
      *   =   At->nnz (nnz of equality constraint matrix A)
      *     + Gt->nnz (nnz of inequality constraint matrix)
      *     + C->lpc.p (nnz of LP cone)
@@ -114,18 +114,18 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 #if PRINTLEVEL > 2
     PRINTTEXT("Non-zeros in KKT matrix: %d\n", (int) nnzK);
 #endif
-	
+
 	/* Allocate memory for KKT matrix */
 	Kpr = (pfloat *)MALLOC(nnzK*sizeof(pfloat));
 	Kir = (idxint *)MALLOC(nnzK*sizeof(idxint));
 	Kjc = (idxint *)MALLOC((nK+1)*sizeof(idxint));
-    
+
     /* Allocate memory for sign vector */
     Sign = (idxint *)MALLOC(nK*sizeof(idxint));
 #if PRINTLEVEL > 2
     PRINTTEXT("Memory allocated for sign vector\n");
 #endif
-    
+
 	/* Set signs for regularization of (1,1) block */
     for( ks=0; ks < n; ks++ ){
         Sign[ks] = +1; /* (1,1) block */
@@ -156,10 +156,10 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
         exit(-1);
     }
 #endif
-    
+
     /* count the number of non-zero entries in K */
     k = 0;
-    
+
     /* (1,1) block: the first n columns are empty */
 #if STATICREG == 0
     for (j=0; j<n; j++) {
@@ -172,7 +172,7 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
         Kpr[k++] = DELTASTAT;
     }
 #endif
-    
+
     /* Fill upper triangular part of K with values */
     /* (1,2) block: A' */
 	i = 0; /* counter for non-zero entries in A or G, respectively */
@@ -194,18 +194,18 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 #endif
     }
 	/* (1,3) and (3,3) block: [G'; 0; -Vinit]
-     * where 
-     * 
+     * where
+     *
      *   Vinit = blkdiag(I, blkdiag(I,1,-1), ...,  blkdiag(I,1,-1));
      *                        ^ #number of second-order cones ^
-     * 
+     *
      * Note that we have to prepare the (3,3) block accordingly
-     * (put zeros for init but store indices that are used in KKT_update 
+     * (put zeros for init but store indices that are used in KKT_update
      * of cone module)
      */
-     
+
 	/* LP cone */
-	i = 0; 
+	i = 0;
 	for( j=0; j < C->lpc->p; j++ ){
         /* copy in G' */
 		row = Gt->jc[j];
@@ -220,10 +220,10 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 		}
         /* -I for LP-cone */
 		C->lpc->kkt_idx[j] = k;
-		Kir[k] = n+p+j;		
+		Kir[k] = n+p+j;
 		Kpr[k] = -1.0;
         k++;
-	}    
+	}
 
 #if CONEMODE == 0
 	/* Second-order cones - copy in G' and set up the scaling matrix
@@ -245,13 +245,13 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
      */
 	cone_strt = C->lpc->p;
     for( l=0; l < C->nsoc; l++ ){
-        
+
         /* size of the cone */
         conesize = C->soc[l].p;
-        
+
         /* go column-wise about it */
 		for( j=0; j < conesize; j++ ){
-           	
+
            row = Gt->jc[cone_strt+j];
            row_stop = Gt->jc[cone_strt+j+1];
            if( row <= row_stop ){
@@ -261,14 +261,14 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
                    Kpr[k++] = Gt->pr[i++];
                }
            }
-                
+
            /* diagonal D */
            Kir[k] = n+p+cone_strt + 2*l + j;
            Kpr[k] = -1.0;
            C->soc[l].Didx[j] = k;
            k++;
         }
-            
+
         /* v */
         Kjc[n+p+cone_strt+2*l+conesize] = k;
         for (r=1; r<conesize; r++) {
@@ -278,9 +278,9 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
         }
         Kir[k] = n+p+cone_strt + 2*l + conesize;
         Kpr[k] = -1;
-        k++;         
-        
-        
+        k++;
+
+
         /* u */
         Kjc[n+p+cone_strt+2*l+conesize+1] = k;
         for (r=0; r<conesize; r++) {
@@ -291,8 +291,8 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
         Kir[k] = n+p+cone_strt + 2*l + conesize + 1;
         Kpr[k] = +1;
         k++;
-        
-	
+
+
         /* prepare index for next cone */
 		cone_strt += C->soc[l].p;
 	}
@@ -312,13 +312,13 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
      */
 	cone_strt = C->lpc->p;
     for( l=0; l < C->nsoc; l++ ){
-        
+
         /* size of the cone */
         conesize = C->soc[l].p;
-        
+
         /* go column-wise about it */
 		for( j=0; j < conesize; j++ ){
-           	
+
             row = Gt->jc[cone_strt+j];
             row_stop = Gt->jc[cone_strt+j+1];
             if( row <= row_stop ){
@@ -328,13 +328,13 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
                     Kpr[k++] = Gt->pr[i++];
                 }
             }
-            
+
             /* first elements - record where this column starts */
             Kir[k] = n+p+cone_strt;
             Kpr[k] = -1.0;
             C->soc[l].colstart[j] = k;
             k++;
-            
+
             /* the rest of the column */
             for (r=1; r<=j; r++) {
                 Kir[k] = n+p+cone_strt+r;
@@ -342,7 +342,7 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
                 k++;
             }
         }
-        
+
         /* prepare index for next cone */
 		cone_strt += C->soc[l].p;
 	}
@@ -364,18 +364,18 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
  *
  * Use the second argument to give the number of variables to NOT free.
  * This is useful if you want to use the result of the optimization without
- * copying over the arrays. One use case is the MEX interface, where we 
+ * copying over the arrays. One use case is the MEX interface, where we
  * do not want to free x,y,s,z (depending on the number of LHS).
  */
 void ECOS_cleanup(pwork* w, idxint keepvars)
 {
 	idxint i;
-    
+
 #if defined EQUILIBRATE && EQUILIBRATE > 0
     /* unset equilibration */
     unset_equilibration(w);
 #endif
-	
+
 	/* Free KKT related memory      ---            below are the corresponding MALLOCs                */
 	FREE(w->KKT->D);                /* mywork->KKT->D = (pfloat *)MALLOC(nK*sizeof(pfloat));          */
 	FREE(w->KKT->dx1);              /* mywork->KKT->dx1 = (pfloat *)MALLOC(mywork->n*sizeof(pfloat)); */
@@ -391,7 +391,7 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 	FREE(w->KKT->Pattern);          /* mywork->KKT->Pattern = (idxint *)MALLOC(nK*sizeof(idxint));    */
 	FREE(w->KKT->Sign);             /* mywork->KKT->Sign = (idxint *)MALLOC(nK*sizeof(idxint));       */
 	FREE(w->KKT->Pinv);             /* mywork->KKT->Pinv = (idxint *)MALLOC(nK*sizeof(idxint));       */
-    FREE(w->KKT->P);                
+    FREE(w->KKT->P);
 	FREE(w->KKT->PK);               /* mywork->KKT->PK = (idxint *)MALLOC(KU->nnz*sizeof(idxint));    */
 	freeSparseMatrix(w->KKT->PKPt); /* mywork->KKT->PKPt = newSparseMatrix(nK, nK, KU->nnz);          */
 	FREE(w->KKT->RHS1);             /* mywork->KKT->RHS1 = (pfloat *)MALLOC(nK*sizeof(pfloat));       */
@@ -443,12 +443,16 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 	FREE(w->ry);
 	FREE(w->rz);
 	FREE(w->stgs);
-	FREE(w->G);	
-	if( w->p > 0 ) FREE(w->A);	
-	if( keepvars < 4 ) { FREE(w->z); FREE(w->best_z); }
-	if( keepvars < 3 ) { FREE(w->s); FREE(w->best_s); }
-	if( keepvars < 2 ) { FREE(w->y); FREE(w->best_y); }
-	if( keepvars < 1 ) { FREE(w->x); FREE(w->best_x); }
+	FREE(w->G);
+	if( w->p > 0 ) FREE(w->A);
+    FREE(w->best_z);
+    FREE(w->best_s);
+    FREE(w->best_y);
+    FREE(w->best_x);
+	if( keepvars < 4 ) { FREE(w->z); }
+	if( keepvars < 3 ) { FREE(w->s); }
+	if( keepvars < 2 ) { FREE(w->y); }
+	if( keepvars < 1 ) { FREE(w->x); }
 #if defined EQUILIBRATE && EQUILIBRATE > 0
     FREE(w->xequil);
     FREE(w->Aequil);
@@ -469,7 +473,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 {
     idxint i, cidx, conesize, lnz, amd_result, nK, *Ljc, *Lir, *P, *Pinv, *Sign;
     pwork* mywork;
-	double Control [AMD_CONTROL], Info [AMD_INFO];		
+	double Control [AMD_CONTROL], Info [AMD_INFO];
 	pfloat *Lpr;
 	spmat *At, *Gt, *KU;
 
@@ -482,13 +486,13 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	timer tmattranspose;
 	timer tordering;
 #endif
-    
+
 #if PROFILING > 0
 	tic(&tsetup);
 #endif
-   
+
 #if PRINTLEVEL > 2
-	PRINTTEXT("\n");		
+	PRINTTEXT("\n");
 	PRINTTEXT("  *******************************************************************************\n");
 	PRINTTEXT("  * ECOS: Embedded Conic Solver - Sparse Interior Point method for SOCPs        *\n");
 	PRINTTEXT("  *                                                                             *\n");
@@ -516,9 +520,9 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
         PRINTTEXT("    Size of SOC #%02d: %d\n", (int)(i+1), (int)q[i]);
     }
     PRINTTEXT("\n");
-    
+
 #endif
-	
+
 	/* get work data structure */
     mywork = (pwork *)MALLOC(sizeof(pwork));
 #if PRINTLEVEL > 2
@@ -549,14 +553,14 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #if PRINTLEVEL > 2
     PRINTTEXT("Memory allocated for variables\n");
 #endif
-    
+
     /* best iterates so far */
     mywork->best_x = (pfloat *)MALLOC(n*sizeof(pfloat));
     mywork->best_y = (pfloat *)MALLOC(p*sizeof(pfloat));
     mywork->best_z = (pfloat *)MALLOC(m*sizeof(pfloat));
     mywork->best_s = (pfloat *)MALLOC(m*sizeof(pfloat));
     mywork->best_info = (stats *)MALLOC(sizeof(stats));
-    
+
 	/* cones */
 	mywork->C = (cone *)MALLOC(sizeof(cone));
 #if PRINTLEVEL > 2
@@ -597,7 +601,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 		mywork->C->soc[i].zkbar = (pfloat *)MALLOC((conesize)*sizeof(pfloat));
 #if CONEMODE == 0
         mywork->C->soc[i].Didx = (idxint *)MALLOC((conesize)*sizeof(idxint));
-#endif 
+#endif
 #if CONEMODE > 0
         mywork->C->soc[i].colstart = (idxint *)MALLOC((conesize)*sizeof(idxint));
 #endif
@@ -624,7 +628,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     mywork->xequil = (pfloat *)MALLOC(n*sizeof(pfloat));
     mywork->Aequil = (pfloat *)MALLOC(p*sizeof(pfloat));
     mywork->Gequil = (pfloat *)MALLOC(m*sizeof(pfloat));
-    
+
 #if PRINTLEVEL > 2
     PRINTTEXT("Memory allocated for equilibration vectors\n");
 #endif
@@ -633,11 +637,11 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	/* settings */
 	mywork->stgs = (settings *)MALLOC(sizeof(settings));
 	mywork->stgs->maxit = MAXIT;
-	mywork->stgs->gamma = GAMMA;	
+	mywork->stgs->gamma = GAMMA;
 	mywork->stgs->delta = DELTA;
     mywork->stgs->eps = EPS;
 	mywork->stgs->nitref = NITREF;
-	mywork->stgs->abstol = ABSTOL;	
+	mywork->stgs->abstol = ABSTOL;
 	mywork->stgs->feastol = FEASTOL;
 	mywork->stgs->reltol = RELTOL;
     mywork->stgs->abstol_inacc = ATOL_INACC;
@@ -683,25 +687,25 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	  At = transposeSparseMatrix(mywork->A);
   else
     At = NULL;
-#if PROFILING > 1	
+#if PROFILING > 1
 	mywork->info->ttranspose += toc(&tmattranspose);
 #endif
 #if PRINTLEVEL > 2
     PRINTTEXT("Transposed A\n");
 #endif
-    
-    
-#if PROFILING > 1	
+
+
+#if PROFILING > 1
 	tic(&tmattranspose);
 #endif
-	Gt = transposeSparseMatrix(mywork->G);    	
-#if PROFILING > 1	
+	Gt = transposeSparseMatrix(mywork->G);
+#if PROFILING > 1
 	mywork->info->ttranspose += toc(&tmattranspose);
 #endif
 #if PRINTLEVEL > 2
     PRINTTEXT("Transposed G\n");
 #endif
-  
+
     /* set up KKT system */
 #if PROFILING > 1
 	tic(&tcreatekkt);
@@ -713,13 +717,13 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #if PRINTLEVEL > 2
     PRINTTEXT("Created upper part of KKT matrix K\n");
 #endif
-    
-	/* 
+
+	/*
      * Set up KKT system related data
-     * (L comes later after symbolic factorization) 
+     * (L comes later after symbolic factorization)
      */
     nK = KU->n;
-    
+
 #if DEBUG > 0
     dumpSparseMatrix(KU, "KU0.txt");
 #endif
@@ -727,9 +731,9 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     PRINTTEXT("Dimension of KKT matrix: %d\n", (int)nK);
     PRINTTEXT("Non-zeros in KKT matrix: %d\n", (int)KU->nnz);
 #endif
-    
-    
-    
+
+
+
     /* allocate memory in KKT system */
 	mywork->KKT = (kkt *)MALLOC(sizeof(kkt));
 	mywork->KKT->D = (pfloat *)MALLOC(nK*sizeof(pfloat));
@@ -741,9 +745,9 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     mywork->KKT->work4 = (pfloat *)MALLOC(nK*sizeof(pfloat));
     mywork->KKT->work5 = (pfloat *)MALLOC(nK*sizeof(pfloat));
     mywork->KKT->work6 = (pfloat *)MALLOC(nK*sizeof(pfloat));
-	mywork->KKT->Flag = (idxint *)MALLOC(nK*sizeof(idxint));	
+	mywork->KKT->Flag = (idxint *)MALLOC(nK*sizeof(idxint));
 	mywork->KKT->Pattern = (idxint *)MALLOC(nK*sizeof(idxint));
-	mywork->KKT->Lnz = (idxint *)MALLOC(nK*sizeof(idxint));	
+	mywork->KKT->Lnz = (idxint *)MALLOC(nK*sizeof(idxint));
 	mywork->KKT->RHS1 = (pfloat *)MALLOC(nK*sizeof(pfloat));
 	mywork->KKT->RHS2 = (pfloat *)MALLOC(nK*sizeof(pfloat));
 	mywork->KKT->dx1 = (pfloat *)MALLOC(mywork->n*sizeof(pfloat));
@@ -757,19 +761,19 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->KKT->PK = (idxint *)MALLOC(KU->nnz*sizeof(idxint));
 
 #if PRINTLEVEL > 2
-    PRINTTEXT("Created memory for KKT-related data\n");    
+    PRINTTEXT("Created memory for KKT-related data\n");
 #endif
-    
 
-    
+
+
     /* calculate ordering of KKT matrix using AMD */
 	P = (idxint *)MALLOC(nK*sizeof(idxint));
 #if PROFILING > 1
 	tic(&tordering);
 #endif
-	AMD_defaults(Control);	
-	amd_result = AMD_order(nK, KU->jc, KU->ir, P, Control, Info);	
-#if PROFILING > 1	
+	AMD_defaults(Control);
+	amd_result = AMD_order(nK, KU->jc, KU->ir, P, Control, Info);
+#if PROFILING > 1
 	mywork->info->torder = toc(&tordering);
 #endif
 
@@ -785,9 +789,9 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #endif
         return NULL;
 	}
-	
+
 	/* calculate inverse permutation and permutation mapping of KKT matrix */
-	pinv(nK, P, mywork->KKT->Pinv);		
+	pinv(nK, P, mywork->KKT->Pinv);
 	Pinv = mywork->KKT->Pinv;
 #if DEBUG > 0
     dumpDenseMatrix_i(P, nK, 1, "P.txt");
@@ -811,14 +815,14 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     for( i=0; i<nK; i++ ){ PRINTTEXT("%+d ", (int)mywork->KKT->Sign[i]); }
     PRINTTEXT("];\n");
 #endif
-	
-    
-	
-	/* symbolic factorization */	
+
+
+
+	/* symbolic factorization */
 	Ljc = (idxint *)MALLOC((nK+1)*sizeof(idxint));
 #if PRINTLEVEL > 2
     PRINTTEXT("Allocated memory for cholesky factor L\n");
-#endif    
+#endif
 	LDL_symbolic2(
 		mywork->KKT->PKPt->n,    /* A and L are n-by-n, where n >= 0 */
 		mywork->KKT->PKPt->jc,   /* input of size n+1, not modified */
@@ -828,7 +832,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 		mywork->KKT->Lnz,		 /* output of size n, not defined on input */
 		mywork->KKT->Flag		 /* workspace of size n, not defn. on input or output */
 	);
-	
+
 
 	/* assign memory for L */
 	lnz = Ljc[nK];
@@ -841,26 +845,26 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #if PRINTLEVEL > 2
 	PRINTTEXT("Created Cholesky factor of K in KKT struct\n");
 #endif
-    
+
 
 	/* permute KKT matrix - we work on this one from now on */
 	permuteSparseSymmetricMatrix(KU, mywork->KKT->Pinv, mywork->KKT->PKPt, NULL);
 #if DEBUG > 0
     dumpSparseMatrix(mywork->KKT->PKPt, "PKPt.txt");
 #endif
-    	
+
 	/* get memory for residuals */
 	mywork->rx = (n == 0) ? NULL : (pfloat *)MALLOC(n*sizeof(pfloat));
 	mywork->ry = (p == 0) ? NULL : (pfloat *)MALLOC(p*sizeof(pfloat));
 	mywork->rz = (m == 0) ? NULL : (pfloat *)MALLOC(m*sizeof(pfloat));
-	
+
     /* clean up */
     mywork->KKT->P = P;
 	FREE(Sign);
   if(At) freeSparseMatrix(At);
 	freeSparseMatrix(Gt);
 	freeSparseMatrix(KU);
-    
+
 #if PROFILING > 0
 	mywork->info->tsetup = toc(&tsetup);
 #endif
