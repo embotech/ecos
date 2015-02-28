@@ -65,6 +65,8 @@ typedef double pfloat;              /* for numerical values  */
 #define PRINTTEXT printf
 #endif
 #include <stdio.h>
+#else
+#define PRINTTEXT(...)
 #endif
 
 #include "SuiteSparse_config.h"
