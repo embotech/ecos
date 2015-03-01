@@ -780,8 +780,9 @@ void backscale(pwork *w)
 idxint ECOS_solve(pwork* w)
 {
 	idxint i, initcode, KKT_FACTOR_RETURN_CODE;
-	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap, pres_prev;
+	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap;
 	idxint exitcode = ECOS_FATAL, interrupted = 0;
+	pfloat pres_prev = (pfloat)NAN;
 
 #if DEBUG
     char fn[20];
@@ -1003,6 +1004,14 @@ idxint ECOS_solve(pwork* w)
         sprintf(fn, "PKPt_factor_%02i.txt", (int)w->info->iter);
         dumpSparseMatrix(w->KKT->L, fn);
 #endif
+		
+	    /* check if factorization was successful, exit otherwise */
+		if(  KKT_FACTOR_RETURN_CODE != KKT_OK ){
+#if PRINTLEVEL > 0
+	    if( w->stgs->verbose ) PRINTTEXT("\nProblem in factoring KKT system, aborting.");
+#endif
+	        return ECOS_FATAL;
+	    }				
 
 		/* Solve for RHS1, which is used later also in combined direction */
 #if PROFILING > 1

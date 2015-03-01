@@ -101,11 +101,11 @@ void bring2cone(cone* C, pfloat* r, pfloat* s)
  */
 idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
 {
-	idxint i, l, k, p, pm1;
+	idxint i, l, k, p; /*, pm1; */
 	pfloat sres, zres, snorm, znorm, gamma, one_over_2gamma;
 	pfloat* sk;
 	pfloat* zk;
-    pfloat a, b, c, d, w, temp, divisor;
+    pfloat a, c, d, w, temp, divisor; /*, b; */
 #if CONEMODE == 0
     pfloat u0, u0_square, u1, v1, d1, c2byu02_d, c2byu02, c_square;
 #endif
@@ -121,7 +121,7 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
 	for( l=0; l < C->nsoc; l++ ){
 		
 		/* indices and variables */
-		sk = s+k; zk = z+k; p = C->soc[l].p; pm1 = p-1;
+		sk = s+k; zk = z+k; p = C->soc[l].p; /* pm1 = p-1; */
 
 		/* check residuals and quit if they're negative */
 		sres = socres(sk, p);  zres = socres(zk, p);
@@ -150,7 +150,7 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
 
 		/* pre-compute variables needed for KKT matrix (kkt_update uses those) */
         temp = 1.0 + a;
-        b = SAFEDIV_POS(1.0,temp);
+        /* b = SAFEDIV_POS(1.0,temp); */
         c = 1.0 + a + SAFEDIV_POS(w,temp);
         divisor = temp*temp;
         d = 1 + SAFEDIV_POS(2,temp) + SAFEDIV_POS(w,divisor);
