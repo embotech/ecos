@@ -39,7 +39,7 @@ extern bool utSetInterruptEnabled(bool);
 #elif (defined _WIN32 || defined _WIN64 || defined _WINDLL )
 
 /* Use Windows SetConsoleCtrlHandler for signal handling */
-#include <Windows.h>
+#include <windows.h>
 
 #else
 
