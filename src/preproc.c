@@ -444,7 +444,7 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 	FREE(w->rz);
 	FREE(w->stgs);
 	FREE(w->G);
-	if( w->p > 0 ) FREE(w->A);
+	if( w->A ) FREE(w->A);
     FREE(w->best_z);
     FREE(w->best_s);
     FREE(w->best_y);
