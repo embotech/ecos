@@ -579,6 +579,8 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	PRINTTEXT("  *                                                                             *\n");
 	PRINTTEXT("  * (C) Alexander Domahidi, ETH Zurich & embotech GmbH, Switzerland, 2012-14.   *\n");
 	PRINTTEXT("  *                     Email: domahidi@embotech.com                            *\n");
+	PRINTTEXT("  *                                                                             *\n");
+    PRINTTEXT("  * Exponential cone solver: Santiago Akle, 2015 tiagoakle@gmail.com            *\n");
 	PRINTTEXT("  *******************************************************************************\n");
 	PRINTTEXT("\n\n");
     PRINTTEXT("PROBLEM SUMMARY:\n");
