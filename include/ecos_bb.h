@@ -49,10 +49,13 @@
 #define MI_ZERO (0)
 #define MI_STAR (-1)
 
-#define MI_OPTIMAL_SOLN (0)
-#define MI_MAXITER_FEASIBLE_SOLN (-1)
-#define MI_MAXITER_NO_SOLN (1)
-#define MI_INFEASIBLE (2)
+/* Exit flags */
+#define MI_OPTIMAL_SOLN (ECOS_OPTIMAL)
+#define MI_INFEASIBLE (ECOS_PINF)
+#define MI_UNBOUNDED (ECOS_DINF)
+#define MI_MAXITER_FEASIBLE_SOLN (ECOS_OPTIMAL + ECOS_INACC_OFFSET)
+#define MI_MAXITER_NO_SOLN (ECOS_PINF + ECOS_INACC_OFFSET)
+#define MI_MAXITER_UNBOUNDED (ECOS_DINF + ECOS_INACC_OFFSET)
 
 /* Max integer and all smaller integer representable by single precision */
 #define MAX_FLOAT_INT (8388608)
