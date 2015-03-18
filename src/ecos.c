@@ -858,7 +858,7 @@ pfloat expConeLineSearch(pwork* w, pfloat dtau, pfloat dkappa, idxint affine)
                         {
     
 #if PRINTLEVEL       > 2
-                                 PRINTTEXT("Centrality violation %e, step %e , mu %e\n",*centrality,alpha,mu);
+                                 PRINTTEXT("Centrality violation %e, step %e , mu %e, barrier %e\n",*centrality,alpha,mu,barrier);
 #endif  
                                   /*Count a backtrack due to centrality violation*/
                                   (*cb)++;
@@ -878,6 +878,24 @@ pfloat expConeLineSearch(pwork* w, pfloat dtau, pfloat dkappa, idxint affine)
            {
 #if PRINTLEVEL > 2
             PRINTTEXT("Primal infeasible at backtrack %ld\n",bk_iter);            
+            //Something is fishy find the larges entry in the iterate
+            double max = 0;
+            int mix = 0;
+            int ik = 0;
+            for(ik = 0; ik < w->m;ik++)
+            {
+                if(ds[ik]>max)
+                {
+                    max = ds[ik];
+                    mix = ik;
+                }
+                if(dz[ik]>max)
+                {
+                    max = dz[ik];
+                    mix = ik;
+                }
+            }
+            PRINTTEXT("Max dir %lf %ld \n",max,mix);
 #endif
                          (*pb)++;                    
            }

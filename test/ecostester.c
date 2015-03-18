@@ -50,6 +50,7 @@
 #include "exponential/random_feasible.h"
 #include "exponential/random_infeasible.h"
 #include "exponential/random_unbounded.h"
+#include "exponential/num_err.h"
 #endif
 
 int tests_run = 0;
@@ -83,6 +84,7 @@ static char * all_tests() {
         mu_run_test(test_random_feasible);
         mu_run_test(test_random_infeasible);
         mu_run_test(test_random_unbounded);
+        mu_run_test(test_num_err);
     #endif
     return 0;
 }
