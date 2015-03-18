@@ -23,7 +23,7 @@ pwork *mywork;
 idxint exitflag;
  
 /* set up data */
-mywork = ECOS_setup(MPC02_n, MPC02_m, MPC02_p, MPC02_l, MPC02_ncones, MPC02_q,
+mywork = ECOS_setup(MPC02_n, MPC02_m, MPC02_p, MPC02_l, MPC02_ncones, MPC02_q, 0,
                     MPC02_Gpr, MPC02_Gjc, MPC02_Gir,
                     MPC02_Apr, MPC02_Ajc, MPC02_Air,
                     MPC02_c, MPC02_h, MPC02_b);

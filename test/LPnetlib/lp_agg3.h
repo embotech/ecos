@@ -24,7 +24,7 @@ idxint exitflag;
 printf("======================================= lp_agg3 =======================================\n");
  
 /* set up data */
-mywork = ECOS_setup(lp_agg3_n, lp_agg3_m, lp_agg3_p, lp_agg3_l, lp_agg3_ncones, lp_agg3_q,
+mywork = ECOS_setup(lp_agg3_n, lp_agg3_m, lp_agg3_p, lp_agg3_l, lp_agg3_ncones, lp_agg3_q, 0,
                     lp_agg3_Gpr, lp_agg3_Gjc, lp_agg3_Gir,
                     lp_agg3_Apr, lp_agg3_Ajc, lp_agg3_Air,
                     lp_agg3_c, lp_agg3_h, lp_agg3_b);

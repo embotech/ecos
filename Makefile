@@ -5,12 +5,12 @@
 
 # Configuration of make process in ecos.mk
 include ecos.mk
-CFLAGS += -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config
+CFLAGS += -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config 
 TEST_INCLUDES = -Itest -Itest/generated
 
 # Compile all C code, including the C-callable routine
 .PHONY: all
-all: libecos.a libecos_bb.a runecos
+all: libecos.a libecos_bb.a runecos runecosexp
 
 # build Tim Davis' sparse LDL package
 $(LDL):
@@ -23,7 +23,7 @@ $(AMD):
 	$(AR) -x external/amd/libamd.a
 
 # build ECOS
-ECOS_OBJS = ecos.o kkt.o cone.o spla.o ctrlc.o timer.o preproc.o splamm.o equil.o
+ECOS_OBJS = ecos.o kkt.o cone.o spla.o ctrlc.o timer.o preproc.o splamm.o equil.o expcone.o wright_omega.o
 libecos.a: $(ECOS_OBJS) $(LDL) $(AMD)
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
@@ -51,6 +51,9 @@ splamm.o            : include/splamm.h include/glblopts.h include/cone.h include
 ctrlc.o             : include/ctrlc.h include/glblopts.h include/cone.h include/ecos.h
 timer.o             : include/timer.h include/glblopts.h include/cone.h include/ecos.h
 equil.o             : include/equil.h include/glblopts.h include/cone.h include/ecos.h
+expcone.o           : include/expcone.h  
+wright_omega.o      : include/wright_omega.h
+
 
 # ECOS demo
 .PHONY: demo
@@ -58,6 +61,10 @@ demo: runecos
 runecos: src/runecos.c libecos.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 	echo ECOS successfully built. Type ./runecos to run demo problem.
+
+runecosexp: src/runecos_exp.c libecos.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	echo ECOS-Exp successfully built. Type ./runecosexp to run demo problem.
 
 # Shared library
 .PHONY: shared
@@ -94,4 +101,4 @@ clean:
 purge: clean
 	( cd external/ldl    ; $(MAKE) purge )
 	( cd external/amd    ; $(MAKE) purge )
-	- $(RM) libecos.a libecos_bb.a runecos
+	- $(RM) libecos.a libecos_bb.a runecos runecosexp

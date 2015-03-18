@@ -35,7 +35,7 @@
 #endif
 
 /* ECOS VERSION NUMBER - FORMAT: X.Y.Z --------------------------------- */
-#define ECOS_VERSION ("1.1.1")
+#define ECOS_VERSION ("2.0.0")
 
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
@@ -61,6 +61,17 @@
 #define STEPMAX    (0.999)  /* largest step allowed, also in affine dir. */
 #define SAFEGUARD  (500)         /* Maximum increase in PRES before
                                                 ECOS_NUMERICS is thrown. */
+/*Ecos exponential cone default settings*/
+#ifdef EXPCONE
+#define MAX_BK           (90)    /*Maximum backtracking steps*/
+#define BK_SCALE         (0.8)   /*Backtracking constant*/
+#define MIN_DISTANCE     (0.1)   /* dont let sqrt(r), sqrt(-u) or sqrt(v)
+                                   become smaller than
+                                  MIN_DISTANCE*mu*/
+#define CENTRALITY       (1)     /*Centrality requirement*/
+#endif
+
+
 
 /* EQUILIBRATION METHOD ------------------------------------------------ */
 #define EQUILIBRATE (1)     /* use equlibration of data matrices? >0: yes */
@@ -98,6 +109,11 @@ typedef struct settings{
 	idxint nitref;				 /* number of iterative refinement steps */
 	idxint maxit;                /* maximum number of iterations         */
     idxint verbose;              /* verbosity bool for PRINTLEVEL < 3    */
+#ifdef EXPCONE /*Exponential cone settings*/
+    idxint max_bk_iter;      /* Maximum backtracking iterations */
+    pfloat bk_scale;         /* Backtracking scaling */
+    pfloat centrality;       /* Centrality bound, ignored when centrality vars = 0*/
+#endif
 } settings;
 
 
@@ -136,6 +152,19 @@ typedef struct stats{
     pfloat tfactor_t1;
     pfloat tfactor_t2;
 #endif
+#ifdef EXPCONE
+    //Counters for backtracking, each of these counts 
+    //one condition that can fail and cause a backtrack
+    idxint pob; //Potential decreases
+    idxint cb; //Centrality violations
+    idxint cob; //The s'z of one cone is too small w.r.t. mu
+    idxint pb; //Primal infeasibility
+    idxint db; //Dual infeasibility 
+    idxint affBack; /*Total affine backtracking steps*/
+    idxint cmbBack; /*Total combined backtracking steps*/ 
+
+    pfloat centrality; /*Centrality at the end of the backtracking*/
+#endif 
 
 } stats;
 
@@ -226,11 +255,15 @@ typedef struct pwork{
 
 /* set up work space */
 /* could be done by codegen */
-pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint* q,
+pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint* q, idxint nex,
                    pfloat* Gpr, idxint* Gjc, idxint* Gir,
                    pfloat* Apr, idxint* Ajc, idxint* Air,
                    pfloat* c, pfloat* h, pfloat* b);
 
+
+#ifdef EXPCONE
+pfloat expConeLineSearch(pwork* w, pfloat dtau, pfloat dkappa, idxint affine);
+#endif
 
 /* solve */
 idxint ECOS_solve(pwork* w);
@@ -275,3 +308,4 @@ void ecos_updateDataEntry_c(pwork* w, idxint idx, pfloat value);
 #endif
 
 #endif
+

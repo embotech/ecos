@@ -229,7 +229,9 @@ ecos_bb_pwork* ECOS_BB_setup(
 
     /* Setup the ecos solver*/
     prob->ecos_prob = ECOS_setup(
-        n, m, p, l, ncones, q,
+    //For now call ECOS with no exponential cones
+    //TODO: Integrate the exponential cone argument to the main bb call
+        n, m, p, l, ncones, q, 0,
         prob->Gpr_new, prob->Gjc_new, prob->Gir_new,
         Apr, Ajc, Air,
         c, prob->h_new, b);

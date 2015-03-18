@@ -33,7 +33,6 @@
 #include "feasibilityProblems/feas.h"
 #include "unboundedProblems/unboundedLP1.h"
 #include "infeasibleProblems/infeasible1.h"
-#include "infeasibleProblems/infeasible2.h"
 #include "unboundedProblems/unboundedMaxSqrt.h"
 #include "emptyProblem/emptyProblem.h"
 #include "LPnetlib/lp_25fv47.h"
@@ -46,6 +45,13 @@
 #include "LPnetlib/lp_beaconfd.h"
 #include "LPnetlib/lp_blend.h"
 #include "LPnetlib/lp_bnl1.h"
+
+#if defined EXPCONE
+#include "exponential/random_feasible.h"
+#include "exponential/random_infeasible.h"
+#include "exponential/random_unbounded.h"
+#include "exponential/num_err.h"
+#endif
 
 int tests_run = 0;
 
@@ -60,7 +66,6 @@ static char * all_tests() {
     mu_run_test(test_feas);
     mu_run_test(test_unboundedLP1);
     mu_run_test(test_infeasible1);
-    mu_run_test(test_infeasible2);
     mu_run_test(test_lp_25fv47);
     mu_run_test(test_lp_adlittle);
     mu_run_test(test_lp_afiro);
@@ -74,6 +79,13 @@ static char * all_tests() {
 /*    mu_run_test(test_unboundedMaxSqrt); */
     mu_run_test(test_emptyProblem);
     mu_run_test(test_issue98);
+
+    #ifdef EXPCONE
+        mu_run_test(test_random_feasible);
+        mu_run_test(test_random_infeasible);
+        mu_run_test(test_random_unbounded);
+        mu_run_test(test_num_err);
+    #endif
     return 0;
 }
 

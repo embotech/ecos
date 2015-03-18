@@ -194,6 +194,19 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
             kk += 2;
 #endif
         }
+#ifdef EXPCONE 
+        for(l=0; l<C->nexc; l++)
+        {
+            for(i=0;i<3;i++)
+            {
+#if (defined STATICREG) && (STATICREG > 0) 				
+                ez[kk++] = Pb[Pinv[k++]] - Gdx[j++] + DELTASTAT*dz[dzoffset++];
+#else
+				ez[kk++] = Pb[Pinv[k++]] - Gdx[j++];
+#endif
+            }
+        }
+#endif
         for( i=0; i<MTILDE; i++) { truez[i] = Px[Pinv[n+p+i]]; }
         if( isinit == 0 ){
             scale2add(truez, ez, C);
@@ -328,6 +341,19 @@ void kkt_update(spmat* PKP, idxint* P, cone *C)
         }
 #endif
 	}
+    #if defined EXPCONE
+    /* Exponential cones */
+    for( i=0; i < C->nexc; i++){ 
+        PKP->pr[P[C->expc[i].colstart[0]]]   = -C->expc[i].v[0]-DELTASTAT;
+        PKP->pr[P[C->expc[i].colstart[1]]]   = -C->expc[i].v[1];
+        PKP->pr[P[C->expc[i].colstart[1]+1]] = -C->expc[i].v[2]-DELTASTAT;
+        PKP->pr[P[C->expc[i].colstart[2]]]   = -C->expc[i].v[3];
+        PKP->pr[P[C->expc[i].colstart[2]+1]] = -C->expc[i].v[4];
+        PKP->pr[P[C->expc[i].colstart[2]+2]] = -C->expc[i].v[5]-DELTASTAT;
+    }
+#endif
+
+
 }
 
 
