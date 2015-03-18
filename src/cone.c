@@ -259,8 +259,8 @@ pfloat evalSymmetricBarrierValue(pfloat* siter, pfloat *ziter, pfloat tauIter, p
             normAccumZ -= ziter[k]*ziter[k]; 
             k++;
         }
-        barrier-= normAccumS<=0? INFINITY : 0.5*log(normAccumS);        
-        barrier-= normAccumS<=0? INFINITY : 0.5*log(normAccumZ);
+        barrier-= normAccumS<=0.0? INFINITY : 0.5*log(normAccumS);        
+        barrier-= normAccumZ<=0.0? INFINITY : 0.5*log(normAccumZ);
         
     }
     return barrier-D-1;
