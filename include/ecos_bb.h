@@ -49,12 +49,18 @@
 #define MI_ZERO (0)
 #define MI_STAR (-1)
 
-/* Exit flags */
-#define MI_OPTIMAL_SOLN (ECOS_OPTIMAL)
-#define MI_INFEASIBLE (ECOS_PINF)
-#define MI_UNBOUNDED (ECOS_DINF)
-#define MI_MAXITER_FEASIBLE_SOLN (ECOS_OPTIMAL + ECOS_INACC_OFFSET)
+/*** Exit flags ***/
+/*ECOS_BB found optimal solution*/
+#define MI_OPTIMAL_SOLN (ECOS_OPTIMAL) 
+/*ECOS_BB proved problem is infeasible*/
+#define MI_INFEASIBLE (ECOS_PINF)	   
+/*ECOS_BB proved problem is unbounded*/
+#define MI_UNBOUNDED (ECOS_DINF)	   
+/*ECOS_BB hit maximum iterations but a feasible solution was found and the best seen feasible solution was returned*/
+#define MI_MAXITER_FEASIBLE_SOLN (ECOS_OPTIMAL + ECOS_INACC_OFFSET) 
+/*ECOS_BB hit maximum iterations without finding a feasible solution*/
 #define MI_MAXITER_NO_SOLN (ECOS_PINF + ECOS_INACC_OFFSET)
+/*ECOS_BB hit maximum iterations without finding a feasible solution that was unbounded*/
 #define MI_MAXITER_UNBOUNDED (ECOS_DINF + ECOS_INACC_OFFSET)
 
 /* Max integer and all smaller integer representable by single precision */
