@@ -12,14 +12,20 @@ s.t. A*x = b
      G*x <=_K h
 ```
 where the last inequality is generalized, i.e. `h - G*x` belongs to the cone `K`.
-ECOS supports the positive orthant `R_+` and second-order cones `Q_n` defined as
+ECOS supports the positive orthant `R_+`, second-order cones `Q_n` defined as
 ```
 Q_n = { (t,x) | t >= || x ||_2 } 
 ```
-In the definition above, t is a scalar and `x` is in `R_{n-1}`. The cone `K` is therefore
-a direct product of the positive orthant and second-order cones:
+with t a scalar and `x` in `R_{n-1}`, 
+and the exponential cone `K_e` defined as 
 ```
-K = R_+ x Q_n1 x ... x Q_nN
+K_e = closure{(x,y,z) | exp(x/z) <= y/z, z>0}
+```
+where `(x,y,z)` is in `R_3`. 
+The cone `K` is therefore
+a direct product of the positive orthant, second-order, and exponential cones:
+```
+K = R_+ x Q_n1 x ... x Q_nN x K_e x ... x K_e
 ```
 
 
@@ -74,8 +80,12 @@ The following people have been, and are, involved in the development and mainten
 + Johan Löfberg (YALMIP interface)
 + João Felipe Santos, Iain Dunning (Julia inteface)
 + Han Wang (ECOS branch and bound wrapper)
++ Santiago Akle (Exponential cone method and extension)
 
 The main technical idea behind ECOS is described in a short [paper](http://www.stanford.edu/~boyd/papers/ecos.html). More details are given in Alexander Domahidi's [PhD Thesis](http://e-collection.library.ethz.ch/view/eth:7611?q=domahidi) in Chapter 9.
+
+The algorithm for exponential cones can be found in Santiago Akle's 
+[PhD Thesis](http://searchworks.stanford.edu/view/10769798) in Chapter 10.
 
 If you find ECOS useful, you can cite it using the following BibTex entry:
 
