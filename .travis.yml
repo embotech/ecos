@@ -1,6 +1,6 @@
 language: c
 env:
-    - CFLAGS="-ansi -Wpedantic -fprofile-arcs -ftest-coverage"
+    - CFLAGS="-ansi -fprofile-arcs -ftest-coverage"
 compiler:
     - gcc
     - clang
