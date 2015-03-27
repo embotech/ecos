@@ -59,24 +59,24 @@ void bring2cone(cone* C, pfloat* r, pfloat* s)
 	 * 1. Find maximum residual ----------------------------------------------
 	 */
 
-	/* LP cone */	
+	/* LP cone */
 	for( i=0; i<C->lpc->p; i++ ){
 		if( r[i] <= 0 && -r[i] > alpha ){ alpha = -r[i]; }
 	}
-	
+
 	/* Second-order cone */
 	for( l=0; l < C->nsoc; l++ ){
 		cres = r[i++]; r1square = 0;
 		for( j=1; j<C->soc[l].p; j++ ){ r1square += r[i]*r[i]; i++; }
-		cres -= sqrt(r1square);		
+		cres -= sqrt(r1square);
 		if( cres <= 0 && -cres > alpha ){ alpha = -cres; }
-	} 
+	}
 
-	
+
 	/*
 	 * 2. compute s = r + (1+alpha)*e -------------------------------------
 	 */
-	
+
 	alpha += 1.0;
 
 	/* LP cone */
@@ -93,8 +93,9 @@ void bring2cone(cone* C, pfloat* r, pfloat* s)
 
 #ifdef EXPCONE
 
-//Sets the initial point to the jordan algebra identity e times scaling for the symmetric cones
-//And the central ray for the exponential cone, scaled by scaling
+/* Sets the initial point to the jordan algebra identity e times scaling for the symmetric cones
+ * and the central ray for the exponential cone, scaled by scaling
+ */
 void unitInitialization(cone* C, pfloat* s, pfloat* z, pfloat scaling)
 {
     idxint i,l,j;
@@ -150,12 +151,12 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
 	for( i=0; i < C->lpc->p; i++ ){
 		C->lpc->v[i] = SAFEDIV_POS(s[i], z[i]);
 		C->lpc->w[i] = sqrt(C->lpc->v[i]);
-	}	
+	}
 
-	/* Second-order cone */	
+	/* Second-order cone */
 	k = C->lpc->p;
 	for( l=0; l < C->nsoc; l++ ){
-		
+
 		/* indices and variables */
 		sk = s+k; zk = z+k; p = C->soc[l].p; /* pm1 = p-1; */
 
@@ -164,20 +165,20 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
         if( sres <= 0 || zres <= 0 ){ return OUTSIDE_CONE; }
 
 		/* normalize variables */
-		snorm = sqrt(sres);    znorm = sqrt(zres);   
+		snorm = sqrt(sres);    znorm = sqrt(zres);
 		for( i=0; i<p; i++ ){ C->soc[l].skbar[i] = SAFEDIV_POS(sk[i],snorm); }
 		for( i=0; i<p; i++ ){ C->soc[l].zkbar[i] = SAFEDIV_POS(zk[i],znorm); }
 		C->soc[l].eta_square = SAFEDIV_POS(snorm,znorm);
 		C->soc[l].eta = sqrt(C->soc[l].eta_square);
 
 		/* Normalized Nesterov-Todd scaling point */
-		gamma = 1.0; 
+		gamma = 1.0;
 		for( i=0; i<p; i++){ gamma += C->soc[l].skbar[i]*C->soc[l].zkbar[i]; }
-		gamma = sqrt(0.5*gamma);		
+		gamma = sqrt(0.5*gamma);
 		one_over_2gamma = SAFEDIV_POS(0.5,gamma);
 		a = one_over_2gamma*(C->soc[l].skbar[0] + C->soc[l].zkbar[0]);
 		w = 0;
-		for( i=1; i<p; i++ ){ 
+		for( i=1; i<p; i++ ){
 			C->soc[l].q[i-1] = one_over_2gamma*(C->soc[l].skbar[i] - C->soc[l].zkbar[i]);
 			w += C->soc[l].q[i-1]*C->soc[l].q[i-1];
 		}
@@ -210,7 +211,7 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
         C->soc[l].u1 = u1;
         C->soc[l].v1 = v1;
 #endif
-        
+
 		/* increase offset for next cone */
 		k += C->soc[l].p;
 	}
@@ -223,7 +224,7 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
             evalExpGradient(z+k, C->expc[l].g);
             k+=3;
         }
-#endif	
+#endif
 	/* lambda = W*z */
 	scale(z, C, lambda);
 
@@ -231,37 +232,37 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
 }
 
 #ifdef EXPCONE
-//Evaulates log(s) + log(z) + log(t) + log(k) + logbarriersocp - (D+1)
+/* Evaulates log(s) + log(z) + log(t) + log(k) + logbarriersocp - (D+1) */
 pfloat evalSymmetricBarrierValue(pfloat* siter, pfloat *ziter, pfloat tauIter, pfloat kapIter, cone* C, pfloat D)
 {
    pfloat barrier = 0.0;
-   idxint j,k,l; 
-   pfloat normAccumS = 0.0;   
+   idxint j,k,l;
+   pfloat normAccumS = 0.0;
    pfloat normAccumZ = 0.0;
    idxint socDim;
-   //Positive orthant barrier
+   /* Positive orthant barrier */
    for(k=0;k<C->lpc->p;k++)
         barrier -= (siter[k]<=0||ziter[k]<=0)? INFINITY : (log(siter[k])+log(ziter[k]));
 
     barrier-= (tauIter<=0||kapIter<=0) ? INFINITY : (log(tauIter)+log(kapIter));
-    //Socp cones
+    /* Socp cones */
     for(l=0;l<C->nsoc;l++)
     {
         socDim = C->soc[l].p;
         normAccumS = 0.0;
         normAccumZ = 0.0;
-        normAccumS = siter[k]*siter[k]; //Root variable of the socp cone
-        normAccumZ = ziter[k]*ziter[k]; 
+        normAccumS = siter[k]*siter[k]; /* Root variable of the socp cone */
+        normAccumZ = ziter[k]*ziter[k];
         k++;
         for(j=1;j<socDim;j++)
         {
-            normAccumS -= siter[k]*siter[k];             
-            normAccumZ -= ziter[k]*ziter[k]; 
+            normAccumS -= siter[k]*siter[k];
+            normAccumZ -= ziter[k]*ziter[k];
             k++;
         }
-        barrier-= normAccumS<=0.0? INFINITY : 0.5*log(normAccumS);        
+        barrier-= normAccumS<=0.0? INFINITY : 0.5*log(normAccumS);
         barrier-= normAccumZ<=0.0? INFINITY : 0.5*log(normAccumZ);
-        
+
     }
     return barrier-D-1;
 }
@@ -281,7 +282,7 @@ void scale(pfloat* z, cone* C, pfloat* lambda)
 	for( i=0; i < C->lpc->p; i++ ){ lambda[i] = C->lpc->w[i] * z[i]; }
 
 	/* Second-order cone */
-	cone_start = C->lpc->p;	
+	cone_start = C->lpc->p;
 	for( l=0; l < C->nsoc; l++ ){
 
 		/* zeta = q'*z1 */
@@ -293,9 +294,9 @@ void scale(pfloat* z, cone* C, pfloat* lambda)
 
 		/* second pass (on k): write out result */
 		lambda[cone_start] = C->soc[l].eta*(C->soc[l].a*z[cone_start] + zeta); /* lambda[0] */
-		for( i=1; i < C->soc[l].p; i++ ){ 
-			j = cone_start+i; 
-			lambda[j] = C->soc[l].eta*(z[j] + factor*C->soc[l].q[i-1]); 
+		for( i=1; i < C->soc[l].p; i++ ){
+			j = cone_start+i;
+			lambda[j] = C->soc[l].eta*(z[j] + factor*C->soc[l].q[i-1]);
 		}
 
 		cone_start += C->soc[l].p;
@@ -321,32 +322,32 @@ void scale2add(pfloat *x, pfloat* y, cone* C)
 #else
     pfloat zeta, temp, a, w, c, d;
 #endif
-    
+
     /* LP cone */
 	for( i=0; i < C->lpc->p; i++ ){ y[i] += C->lpc->v[i] * x[i]; }
-   
+
     /* Second-order cone */
     cone_start = C->lpc->p;
 #if CONEMODE == 0
-    
+
 	for( l=0; l < C->nsoc; l++ ){
-        
+
         getSOCDetails(&C->soc[l], &conesize, &eta_square, &d1, &u0, &u1, &v1, &q);
         conesize_m1 = conesize - 1;
-        
+
         x1 = x + cone_start;
         x2 = x1 + 1;
         x3 = x2 + conesize - 1;
         x4 = x3 + 1;
-        
+
         y1 = y + cone_start;
         y2 = y1 + 1;
         y3 = y2 + conesize - 1;
         y4 = y3 + 1;
-        
+
         /* y1 += d1*x1 + u0*x4 */
         y1[0] += eta_square*(d1*x1[0] + u0*x4[0]);
-        
+
         /* y2 += x2 + v1*q*x3 + u1*q*x4 */
         v1x3_plus_u1x4 = v1*x3[0] + u1*x4[0];
         qtx2 = 0;
@@ -354,21 +355,21 @@ void scale2add(pfloat *x, pfloat* y, cone* C)
             y2[i] += eta_square*(x2[i] + v1x3_plus_u1x4*q[i]);
             qtx2 += q[i]*x2[i];
         }
-        
+
         /* y3 += v1*q'*x2 + x3 */
         y3[0] += eta_square*(v1*qtx2 + x3[0]);
-        
+
         /* y4 += u0*x1 + u1*q'*x2 - x4 */
-        y4[0] += eta_square*(u0*x1[0] + u1*qtx2 - x4[0]);        
-        
+        y4[0] += eta_square*(u0*x1[0] + u1*qtx2 - x4[0]);
+
         /* prepare index for next cone */
         cone_start += conesize + 2;
     }
-    
+
 #else
-    
+
 	for( l=0; l < C->nsoc; l++ ){
-        
+
         conesize = C->soc[l].p;
         conesize_m1 = conesize - 1;
         eta_square = C->soc[l].eta_square;
@@ -377,28 +378,28 @@ void scale2add(pfloat *x, pfloat* y, cone* C)
         d = C->soc[l].d;
         q = C->soc[l].q;
         w = C->soc[l].w;
-        
+
         x1 = x + cone_start;
         x2 = x1 + 1;
-        
+
         y1 = y + cone_start;
         y2 = y1 + 1;
-        
+
         /* zeta = q'*x2 */
         zeta = 0;
         for (i=0; i<conesize-1; i++) {
             zeta += q[i]*x2[i];
         }
-        
+
         /* y1 += eta^2*[ (a^2 + w)x1 + c*zeta ] */
         y1[0] += eta_square*( (a*a+w)*x1[0] + c*zeta );
-        
+
         /* y2 += eta^2*[ (c*q*x1 + x2 + d*q*zeta ] */
         temp = c*x1[0] + d*zeta;
         for (i=0; i<conesize_m1; i++) {
             y2[i] += eta_square*( temp*q[i] + x2[i] );
         }
-        
+
         /* prepare index for next cone */
         cone_start += conesize;
     }
@@ -421,7 +422,7 @@ void unscale(pfloat* lambda, cone* C, pfloat* z)
 	for( i=0; i < C->lpc->p; i++ ){ z[i] = SAFEDIV_POS(lambda[i], C->lpc->w[i]); }
 
 	/* Second-order cone */
-	cone_start = C->lpc->p;	
+	cone_start = C->lpc->p;
 	for( l=0; l < C->nsoc; l++ ){
 
 		/* zeta = q'*lambda1 */
@@ -433,8 +434,8 @@ void unscale(pfloat* lambda, cone* C, pfloat* z)
 
 		/* second pass (on k): write out result */
 		z[cone_start] = SAFEDIV_POS( (C->soc[l].a*lambda[cone_start] - zeta), C->soc[l].eta );
-		for( i=1; i < C->soc[l].p; i++ ){ 
-			j = cone_start+i; 
+		for( i=1; i < C->soc[l].p; i++ ){
+			j = cone_start+i;
 			z[j] = SAFEDIV_POS( (lambda[j] + factor*C->soc[l].q[i-1]), C->soc[l].eta );
 		}
 
@@ -452,7 +453,7 @@ pfloat conicProduct(pfloat* u, pfloat* v, cone* C, pfloat* w)
 {
 	idxint i, j, k, cone_start, conesize;
 	pfloat u0, v0, mu;
-	
+
     mu = 0;
 	k=0;
 
@@ -465,8 +466,8 @@ pfloat conicProduct(pfloat* u, pfloat* v, cone* C, pfloat* w)
 
 	/* Second-order cone */
 	cone_start = C->lpc->p;
-	for( i=0; i < C->nsoc; i++ ){ 		
-		conesize = C->soc[i].p; 
+	for( i=0; i < C->nsoc; i++ ){
+		conesize = C->soc[i].p;
 		u0 = u[cone_start];
 		v0 = v[cone_start];
 		w[k] = eddot(conesize, u+cone_start, v+cone_start);
@@ -475,7 +476,7 @@ pfloat conicProduct(pfloat* u, pfloat* v, cone* C, pfloat* w)
 		for( j=1; j < conesize; j++ ){ w[k++] = u0*v[cone_start+j] + v0*u[cone_start+j]; }
 		cone_start += conesize;
 	}
-    
+
     return mu;
 }
 
@@ -488,7 +489,7 @@ void conicDivision(pfloat* u, pfloat* w, cone* C, pfloat* v)
 {
 	idxint i, j, k, cone_start, conesize;
 	pfloat rho, zeta, u0, w0, factor, temp;
-	
+
 	/* LP cone */
 	for( i=0; i < C->lpc->p; i++ ){ v[i] = SAFEDIV_POS(w[i],u[i]); }
 
@@ -497,17 +498,17 @@ void conicDivision(pfloat* u, pfloat* w, cone* C, pfloat* v)
 	for( i=0; i < C->nsoc; i++ ){
 		conesize = C->soc[i].p;
 		u0 = u[cone_start]; w0 = w[cone_start];
-		rho = u0*u0;   zeta = 0; 		
+		rho = u0*u0;   zeta = 0;
 		for( j=1; j < conesize; j++ ){
-			k = cone_start+j;			
-			rho -= u[k]*u[k]; 
+			k = cone_start+j;
+			rho -= u[k]*u[k];
 			zeta += u[k]*w[k];
 		}
         temp = SAFEDIV_POS(zeta,u0) - w0;
         factor = SAFEDIV_POS(temp,rho);
         temp = u0*w0 - zeta;
 		v[cone_start] = SAFEDIV_POS(temp,rho);
-		for( j=1; j < conesize; j++ ){ 
+		for( j=1; j < conesize; j++ ){
 			k = cone_start+j;
 			v[cone_start+j] = factor*u[k] + SAFEDIV_POS(w[k],u0);
 		}
@@ -515,8 +516,8 @@ void conicDivision(pfloat* u, pfloat* w, cone* C, pfloat* v)
 	}
 }
 
-/* 
- * Returns details on second order cone 
+/*
+ * Returns details on second order cone
  * Purpose: cleaner code
  */
 void getSOCDetails(socone *soc, idxint *conesize, pfloat* eta_square, pfloat* d1, pfloat* u0, pfloat* u1, pfloat* v1, pfloat **q)
@@ -533,14 +534,14 @@ void getSOCDetails(socone *soc, idxint *conesize, pfloat* eta_square, pfloat* d1
 }
 
 
-/* 
- * Returns dx, dy and dz from the expanded and permuted version of 
+/*
+ * Returns dx, dy and dz from the expanded and permuted version of
  * a search direction vector.
  */
 void unstretch(idxint n, idxint p, cone *C, idxint *Pinv, pfloat *Px, pfloat *dx, pfloat *dy, pfloat *dz)
 {
     idxint i,j,k,l;
-    k = 0;    
+    k = 0;
     for( i=0; i<n; i++ ){ dx[i] = Px[Pinv[k++]]; }
     for( i=0; i<p; i++ ){ dy[i] = Px[Pinv[k++]]; }
     j = 0;
@@ -553,7 +554,7 @@ void unstretch(idxint n, idxint p, cone *C, idxint *Pinv, pfloat *Px, pfloat *dx
     }
 #ifdef EXPCONE
     for( l=0; l<C->nexc; l++)
-    { 
+    {
         for( i=0; i<3; i++ ){ dz[j++] = Px[Pinv[k++]]; }
     }
 #endif

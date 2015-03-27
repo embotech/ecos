@@ -292,7 +292,7 @@ idxint init(pwork* w)
 	}
 #ifdef EXPCONE
     for( l=0; l<w->C->nexc; l++)
-    { 
+    {
         for(i=0; i<3; i++){ w->KKT->RHS1[w->KKT->Pinv[k++]] = w->h[j++]; }
     }
 #endif
@@ -310,8 +310,9 @@ idxint init(pwork* w)
 	rz = norm2(w->h, w->m); w->resz0 = MAX(1, rz);
 
 #ifdef EXPCONE
-    //If expcone is enabled and there are exponential cones in 
-    //the problem definition, then skip the Mehrotra initialization strategy
+    /* If expcone is enabled and there are exponential cones in
+     * the problem definition, then skip the Mehrotra initialization strategy
+     */
     if(w->C->nexc == 0)
     {
 #endif
@@ -421,8 +422,8 @@ idxint init(pwork* w)
 	    for( i=0; i<w->n; i++ ){ w->x[i] = 0.0; }
         w->info->nitref1 = 0;
         w->info->nitref2 = 0;
-    } 
-#endif	
+    }
+#endif
 
 	/* Prepare RHS1 - before this line RHS1 = [0; b; h], after it holds [-c; b; h] */
 	for( i=0; i<w->n; i++){ w->KKT->RHS1[Pinv[i]] = -w->c[i]; }
@@ -489,7 +490,7 @@ void computeResiduals(pwork *w)
     w->nx = norm2(w->x,w->n);
     w->ny = norm2(w->y,w->p);
     w->ns = norm2(w->s,w->m);
-    w->nz = norm2(w->z,w->m);    
+    w->nz = norm2(w->z,w->m);
 
 }
 
@@ -521,7 +522,7 @@ void updateStatistics(pwork* w)
     nry = w->p > 0 ? norm2(w->ry, w->p)/MAX(w->resy0+w->nx,1) : 0.0;
     nrz = norm2(w->rz, w->m)/MAX(w->resz0+w->nx+w->ns,1);
 	info->pres = MAX(nry, nrz) / w->tau;
-	info->dres = norm2(w->rx, w->n)/MAX(w->resx0+w->ny+w->nz,1) / w->tau; 
+	info->dres = norm2(w->rx, w->n)/MAX(w->resx0+w->ny+w->nz,1) / w->tau;
 
 	/* infeasibility measures
      *
@@ -531,7 +532,7 @@ void updateStatistics(pwork* w)
      */
     info->pinfres = (w->hz + w->by)/MAX(w->ny+w->nz,1) < -w->stgs->reltol ? w->hresx / MAX(w->ny+w->nz,1) : NAN;
     info->dinfres = w->cx/MAX(w->nx,1) < -w->stgs->reltol ? MAX(w->hresy/MAX(w->nx,1), w->hresz/MAX(w->nx+w->ns,1)) : NAN;
-       
+
 
 
 #if PRINTLEVEL > 2
@@ -566,7 +567,7 @@ void printProgress(stats* info)
 #else
 		PRINTTEXT("It     pcost         dcost      gap     pres    dres     k/t     mu      step     IR\n");
 		PRINTTEXT("%2d  %c%+5.3e  %c%+5.3e  %c%+2.0e  %c%2.0e  %c%2.0e  %c%2.0e  %c%2.0e    N/A     %d %d -\n",(int)info->iter, 32, info->pcost, 32, info->dcost, 32, info->gap, 32, info->pres, 32, info->dres, 32, info->kapovert, 32, info->mu, (int)info->nitref1, (int)info->nitref2);
-#endif //End if defined EXPCONE for the branch of the first iteration non windows
+#endif /*End if defined EXPCONE for the branch of the first iteration non windows */
 #endif
 	}  else {
 #if defined _WIN32 || defined _WIN64
@@ -591,8 +592,8 @@ void printProgress(stats* info)
    (int)info->cmbBack);
 #else
 		PRINTTEXT("%2d  %c%+5.3e%c  %+5.3e %c %+2.0e%c  %2.0e%c  %2.0e%c  %2.0e%c  %2.0e%c  %6.4f   %d %d %d\n",(int)info->iter, 32,info->pcost, 32,info->dcost, 32, info->gap, 32, info->pres, 32, info->dres, 32, info->kapovert, 32, info->mu, 32, info->step, (int)info->nitref1, (int)info->nitref2, (int)info->nitref3);
-#endif//End of if defined expcone
-#endif //end of windows block
+#endif /* End of if defined expcone */
+#endif /* end of windows block */
 	}
 
 /* enable to flush printf in Matlab immediately */
@@ -651,16 +652,16 @@ void RHS_affine(pwork* w)
         RHS[Pinv[j++]] = 0;
 #endif
 	}
-#ifdef EXPCONE 
-    
+#ifdef EXPCONE
+
     /*Exponential cones*/
     for(l=0;l<w->C->nexc; l++){
         for(i=0;i<3;i++)
-        { 
-    		RHS[Pinv[j++]] = w->s[k] - w->rz[k]; k++;			
+        {
+    		RHS[Pinv[j++]] = w->s[k] - w->rz[k]; k++;
         }
     }
-   
+
 #endif
 }
 
@@ -714,7 +715,7 @@ void RHS_combined(pwork* w)
     k = w->C->fexv;
 
     /*Exponential cones*/
-    // -(1-sigma)*rz +s + mu*sigma*g(x) 
+    /* -(1-sigma)*rz +s + mu*sigma*g(x) */
     for(l=0;l<w->C->nexc;l++)
     {
             w->C->expc[l].g[0] = s[k]+sigmamu*w->C->expc[l].g[0];
@@ -741,7 +742,7 @@ void RHS_combined(pwork* w)
 */
 pfloat expConeLineSearch(pwork* w, pfloat dtau, pfloat dkappa, idxint affine)
 {
-    //Iterates and workspace 
+    /* Iterates and workspace */
     pfloat* ws = w->KKT->work1;
     pfloat* wz = w->KKT->work2;
     pfloat* s  = w->s;
@@ -750,55 +751,55 @@ pfloat expConeLineSearch(pwork* w, pfloat dtau, pfloat dkappa, idxint affine)
     pfloat* dz = w->KKT->dz2;
     pfloat tau = w->tau;
     pfloat kap = w->kap;
-   // pfloat* ds = w->dsaff_by_W;
-   // pfloat* dz = w->W_times_dzaff;
-    
-    //Settings
+    /* pfloat* ds = w->dsaff_by_W; */
+    /* pfloat* dz = w->W_times_dzaff; */
+
+    /* Settings */
     pfloat gamma = w->stgs->gamma;
 
-    //Misc 
+    /* Misc */
     idxint bk_iter, j;
 
     pfloat mui, mu;
-    
-    //Initial alpha
+
+    /* Initial alpha */
     pfloat alpha;
 
-    //Pointers to counters
+    /* Pointers to counters */
     idxint* pob;
     idxint* cb;
     idxint* cob;
-    idxint* pb; 
-    idxint* db;    
-    
-    //Start from the alpha chosen for the symmetric cones
+    idxint* pb;
+    idxint* db;
+
+    /* Start from the alpha chosen for the symmetric cones */
     if(affine ==1)
     {
         alpha = w->info->step_aff;
     }
-    else //Combined 
+    else /* Combined */
     {
-        alpha = w->info->step; 
+        alpha = w->info->step;
     }
     pob = &w->info->pob;
-    cb  = &w->info->cb;  
+    cb  = &w->info->cb;
     cob = &w->info->cob;
-    pb  = &w->info->pb;    
-    db  = &w->info->db;  
+    pb  = &w->info->pb;
+    db  = &w->info->db;
 
-    //Initialize the counters
+    /* Initialize the counters */
     *pob = 0;
-    *cb  = 0; 
-    *cob = 0; 
-    *pb  = 0;   
-    *db  = 0; 
+    *cb  = 0;
+    *cob = 0;
+    *pb  = 0;
+    *db  = 0;
 
-    //Initialize the other statistics 
+    /* Initialize the other statistics */
     pfloat* centrality = &w->info->centrality;
-    pfloat barrier = 0.0; //Variable to hold the value of f_e(s_e)+f^\star_e(z_e)
-    *(centrality) = 1e300; //Placeholder 
+    pfloat barrier = 0.0;  /* Variable to hold the value of f_e(s_e)+f^\star_e(z_e) */
+    *(centrality) = 1e300; /* Placeholder */
 
-    //Constants 
+    /* Constants */
     pfloat cent_constant = w->D+1;
 
     for(bk_iter = 0;bk_iter<w->stgs->max_bk_iter;bk_iter++)
@@ -811,74 +812,75 @@ pfloat expConeLineSearch(pwork* w, pfloat dtau, pfloat dkappa, idxint affine)
             wz[j] = z[j]+alpha*dz[j];
             mu += ws[j]*wz[j];
          }
-   
+
          mu = mu+(tau+alpha*dtau)*(kap+alpha*dkappa);
          mu = mu/(w->D+1);
-           
-        //Evaluate the feasibility
+
+        /* Evaluate the feasibility */
         if(evalExpDualFeas(wz+w->C->fexv,w->C->nexc)==1)
         {
             if(evalExpPrimalFeas(ws+w->C->fexv,w->C->nexc)==1)
             {
-                    
-                //Compute the mu_i for each cone 
-                //Because the sum mu_i = mu*nexc,
-                //Dont let any mu_i get much smaller than mu
 
-                //Evaluate the first mui
+                /* Compute the mu_i for each cone
+                 * Because the sum mu_i = mu*nexc,
+                 * Dont let any mu_i get much smaller than mu
+                 */
+
+                /* Evaluate the first mui */
                 j=w->C->fexv;
                 mui = ws[j]*wz[j]+ws[j+1]*wz[j+1]+ws[j+2]*wz[j+2];
                 mui /= 3.0;
                 while(mui>MIN_DISTANCE*mu && j<w->m-2)
                 {
-                      //Calculate mui
+                      /* Calculate mui */
                       j+=3;
                       if(j<w->m)
                       {
                           mui = ws[j]*wz[j]+ws[j+1]*wz[j+1]+ws[j+2]*wz[j+2];
                           mui /= 3.0;
                       }
-                       
+
                 }
-                //If all the mui are larger than MIN_DISTANCE*exmpu then j == m
+                /* If all the mui are larger than MIN_DISTANCE*exmpu then j == m */
                 if(j==w->m)
-                {  
+                {
 
                         barrier = evalBarrierValue(ws,wz, w->C->fexv, w->C->nexc);
-                        
+
                         barrier += evalSymmetricBarrierValue(ws, wz, tau+alpha*dtau, kap+alpha*dkappa, w->C, w->D);
-                       
+
                         *centrality = barrier + cent_constant*log(mu) + cent_constant;
-                         
-                        if(*centrality<w->stgs->centrality) 
-                        { 
-                               return alpha*gamma;                                   
+
+                        if(*centrality<w->stgs->centrality)
+                        {
+                               return alpha*gamma;
                         }
                         else /* Iterate violates centrality */
                         {
-    
+
 #if PRINTLEVEL       > 2
                                  PRINTTEXT("Centrality violation %e, step %e , mu %e, barrier %e\n",*centrality,alpha,mu,barrier);
-#endif  
+#endif
                                   /*Count a backtrack due to centrality violation*/
                                   (*cb)++;
-                       } 
+                       }
                 }
                 else /* At least one mui is too small*/
                 {
 #if PRINTLEVEL      > 2
                             PRINTTEXT("Cone too close to complementary %e, step %e , mu %e\n",mui,alpha,mu);
-#endif  
+#endif
                              /*Count a backtrack due to primal infeasibility*/
-                             (*cob)++;                                        
+                             (*cob)++;
                 }
 
-           }    
+           }
            else
            {
 #if PRINTLEVEL > 2
-            PRINTTEXT("Primal infeasible at backtrack %ld\n",bk_iter);            
-            //Something is fishy find the larges entry in the iterate
+            PRINTTEXT("Primal infeasible at backtrack %ld\n",bk_iter);
+            /* Something is fishy find the largest entry in the iterate */
             double max = 0;
             int mix = 0;
             int ik = 0;
@@ -897,28 +899,28 @@ pfloat expConeLineSearch(pwork* w, pfloat dtau, pfloat dkappa, idxint affine)
             }
             PRINTTEXT("Max dir %lf %ld \n",max,mix);
 #endif
-                         (*pb)++;                    
+                         (*pb)++;
            }
         }
         else
         {
 
 #if PRINTLEVEL > 2
-            PRINTTEXT("Dual infeasible at backtrack %ld\n",bk_iter);            
+            PRINTTEXT("Dual infeasible at backtrack %ld\n",bk_iter);
 #endif
             /*Count a backtrack due to dual infeasibility*/
-            (*db)++; 
-        } 
+            (*db)++;
+        }
         alpha = alpha*w->stgs->bk_scale;
-        
+
     }
 #if PRINTLEVEL > 2
        PRINTTEXT("Max backtrack iters reached\n");
 #endif
-    
+
     return -1;
 }
-#endif 
+#endif
 /*
  * Line search according to Vandenberghe (cf. �8 in his manual).
  */
@@ -1058,9 +1060,9 @@ idxint ECOS_solve(pwork* w)
 	pfloat pres_prev = (pfloat)NAN;
 
 #ifdef EXPCONE
-        idxint fc = w->C->fexv; //First cone variable e
+        idxint fc = w->C->fexv; /* First cone variable e */
         idxint k;
-#endif 
+#endif
 
 #if DEBUG
     char fn[20];
@@ -1238,7 +1240,7 @@ idxint ECOS_solve(pwork* w)
 
 
 		/* Compute scalings */
-#ifdef EXPCONE  
+#ifdef EXPCONE
 		if( updateScalings(w->C, w->s, w->z, w->lambda, w->info->mu) == OUTSIDE_CONE ){
 #else
 		if( updateScalings(w->C, w->s, w->z, w->lambda) == OUTSIDE_CONE ){
@@ -1285,14 +1287,14 @@ idxint ECOS_solve(pwork* w)
         sprintf(fn, "PKPt_factor_%02i.txt", (int)w->info->iter);
         dumpSparseMatrix(w->KKT->L, fn);
 #endif
-		
+
 	    /* check if factorization was successful, exit otherwise */
 		if(  KKT_FACTOR_RETURN_CODE != KKT_OK ){
 #if PRINTLEVEL > 0
 	    if( w->stgs->verbose ) PRINTTEXT("\nProblem in factoring KKT system, aborting.");
 #endif
 	        return ECOS_FATAL;
-	    }				
+	    }
 
 		/* Solve for RHS1, which is used later also in combined direction */
 #if PROFILING > 1
@@ -1343,54 +1345,57 @@ idxint ECOS_solve(pwork* w)
 		w->info->step_aff = lineSearch(w->lambda, w->dsaff_by_W, w->W_times_dzaff, w->tau, dtauaff, w->kap, dkapaff, w->C, w->KKT);
 
 #ifdef EXPCONE
-        
-        //The present value of step_aff keeps the primal and dual symmetric slacks close to the boundary
-        // Here w->W_times_dzaff contains dzaff for the exponential cones 
-        // However W\dsaff is not initialized for the exponential cones. 
-        // first we must calculate dsaff 
-        // From \muH(x)dxaff + dsaff = -s we set dsaff to be 
-        // dsaff = -s - \mu H(z)dzaff
-        //Calculate muH(s)dzaff and store in dsaff_by_W
-       
-       //For the linesearch we need to compute x's+tk at every step size so 
-        //we need to calculate the search direction for the symmetric cones too
+
+        /* The present value of step_aff keeps the primal and dual symmetric slacks close to the boundary
+         * Here w->W_times_dzaff contains dzaff for the exponential cones
+         * However W\dsaff is not initialized for the exponential cones.
+         * first we must calculate dsaff
+         * From \muH(x)dxaff + dsaff = -s we set dsaff to be
+         * dsaff = -s - \mu H(z)dzaff
+         */
+
+        /* Calculate muH(s)dzaff and store in dsaff_by_W */
+
+        /* For the linesearch we need to compute x's+tk at every step size so
+         * we need to calculate the search direction for the symmetric cones too
+         */
 
         /* ds = W*ds_by_W */
 		scale(w->dsaff_by_W, w->C, w->dsaff);
 
-        //Zero out
+        /* Zero out */
         for(i=fc; i<w->m; i++)
-        { 
+        {
             w->dsaff[i] = 0.0;
         }
 
-        scaleToAddExpcone(w->dsaff,w->KKT->dz2, w->C->expc, w->C->nexc, fc);  
-        
-        //Add -s  ds = -s - muH(z)dz
+        scaleToAddExpcone(w->dsaff,w->KKT->dz2, w->C->expc, w->C->nexc, fc);
+
+        /* Add -s  ds = -s - muH(z)dz */
         for(i=fc; i<w->m; i++)
-        { 
+        {
             w->dsaff[i] = -w->dsaff[i]-w->s[i];
         }
-        // Now dsaff_by_W has dsaff and W_times_dzaff dzaff
+        /* Now dsaff_by_W has dsaff and W_times_dzaff dzaff */
 
- 
+
 #if PRINTLEVEL > 2
     PRINTTEXT("Backtrack affine\n");
-#endif        
-        //Set the affine backtracking counter to zero
+#endif
+        /* Set the affine backtracking counter to zero */
         w->info->affBack = 0;
         if(w->C->nexc>0)
             {
             w->info->step_aff = expConeLineSearch(w,dtauaff,dkapaff,1);
-            //Sum all the backtracking steps 
-            //Sum the backtracking counts 
+            /* Sum all the backtracking steps */
+            /* Sum the backtracking counts */
             w->info->affBack+= w->info->pob;
             w->info->affBack+=w->info->cb;
             w->info->affBack+= w->info->cob;
             w->info->affBack+=w->info->pb;
             w->info->affBack+=w->info->db;
 
-#if PRINTLEVEL > 2 
+#if PRINTLEVEL > 2
            PRINTTEXT("Affine backtracking %d %d %d %d %d \n",\
            (int)w->info->pob,\
            (int)w->info->cb,\
@@ -1398,7 +1403,7 @@ idxint ECOS_solve(pwork* w)
            (int)w->info->pb,\
            (int)w->info->db);
 #endif
-            //Detect linesearch failure, recover and end.
+            /* Detect linesearch failure, recover and end. */
             if(w->info->step_aff == -1)
             {
 #if PRINTLEVEL > 2
@@ -1408,8 +1413,8 @@ idxint ECOS_solve(pwork* w)
             }
 
         }
-#endif //END EXPCONE
-		
+#endif /* END EXPCONE */
+
 		/* Centering parameter */
         sigma = 1.0 - w->info->step_aff;
         sigma = sigma*sigma*sigma;
@@ -1449,22 +1454,22 @@ idxint ECOS_solve(pwork* w)
 
 		/* Line search on combined direction */
 		w->info->step = lineSearch(w->lambda, w->dsaff_by_W, w->W_times_dzaff, w->tau, dtau, w->kap, dkap, w->C, w->KKT) * w->stgs->gamma;
-        
-        //Bring ds to the final unscaled form
+
+        /* Bring ds to the final unscaled form */
 	    /* ds = W*ds_by_W */
 		scale(w->dsaff_by_W, w->C, w->dsaff);
 
 #ifdef EXPCONE
-        
-        //Zero out the section corresponding to the exponential vars
+
+        /* Zero out the section corresponding to the exponential vars */
         for(i=fc; i<w->m; i++)
-        { 
+        {
             w->dsaff[i] = 0.0;
-        } 
-        //Calculate muH(z)dzaff and store in dsaff
+        }
+        /* Calculate muH(z)dzaff and store in dsaff */
         scaleToAddExpcone(w->dsaff,w->KKT->dz2,w->C->expc,w->C->nexc,fc);
-        
-        //We have modified g to contain s+sigma*mu*g(z)
+
+        /* We have modified g to contain s+sigma*mu*g(z) */
         k = fc;
         for(i=0;i<w->C->nexc;i++)
         {
@@ -1476,12 +1481,12 @@ idxint ECOS_solve(pwork* w)
 			k++;
         }
 
-    //Set the backtracking counter to zero
+    /* Set the backtracking counter to zero */
     w->info->cmbBack = 0;
     if(w->C->nexc>0)
     {
         w->info->step = expConeLineSearch(w,dtau,dkap,0);
-        //Sum the backtracking counts 
+        /* Sum the backtracking counts */
         w->info->cmbBack+= w->info->cb;
         w->info->cmbBack+= w->info->cob;
         w->info->cmbBack+= w->info->pb;
@@ -1494,8 +1499,8 @@ idxint ECOS_solve(pwork* w)
         (int)w->info->pb,\
         (int)w->info->db);
 #endif
- 
-         //Detect linesearch failure, recover and end.
+
+        /* Detect linesearch failure, recover and end. */
         if(w->info->step == -1)
         {
 
@@ -1510,27 +1515,25 @@ idxint ECOS_solve(pwork* w)
             if( w->stgs->verbose ) PRINTTEXT("Combined line search failed, recovering best iterate (%d) and stopping.\n", (int)w->best_info->iter);
 #endif
             restoreBestIterate( w );
-            
+
             /* Determine whether we have reached at least reduced accuracy */
             exitcode = checkExitConditions( w, ECOS_INACC_OFFSET );
-            
+
             /* if not, exit anyways */
             if( exitcode == ECOS_NOT_CONVERGED_YET ){
                 exitcode = ECOS_NUMERICS;
 #if PRINTLEVEL > 0
                 if( w->stgs->verbose ) PRINTTEXT("\nNUMERICAL PROBLEMS (reached feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", MAX(w->info->dres, w->info->pres), w->info->relgap, w->info->gap);
-#endif 
+#endif
                 break;
             } else {
                 break;
             }
        }
-      
+
     }
 
-#endif //endif of EXPCONE
-
-
+#endif /* endif of EXPCONE */
 
 
 		/* Update variables */

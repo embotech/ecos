@@ -19,8 +19,8 @@
 
 
 /*
- * The branch and bound module is (c) Han Wang, Stanford University, 
- * [hanwang2@stanford.edu] 
+ * The branch and bound module is (c) Han Wang, Stanford University,
+ * [hanwang2@stanford.edu]
  */
 
 #include "glblopts.h"
@@ -168,11 +168,11 @@ ecos_bb_pwork* ECOS_BB_setup(
     PRINTTEXT("   Integer var indices: "); for( i=0; i<num_int_vars; ++i) PRINTTEXT("%u ", (unsigned int) int_vars_idx[i]); PRINTTEXT("\n");
     PRINTTEXT("\n");
 
-    PRINTTEXT("n=%u\n",n);    
+    PRINTTEXT("n=%u\n",n);
     PRINTTEXT("m=%u\n",m);
-    PRINTTEXT("Gpr=");for (i=0;i<Gjc[n];i++){PRINTTEXT("%f,",Gpr[i]);}PRINTTEXT("\n");        
-    PRINTTEXT("Gir=");for (i=0;i<Gjc[n];i++){PRINTTEXT("%u,",Gir[i]);}PRINTTEXT("\n");        
-    PRINTTEXT("Gjc=");for (i=0;i<=n;i++){PRINTTEXT("%u,",Gjc[i]);}PRINTTEXT("\n");        
+    PRINTTEXT("Gpr=");for (i=0;i<Gjc[n];i++){PRINTTEXT("%f,",Gpr[i]);}PRINTTEXT("\n");
+    PRINTTEXT("Gir=");for (i=0;i<Gjc[n];i++){PRINTTEXT("%u,",Gir[i]);}PRINTTEXT("\n");
+    PRINTTEXT("Gjc=");for (i=0;i<=n;i++){PRINTTEXT("%u,",Gjc[i]);}PRINTTEXT("\n");
 #endif
 
 
@@ -229,8 +229,8 @@ ecos_bb_pwork* ECOS_BB_setup(
 
     /* Setup the ecos solver*/
     prob->ecos_prob = ECOS_setup(
-    //For now call ECOS with no exponential cones
-    //TODO: Integrate the exponential cone argument to the main bb call
+    /* For now call ECOS with no exponential cones */
+    /* TODO: Integrate the exponential cone argument to the main bb call */
         n, m, p, l, ncones, q, 0,
         prob->Gpr_new, prob->Gjc_new, prob->Gir_new,
         Apr, Ajc, Air,
@@ -297,9 +297,9 @@ void ECOS_BB_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep){
 
 settings_bb* get_default_ECOS_BB_settings(){
     settings_bb* stgs = (settings_bb*) MALLOC( sizeof(settings_bb) );
-    stgs->maxit = MI_MAXITER;           
-    stgs->verbose = 1;         
-    stgs->abs_tol_gap = MI_ABS_EPS;     
+    stgs->maxit = MI_MAXITER;
+    stgs->verbose = 1;
+    stgs->abs_tol_gap = MI_ABS_EPS;
     stgs->rel_tol_gap = MI_REL_EPS;
     stgs->integer_tol = MI_INT_TOL;
     return stgs;

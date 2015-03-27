@@ -29,29 +29,31 @@
 int main(void)
 {
 
-    //Modify the problem to add an exponential cone
-    //the original problem has socps of size 3,3,3,3,3,4.
-    //Make it 3,3,3,4 and an exponential cone
-//    ncones = 3;
-//    q[2] = 4;
-//    idxint nexc = 3;
-
-//idxint nexc = 1;
-//q[4] = 4;
-//ncones = 5;
-
+    /* Modify the problem to add an exponential cone
+     * the original problem has socps of size 3,3,3,3,3,4.
+     * Make it 3,3,3,4 and an exponential cone
+     */
+/*
+ *    ncones = 3;
+ *    q[2] = 4;
+ *    idxint nexc = 3;
+ *
+ *    idxint nexc = 1;
+ *    q[4] = 4;
+ *    ncones = 5;
+ */
     idxint nexc = 0;
     l = l+1;
-    //ncones = 5;
+    /* ncones = 5; */
     ncones = 0;
-    //q[4]   = 4;
+    /* q[4]   = 4; */
     nexc   = 6;
-//     idxint nexc = 0;
+/*     idxint nexc = 0; */
 /*char ver[7];*/
 
     idxint exitflag = ECOS_FATAL;
 	pwork* mywork;
-   
+
 
 #if PROFILING > 0
 	double ttotal, tsolve, tsetup;
@@ -59,13 +61,13 @@ int main(void)
 #if PROFILING > 1
     double torder, tkktcreate, ttranspose, tfactor, tkktsolve;
 #endif
-	
-	/* set up data */	
+
+	/* set up data */
 	mywork = ECOS_setup(n, m, p, l, ncones, q, nexc, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b);
     mywork->stgs->maxit = 25;
     if( mywork != NULL ){
-	
-	/* solve */	
+
+	/* solve */
 	exitflag = ECOS_solve(mywork);
 
 	/* some statistics in milliseconds */
@@ -89,7 +91,7 @@ int main(void)
 	printf("2. Solve: %7.3f (%4.1f%%)\n", tsolve,  tsolve / ttotal*100);
 	printf("----------------------------------\n");
 	printf(" Total solve time: %7.3f ms\n\n", ttotal);
-	
+
 	printf("Detailed timings in SETUP:\n");
 	printf("Create transposes: %7.3f (%4.1f%%)\n", ttranspose, ttranspose / tsetup*100);
 	printf("Create KKT Matrix: %7.3f (%4.1f%%)\n", tkktcreate, tkktcreate / tsetup*100);
@@ -104,17 +106,17 @@ int main(void)
 	printf("\n");
 #endif
 #endif
-	
+
     /* clean up memory */
 	ECOS_cleanup(mywork, 0);
-        
+
     }
-    
+
     /* test version number
     ECOS_ver(ver);
     printf("This test has been run on ECOS version %s\n", ver);
      */
-	
+
     /* explicitly truncate exit code */
 	return (int)exitflag;
 }
@@ -124,5 +126,5 @@ int main(void)
 int main(void)
 {
 	printf("Compile with EXPCONE to run this example\n");
-} 
+}
 #endif

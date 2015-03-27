@@ -1,11 +1,11 @@
 /**
- * Santiago Akle 
+ * Santiago Akle
  * ICME Stanford University 2014
  *
  * Computes the value \omega(z) defined as the solution y to
  * the equation y+log(y) = z for z real and z>=1.
  * Follows the recommendations by
- * PIERS W. LAWRENCE, ROBERT M. CORLESS, and DAVID J. JEFFREY. 
+ * PIERS W. LAWRENCE, ROBERT M. CORLESS, and DAVID J. JEFFREY.
  * Published in:
  * Algorithm 917: Complex Double-Precision Evaluation of the Wright \omega Function
  * ACM Transactions on Mathematical Software (TOMS) TOMS Homepage table of contents archive
@@ -16,7 +16,7 @@
  * ISSN: 0098-3500 EISSN: 1557-7295 doi>10.1145/2168773.2168779
  */
 
-//#define DEBUG
+/* #define DEBUG */
 #define pfloat double
 #define idxint long int
 #include "math.h"

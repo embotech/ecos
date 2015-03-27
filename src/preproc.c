@@ -157,8 +157,8 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
         Sign[ks] = -1;      /* (3,3) block has -1 sign if all dense */
     }
 #endif
-#ifdef EXPCONE //In the case CONEMODE != 0 this is marginally inneficient
-    //Set the signs of the regularization of the expcone block
+#ifdef EXPCONE /* In the case CONEMODE != 0 this is marginally inneficient */
+    /* Set the signs of the regularization of the expcone block */
     for(ks=nK-3*C->nexc;ks<nK;)
     {
         Sign[ks++] = -1;
@@ -368,23 +368,23 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
      * which has a dense structure (only upper half part is shown):
      *
      *  k is the index of the entry in Kip, Kir
-     *  If the dense form of the socp cones is used the exponential cones start 
+     *  If the dense form of the socp cones is used the exponential cones start
      *  at row n+p+linear_vars+socp_vars.
-     *  If the sparse form of the socp cones is used then the exponential cones will 
+     *  If the sparse form of the socp cones is used then the exponential cones will
      *  start at row n+p+linear_vars+socp_vars+2*number_socp_cones
      *  In either case cone_strt will have value equal to socp_vars+linear_vars.
      */
 
-    //At this point cone_strt = sum(q)+l
-    
+    /* At this point cone_strt = sum(q)+l */
+
      idxint exp_cone_strt = cone_strt;
 #if CONEMODE == 0
-    exp_cone_strt += 2*C->nsoc; 
+    exp_cone_strt += 2*C->nsoc;
 #endif
-     for( l=0; l < C->nexc; l++ ){            
+     for( l=0; l < C->nexc; l++ ){
 
         /* go column-wise about it */
-		for( j=0; j < 3; j++ ){	
+		for( j=0; j < 3; j++ ){
             row = Gt->jc[cone_strt+j];
             row_stop = Gt->jc[cone_strt+j+1];
             if( row <= row_stop ){
@@ -395,8 +395,8 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
                 }
             }
 
-            //Save the index of the start of the column for the permutation
-            C->expc[l].colstart[j] = k; 
+            /* Save the index of the start of the column for the permutation */
+            C->expc[l].colstart[j] = k;
             /* top of the column */
             for (r=0; r<j; r++) {
                 Kir[k] = n+p+exp_cone_strt+r;
@@ -407,11 +407,11 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
             Kir[k]   = n+p+exp_cone_strt+j;
             Kpr[k++] = -1.0;
         }
-        
+
         /* prepare index for next cone */
 		cone_strt += 3;
         exp_cone_strt += 3;
-	} 
+	}
 #endif
 
 
@@ -612,8 +612,8 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->p = p;
     mywork->D = l + ncones;
 #ifdef EXPCONE
-    mywork->D = mywork->D + 3*nexc; 
-#endif 
+    mywork->D = mywork->D + 3*nexc;
+#endif
 #if PRINTLEVEL > 2
     PRINTTEXT("Set dimensions\n");
 #endif
@@ -700,7 +700,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     PRINTTEXT("Memory allocated for exponential cones\n");
 #endif
 #endif
-    
+
     /* The number of conic variables has to equal l+sum(q)+3*nexp else terminate*/
 #ifdef EXPCONE
     if(cidx+l+3*nexc!=m)
@@ -719,7 +719,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
         return NULL;
     }
 #endif
- 
+
 	/* info struct */
     mywork->info = (stats *)MALLOC(sizeof(stats));
 #if PROFILING > 1

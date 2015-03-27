@@ -33,22 +33,22 @@
 
 /* LP CONE ------------------------------------------------------------- */
 typedef struct lpcone{
-    idxint p;         /* dimension of cone                               */    
+    idxint p;         /* dimension of cone                               */
     pfloat* w;        /* scalings                                        */
-	pfloat* v;        /* = w^2 - saves p multiplications                 */	
+	pfloat* v;        /* = w^2 - saves p multiplications                 */
 	idxint* kkt_idx;  /* indices of KKT matrix to which scalings w^2 map */
 } lpcone;
 
 
 /* SECOND-ORDER CONE --------------------------------------------------- */
 /* (all KKT indices are in compressed column format pointing into Kpr)   */
-typedef struct socone{    
+typedef struct socone{
 	idxint p;           /* dimension of cone                             */
 	pfloat* skbar;      /* temporary variables to work with              */
 	pfloat* zkbar;      /* temporary variables to work with              */
     pfloat a;           /* = wbar(1)                                     */
     pfloat d1;          /* first element of D                            */
-    pfloat w;           /* = q'*q                                        */  
+    pfloat w;           /* = q'*q                                        */
     pfloat eta;         /* eta = (sres / zres)^(1/4)                     */
     pfloat eta_square;  /* eta^2 = (sres / zres)^(1/2)                   */
     pfloat* q;          /* = wbar(2:end)                                 */
@@ -65,7 +65,7 @@ typedef struct socone{
     pfloat c;           /* = 1 + a + w/(1+a)                             */
     pfloat d;           /* = 1 + 2/(1+a) + w/(1+a)^2                     */
 #endif
-    
+
 } socone;
 
 
@@ -97,9 +97,10 @@ typedef struct cone{
 void bring2cone(cone* C, pfloat* r, pfloat* s);
 
 #ifdef EXPCONE
-//When there are exponential variables in the definition of the problem 
-//the initialization strategy changes to using the central ray for all 
-//cones.
+/* When there are exponential variables in the definition of the problem
+ * the initialization strategy changes to using the central ray for all
+ * cones.
+ */
 void unitInitialization(cone* C, pfloat* s, pfloat* z, pfloat scaling);
 #endif
 
@@ -107,9 +108,9 @@ void unitInitialization(cone* C, pfloat* s, pfloat* z, pfloat scaling);
  * Update scalings.
  * Returns OUTSIDE_CONE as soon as any multiplier or slack leaves the cone,
  * as this indicates severe problems.
- * When compiled with EXPCONE it calculates the value of muH(z_e) with 
+ * When compiled with EXPCONE it calculates the value of muH(z_e) with
  * z_e the dual slacks for the exponential cone
- * and stores the Hessian in the cone structure. 
+ * and stores the Hessian in the cone structure.
  */
 #ifdef EXPCONE
 idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda, pfloat mu);

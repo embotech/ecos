@@ -18,8 +18,8 @@
  */
 
 /*
- * The exponental cone module is (c) Santiago Akle, Stanford University, 
- * [akle@stanford.edu] 
+ * The exponental cone module is (c) Santiago Akle, Stanford University,
+ * [akle@stanford.edu]
  *
  */
 
@@ -39,23 +39,23 @@
   */
 typedef struct expcone
 {
-    idxint colstart[3]; // All cones are fixed size, we store the index
-                        // where the column of the hessian starts in the
-                        // permuted Newton system. 
-    
-    pfloat v[6];        // Uper triangular section of the hessian
-    pfloat g[3];        // Gradient of the barrier
+    idxint colstart[3]; /* All cones are fixed size, we store the index
+                         * where the column of the hessian starts in the
+                         * permuted Newton system.
+                         */
+    pfloat v[6];        /* Uper triangular section of the hessian */
+    pfloat g[3];        /* Gradient of the barrier */
 } expcone;
 
-/* 
+/*
  * Evaluates the Hessian of the exponential dual cone barrier at the triplet
  * w[0],w[1],w[2], and stores the upper triangular part of the matrix mu*H(w)
  * at v[0],...,v[5]. The entries of the Hessian are arranged columnwise into v
  */
 void evalExpHessian(pfloat* w, pfloat* v, pfloat mu);
 
-/* 
- * Evaluates the gradient of the dual exponential cone barrier g^\star(z) at the triplet 
+/*
+ * Evaluates the gradient of the dual exponential cone barrier g^\star(z) at the triplet
  * w[0],w[1],w[2], and stores the result at g[0],..,g[2].
  */
 void evalExpGradient(pfloat* w, pfloat* g);
@@ -65,23 +65,23 @@ void evalExpGradient(pfloat* w, pfloat* g);
  */
 pfloat evalBarrierValue(pfloat* siter, pfloat *ziter, idxint fc, idxint nexc);
 
-/* 
+/*
  * Multiplies by y+=muH*x
  */
 void scaleToAddExpcone(pfloat* y, pfloat* x, expcone* expcones, idxint nexc, idxint fc);
 
 /*
  * Returns 1 if s is primal feasible w.r.t the primal exponential
- * cone and 0 i.o.c 
+ * cone and 0 i.o.c
  */
 idxint evalExpPrimalFeas(pfloat *s, idxint nexc);
 
 /*
- * Returns 1 if s is dual feasible w.r.t the dual exponential 
+ * Returns 1 if s is dual feasible w.r.t the dual exponential
  * cone and 0 i.o.c
  */
 idxint evalExpDualFeas(pfloat *s, idxint nexc);
 
 #endif
-#endif //End ifndef __ECOS_EXP_H__
+#endif /* End ifndef __ECOS_EXP_H__ */
 

@@ -153,18 +153,19 @@ typedef struct stats{
     pfloat tfactor_t2;
 #endif
 #ifdef EXPCONE
-    //Counters for backtracking, each of these counts 
-    //one condition that can fail and cause a backtrack
-    idxint pob; //Potential decreases
-    idxint cb; //Centrality violations
-    idxint cob; //The s'z of one cone is too small w.r.t. mu
-    idxint pb; //Primal infeasibility
-    idxint db; //Dual infeasibility 
-    idxint affBack; /*Total affine backtracking steps*/
-    idxint cmbBack; /*Total combined backtracking steps*/ 
+    /* Counters for backtracking, each of these counts
+     * one condition that can fail and cause a backtrack
+     */
+    idxint pob; /* Potential decreases    */
+    idxint cb;  /* Centrality violations  */
+    idxint cob; /* The s'z of one cone is too small w.r.t. mu */
+    idxint pb;  /* Primal infeasibility   */
+    idxint db;  /* Dual infeasibility     */
+    idxint affBack; /* Total affine backtracking steps   */
+    idxint cmbBack; /* Total combined backtracking steps */
 
     pfloat centrality; /*Centrality at the end of the backtracking*/
-#endif 
+#endif
 
 } stats;
 
@@ -226,9 +227,9 @@ typedef struct pwork{
 	/* residuals */
 	pfloat *rx;   pfloat *ry;   pfloat *rz;   pfloat rt;
 	pfloat hresx;  pfloat hresy;  pfloat hresz;
- 
+
     /* norm iterates */
-    pfloat nx,ny,nz,ns; 
+    pfloat nx,ny,nz,ns;
 
 	/* temporary storage */
 	pfloat cx;  pfloat by;  pfloat hz;  pfloat sz;

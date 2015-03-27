@@ -18,31 +18,32 @@
  */
 
  /*
-  * The exponential cone module is (c) Santiago Akle, Stanford University, 
-  * [akle@stanford.edu] 
+  * The exponential cone module is (c) Santiago Akle, Stanford University,
+  * [akle@stanford.edu]
   */
 
 #include "expcone.h"
 
 #ifdef EXPCONE
-/* Evaluates the Hessian of the exponential dual cone barrier at the triplet 
+/* Evaluates the Hessian of the exponential dual cone barrier at the triplet
  * w[0],w[1],w[2], and stores the upper triangular part of the matrix mu*H(w)
  * at v[0],...,v[5] where the entries are arranged columnwise
  */
 void evalExpHessian(pfloat* w, pfloat* v, pfloat mu)
-{      
+{
+      /**
+       *  l = log(-y/x);
+       *  r = -x*l-x+w;
+       *  He = [[ 1/x^2 - 1/(r*x) + l^2/r^2,           1/(r*y) + (l*x)/(r^2*y),     -l/r^2];
+       *       [   1/(r*y) + (l*x)/(r^2*y), 1/y^2 - x/(r*y^2) + x^2/(r^2*y^2), -x/(r^2*y)];
+       *       [                    -l/r^2,                        -x/(r^2*y),      1/r^2]];
+       */
 
-      //  l = log(-y/x);
-      //  r = -x*l-x+w;
-      //  He = [[ 1/x^2 - 1/(r*x) + l^2/r^2,           1/(r*y) + (l*x)/(r^2*y),     -l/r^2];
-      //       [   1/(r*y) + (l*x)/(r^2*y), 1/y^2 - x/(r*y^2) + x^2/(r^2*y^2), -x/(r^2*y)];
-      //       [                    -l/r^2,                        -x/(r^2*y),      1/r^2]];
-        
         pfloat x     = w[0];
         pfloat y     = w[1];
         pfloat z     = w[2];
         pfloat l     = log(-y/x);
-        pfloat r     = -x*l-x+z; 
+        pfloat r     = -x*l-x+z;
         v[0]         = mu*((r*r-x*r+l*l*x*x)/(r*x*x*r));
         v[1]         = mu*((z-x)/(r*r*y));
         v[2]         = mu*((r*r-x*r+x*x)/(r*r*y*y));
@@ -51,7 +52,7 @@ void evalExpHessian(pfloat* w, pfloat* v, pfloat mu)
         v[5]         = mu*(1/(r*r));
 }
 
-/* Evaluates the gradient of the exponential cone g(z) at the triplet 
+/* Evaluates the gradient of the exponential cone g(z) at the triplet
  * w[0],w[1],w[2], and stores the result at g[0],..,g[2]
  */
 void evalExpGradient(pfloat* w, pfloat* g)
@@ -60,17 +61,17 @@ void evalExpGradient(pfloat* w, pfloat* g)
         pfloat y     = w[1];
         pfloat z     = w[2];
         pfloat l     = log(-y/x);
-        pfloat r     = -x*l-x+z; 
+        pfloat r     = -x*l-x+z;
 
         g[0]         = (l*x-r)/(r*x);
         g[1]         = (x-r)/(y*r);
         g[2]         = -1/r;
 }
 
-//Computes f_e(s_e) + f^\star_e(z_e)
+/* Computes f_e(s_e) + f^\star_e(z_e) */
 pfloat evalBarrierValue(pfloat* siter, pfloat *ziter, idxint fc, idxint nexc)
 {
-    //Move to the first exponential cone slack
+    /* Move to the first exponential cone slack */
     ziter = ziter+fc;
     siter = siter+fc;
 
@@ -80,11 +81,11 @@ pfloat evalBarrierValue(pfloat* siter, pfloat *ziter, idxint fc, idxint nexc)
     pfloat dual_barrier   = 0.0;
 
     idxint j;
-    //For the dual cone measure -u,v, -ul-u+w
-    //For the primal cone measure z,v,omega-1
+    /* For the dual cone measure -u,v, -ul-u+w */
+    /* For the primal cone measure z,v,omega-1 */
     for(j=0;j<nexc;j++)
     {
-        //Extract the entries
+        /* Extract the entries */
         u = ziter[0];
         v = ziter[1];
         w = ziter[2];
@@ -95,12 +96,12 @@ pfloat evalBarrierValue(pfloat* siter, pfloat *ziter, idxint fc, idxint nexc)
 
         l = log(-v/u);
         dual_barrier += -log(w-u-u*l)-log(-u)-log(v);
-        
-        //Primal Cone
-        o = wrightOmega(1-x/z-log(z)+log(y)); 
+
+        /* Primal Cone */
+        o = wrightOmega(1-x/z-log(z)+log(y));
         o = (o-1)*(o-1)/o;
         primal_barrier += -log(o)-2*log(z)-log(y)-3;
-        
+
         ziter += 3;
         siter += 3;
 
@@ -110,38 +111,38 @@ pfloat evalBarrierValue(pfloat* siter, pfloat *ziter, idxint fc, idxint nexc)
 
 
 /*
- * Computes y[fc:end] += muH(x[fc:end])*x[fc:end], where 
+ * Computes y[fc:end] += muH(x[fc:end])*x[fc:end], where
  * fc is the index of the first exponential slack.
  * This method assumes that the scalings have been updated by update scalings
- * and that C->expc[cone_number].v contains mu*H(x). 
- * 
+ * and that C->expc[cone_number].v contains mu*H(x).
+ *
  */
 void scaleToAddExpcone(pfloat* y, pfloat* x, expcone* expc, idxint nexc, idxint fc)
 {
     idxint l;
-    //Shift to the exponential slacks
+    /* Shift to the exponential slacks */
     x = x+fc;
     y = y+fc;
 
     for( l=0; l < nexc; l++ ){
-              
+
         y[0]+= expc[l].v[0]*x[0]+expc[l].v[1]*x[1]+expc[l].v[3]*x[2];
-        y[1]+= expc[l].v[1]*x[0]+expc[l].v[2]*x[1]+expc[l].v[4]*x[2];         
+        y[1]+= expc[l].v[1]*x[0]+expc[l].v[2]*x[1]+expc[l].v[4]*x[2];
         y[2]+= expc[l].v[3]*x[0]+expc[l].v[4]*x[1]+expc[l].v[5]*x[2];
 
         /* prepare index for next cone */
         x += 3;
-        y += 3; 
+        y += 3;
     }
 }
 
 /*
  * Returns 1 if s is primal feasible
- * with respect to the exponential cone, 
+ * with respect to the exponential cone,
  * and 0 i.o.c
  */
 idxint evalExpPrimalFeas(pfloat *s, idxint nexc)
-{ 
+{
     pfloat x1,x2,x3,tmp1,psi;
     idxint j = 0;
 
@@ -163,7 +164,7 @@ idxint evalExpPrimalFeas(pfloat *s, idxint nexc)
 
 /*
  * Returns 1 if s is dual feasible
- * with respect to the dual of the exponential cone, 
+ * with respect to the dual of the exponential cone,
  * and 0 i.o.c
  */
 idxint evalExpDualFeas(pfloat *z, idxint nexc)
@@ -188,9 +189,4 @@ idxint evalExpDualFeas(pfloat *z, idxint nexc)
 }
 
 #endif
-
-
-
-
-
 
