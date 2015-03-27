@@ -5,7 +5,7 @@ compiler:
     - gcc
     - clang
 before_install:
-    - pip install cpp-coveralls
+    - sudo pip install cpp-coveralls
 script:
     - make
     - make test
