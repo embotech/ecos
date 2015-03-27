@@ -2,9 +2,14 @@ language: c
 compiler:
     - gcc
     - clang
+before_install:
+    - sudo pip install cpp-coveralls
 script:
-    - make
-    - make test
+    - CFLAGS="-ansi -Werror -fprofile-arcs -ftest-coverage" make
+    - CFLAGS="-ansi -Werror -fprofile-arcs -ftest-coverage" make test
     - ./runecos
+    - ./runecosexp
     - ./ecostester
     - ./ecos_bb_test
+after_auccess:
+    - coveralls --verbose --dryrun --gcov-options '\-lp'
