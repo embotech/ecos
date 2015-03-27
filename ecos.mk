@@ -12,7 +12,7 @@ USE_LONG = 1
 ## GNU C Compiler
 #CC = gcc
 
-CFLAGS = -O2 -Wall -DCTRLC=1 -Wextra -fPIC #-ansi -Werror #-ipo
+CFLAGS += -O2 -Wall -DCTRLC=1 -Wextra -fPIC #-ansi -Werror #-ipo
 ifdef USE_LONG
 CFLAGS += -DLDL_LONG -DDLONG
 LDL = ldll.o
