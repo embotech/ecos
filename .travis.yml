@@ -13,5 +13,5 @@ script:
     - ./runecosexp
     - ./ecostester
     - ./ecos_bb_test
-after_auccess:
-    - coveralls --verbose --dryrun --gcov-options '\-lp'
+after_success:
+    - coveralls --verbose --gcov-options '\-lp'
