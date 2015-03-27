@@ -1,7 +1,7 @@
 Embedded Conic Solver (ECOS)
 ====
 
-[![Build Status](https://travis-ci.org/embotech/ecos.svg?branch=master)](https://travis-ci.org/embotech/ecos)
+[![Build Status](https://travis-ci.org/embotech/ecos.svg)](https://travis-ci.org/embotech/ecos)
 [![Coverage Status](https://coveralls.io/repos/embotech/ecos/badge.svg)](https://coveralls.io/r/embotech/ecos)
 
 **Visit www.embotech.com/ECOS for detailed information on ECOS.**
