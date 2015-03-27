@@ -5,7 +5,8 @@ compiler:
     - gcc
     - clang
 before_install:
-    - sudo pip install cpp-coveralls
+    - sudo apt-get install -y lcov
+    - gem install coveralls-lcov
 script:
     - make
     - make test
@@ -14,4 +15,5 @@ script:
     - ./ecostester
     - ./ecos_bb_test
 after_success:
-    - coveralls --verbose --gcov-options '\-lp'
+    - lcov --compat-libtool --directory . --capture --output-file coverage.info
+    - coveralls-lcov coverage.info
