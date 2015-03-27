@@ -55,6 +55,17 @@ typedef struct timer{
 #else
 
 /* Use POSIX clocl_gettime() for timing on non-Windows machines */
+
+/* See
+ * http://stackoverflow.com/questions/3875197/linux-gcc-with-std-c99-complains-about-not-knowing-struct-timespec
+ * for info about the following lines of code.
+ */
+#if __STDC_VERSION__ >= 199901L
+#define _XOPEN_SOURCE 600
+#else
+#define _XOPEN_SOURCE 500
+#endif /* __STDC_VERSION__ */
+
 #include <time.h>
 
 typedef struct timer{
