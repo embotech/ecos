@@ -1,12 +1,14 @@
 language: c
+env:
+    - CFLAGS="-ansi -fprofile-arcs -ftest-coverage"
 compiler:
     - gcc
     - clang
 before_install:
     - sudo pip install cpp-coveralls
 script:
-    - CFLAGS="-ansi -Werror -fprofile-arcs -ftest-coverage" make
-    - CFLAGS="-ansi -Werror -fprofile-arcs -ftest-coverage" make test
+    - make
+    - make test
     - ./runecos
     - ./runecosexp
     - ./ecostester
