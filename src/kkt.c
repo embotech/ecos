@@ -1,7 +1,7 @@
 /*
  * ECOS - Embedded Conic Solver.
- * Copyright (C) 2012-14 Alexander Domahidi [domahidi@control.ee.ethz.ch],
- * Automatic Control Laboratory, ETH Zurich.
+ * Copyright (C) 2012-2015 A. Domahidi [domahidi@embotech.com],
+ * Automatic Control Lab, ETH Zurich & embotech GmbH, Zurich, Switzerland.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -94,6 +94,9 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
 #endif
     
     idxint i, k, l, j, kk, kItRef;
+#if (defined STATICREG) && (STATICREG > 0)
+	idxint dzoffset;
+#endif
 	idxint*  Pinv = KKT->Pinv;
 	pfloat*    Px = KKT->work1;
 	pfloat*   dPx = KKT->work2;
@@ -136,29 +139,53 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
         
 		/* compute error term */
         k=0; j=0;
-        /* --> 1. ex = bx - A'*dy - G'*dz */
-        for( i=0; i<n; i++ ){ ex[i] = Pb[Pinv[k++]]; }
+        
+		/* 1. error on dx*/
+#if (defined STATICREG) && (STATICREG > 0)
+		/* ex = bx - A'*dy - G'*dz - DELTASTAT*dx */
+        for( i=0; i<n; i++ ){ ex[i] = Pb[Pinv[k++]] - DELTASTAT*dx[i]; }
+#else
+		/* ex = bx - A'*dy - G'*dz */
+		for( i=0; i<n; i++ ){ ex[i] = Pb[Pinv[k++]]; }
+#endif
         if(A) sparseMtVm(A, dy, ex, 0, 0);
         sparseMtVm(G, dz, ex, 0, 0);
         nex = norminf(ex,n);
         	
-        /* --> 2. ey = by - A*dx */
+        /* error on dy */
         if( p > 0 ){
-            for( i=0; i<p; i++ ){ ey[i] = Pb[Pinv[k++]]; }
+#if (defined STATICREG) && (STATICREG > 0)
+			/* ey = by - A*dx + DELTASTAT*dy */
+            for( i=0; i<p; i++ ){ ey[i] = Pb[Pinv[k++]] + DELTASTAT*dy[i]; }
+#else
+			/* ey = by - A*dx */
+			for( i=0; i<p; i++ ){ ey[i] = Pb[Pinv[k++]]; }
+#endif
             sparseMV(A, dx, ey, -1, 0);
             ney = norminf(ey,p);            
         }
         
-        /* --> 3. ez = bz - G*dx + V*dz_true */
-        kk = 0;
+        
+		/* --> 3. ez = bz - G*dx + V*dz_true */
+        kk = 0; j=0; 
+#if (defined STATICREG) && (STATICREG > 0)		
+		dzoffset=0;
+#endif
         sparseMV(G, dx, Gdx, 1, 1);
-        j=0;
         for( i=0; i<C->lpc->p; i++ ){
-            ez[kk++] = Pb[Pinv[k++]] - Gdx[j++];
+#if (defined STATICREG) && (STATICREG > 0)
+            ez[kk++] = Pb[Pinv[k++]] - Gdx[j++] + DELTASTAT*dz[dzoffset++];
+#else
+			ez[kk++] = Pb[Pinv[k++]] - Gdx[j++];
+#endif
         }
         for( l=0; l<C->nsoc; l++ ){
             for( i=0; i<C->soc[l].p; i++ ){
-                ez[kk++] = Pb[Pinv[k++]] - Gdx[j++];
+#if (defined STATICREG) && (STATICREG > 0) 				
+                ez[kk++] = i<(C->soc[l].p-1) ? Pb[Pinv[k++]] - Gdx[j++] + DELTASTAT*dz[dzoffset++] : Pb[Pinv[k++]] - Gdx[j++] - DELTASTAT*dz[dzoffset++];
+#else
+				ez[kk++] = Pb[Pinv[k++]] - Gdx[j++];
+#endif
             }
 #if CONEMODE == 0
             ez[kk] = 0;
@@ -186,7 +213,7 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
         
         /* maximum error (infinity norm of e) */
         nerr = MAX( nex, nez);
-        if( p > 0 ){ nerr = MAX( nerr, nez ); }
+        if( p > 0 ){ nerr = MAX( nerr, ney ); }
         
         /* CHECK WHETHER REFINEMENT BROUGHT DECREASE - if not undo and quit! */
         if( kItRef > 0 && nerr > nerr_prev ){

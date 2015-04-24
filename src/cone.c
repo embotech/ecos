@@ -1,7 +1,7 @@
 /*
  * ECOS - Embedded Conic Solver.
- * Copyright (C) 2012-14 Alexander Domahidi [domahidi@control.ee.ethz.ch],
- * Automatic Control Laboratory, ETH Zurich.
+ * Copyright (C) 2012-2015 A. Domahidi [domahidi@embotech.com],
+ * Automatic Control Lab, ETH Zurich & embotech GmbH, Zurich, Switzerland.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -107,7 +107,7 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
 	pfloat* zk;
     pfloat a, b, c, d, w, temp, divisor;
 #if CONEMODE == 0
-    pfloat u0, u0_square, u1, v1, d1, c2byu02, c_square;
+    pfloat u0, u0_square, u1, v1, d1, c2byu02_d, c2byu02, c_square;
 #endif
 
 	/* LP cone */
@@ -165,7 +165,9 @@ idxint updateScalings(cone* C, pfloat* s, pfloat* z, pfloat* lambda)
         u0_square = a*a + w - d1;
         u0 = sqrt(u0_square);
         c2byu02 = SAFEDIV_POS((c*c),u0_square);
-        v1 = sqrt(c2byu02 - d);
+        c2byu02_d = c2byu02 - d;
+        if (c2byu02_d <= 0) { return OUTSIDE_CONE; }
+        v1 = sqrt(c2byu02_d);
         u1 = sqrt(c2byu02);
         C->soc[l].d1 = d1;
         C->soc[l].u0 = u0;

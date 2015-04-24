@@ -1,7 +1,7 @@
 /*
  * ECOS - Embedded Conic Solver.
- * Copyright (C) 2012-14 Alexander Domahidi [domahidi@control.ee.ethz.ch],
- * Automatic Control Laboratory, ETH Zurich.
+ * Copyright (C) 2012-2015 A. Domahidi [domahidi@embotech.com],
+ * Automatic Control Lab, ETH Zurich & embotech GmbH, Zurich, Switzerland.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,32 +30,35 @@
 #include "timer.h"
 #endif
 
+#if CTRLC > 0
+#include "ctrlc.h"
+#endif
 
 /* ECOS VERSION NUMBER - FORMAT: X.Y.Z --------------------------------- */
-#define ECOS_VERSION ("1.0.5")
+#define ECOS_VERSION ("1.1.1")
 
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
-#define MAXIT      (30)          /* maximum number of iterations         */
-#define FEASTOL    (1E-7)        /* primal/dual infeasibility tolerance  */
-#define ABSTOL     (1E-7)        /* absolute tolerance on duality gap    */
-#define RELTOL     (1E-7)        /* relative tolerance on duality gap    */
+#define MAXIT      (100)          /* maximum number of iterations         */
+#define FEASTOL    (1E-8)        /* primal/dual infeasibility tolerance  */
+#define ABSTOL     (1E-8)        /* absolute tolerance on duality gap    */
+#define RELTOL     (1E-8)        /* relative tolerance on duality gap    */
 #define FTOL_INACC (1E-4)        /* inaccurate solution feasibility tol. */
-#define ATOL_INACC (1E-5)        /* inaccurate solution absolute tol.    */
-#define RTOL_INACC (1E-5)        /* inaccurate solution relative tol.    */
+#define ATOL_INACC (5E-5)        /* inaccurate solution absolute tol.    */
+#define RTOL_INACC (5E-5)        /* inaccurate solution relative tol.    */
 #define GAMMA      (0.99)        /* scaling the final step length        */
 #define STATICREG  (1)           /* static regularization: 0:off, 1:on   */
-#define DELTASTAT  (1E-5)        /* regularization parameter             */
-#define DELTA      (1E-6)        /* dyn. regularization parameter        */
-#define EPS        (1E-14)  /* dyn. regularization threshold (do not 0!) */
+#define DELTASTAT  (1E-7)        /* regularization parameter             */
+#define DELTA      (2E-7)        /* dyn. regularization parameter        */
+#define EPS        (1E-13)  /* dyn. regularization threshold (do not 0!) */
 #define VERBOSE    (1)           /* bool for verbosity; PRINTLEVEL < 3   */
-#define NITREF     (5)       	 /* number of iterative refinement steps */
-#define IRERRFACT  (2)           /* factor by which IR should reduce err */
+#define NITREF     (9)       	 /* number of iterative refinement steps */
+#define IRERRFACT  (6)           /* factor by which IR should reduce err */
 #define LINSYSACC  (1E-14)       /* rel. accuracy of search direction    */
-#define SIGMAMIN   (0.0001)      /* always do some centering             */
-#define SIGMAMAX   (0.9999)      /* never fully center                   */
-#define STEPMIN    (0.0001)      /* smallest step that we do take        */
-#define STEPMAX    (0.9999) /* largest step allowed, also in affine dir. */
+#define SIGMAMIN   (1E-4)        /* always do some centering             */
+#define SIGMAMAX   (1.0)         /* never fully center                   */
+#define STEPMIN    (1E-6)        /* smallest step that we do take        */
+#define STEPMAX    (0.999)  /* largest step allowed, also in affine dir. */
 #define SAFEGUARD  (500)         /* Maximum increase in PRES before
                                                 ECOS_NUMERICS is thrown. */
 
@@ -74,8 +77,8 @@
 #define ECOS_MAXIT    (-1)  /* Maximum number of iterations reached      */
 #define ECOS_NUMERICS (-2)  /* Search direction unreliable               */
 #define ECOS_OUTCONE  (-3)  /* s or z got outside the cone, numerics?    */
+#define ECOS_SIGINT   (-4)  /* solver interrupted by a signal/ctrl-c     */
 #define ECOS_FATAL    (-7)  /* Unknown problem in solver                 */
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -248,8 +251,8 @@ void ECOS_cleanup(pwork* w, idxint keepvars);
  * where x is the major, y the minor and zzz the build number
  */
 const char* ECOS_ver(void);
-    
-    
+
+
 /* ------------------- EXPERT LEVEL INTERFACES ---------------------- */
 
 /*
@@ -258,6 +261,11 @@ const char* ECOS_ver(void);
  */
 void ecos_updateDataEntry_h(pwork* w, idxint idx, pfloat value);
 
+/*
+ * Updates one element of the OBJ vector c of inequalities
+ * After the call, w->c[idx] = value (but equilibrated)
+ */
+void ecos_updateDataEntry_c(pwork* w, idxint idx, pfloat value);
 
 #ifdef __cplusplus
 }

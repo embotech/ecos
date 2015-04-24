@@ -1,4 +1,0 @@
-graft include
-graft external/amd/include
-graft external/ldl/include
-graft external/SuiteSparse_config

@@ -14,7 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * aidxint with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -28,11 +28,23 @@
 /* Include Tests */
 #include "MPC/MPC01.h"
 #include "MPC/MPC02.h"
-#include "generated_tests/generated_tests.h"
-#include "feas_prob/feas.h"
+#include "cvxpyProblems/githubIssue98.h"
+#include "generated/generated_tests.h"
+#include "feasibilityProblems/feas.h"
 #include "unboundedProblems/unboundedLP1.h"
 #include "infeasibleProblems/infeasible1.h"
 #include "unboundedProblems/unboundedMaxSqrt.h"
+#include "emptyProblem/emptyProblem.h"
+#include "LPnetlib/lp_25fv47.h"
+#include "LPnetlib/lp_adlittle.h"
+#include "LPnetlib/lp_afiro.h"
+#include "LPnetlib/lp_agg.h"
+#include "LPnetlib/lp_agg2.h"
+#include "LPnetlib/lp_agg3.h"
+#include "LPnetlib/lp_bandm.h"
+#include "LPnetlib/lp_beaconfd.h"
+#include "LPnetlib/lp_blend.h"
+#include "LPnetlib/lp_bnl1.h"
 
 int tests_run = 0;
 
@@ -44,11 +56,22 @@ static char * all_tests() {
     mu_run_test(test_sq_norm);
     mu_run_test(test_sum_sq);
     mu_run_test(test_inv_pos);
-    /*mu_run_test(test_sqrt);*/
     mu_run_test(test_feas);
     mu_run_test(test_unboundedLP1);
     mu_run_test(test_infeasible1);
-    mu_run_test(test_unboundedMaxSqrt);
+    mu_run_test(test_lp_25fv47);
+    mu_run_test(test_lp_adlittle);
+    mu_run_test(test_lp_afiro);
+    mu_run_test(test_lp_agg);
+    mu_run_test(test_lp_agg2);
+    mu_run_test(test_lp_agg3);
+    mu_run_test(test_lp_bandm);
+    mu_run_test(test_lp_beaconfd);
+    mu_run_test(test_lp_blend);
+    mu_run_test(test_lp_bnl1);
+/*    mu_run_test(test_unboundedMaxSqrt); */
+    mu_run_test(test_emptyProblem);
+    mu_run_test(test_issue98);
     return 0;
 }
 

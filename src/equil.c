@@ -1,7 +1,7 @@
 /*
  * ECOS - Embedded Conic Solver.
- * Copyright (C) 2012-14 Alexander Domahidi [domahidi@control.ee.ethz.ch],
- * Automatic Control Laboratory, ETH Zurich.
+ * Copyright (C) 2012-2015 A. Domahidi [domahidi@embotech.com],
+ * Automatic Control Lab, ETH Zurich & embotech GmbH, Zurich, Switzerland.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -179,10 +179,11 @@ void use_alternating_norm_equilibration(pwork *w)
     if(num_G_rows > 0)
         equilibrate_cols(w->xequil, w->G);
 
-    /* equilibrate the c vector */
+    /* equilibrate the c vector
     for(i = 0; i < num_cols; i++) {
         w->c[i] /= w->xequil[i];
-    }
+    }  */
+        
     /* equilibrate the b vector */
     for(i = 0; i < num_A_rows; i++) {
         w->b[i] /= w->Aequil[i];
@@ -292,10 +293,11 @@ void use_ruiz_equilibration(pwork *w)
         }
     }
 
-    /* equilibrate the c vector */
+    /* equilibrate the c vector 
     for(i = 0; i < num_cols; i++) {
         w->c[i] /= w->xequil[i];
-    }
+    } */
+
     /* equilibrate the b vector */
     for(i = 0; i < num_A_rows; i++) {
         w->b[i] /= w->Aequil[i];
@@ -340,7 +342,7 @@ void set_equilibration(pwork *w)
 void unset_equilibration(pwork *w)
 {
     idxint i;
-    idxint num_cols = w->A ? w->A->n : w->G->n;
+    //idxint num_cols = w->A ? w->A->n : w->G->n;
     idxint num_A_rows = w->A ? w->A->m : 0;
     idxint num_G_rows = w->G->m;
 
@@ -349,10 +351,11 @@ void unset_equilibration(pwork *w)
     if(num_G_rows > 0)
         restore(w->Gequil, w->xequil, w->G);
 
-    /* unequilibrate the c vector */
+    /* unequilibrate the c vector 
     for(i = 0; i < num_cols; i++) {
         w->c[i] *= w->xequil[i];
-    }
+    }*/
+
     /* unequilibrate the b vector */
     for(i = 0; i < num_A_rows; i++) {
         w->b[i] *= w->Aequil[i];

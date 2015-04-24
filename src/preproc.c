@@ -1,7 +1,7 @@
 /*
  * ECOS - Embedded Conic Solver.
- * Copyright (C) 2012-14 Alexander Domahidi [domahidi@control.ee.ethz.ch],
- * Automatic Control Laboratory, ETH Zurich.
+ * Copyright (C) 2012-2015 A. Domahidi [domahidi@embotech.com],
+ * Automatic Control Lab, ETH Zurich & embotech GmbH, Zurich, Switzerland.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,9 +46,11 @@
 #ifdef MATLAB_MEX_FILE
 #define MALLOC mxMalloc
 #define FREE mxFree
+#define CALLOC mxCalloc
 #else 
 #define MALLOC malloc
 #define FREE free
+#define CALLOC calloc
 #endif
 
 
@@ -407,8 +409,10 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 		FREE(w->C->lpc->kkt_idx);
 		FREE(w->C->lpc->v);
 		FREE(w->C->lpc->w);
-		FREE(w->C->lpc);
 	}
+    /* C->lpc is always allocated, so we free it here. */
+    FREE(w->C->lpc);
+
 	for( i=0; i < w->C->nsoc; i++ ){
 		FREE(w->C->soc[i].q);
 		FREE(w->C->soc[i].skbar);
@@ -478,7 +482,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	timer tmattranspose;
 	timer tordering;
 #endif
-
+    
 #if PROFILING > 0
 	tic(&tsetup);
 #endif
@@ -497,8 +501,8 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	PRINTTEXT("  *                                                                             *\n");
 	PRINTTEXT("  *       Written during a summer visit at Stanford University with S. Boyd.    *\n");
 	PRINTTEXT("  *                                                                             *\n");
-	PRINTTEXT("  * (C) Alexander Domahidi, Automatic Control Laboratory, ETH Zurich, 2012-13.  *\n");
-	PRINTTEXT("  *                     Email: domahidi@control.ee.ethz.ch                      *\n");
+	PRINTTEXT("  * (C) Alexander Domahidi, ETH Zurich & embotech GmbH, Switzerland, 2012-14.   *\n");
+	PRINTTEXT("  *                     Email: domahidi@embotech.com                            *\n");
 	PRINTTEXT("  *******************************************************************************\n");
 	PRINTTEXT("\n\n");
     PRINTTEXT("PROBLEM SUMMARY:\n");
@@ -511,6 +515,8 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     for( i=0; i<ncones; i++ ){
         PRINTTEXT("    Size of SOC #%02d: %d\n", (int)(i+1), (int)q[i]);
     }
+    PRINTTEXT("\n");
+    
 #endif
 	
 	/* get work data structure */
@@ -550,7 +556,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     mywork->best_z = (pfloat *)MALLOC(m*sizeof(pfloat));
     mywork->best_s = (pfloat *)MALLOC(m*sizeof(pfloat));
     mywork->best_info = (stats *)MALLOC(sizeof(stats));
-
+    
 	/* cones */
 	mywork->C = (cone *)MALLOC(sizeof(cone));
 #if PRINTLEVEL > 2
@@ -578,7 +584,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 
 
 	/* Second-order cones */
-	mywork->C->soc = (socone *)MALLOC(ncones*sizeof(socone));
+	mywork->C->soc = (ncones == 0) ? NULL : (socone *)MALLOC(ncones*sizeof(socone));
 	mywork->C->nsoc = ncones;
     cidx = 0;
     for( i=0; i<ncones; i++ ){
@@ -613,7 +619,6 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     PRINTTEXT("Memory allocated for info struct\n");
 #endif
 
-    
 #if defined EQUILIBRATE && EQUILIBRATE > 0
     /* equilibration vector */
     mywork->xequil = (pfloat *)MALLOC(n*sizeof(pfloat));
@@ -696,10 +701,6 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #if PRINTLEVEL > 2
     PRINTTEXT("Transposed G\n");
 #endif
-    
-
-
-     
   
     /* set up KKT system */
 #if PROFILING > 1
@@ -712,7 +713,6 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #if PRINTLEVEL > 2
     PRINTTEXT("Created upper part of KKT matrix K\n");
 #endif
-    
     
 	/* 
      * Set up KKT system related data
@@ -760,6 +760,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     PRINTTEXT("Created memory for KKT-related data\n");    
 #endif
     
+
     
     /* calculate ordering of KKT matrix using AMD */
 	P = (idxint *)MALLOC(nK*sizeof(idxint));
@@ -849,9 +850,9 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #endif
     	
 	/* get memory for residuals */
-	mywork->rx = (pfloat *)MALLOC(n*sizeof(pfloat));
-	mywork->ry = (pfloat *)MALLOC(p*sizeof(pfloat));
-	mywork->rz = (pfloat *)MALLOC(m*sizeof(pfloat));
+	mywork->rx = (n == 0) ? NULL : (pfloat *)MALLOC(n*sizeof(pfloat));
+	mywork->ry = (p == 0) ? NULL : (pfloat *)MALLOC(p*sizeof(pfloat));
+	mywork->rz = (m == 0) ? NULL : (pfloat *)MALLOC(m*sizeof(pfloat));
 	
     /* clean up */
     mywork->KKT->P = P;
