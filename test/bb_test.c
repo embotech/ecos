@@ -22,7 +22,7 @@ int test_1a_bool(){
 	
 	ecos_bb_pwork* prob = ECOS_BB_setup(
 		n, m, 0, 
-		m, 0, NULL,
+		m, 0, NULL, 0,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 1, bool_idx, 0 , NULL, NULL);
@@ -62,7 +62,7 @@ int test_1a_int(){
 	
 	ecos_bb_pwork* prob = ECOS_BB_setup(
 		n, m, 0, 
-		m, 0, NULL,
+		m, 0, NULL, 0,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 0 , NULL, 2, int_idx, NULL);
@@ -101,7 +101,7 @@ int test_1b(){
 	
 	ecos_bb_pwork* prob = ECOS_BB_setup(
 		n, m, 0, 
-		m, 0, NULL,
+		m, 0, NULL, 0,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 1, bool_idx, 0 , NULL, NULL);
@@ -140,7 +140,7 @@ int test_2(){
 
 	ecos_bb_pwork* prob = ECOS_BB_setup(
 		n, m, 0, 
-		m, 0, NULL,
+		m, 0, NULL, 0,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 2, bool_idx, 0 , NULL, NULL);
@@ -178,7 +178,7 @@ int test_3(){
 	
 	ecos_bb_pwork* prob = ECOS_BB_setup(
 		n, m, 0, 
-		m, 0, NULL,
+		m, 0, NULL, 0,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 1, bool_idx, 0 , NULL, NULL);
@@ -216,7 +216,7 @@ int test_4(){
 	
 	ecos_bb_pwork* prob = ECOS_BB_setup(
 		n, m, 0, 
-		m, 0, NULL,
+		m, 0, NULL, 0,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 6, bool_idx, 0, NULL, NULL);
@@ -255,7 +255,7 @@ int test_5(){
 
 	ecos_bb_pwork* prob = ECOS_BB_setup(
 		n, m, 0, 
-		m, 0, NULL,
+		m, 0, NULL, 0,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 	feas_c, feas_h, NULL, 6, bool_idx, 0, NULL, NULL);
@@ -294,7 +294,7 @@ int test_6(){
 
 	ecos_bb_pwork* prob = ECOS_BB_setup(
 		n, m, 0, 
-		m, 0, NULL,
+		m, 0, NULL, 0,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 6, bool_idx, 0, NULL, NULL);
@@ -348,7 +348,7 @@ int test_7(){
 
 	ecos_bb_pwork* prob = ECOS_BB_setup(
 		n, m, 0, 
-		m, 0, NULL,
+		m, 0, NULL, 0,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 5, bool_idx, 0, NULL, NULL);
