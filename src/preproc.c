@@ -79,8 +79,8 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 	idxint m = Gt->n;
 	idxint p = At ? At->n : 0;
 	idxint nK, nnzK;
-	pfloat *Kpr;
-	idxint *Kjc, *Kir;
+	pfloat *Kpr = NULL;
+	idxint *Kjc = NULL, *Kir = NULL;
     idxint *Sign;
 
 	/* Dimension of KKT matrix

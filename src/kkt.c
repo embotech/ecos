@@ -42,7 +42,7 @@ idxint kkt_factor(kkt* KKT, pfloat eps, pfloat delta)
 #endif
 {
 	idxint nd;
-    
+
     /* returns n if successful, k if D (k,k) is zero */
 	nd = LDL_numeric2(
 				KKT->PKPt->n,	/* K and L are n-by-n, where n >= 0 */
@@ -86,13 +86,13 @@ idxint kkt_factor(kkt* KKT, pfloat eps, pfloat delta)
  */
 idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* dy, pfloat* dz, idxint n, idxint p, idxint m, cone* C, idxint isinit, idxint nitref)
 {
-	
+
 #if CONEMODE == 0
 #define MTILDE (m+2*C->nsoc)
 #else
 #define MTILDE (m)
 #endif
-    
+
     idxint i, k, l, j, kk, kItRef;
 #if (defined STATICREG) && (STATICREG > 0)
 	idxint dzoffset;
@@ -117,10 +117,10 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
     idxint nK = KKT->PKPt->n;
 
 	/* forward - diagonal - backward solves: Px holds solution */
-	LDL_lsolve2(nK, Pb, KKT->L->jc, KKT->L->ir, KKT->L->pr, Px );		
+	LDL_lsolve2(nK, Pb, KKT->L->jc, KKT->L->ir, KKT->L->pr, Px );
 	LDL_dsolve(nK, Px, KKT->D);
 	LDL_ltsolve(nK, Px, KKT->L->jc, KKT->L->ir, KKT->L->pr);
-    
+
 #if PRINTLEVEL > 2
     if( p > 0 ){
         PRINTTEXT("\nIR: it  ||ex||   ||ey||   ||ez|| (threshold: %4.2e)\n", error_threshold);
@@ -130,16 +130,16 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
         PRINTTEXT("    -----------------------------------------\n");
     }
 #endif
-    
+
 	/* iterative refinement */
 	for( kItRef=0; kItRef <= nitref; kItRef++ ){
-        
+
         /* unpermute x & copy into arrays */
         unstretch(n, p, C, Pinv, Px, dx, dy, dz);
-        
+
 		/* compute error term */
         k=0; j=0;
-        
+
 		/* 1. error on dx*/
 #if (defined STATICREG) && (STATICREG > 0)
 		/* ex = bx - A'*dy - G'*dz - DELTASTAT*dx */
@@ -151,7 +151,7 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
         if(A) sparseMtVm(A, dy, ex, 0, 0);
         sparseMtVm(G, dz, ex, 0, 0);
         nex = norminf(ex,n);
-        	
+
         /* error on dy */
         if( p > 0 ){
 #if (defined STATICREG) && (STATICREG > 0)
@@ -162,13 +162,13 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
 			for( i=0; i<p; i++ ){ ey[i] = Pb[Pinv[k++]]; }
 #endif
             sparseMV(A, dx, ey, -1, 0);
-            ney = norminf(ey,p);            
+            ney = norminf(ey,p);
         }
-        
-        
+
+
 		/* --> 3. ez = bz - G*dx + V*dz_true */
-        kk = 0; j=0; 
-#if (defined STATICREG) && (STATICREG > 0)		
+        kk = 0; j=0;
+#if (defined STATICREG) && (STATICREG > 0)
 		dzoffset=0;
 #endif
         sparseMV(G, dx, Gdx, 1, 1);
@@ -181,7 +181,7 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
         }
         for( l=0; l<C->nsoc; l++ ){
             for( i=0; i<C->soc[l].p; i++ ){
-#if (defined STATICREG) && (STATICREG > 0) 				
+#if (defined STATICREG) && (STATICREG > 0)
                 ez[kk++] = i<(C->soc[l].p-1) ? Pb[Pinv[k++]] - Gdx[j++] + DELTASTAT*dz[dzoffset++] : Pb[Pinv[k++]] - Gdx[j++] - DELTASTAT*dz[dzoffset++];
 #else
 				ez[kk++] = Pb[Pinv[k++]] - Gdx[j++];
@@ -194,12 +194,12 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
             kk += 2;
 #endif
         }
-#ifdef EXPCONE 
+#ifdef EXPCONE
         for(l=0; l<C->nexc; l++)
         {
             for(i=0;i<3;i++)
             {
-#if (defined STATICREG) && (STATICREG > 0) 				
+#if (defined STATICREG) && (STATICREG > 0)
                 ez[kk++] = Pb[Pinv[k++]] - Gdx[j++] + DELTASTAT*dz[dzoffset++];
 #else
 				ez[kk++] = Pb[Pinv[k++]] - Gdx[j++];
@@ -214,8 +214,8 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
             vadd(MTILDE, truez, ez);
         }
         nez = norminf(ez,MTILDE);
-        
-        
+
+
 #if PRINTLEVEL > 2
         if( p > 0 ){
             PRINTTEXT("    %2d  %3.1e  %3.1e  %3.1e\n", (int)kItRef, nex, ney, nez);
@@ -223,11 +223,11 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
             PRINTTEXT("    %2d  %3.1e  %3.1e\n", (int)kItRef, nex, nez);
         }
 #endif
-        
+
         /* maximum error (infinity norm of e) */
         nerr = MAX( nex, nez);
         if( p > 0 ){ nerr = MAX( nerr, ney ); }
-        
+
         /* CHECK WHETHER REFINEMENT BROUGHT DECREASE - if not undo and quit! */
         if( kItRef > 0 && nerr > nerr_prev ){
             /* undo refinement */
@@ -235,21 +235,21 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
             kItRef--;
             break;
         }
-        
+
         /* CHECK WHETHER TO REFINE AGAIN */
         if( kItRef == nitref || ( nerr < error_threshold ) || ( kItRef > 0 && nerr_prev < IRERRFACT*nerr ) ){
             break;
         }
         nerr_prev = nerr;
-        
+
         /* permute */
         for( i=0; i<nK; i++) { Pe[Pinv[i]] = e[i]; }
-        
+
         /* forward - diagonal - backward solves: dPx holds solution */
         LDL_lsolve2(nK, Pe, KKT->L->jc, KKT->L->ir, KKT->L->pr, dPx);
         LDL_dsolve(nK, dPx, KKT->D);
         LDL_ltsolve(nK, dPx, KKT->L->jc, KKT->L->ir, KKT->L->pr);
-        
+
         /* add refinement to Px */
         for( i=0; i<nK; i++ ){ Px[i] += dPx[i]; }
 	}
@@ -257,10 +257,10 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
 #if PRINTLEVEL > 2
     PRINTTEXT("\n");
 #endif
-    
+
 	/* copy solution out into the different arrays, permutation included */
 	unstretch(n, p, C, Pinv, Px, dx, dy, dz);
-    
+
     return kItRef;
 }
 
@@ -279,7 +279,7 @@ void kkt_update(spmat* PKP, idxint* P, cone *C)
     pfloat a, w, c, d, eta_square_d, qj;
     idxint thiscolstart;
 #endif
-	
+
 	/* LP cone */
     for( i=0; i < C->lpc->p; i++ ){ PKP->pr[P[C->lpc->kkt_idx[i]]] = -C->lpc->v[i] - DELTASTAT; }
 
@@ -289,20 +289,20 @@ void kkt_update(spmat* PKP, idxint* P, cone *C)
 #if CONEMODE == 0
         getSOCDetails(&C->soc[i], &conesize, &eta_square, &d1, &u0, &u1, &v1, &q);
         conesize_m1 = conesize - 1;
-        
+
         /* D */
         PKP->pr[P[C->soc[i].Didx[0]]] = -eta_square * d1 - DELTASTAT;
         for (k=1; k < conesize; k++) {
             PKP->pr[P[C->soc[i].Didx[k]]] = -eta_square - DELTASTAT;
         }
-        
+
         /* v */
         j=1;
         for (k=0; k < conesize_m1; k++) {
             PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = -eta_square * v1 * q[k];
         }
         PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = -eta_square;
-        
+
         /* u */
         PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = -eta_square * u0;
         for (k=0; k < conesize_m1; k++) {
@@ -310,7 +310,7 @@ void kkt_update(spmat* PKP, idxint* P, cone *C)
         }
         PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = +eta_square + DELTASTAT;
 #endif
-        
+
 #if CONEMODE > 0
         conesize = C->soc[i].p;
         eta_square = C->soc[i].eta_square;
@@ -320,19 +320,19 @@ void kkt_update(spmat* PKP, idxint* P, cone *C)
         d = C->soc[i].d;
         q = C->soc[i].q;
         eta_square_d = eta_square * d;
-        
+
         /* first column - only diagonal element */
         PKP->pr[P[C->soc[i].colstart[0]]] = -eta_square * (a*a + w);
-        
+
         /* next conesize-1 columns */
         for (j=1; j<conesize; j++) {
-            
+
             thiscolstart = C->soc[i].colstart[j];
-            
+
             /* first element in column (=c*q) */
             qj = q[j-1];
             PKP->pr[P[thiscolstart]] = -eta_square * c * qj;
-            
+
             /* the rest of the column (=I + d*qq') */
             for (k=1; k<j; k++) {
                 PKP->pr[P[thiscolstart+k]] = -eta_square_d * q[k-1]*qj;      /* super-diagonal elements */
@@ -343,7 +343,7 @@ void kkt_update(spmat* PKP, idxint* P, cone *C)
 	}
     #if defined EXPCONE
     /* Exponential cones */
-    for( i=0; i < C->nexc; i++){ 
+    for( i=0; i < C->nexc; i++){
         PKP->pr[P[C->expc[i].colstart[0]]]   = -C->expc[i].v[0]-DELTASTAT;
         PKP->pr[P[C->expc[i].colstart[1]]]   = -C->expc[i].v[1];
         PKP->pr[P[C->expc[i].colstart[1]+1]] = -C->expc[i].v[2]-DELTASTAT;
@@ -360,12 +360,12 @@ void kkt_update(spmat* PKP, idxint* P, cone *C)
 
 /**
  * Initializes the (3,3) block of the KKT matrix to produce the matrix
- * 
+ *
  * 		[0  A'  G']
  * K =  [A  0   0 ]
  *      [G  0  -I ]
  *
- * It is assumed that the A,G have been already copied in appropriately, 
+ * It is assumed that the A,G have been already copied in appropriately,
  * and that enough memory has been allocated (this is done in preproc.c module).
  *
  * Note that the function works on the permuted KKT matrix.
@@ -381,30 +381,30 @@ void kkt_init(spmat* PKP, idxint* P, cone *C)
     pfloat a, w, c, d, eta_square_d, qj;
     idxint thiscolstart;
 #endif
-	
+
 	/* LP cone */
     for( i=0; i < C->lpc->p; i++ ){ PKP->pr[P[C->lpc->kkt_idx[i]]] = -1.0; }
-    
+
 	/* Second-order cone */
 	for( i=0; i<C->nsoc; i++ ){
-        
+
 #if CONEMODE == 0
         getSOCDetails(&C->soc[i], &conesize, &eta_square, &d1, &u0, &u1, &v1, &q);
         conesize_m1 = conesize - 1;
-        
+
         /* D */
         PKP->pr[P[C->soc[i].Didx[0]]] = -1.0;
         for (k=1; k < conesize; k++) {
             PKP->pr[P[C->soc[i].Didx[k]]] = -1.0;
         }
-        
+
         /* v */
         j=1;
         for (k=0; k < conesize_m1; k++) {
             PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = 0.0;
         }
         PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = -1.0;
-        
+
         /* u */
         PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = 0.0;
         for (k=0; k < conesize_m1; k++) {
@@ -412,7 +412,7 @@ void kkt_init(spmat* PKP, idxint* P, cone *C)
         }
         PKP->pr[P[C->soc[i].Didx[conesize_m1] + j++]] = +1.0;
 #endif
-        
+
 #if CONEMODE > 0
         conesize = C->soc[i].p;
         eta_square = C->soc[i].eta_square;
@@ -422,19 +422,19 @@ void kkt_init(spmat* PKP, idxint* P, cone *C)
         d = C->soc[i].d;
         q = C->soc[i].q;
         eta_square_d = eta_square * d;
-        
+
         /* first column - only diagonal element */
         PKP->pr[P[C->soc[i].colstart[0]]] = -1.0;
-        
+
         /* next conesize-1 columns */
         for (j=1; j<conesize; j++) {
-            
+
             thiscolstart = C->soc[i].colstart[j];
-            
+
             /* first element in column (=c*q) */
             qj = q[j-1];
             PKP->pr[P[thiscolstart]] = 0.0;
-            
+
             /* the rest of the column (=I + d*qq') */
             for (k=1; k<j; k++) {
                 PKP->pr[P[thiscolstart+k]] = 0.0;      /* super-diagonal elements */

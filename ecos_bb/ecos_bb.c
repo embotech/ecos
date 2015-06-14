@@ -275,8 +275,7 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
     }
 #endif
 
-    if (ret_code == ECOS_OPTIMAL || 
-        ret_code == ECOS_INACC_OFFSET || 
+    if (ret_code >= 0 || 
         ret_code == ECOS_MAXIT ||
         ret_code == ECOS_NUMERICS )
     {
@@ -360,11 +359,23 @@ idxint should_continue(ecos_bb_pwork* prob, idxint curr_node_idx){
 }
 
 int get_ret_code(ecos_bb_pwork* prob){
-    if ( prob->iter < prob->stgs->maxit ){
-        if ( isinf(prob->global_U) ) return MI_INFEASIBLE;
+    if ( prob->iter < prob->stgs->maxit-1){
+        if ( isinf(prob->global_U) ){
+            if ( prob->global_U >= 0){
+                return MI_INFEASIBLE;      
+            }else{
+                return MI_UNBOUNDED;      
+            }
+        } 
         else return MI_OPTIMAL_SOLN;
     } else {
-        if ( isinf(prob->global_U) ) return MI_MAXITER_NO_SOLN;
+        if ( isinf(prob->global_U) ){
+            if ( prob->global_U >= 0){
+                return MI_MAXITER_NO_SOLN;
+            }else{
+                return MI_MAXITER_UNBOUNDED;      
+            }
+        } 
         else return MI_MAXITER_FEASIBLE_SOLN;
     }
 }
