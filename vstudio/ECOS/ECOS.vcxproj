@@ -74,21 +74,29 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\cone.c" />
+    <ClCompile Include="..\..\src\ctrlc.c" />
     <ClCompile Include="..\..\src\ecos.c" />
+    <ClCompile Include="..\..\src\equil.c" />
+    <ClCompile Include="..\..\src\expcone.c" />
     <ClCompile Include="..\..\src\kkt.c" />
     <ClCompile Include="..\..\src\preproc.c" />
     <ClCompile Include="..\..\src\spla.c" />
     <ClCompile Include="..\..\src\splamm.c" />
     <ClCompile Include="..\..\src\timer.c" />
+    <ClCompile Include="..\..\src\wright_omega.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\cone.h" />
+    <ClInclude Include="..\..\include\ctrlc.h" />
     <ClInclude Include="..\..\include\ecos.h" />
+    <ClInclude Include="..\..\include\equil.h" />
+    <ClInclude Include="..\..\include\expcone.h" />
     <ClInclude Include="..\..\include\glblopts.h" />
     <ClInclude Include="..\..\include\kkt.h" />
     <ClInclude Include="..\..\include\spla.h" />
     <ClInclude Include="..\..\include\splamm.h" />
     <ClInclude Include="..\..\include\timer.h" />
+    <ClInclude Include="..\..\include\wright_omega.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AMD\AMD.vcxproj">

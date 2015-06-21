@@ -71,17 +71,18 @@ void evalExpGradient(pfloat* w, pfloat* g)
 /* Computes f_e(s_e) + f^\star_e(z_e) */
 pfloat evalBarrierValue(pfloat* siter, pfloat *ziter, idxint fc, idxint nexc)
 {
-    /* Move to the first exponential cone slack */
-    ziter = ziter+fc;
-    siter = siter+fc;
-
     pfloat l, u, v, w, x, y, z, o;
 
     pfloat primal_barrier = 0.0;
     pfloat dual_barrier   = 0.0;
 
     idxint j;
-    /* For the dual cone measure -u,v, -ul-u+w */
+    
+	/* Move to the first exponential cone slack */
+    ziter = ziter+fc;
+    siter = siter+fc;
+	
+	/* For the dual cone measure -u,v, -ul-u+w */
     /* For the primal cone measure z,v,omega-1 */
     for(j=0;j<nexc;j++)
     {

@@ -53,8 +53,13 @@ typedef double pfloat;              /* for numerical values  */
 #define NAN ((double)0x7ff8000000000000)
 #endif
 
+/* INF ---------------------------------------------------------------- */
+#ifndef INFINITY
+#define INFINITY ((double)0x7ff0000000000000)
+#endif
+
 /* Exponential cone */
-#define EXPCONE       /*When defined the exponential cone solver code is enabled*/
+#define EXPCONE      /*When defined the exponential cone solver code is enabled*/
 
 /* SYSTEM INCLUDES FOR PRINTING ---------------------------------------- */
 #if PRINTLEVEL > 0

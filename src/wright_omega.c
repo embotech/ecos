@@ -20,12 +20,14 @@
  */
 pfloat wrightOmega(pfloat z)
 {
-    if(z<0.0) return -1; /* Fail if the input is not supported */
     pfloat w  = 0.0;
     pfloat r  = 0.0;
     pfloat q  = 0.0;
     pfloat zi = 0.0;
-    if(z<1.0+M_PI)      /* If z is between 0 and 1+pi */
+    
+	if(z<0.0) return -1; /* Fail if the input is not supported */
+	
+	if(z<1.0+M_PI)      /* If z is between 0 and 1+pi */
     {
         q = z-1;
         r = q;

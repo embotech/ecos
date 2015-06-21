@@ -297,7 +297,7 @@ idxint init(pwork* w)
     }
 #endif
 #if PRINTLEVEL > 2
-    PRINTTEXT("Written %d entries of RHS1\n", (int)k);
+    PRINTTEXT("Written %i entries of RHS1\n", (int)k);
 #endif
 
 	/* initialize RHS2 */
@@ -551,7 +551,7 @@ void printProgress(stats* info)
 		/* print header at very first iteration */
 #if PRINTLEVEL == 2
 		PRINTTEXT("\nECOS %s - (C) embotech GmbH, Zurich Switzerland, 2012-15. Web: www.embotech.com/ECOS\n", ECOS_VERSION);
-#if PRINTLEVEL == 3
+#if PRINTLEVEL > 2
 		PRINTTEXT("Contributors: Core interior point solver:         A. Domahidi, embotech GmbH\n");
 		PRINTTEXT("              Python interface and equilibration: Eric Chu, Stanford University\n");
 		PRINTTEXT("              Branch-and-bound module:            Han Wang, Stanford University\n");
@@ -564,33 +564,35 @@ void printProgress(stats* info)
 #endif
 #if defined _WIN32 || defined _WIN64
 #if defined EXPCONE
-        PRINTTEXT("It     pcost       dcost      gap  pres   dres    k/t    mu     step    IR       BT    1-sigma\n");
-		PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e   N/A    %d %d -  - - - - - -  -\n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, (int)info->nitref1, (int)info->nitref2);
+        PRINTTEXT("It     pcost       dcost      gap   pres   dres    k/t    mu     step   sigma     IR    |   BT\n");
+		PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e    ---    ---   %2d %2d  - |  -  - \n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, (int)info->nitref1, (int)info->nitref2);
 #else
-		PRINTTEXT("It     pcost       dcost      gap   pres   dres    k/t    mu     step    IR\n");
-		PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e   N/A    %d %d -\n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, (int)info->nitref1, (int)info->nitref2);
+		PRINTTEXT("It     pcost       dcost      gap   pres   dres    k/t    mu     step   sigma     IR\n");
+		PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e    ---    ---   %2d %2d  -\n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, (int)info->nitref1, (int)info->nitref2);
 #endif //if defined expcone
 #else
 #if defined EXPCONE
-        PRINTTEXT("It     pcost       dcost      gap   pres   dres    k/t    mu     step   sigma      IR   |   BT\n");
+        PRINTTEXT("It     pcost       dcost      gap   pres   dres    k/t    mu     step   sigma     IR    |   BT\n");
 		PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e    ---    ---   %2d %2d  - |  -  - \n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, (int)info->nitref1, (int)info->nitref2);
 #else
-        PRINTTEXT("It     pcost       dcost      gap   pres   dres    k/t    mu     step   sigma      IR\n");
+        PRINTTEXT("It     pcost       dcost      gap   pres   dres    k/t    mu     step   sigma     IR\n");
 		PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e    ---    ---   %2d %2d  -\n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, (int)info->nitref1, (int)info->nitref2);
 #endif /*End if defined EXPCONE for the branch of the first iteration non windows */
 #endif
 	}  else {
 #if defined _WIN32 || defined _WIN64
 #if defined EXPCONE
-	PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e  %6.4f  %d %d %d | %d %d \n",(int)info->iter,info->pcost,info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, info->step, info->sigma,\
+	PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e  %6.4f  %2.0e  %2d %2d %2d | %2d %2d\n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, info->step, info->sigma,\
    (int)info->nitref1,\
    (int)info->nitref2,\
    (int)info->nitref3,\
    (int)info->affBack,\
    (int)info->cmbBack);
-
 #else
-		PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e  %6.4f  %d %d %d\n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, info->step, (int)info->nitref1, (int)info->nitref2, (int)info->nitref3);
+	PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e  %6.4f  %2.0e  %2d %2d %2d\n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, info->step, info->sigma,\
+   (int)info->nitref1,\
+   (int)info->nitref2,\
+   (int)info->nitref3);
 #endif //End of if defined EXPCONE
 #else
 #if defined EXPCONE
@@ -691,6 +693,9 @@ void RHS_combined(pwork* w)
 	pfloat sigmamu = w->info->sigma * w->info->mu;
 	pfloat one_minus_sigma = 1.0 - w->info->sigma;
 	idxint* Pinv = w->KKT->Pinv;
+#ifdef EXPCONE
+	pfloat* s;
+#endif
 
 	/* ds = lambda o lambda + W\s o Wz - sigma*mu*e) */
 	conicProduct(w->lambda, w->lambda, w->C, ds1);
@@ -724,7 +729,7 @@ void RHS_combined(pwork* w)
 	}
 
 #ifdef EXPCONE
-    pfloat* s   = w->s;
+    s = w->s;
     k = w->C->fexv;
 
     /*Exponential cones*/
@@ -785,6 +790,16 @@ pfloat expConeLineSearch(pwork* w, pfloat dtau, pfloat dkappa, idxint affine)
     idxint* pb;
     idxint* db;
 
+	 /* Initialize the other statistics */
+	pfloat* centrality = &w->info->centrality; 
+	pfloat barrier = 0.0;  /* Variable to hold the value of f_e(s_e)+f^\star_e(z_e) */
+	
+	/* Constants */
+    const pfloat cent_constant = w->D+1;
+
+	/* Placeholder */
+	*(centrality) = 1e300; /* Placeholder */
+
     /* Start from the alpha chosen for the symmetric cones */
     if(affine ==1)
     {
@@ -806,14 +821,6 @@ pfloat expConeLineSearch(pwork* w, pfloat dtau, pfloat dkappa, idxint affine)
     *cob = 0;
     *pb  = 0;
     *db  = 0;
-
-    /* Initialize the other statistics */
-    pfloat* centrality = &w->info->centrality;
-    pfloat barrier = 0.0;  /* Variable to hold the value of f_e(s_e)+f^\star_e(z_e) */
-    *(centrality) = 1e300; /* Placeholder */
-
-    /* Constants */
-    pfloat cent_constant = w->D+1;
 
     for(bk_iter = 0;bk_iter<w->stgs->max_bk_iter;bk_iter++)
     {
@@ -1143,7 +1150,7 @@ idxint ECOS_solve(pwork* w)
         if( w->info->iter > 0 && (w->info->pres > SAFEGUARD*pres_prev || w->info->gap < 0) ){
 #if PRINTLEVEL > 1
             if( w->stgs->verbose ) deleteLastProgressLine( w->info );
-            if( w->stgs->verbose ) PRINTTEXT("Unreliable search direction detected, recovering best iterate (%d) and stopping.\n", (int)w->best_info->iter);
+            if( w->stgs->verbose ) PRINTTEXT("Unreliable search direction detected, recovering best iterate (%i) and stopping.\n", (int)w->best_info->iter);
 #endif
             restoreBestIterate( w );
 
@@ -1182,7 +1189,7 @@ idxint ECOS_solve(pwork* w)
             if( w->info->iter > 0 && w->info->step == STEPMIN*GAMMA ){
 #if PRINTLEVEL > 0
                 if( w->stgs->verbose ) deleteLastProgressLine( w->info );
-                if( w->stgs->verbose ) PRINTTEXT("No further progress possible, recovering best iterate (%d) and stopping.", (int)w->best_info->iter );
+                if( w->stgs->verbose ) PRINTTEXT("No further progress possible, recovering best iterate (%i) and stopping.", (int)w->best_info->iter );
 #endif
                 restoreBestIterate( w );
 
@@ -1212,7 +1219,7 @@ idxint ECOS_solve(pwork* w)
                 {
 #if PRINTLEVEL > 0
                     if( w->stgs->verbose )
-                        PRINTTEXT("%s, recovering best iterate (%d) and stopping.\n", what, (int)w->best_info->iter);
+                        PRINTTEXT("%s, recovering best iterate (%i) and stopping.\n", what, (int)w->best_info->iter);
 #endif
                     restoreBestIterate( w );
                 }
@@ -1261,7 +1268,7 @@ idxint ECOS_solve(pwork* w)
             /* SAFEGUARD: we have to recover here */
 #if PRINTLEVEL > 0
             if( w->stgs->verbose ) deleteLastProgressLine( w->info );
-            if( w->stgs->verbose ) PRINTTEXT("Slacks/multipliers leaving the cone, recovering best iterate (%d) and stopping.\n", (int)w->best_info->iter);
+            if( w->stgs->verbose ) PRINTTEXT("Slacks/multipliers leaving the cone, recovering best iterate (%i) and stopping.\n", (int)w->best_info->iter);
 #endif
             restoreBestIterate( w );
 
@@ -1409,7 +1416,7 @@ idxint ECOS_solve(pwork* w)
             w->info->affBack+=w->info->db;
 
 #if PRINTLEVEL > 2
-           PRINTTEXT("Affine backtracking %d %d %d %d %d \n",\
+           PRINTTEXT("Affine backtracking %i %i %i %i %i \n",\
            (int)w->info->pob,\
            (int)w->info->cb,\
            (int)w->info->cob,\
@@ -1506,7 +1513,7 @@ idxint ECOS_solve(pwork* w)
         w->info->cmbBack+= w->info->db;
 
 #if PRINTLEVEL > 2
-        PRINTTEXT("Combined backtracking %d %d %d %d \n",\
+        PRINTTEXT("Combined backtracking %i %i %i %i \n",\
         (int)w->info->cb,\
         (int)w->info->cob,\
         (int)w->info->pb,\
@@ -1518,14 +1525,14 @@ idxint ECOS_solve(pwork* w)
         {
 
 #if PRINTLEVEL > 1
-            PRINTTEXT("Combined backtracking failed %d %d %d %d sigma %g\n",\
+            PRINTTEXT("Combined backtracking failed %i %i %i %i sigma %g\n",\
             (int)w->info->cb,\
             (int)w->info->cob,\
             (int)w->info->pb,\
             (int)w->info->db,\
             sigma);
 
-            if( w->stgs->verbose ) PRINTTEXT("Combined line search failed, recovering best iterate (%d) and stopping.\n", (int)w->best_info->iter);
+            if( w->stgs->verbose ) PRINTTEXT("Combined line search failed, recovering best iterate (%i) and stopping.\n", (int)w->best_info->iter);
 #endif
             restoreBestIterate( w );
 

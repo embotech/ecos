@@ -82,6 +82,9 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 	pfloat *Kpr = NULL;
 	idxint *Kjc = NULL, *Kir = NULL;
     idxint *Sign;
+#ifdef EXPCONE
+	idxint exp_cone_strt;
+#endif
 
 	/* Dimension of KKT matrix
      *   =   n (number of variables)
@@ -377,7 +380,7 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 
     /* At this point cone_strt = sum(q)+l */
 
-     idxint exp_cone_strt = cone_strt;
+    exp_cone_strt = cone_strt;
 #if CONEMODE == 0
     exp_cone_strt += 2*C->nsoc;
 #endif

@@ -19,7 +19,11 @@
 /* #define DEBUG */
 #define pfloat double
 #define idxint long int
-#include "math.h"
+
+#if (defined _WIN32 || defined _WIN64 || defined _WINDLL )
+#define _USE_MATH_DEFINES
+#endif
+#include <math.h>
 
 #ifdef DEBUG
 #include <stdio.h>

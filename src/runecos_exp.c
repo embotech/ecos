@@ -28,8 +28,17 @@
 #ifdef EXPCONE
 int main(void)
 {
+	idxint exitflag = ECOS_FATAL;
+	pwork* mywork;
 
-    /* Modify the problem to add an exponential cone
+#if PROFILING > 0
+	double ttotal, tsolve, tsetup;
+#endif
+#if PROFILING > 1
+    double torder, tkktcreate, ttranspose, tfactor, tkktsolve;
+#endif
+    
+	/* Modify the problem to add an exponential cone
      * the original problem has socps of size 3,3,3,3,3,4.
      * Make it 3,3,3,4 and an exponential cone
      */
@@ -51,16 +60,6 @@ int main(void)
 /*     idxint nexc = 0; */
 /*char ver[7];*/
 
-    idxint exitflag = ECOS_FATAL;
-	pwork* mywork;
-
-
-#if PROFILING > 0
-	double ttotal, tsolve, tsetup;
-#endif
-#if PROFILING > 1
-    double torder, tkktcreate, ttranspose, tfactor, tkktsolve;
-#endif
 
 	/* set up data */
 	mywork = ECOS_setup(n, m, p, l, ncones, q, nexc, Gpr, Gjc, Gir, Apr, Ajc, Air, c, h, b);
