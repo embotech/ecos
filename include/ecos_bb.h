@@ -31,7 +31,7 @@
 #include "glblopts.h"
 
 /* Print verbosity */
-#define MI_PRINTLEVEL (0)
+#define MI_PRINTLEVEL (1)
 
 /* ecos_bb configuration settings */
 #define MI_ABS_EPS (1E-6)

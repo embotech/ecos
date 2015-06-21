@@ -37,7 +37,6 @@
 /* ECOS VERSION NUMBER - FORMAT: X.Y.Z --------------------------------- */
 #define ECOS_VERSION ("2.0.0")
 
-
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
 #define MAXIT      (100)          /* maximum number of iterations         */
 #define FEASTOL    (1E-8)        /* primal/dual infeasibility tolerance  */

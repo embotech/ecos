@@ -550,11 +550,21 @@ void printProgress(stats* info)
 	{
 		/* print header at very first iteration */
 #if PRINTLEVEL == 2
-		PRINTTEXT("\nECOS %s - (c) A. Domahidi, ETH Zurich & embotech 2012-15. Support: ecos@embotech.com\n\n", ECOS_VERSION);
+		PRINTTEXT("\nECOS %s - (C) embotech GmbH, Zurich Switzerland, 2012-15. Web: www.embotech.com/ECOS\n", ECOS_VERSION);
+#if PRINTLEVEL == 3
+		PRINTTEXT("Contributors: Core interior point solver:         A. Domahidi, embotech GmbH\n");
+		PRINTTEXT("              Python interface and equilibration: Eric Chu, Stanford University\n");
+		PRINTTEXT("              Branch-and-bound module:            Han Wang, Stanford University\n");
+		PRINTTEXT("              Maths and Methods:                  Stephen Boyd, Stanford University\n");
+#ifdef EXPCONE
+		PRINTTEXT("              Exponential cone support:           Santiago Akle, Stanford University\n");
+#endif
+#endif
+		PRINTTEXT("\n");
 #endif
 #if defined _WIN32 || defined _WIN64
 #if defined EXPCONE
-        PRINTTEXT("It     pcost       dcost      gap   pres   dres    k/t    mu     step    IR       BT    1-sigma\n");
+        PRINTTEXT("It     pcost       dcost      gap  pres   dres    k/t    mu     step    IR       BT    1-sigma\n");
 		PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e   N/A    %d %d -  - - - - - -  -\n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, (int)info->nitref1, (int)info->nitref2);
 #else
 		PRINTTEXT("It     pcost       dcost      gap   pres   dres    k/t    mu     step    IR\n");
@@ -562,11 +572,11 @@ void printProgress(stats* info)
 #endif //if defined expcone
 #else
 #if defined EXPCONE
-        PRINTTEXT("It     pcost         dcost      gap     pres    dres     k/t     mu      step  sigma   IR     |  BT   \n");
-		PRINTTEXT("%2d  %c%+5.3e  %c%+5.3e  %c%+2.0e  %c%2.0e  %c%2.0e  %c%2.0e  %c%2.0e    N/A          %d %d -   | -  - \n",(int)info->iter, 32, info->pcost, 32, info->dcost, 32, info->gap, 32, info->pres, 32, info->dres, 32, info->kapovert, 32, info->mu, (int)info->nitref1, (int)info->nitref2);
+        PRINTTEXT("It     pcost       dcost      gap   pres   dres    k/t    mu     step   sigma      IR   |   BT\n");
+		PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e    ---    ---   %2d %2d  - |  -  - \n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, (int)info->nitref1, (int)info->nitref2);
 #else
-		PRINTTEXT("It     pcost         dcost      gap     pres    dres     k/t     mu      step     IR\n");
-		PRINTTEXT("%2d  %c%+5.3e  %c%+5.3e  %c%+2.0e  %c%2.0e  %c%2.0e  %c%2.0e  %c%2.0e    N/A     %d %d -\n",(int)info->iter, 32, info->pcost, 32, info->dcost, 32, info->gap, 32, info->pres, 32, info->dres, 32, info->kapovert, 32, info->mu, (int)info->nitref1, (int)info->nitref2);
+        PRINTTEXT("It     pcost       dcost      gap   pres   dres    k/t    mu     step   sigma      IR\n");
+		PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e    ---    ---   %2d %2d  -\n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, (int)info->nitref1, (int)info->nitref2);
 #endif /*End if defined EXPCONE for the branch of the first iteration non windows */
 #endif
 	}  else {
@@ -584,14 +594,17 @@ void printProgress(stats* info)
 #endif //End of if defined EXPCONE
 #else
 #if defined EXPCONE
-	PRINTTEXT("%2d  %c%+5.3e%c  %+5.3e %c %+2.0e%c  %2.0e%c  %2.0e%c  %2.0e%c  %2.0e%c  %6.4f %2.0e %2d %2d %2d | %2d %2d \n",(int)info->iter, 32,info->pcost, 32,info->dcost, 32, info->gap, 32, info->pres, 32, info->dres, 32, info->kapovert, 32, info->mu, 32, info->step, info->sigma,\
+	PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e  %6.4f  %2.0e  %2d %2d %2d | %2d %2d\n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, info->step, info->sigma,\
    (int)info->nitref1,\
    (int)info->nitref2,\
    (int)info->nitref3,\
    (int)info->affBack,\
    (int)info->cmbBack);
 #else
-		PRINTTEXT("%2d  %c%+5.3e%c  %+5.3e %c %+2.0e%c  %2.0e%c  %2.0e%c  %2.0e%c  %2.0e%c  %6.4f   %d %d %d\n",(int)info->iter, 32,info->pcost, 32,info->dcost, 32, info->gap, 32, info->pres, 32, info->dres, 32, info->kapovert, 32, info->mu, 32, info->step, (int)info->nitref1, (int)info->nitref2, (int)info->nitref3);
+	PRINTTEXT("%2d  %+5.3e  %+5.3e  %+2.0e  %2.0e  %2.0e  %2.0e  %2.0e  %6.4f  %2.0e  %2d %2d %2d\n",(int)info->iter, info->pcost, info->dcost, info->gap, info->pres, info->dres, info->kapovert, info->mu, info->step, info->sigma,\
+   (int)info->nitref1,\
+   (int)info->nitref2,\
+   (int)info->nitref3);
 #endif /* End of if defined expcone */
 #endif /* end of windows block */
 	}
