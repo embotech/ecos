@@ -51,7 +51,7 @@ extern "C" {
 
 #ifndef SuiteSparse_long
 
-#if _WIN64
+#if _WIN64 && !(defined PYTHON)
 
 #define SuiteSparse_long __int64
 #define SuiteSparse_long_max _I64_MAX
