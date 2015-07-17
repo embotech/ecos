@@ -47,7 +47,7 @@
 #define RTOL_INACC (5E-5)        /* inaccurate solution relative tol.    */
 #define GAMMA      (0.99)        /* scaling the final step length        */
 #define STATICREG  (1)           /* static regularization: 0:off, 1:on   */
-#define DELTASTAT  (1E-7)        /* regularization parameter             */
+#define DELTASTAT  (7E-8)        /* regularization parameter             */
 #define DELTA      (2E-7)        /* dyn. regularization parameter        */
 #define EPS        (1E-13)  /* dyn. regularization threshold (do not 0!) */
 #define VERBOSE    (1)           /* bool for verbosity; PRINTLEVEL < 3   */
