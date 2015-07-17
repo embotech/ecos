@@ -35,7 +35,7 @@
 #endif
 
 /* ECOS VERSION NUMBER - FORMAT: X.Y.Z --------------------------------- */
-#define ECOS_VERSION ("2.0.0")
+#define ECOS_VERSION ("2.0.1")
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
 #define MAXIT      (100)          /* maximum number of iterations         */
