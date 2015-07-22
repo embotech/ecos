@@ -5,12 +5,14 @@
 
 # Configuration of make process in ecos.mk
 include ecos.mk
-CFLAGS += -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config 
+CFLAGS += -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config -Iexternal/CHOLMOD/Include
+LDFLAGS += -Lexternal/CHOLMOD/Lib -Lexternal/AMD/Lib -Lexternal/COLAMD/Lib -Lexternal/SuiteSparse_config -Lexternal/SuiteSparse_config/xerbla -Lexternal/metis-4.0 -Lexternal/CAMD/Lib -Lexternal/CCOLAMD/Lib -Lusr/lib64
+LDLIBS = -lcholmod -lamd -lcolamd -lsuitesparseconfig -lcerbla -lmetis -lcamd -lccolamd -lm -llapack -lblas
 TEST_INCLUDES = -Itest -Itest/generated
 
 # Compile all C code, including the C-callable routine
 .PHONY: all
-all: libecos.a libecos_bb.a runecos runecosexp
+all: libecos.a libecos_bb.a runecos
 
 # build Tim Davis' sparse LDL package
 $(LDL):
@@ -23,7 +25,7 @@ $(AMD):
 	$(AR) -x external/amd/libamd.a
 
 # build ECOS
-ECOS_OBJS = ecos.o kkt.o cone.o spla.o ctrlc.o timer.o preproc.o splamm.o equil.o expcone.o wright_omega.o
+ECOS_OBJS = ecos.o kkt.o cone.o spla.o ctrlc.o timer.o preproc.o splamm.o equil.o lino_kkt.o
 libecos.a: $(ECOS_OBJS) $(LDL) $(AMD)
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
@@ -51,20 +53,14 @@ splamm.o            : include/splamm.h include/glblopts.h include/cone.h include
 ctrlc.o             : include/ctrlc.h include/glblopts.h include/cone.h include/ecos.h
 timer.o             : include/timer.h include/glblopts.h include/cone.h include/ecos.h
 equil.o             : include/equil.h include/glblopts.h include/cone.h include/ecos.h
-expcone.o           : include/expcone.h  
-wright_omega.o      : include/wright_omega.h
-
+lino_kkt.o			: include/lino_kkt.h include/ecos.h include/splamm.h external/CHOLMOD/Include/cholmod.h
 
 # ECOS demo
 .PHONY: demo
 demo: runecos
 runecos: src/runecos.c libecos.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 	echo ECOS successfully built. Type ./runecos to run demo problem.
-
-runecosexp: src/runecos_exp.c libecos.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
-	echo ECOS-Exp successfully built. Type ./runecosexp to run demo problem.
 
 # Shared library
 .PHONY: shared
@@ -88,6 +84,17 @@ ecos_bb_test: test/bb_test.c libecos_bb.a
 %.o: test/generated/*/%.c test/generated/*/%.h
 	$(CC) $(CFLAGS) $(TEST_INCLUDES) -c $< -o $@
 
+# Test lino_kkt
+.PHONY: lino
+lino: lino_kkt
+lino_kkt: src/lino_kkt.c libecos.a
+	$(CC) $(CFLAGS) -o lino_kkt $^ $(LDFLAGS) $(LDLIBS)
+
+# Main.c (valgrind)
+.PHONY: valgrind
+valgrind: main
+main: src/main.c libecos.a
+	$(CC) $(CFLAGS) -g -o main $^ $(LDFLAGS) $(LDLIBS)
 
 # remove object files, but keep the compiled programs and library archives
 .PHONY: clean
@@ -101,4 +108,4 @@ clean:
 purge: clean
 	( cd external/ldl    ; $(MAKE) purge )
 	( cd external/amd    ; $(MAKE) purge )
-	- $(RM) libecos.a libecos_bb.a runecos runecosexp
+	- $(RM) libecos.a libecos_bb.a runecos lino_kkt main

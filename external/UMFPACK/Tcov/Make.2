@@ -1,0 +1,16 @@
+#===============================================================================
+# BLAS, do not test for integer overflow.
+#===============================================================================
+
+CC = gcc
+CF = -O0 -g -ftest-coverage -fprofile-arcs -O0
+UMFPACK_CONFIG = -DTESTING
+LIB = -llapack -lblas -lgfortran -lgfortranbegin -lm -lrt
+
+RANLIB = ranlib
+MV = mv -f
+ARCHIVE = ar rv
+
+#===============================================================================
+
+CLEAN = *.o *.obj *.ln *.bb *.bbg *.da *.c.tcov *.c.gcov gmon.out

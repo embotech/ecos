@@ -16,12 +16,15 @@
 typedef struct pfc{
 	idxint ncones;
 	pfloat delta;
+	timer tnefactor, tnesolve;
+	pfloat tfactor, tsolve;
 	spmat *G, *A, *At;
 	
 	/* for product-form cholesky */
 	spmat** G_br; /* blockrows of G */
 	spmat** GtG; /* G_br'*G_br */
 	spmat* S; /* sum(1/eta_square*GtG) */
+	spmat* Spattern, Mpattern;
 	pfloat** gtw; /* G_br'*wnew */
 	pfloat** gte; /* G_br'*e0, e0 being the first unit vector */
 	pfloat** wnew; /* new scaling */
@@ -39,7 +42,7 @@ typedef struct pfc{
 	
 	/* Cholmod */
 	cholmod_common c;
-	cholmod_sparse *Scm, *Scmreg, *Acm, *Atcm, *Gcm, *Z, *Zt, *M, *Mreg, *RegS, *RegM;
+	cholmod_sparse *Scm, *Scmreg, *Spatterncm, *Spatterncmreg, *Acm, *Atcm, *Gcm, *Z, *Zt, *M, *Mreg, *RegS, *RegM;
 	cholmod_factor *L, *L_M;
 	cholmod_dense *dxcm, *dycm, *workx, *worky, *xpGtWinv2zcm, *RHS, *RHStemp, *bzcm, *up_d, *down_d;
 } pfc;
@@ -47,7 +50,7 @@ typedef struct pfc{
 /********** INIT **********/
 
 /* Setup, allocate memory. TESTED */
-pfc* neSetup(idxint l, idxint ncones, idxint* q, spmat* G, spmat* A, pfloat* bx, pfloat* by, pfloat* bz, pfloat delta);
+pfc* neSetup(idxint l, idxint ncones, idxint* q, spmat* G, spmat* A, pfloat delta);
 
 /* Deallocate memory. TESTED */
 void neCleanup(pfc* mypfc, idxint ncones, idxint l);
@@ -66,6 +69,8 @@ idxint count_mem(spmat* X);
 
 /* Computes how much memory is needed to compute X'*X + eye*delta */
 idxint count_mem_diag(spmat* X);
+
+void initfactors(pfc* mypfc, cone* C);
 
 /********** LinAlg **********/
 
@@ -146,11 +151,17 @@ void factorM(pfc* mypfc);
 /* Compute RHS of normal equations form TESTED */
 void RHS(pfc* mypfc, cone* C, idxint isItRef);
 
-/* Solve */
-void NEsolve(pfc* mypfc, cone* C, idxint isItRef);
+/* Solve TESTED */
+void LinSyssolve(pfc* mypfc, cone* C, idxint isItRef);
 
-/* Iterative refinement */
-void itref(pfc* mypfc, cone* C);
+/* Iterative refinement TESTED */
+idxint itref(pfc* mypfc, cone* C);
+
+/* Factor */
+void NEfactor(pfc* mypfc, cone* C);
+
+/* Solve */
+idxint NEsolve(pfc* mypfc,cone* C, pfloat* bx, pfloat* by, pfloat* bz);
 
 /********** DEBUG **********/
 

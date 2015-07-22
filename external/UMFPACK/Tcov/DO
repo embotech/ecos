@@ -1,0 +1,68 @@
+#!/bin/csh
+
+echo '################################################################################'
+echo 'Tcov test:' $1 $2 $3
+echo '################################################################################'
+
+#-------------------------------------------------------------------------------
+
+# get a clean directory
+# /bin/mv Out/$1_$2 `mktemp -d Trash/XXXXXX`
+
+# delete the directory
+/bin/rm -rf Out/$1_$2
+
+mkdir Out/$1_$2
+
+# put in UMFPACK (excluding Tcov and MATLAB directories) and AMD
+mkdir Out/$1_$2/UMFPACK
+mkdir Out/$1_$2/UMFPACK/Doc
+/bin/cp -pr ../Source Out/$1_$2/UMFPACK
+## /bin/cp -pr ../Lib Out/$1_$2/UMFPACK
+( cd Out/$1_$2/UMFPACK ; ln -s Source Lib )
+/bin/cp -pr ../Include Out/$1_$2/UMFPACK
+/bin/cp -pr ../Demo Out/$1_$2/UMFPACK
+/bin/cp -pr Top_Makefile Out/$1_$2/UMFPACK/Makefile
+/bin/cp -pr ../Lib/GNUmakefile Out/$1_$2/UMFPACK/Source/Makefile
+/bin/cp -pr Demo_Makefile Out/$1_$2/UMFPACK/Demo/Makefile
+/bin/cp -pr ../Doc/License Out/$1_$2/UMFPACK/Doc
+
+# put in AMD
+/bin/cp -pr ../../AMD Out/$1_$2
+/bin/rm -rf  Out/$1_$2/AMD/Lib
+( cd Out/$1_$2/AMD ; ln -s Source Lib )
+/bin/cp -pr Top_Makefile Out/$1_$2/AMD/Makefile
+/bin/cp -pr ../../AMD/Lib/GNUmakefile Out/$1_$2/AMD/Source/Makefile
+/bin/cp -pr AMD_Demo_Makefile Out/$1_$2/AMD/Demo/Makefile
+
+# links to CHOLMOD, CAMD, CCOLAMD, and metis
+ln -s ../../../../CHOLMOD Out/$1_$2/CHOLMOD
+ln -s ../../../../CAMD Out/$1_$2/CAMD
+ln -s ../../../../CCOLAMD Out/$1_$2/CCOLAMD
+ln -s ../../../../COLAMD Out/$1_$2/COLAMD
+ln -s ../../../../metis-4.0 Out/$1_$2/metis-4.0
+
+/bin/cp debug.* Out/$1_$2
+
+# put in the makefile
+/bin/cp GNUmakefile.$2 Out/$1_$2/GNUmakefile
+
+# put in SuiteSparse_config
+/bin/cp -pr ../../SuiteSparse_config Out/$1_$2
+/bin/rm -rf  Out/$1_$2/SuiteSparse_config/xerbla
+/bin/cp -f  Make.$1 Out/$1_$2/SuiteSparse_config/SuiteSparse_config.mk
+
+# put in the main program
+/bin/cp ut.c Out/$1_$2
+
+# put in the test matrices
+/bin/cp -f badnum*.umf Out/$1_$2
+/bin/cp -f badsym*.umf Out/$1_$2
+/bin/cp -pr TestMat Out/$1_$2
+
+# put in the gcov files
+/bin/cp -f ucov.* Out/$1_$2/UMFPACK/Source
+/bin/cp -f acov.* Out/$1_$2/AMD/Source
+
+# compile and run
+( cd Out/$1_$2 ; time make $3 > $1_$2.out )

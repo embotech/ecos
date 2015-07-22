@@ -4,7 +4,7 @@
 /********** INIT **********/
 
 /* Setup, allocate memory */
-pfc* neSetup(idxint l, idxint ncones, idxint* q, spmat* G, spmat* A, pfloat* bx, pfloat* by, pfloat* bz, pfloat delta){
+pfc* neSetup(idxint l, idxint ncones, idxint* q, spmat* G, spmat* A, pfloat delta){
 	idxint i, conestart, S_nnz;
 	/* Get pfc data structure */
 	pfc* mypfc = (pfc*)MALLOC(sizeof(pfc));
@@ -12,16 +12,21 @@ pfc* neSetup(idxint l, idxint ncones, idxint* q, spmat* G, spmat* A, pfloat* bx,
 	mypfc->G = G;
 	/* A */
 	mypfc->A = A;
-	/* Allocate memory for pointers to matrices and vectors */
 	S_nnz = count_mem_diag(G);
 	mypfc->S = newSparseMatrix(G->n,G->n,S_nnz);
+	mypfc->Spattern = newSparseMatrix(G->n,G->n,S_nnz);
 	for(i = 0; i <= G->n; i++){
 		mypfc->S->jc[i] = 0;
+		mypfc->Spattern->jc[i] = 0;
 	}
 	for(i = 0; i < S_nnz; i++){
 		mypfc->S->ir[i] = 0;
 		mypfc->S->pr[i] = 0;
+		mypfc->Spattern->ir[i] = 0;
+		mypfc->Spattern->pr[i] = 0;
 	}
+
+	/* Allocate memory for pointers to matrices and vectors */
 	mypfc->GtG = (spmat**)MALLOC((l+ncones)*sizeof(spmat*));
 	if(ncones){
 		mypfc->G_br = (spmat**)MALLOC(ncones*sizeof(spmat*));
@@ -29,6 +34,7 @@ pfc* neSetup(idxint l, idxint ncones, idxint* q, spmat* G, spmat* A, pfloat* bx,
 		mypfc->gte = (pfloat**)MALLOC(ncones*sizeof(pfloat*));
 		mypfc->wnew = (pfloat**)MALLOC(ncones*sizeof(pfloat*));
 	}
+
 	/* Allocate memory for blockrows&blockrow squares and compute them. Allocate memory for wnew, G'_i*w_i and G'_i*e0. */
 	conestart = l; /* l = number of lp-cones */
 	
@@ -38,6 +44,7 @@ pfc* neSetup(idxint l, idxint ncones, idxint* q, spmat* G, spmat* A, pfloat* bx,
 		mypfc->GtG[i] = sparseMtM(G_temp);
 		freeSparseMatrix(G_temp);
 	}
+
 	for(i = 0; i < ncones; i++){	
 		mypfc->G_br[i] = blockrow(G,conestart,conestart+q[i]-1);		
 		mypfc->GtG[l+i] = sparseMtM(mypfc->G_br[i]);
@@ -49,12 +56,14 @@ pfc* neSetup(idxint l, idxint ncones, idxint* q, spmat* G, spmat* A, pfloat* bx,
 	
 	mypfc->ncones = ncones;
 	mypfc->delta = delta;
-	
+
 	/* RHS */
 	mypfc->xpGtWinv2z = (pfloat*)MALLOC(G->n*sizeof(pfloat));
+	/*
 	mypfc->bx = bx;
 	mypfc->by = by;
 	mypfc->bz = bz;
+	*/
 	mypfc->bxbybzsize = A->n+A->m+G->m;
 	mypfc->bxbybz = (pfloat*)MALLOC(mypfc->bxbybzsize*sizeof(pfloat));
 	
@@ -72,13 +81,14 @@ pfc* neSetup(idxint l, idxint ncones, idxint* q, spmat* G, spmat* A, pfloat* bx,
 	/* Solution iterative refinement */
 	mypfc->ddx = (pfloat*)MALLOC(A->n*sizeof(pfloat));
 	mypfc->ddy = (pfloat*)MALLOC(A->m*sizeof(pfloat));
-	mypfc->ddz = (pfloat*)MALLOC(G->m*sizeof(pfloat));	
+	mypfc->ddz = (pfloat*)MALLOC(G->m*sizeof(pfloat));
+
 	
 	/* Cholmod stuff */
 	cholmod_l_start(&(mypfc->c));
 	
-	mypfc->Scm = cholmod_l_allocate_sparse(mypfc->S->m,mypfc->S->n,mypfc->S->nnz,1,1,1,CHOLMOD_REAL,&(mypfc->c));		
-	
+	mypfc->Scm = cholmod_l_allocate_sparse(mypfc->S->m,mypfc->S->n,mypfc->S->nnz,1,1,1,CHOLMOD_REAL,&(mypfc->c));
+	mypfc->Spatterncm = cholmod_l_allocate_sparse(mypfc->Spattern->m,mypfc->Spattern->n,mypfc->S->nnz,1,1,1,CHOLMOD_REAL,&(mypfc->c));
 	mypfc->Acm = cholmod_l_allocate_sparse(mypfc->A->m,mypfc->A->n,mypfc->A->nnz,1,1,0,CHOLMOD_REAL,&(mypfc->c));
 	for(i = 0; i <= mypfc->A->n; i++){
 		((idxint*)mypfc->Acm->p)[i] = mypfc->A->jc[i];
@@ -87,9 +97,7 @@ pfc* neSetup(idxint l, idxint ncones, idxint* q, spmat* G, spmat* A, pfloat* bx,
 		((idxint*)mypfc->Acm->i)[i] = mypfc->A->ir[i];
 		((pfloat*)mypfc->Acm->x)[i] = mypfc->A->pr[i];
 	}
-	
-	mypfc->Atcm = cholmod_l_transpose(mypfc->Acm,2,&(mypfc->c));
-	
+	mypfc->Atcm = cholmod_l_transpose(mypfc->Acm,1,&(mypfc->c));
 	mypfc->Gcm = cholmod_l_allocate_sparse(mypfc->G->m,mypfc->G->n,mypfc->G->nnz,1,1,0,CHOLMOD_REAL,&(mypfc->c));
 	for(i = 0; i <= mypfc->G->n; i++){
 		((idxint*)mypfc->Gcm->p)[i] = mypfc->G->jc[i];
@@ -98,10 +106,8 @@ pfc* neSetup(idxint l, idxint ncones, idxint* q, spmat* G, spmat* A, pfloat* bx,
 		((idxint*)mypfc->Gcm->i)[i] = mypfc->G->ir[i];
 		((pfloat*)mypfc->Gcm->x)[i] = mypfc->G->pr[i];
 	}
-	
 	mypfc->RegS = cholmod_l_speye(mypfc->G->n,mypfc->G->n,CHOLMOD_REAL,&(mypfc->c));
 	mypfc->RegM = cholmod_l_speye(mypfc->A->m,mypfc->A->m,CHOLMOD_REAL,&(mypfc->c));
-	
 	mypfc->xpGtWinv2zcm = cholmod_l_allocate_dense(mypfc->A->n,1,mypfc->A->n,CHOLMOD_REAL,&(mypfc->c));	
 	mypfc->RHS = cholmod_l_allocate_dense(mypfc->A->m,1,mypfc->A->m,CHOLMOD_REAL,&(mypfc->c));	
 	mypfc->bzcm = cholmod_l_allocate_dense(mypfc->G->m,1,mypfc->G->m,CHOLMOD_REAL,&(mypfc->c));
@@ -112,11 +118,10 @@ pfc* neSetup(idxint l, idxint ncones, idxint* q, spmat* G, spmat* A, pfloat* bx,
 	mypfc->c.final_ll = 0;
 	mypfc->c.final_pack = 0;
 	mypfc->c.supernodal = CHOLMOD_AUTO;
-	/*
+	
 	mypfc->c.nmethods = 1;
 	mypfc->c.method[0].ordering = CHOLMOD_NATURAL;	
 	mypfc->c.postorder = 0;
-	*/
 	
 	return mypfc;
 }
@@ -143,6 +148,7 @@ void neCleanup(pfc* mypfc, idxint ncones, idxint l){
 	}
 	FREE(mypfc->GtG);
 	freeSparseMatrix(mypfc->S);
+	freeSparseMatrix(mypfc->Spattern);
 	
 	/* RHS */
 	FREE(mypfc->xpGtWinv2z);
@@ -164,7 +170,9 @@ void neCleanup(pfc* mypfc, idxint ncones, idxint l){
 	
 	/* Cholmod stuff */ 
 	cholmod_l_free_sparse(&(mypfc->Scm),&(mypfc->c));
+	cholmod_l_free_sparse(&(mypfc->Spatterncm),&(mypfc->c));
 	cholmod_l_free_sparse(&(mypfc->Scmreg),&(mypfc->c));
+	cholmod_l_free_sparse(&(mypfc->Spatterncmreg),&(mypfc->c));
 	cholmod_l_free_sparse(&(mypfc->Acm),&(mypfc->c));
 	cholmod_l_free_sparse(&(mypfc->Atcm),&(mypfc->c));
 	cholmod_l_free_sparse(&(mypfc->Gcm),&(mypfc->c));
@@ -172,6 +180,8 @@ void neCleanup(pfc* mypfc, idxint ncones, idxint l){
 	cholmod_l_free_sparse(&(mypfc->RegM),&(mypfc->c));
 	cholmod_l_free_sparse(&(mypfc->M),&(mypfc->c));
 	cholmod_l_free_sparse(&(mypfc->Mreg),&(mypfc->c));
+	cholmod_l_free_sparse(&(mypfc->Z),&(mypfc->c));
+	cholmod_l_free_sparse(&(mypfc->Zt),&(mypfc->c));
 	cholmod_l_free_dense(&(mypfc->xpGtWinv2zcm),&(mypfc->c));
 	cholmod_l_free_dense(&(mypfc->RHS),&(mypfc->c));
 	cholmod_l_free_dense(&(mypfc->bzcm),&(mypfc->c));
@@ -346,6 +356,40 @@ idxint count_mem_diag(spmat* X){
 		}
 	}
 	return mem_needed+mem_diag;
+}
+
+void initfactors(pfc* mypfc, cone* C){
+	idxint i;
+	/* Compute S */
+   	for(i = 0; i < C->lpc->p; i++){            
+        sparseAdd(mypfc->GtG[i],mypfc->Spattern);        
+    }        
+    for(i = 0; i < C->nsoc; i++){
+        sparseAdd(mypfc->GtG[i+C->lpc->p],mypfc->Spattern);
+    }
+    /* Copy Spattern to cholmod format */
+    for(i = 0; i <= mypfc->Spattern->n; i++){
+		((idxint*)mypfc->Spatterncm->p)[i] = mypfc->Spattern->jc[i];
+	}
+	for(i = 0; i < mypfc->Spattern->nnz; i++){
+		((idxint*)mypfc->Spatterncm->i)[i] = mypfc->Spattern->ir[i];
+		((pfloat*)mypfc->Spatterncm->x)[i] = mypfc->Spattern->pr[i];
+	}
+	/* Add ones on diagonal */
+	pfloat alpha[2] = {1,0};
+	pfloat beta[2] = {1,0};
+	mypfc->Spatterncmreg = cholmod_l_add(mypfc->Spatterncm,mypfc->RegS,alpha,beta,1,1,&(mypfc->c));
+	mypfc->Spatterncmreg->stype = 1;
+	
+	/* Pattern only */
+	cholmod_l_sparse_xtype(CHOLMOD_PATTERN,mypfc->Spatterncmreg,&(mypfc->c));
+	
+	/* Analyze S */
+	mypfc->L = cholmod_l_analyze(mypfc->Spatterncmreg,&(mypfc->c));
+	
+	/* M pattern */
+	
+	
 }
 
 
@@ -654,6 +698,7 @@ pfloat DotK(idxint n, pfloat* x, pfloat* y, idxint K){
 	res = SumK(2*n,r,K-1);
 	return res;
 }
+
 /********** FACTOR & SOLVE **********/
 
 /* Compute bxpGtWinv2bz (a part of the RHS) */
@@ -759,19 +804,7 @@ void factorS(pfc* mypfc){
 	pfloat beta[2] = {mypfc->delta,0};
 	mypfc->Scmreg = cholmod_l_add(mypfc->Scm,mypfc->RegS,alpha,beta,1,1,&(mypfc->c));
 	mypfc->Scmreg->stype = 1;
-	
-	mypfc->L = cholmod_l_analyze(mypfc->Scmreg,&(mypfc->c));
 	cholmod_l_factorize(mypfc->Scmreg,mypfc->L,&(mypfc->c));
-	/*
-	idxint i;
-	cholmod_sparse* Lsp = cholmod_l_factor_to_sparse(mypfc->L,&(mypfc->c));
-	idxint col[Lsp->ncol];
-	for(i = 0; i < Lsp->ncol; i++){
-		col[i] = i;
-	}	
-	cholmod_sparse* Snew = cholmod_l_aat(Lsp,col,Lsp->ncol,1,&(mypfc->c));
-	printSparseCM(Snew,&(mypfc->c));
-	*/
 }
 	
 
@@ -799,7 +832,7 @@ void updown(pfc* mypfc){
 	/* convert to LL' instead of LDL' */
 	cholmod_l_change_factor(CHOLMOD_REAL,1,0,1,1,mypfc->L,&(mypfc->c));
 	/*
-	printf("IS_LL = %i\n",mypfc->L->is_ll);
+	printf("IS_LL = %i\n",mypfc->L->is_ll);	
 	cholmod_sparse* Lsp = cholmod_l_factor_to_sparse(mypfc->L,&(mypfc->c));
 	idxint col[Lsp->ncol];
 	for(i = 0; i < Lsp->ncol; i++){
@@ -825,11 +858,9 @@ void compZM(pfc* mypfc){
 	printSparseCM(Snew,&(mypfc->c));
 	*/
 	
-	cholmod_sparse* Z = cholmod_l_spsolve(4,mypfc->L,mypfc->Atcm,&(mypfc->c));	
-	cholmod_sparse* Zt = cholmod_l_transpose(Z,1,&(mypfc->c));
-	mypfc->M = cholmod_l_ssmult(Zt,Z,1,1,1,&(mypfc->c));
-	cholmod_l_free_sparse(&Z,&(mypfc->c));
-	cholmod_l_free_sparse(&Zt,&(mypfc->c));
+	mypfc->Z = cholmod_l_spsolve(4,mypfc->L,mypfc->Atcm,&(mypfc->c));	
+	mypfc->Zt = cholmod_l_transpose(mypfc->Z,1,&(mypfc->c));
+	mypfc->M = cholmod_l_ssmult(mypfc->Zt,mypfc->Z,1,1,1,&(mypfc->c));
 	/*
 	cholmod_l_print_sparse(mypfc->M,"M",&(mypfc->c));
 	printSparseCM(mypfc->M,&(mypfc->c));
@@ -845,7 +876,6 @@ void factorM(pfc* mypfc){
 	pfloat beta[2] = {mypfc->delta,0};
 	mypfc->Mreg = cholmod_l_add(mypfc->M,mypfc->RegM,alpha,beta,1,1,&(mypfc->c));
 	mypfc->Mreg->stype = 1;
-	
 	mypfc->L_M = cholmod_l_analyze(mypfc->Mreg,&(mypfc->c));
 	cholmod_l_factorize(mypfc->Mreg,mypfc->L_M,&(mypfc->c));
 	
@@ -889,7 +919,7 @@ void RHS(pfc* mypfc, cone* C, idxint isItRef){
 }
 
 /* Solve */
-void NEsolve(pfc* mypfc, cone* C, idxint isItRef){
+void LinSyssolve(pfc* mypfc, cone* C, idxint isItRef){
 	idxint i;
 	
 	/* Solve for dy */ 
@@ -946,7 +976,7 @@ void NEsolve(pfc* mypfc, cone* C, idxint isItRef){
 }
 
 /* Iterative refinement */
-void itref(pfc* mypfc, cone* C){
+idxint itref(pfc* mypfc, cone* C){
 	idxint i, j;
 	pfloat nex, ney, nez, nerr;
 	pfloat nItref = 3;
@@ -970,12 +1000,22 @@ void itref(pfc* mypfc, cone* C){
 		}
 		sparseMtVm(mypfc->A,mypfc->dy,mypfc->ex,0,0);
 		sparseMtVm(mypfc->G,mypfc->dz,mypfc->ex,0,0);
+		/*
+		for(j = 0; j < mypfc->A->n; j++){
+			mypfc->ex[j] -= mypfc->delta*mypfc->dx[j];
+		}
+		*/
 		
 		/* ey */
 		for(j = 0; j < mypfc->A->m; j++){
 			mypfc->ey[j] = mypfc->by[j];
 		}
 		sparseMV(mypfc->A,mypfc->dx,mypfc->ey,-1,0);
+		/*
+		for(j = 0; j < mypfc->A->m; j++){
+			mypfc->ey[j] += mypfc->delta*mypfc->dy[j];
+		}
+		*/
 		
 		/* ez */
 		for(j = 0; j < mypfc->G->m; j++){
@@ -1018,14 +1058,42 @@ void itref(pfc* mypfc, cone* C){
 		RHS(mypfc,C,1);
 		
 		/* Solve new system */ 
-		NEsolve(mypfc,C,1);
+		LinSyssolve(mypfc,C,1);
 		
 		/* Add to solution */
 		vadd(mypfc->A->n,mypfc->ddx,mypfc->dx);
 		vadd(mypfc->A->m,mypfc->ddy,mypfc->dy);
 		vadd(mypfc->G->m,mypfc->ddz,mypfc->dz);
 	}
+	return i;
 	
+}
+
+/* Factor */
+void NEfactor(pfc* mypfc, cone* C){
+	initfactors(mypfc,C);
+	computeUpdates(mypfc,C);
+	addS(mypfc,C);
+	tic(&mypfc->tnefactor);
+	factorS(mypfc);
+	updown(mypfc);
+	compZM(mypfc);
+	factorM(mypfc);
+	mypfc->tfactor = toc(&mypfc->tnefactor);
+}
+
+/* Solve */
+idxint NEsolve(pfc* mypfc,cone* C, pfloat* bx, pfloat* by, pfloat* bz){
+	idxint nit;
+	mypfc->bx = bx;
+	mypfc->by = by;
+	mypfc->bz = bz;
+	RHS(mypfc,C,0);
+	tic(&mypfc->tnesolve);
+	LinSyssolve(mypfc,C,0);
+	mypfc->tsolve = toc(&mypfc->tnesolve);
+	nit = itref(mypfc,C);
+	return nit;
 }
 
 /********** DEBUG **********/
@@ -1071,13 +1139,3 @@ void printSparseCM(cholmod_sparse* Y,cholmod_common* c){
 	}
 	printf("\n");
 }
-
-int main(){
-	pfloat x[5] = {0.123456789, -1.23456789, 3.456789, 0.0056789, 5.6789};
-	pfloat* xptr = x;
-	xptr++;
-	pfloat res1 = Dot2s(4,xptr,xptr);
-	pfloat res2 = eddot(4,xptr,xptr);
-	printf("res1 = %f, res2 = %f\n",res1,res2);
-}
-
