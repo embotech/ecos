@@ -6,8 +6,8 @@
 # Configuration of make process in ecos.mk
 include ecos.mk
 CFLAGS += -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config -Iexternal/CHOLMOD/Include
-LDFLAGS += -Lexternal/CHOLMOD/Lib -Lexternal/AMD/Lib -Lexternal/COLAMD/Lib -Lexternal/SuiteSparse_config -Lexternal/SuiteSparse_config/xerbla -Lexternal/metis-4.0 -Lexternal/CAMD/Lib -Lexternal/CCOLAMD/Lib -Lusr/lib64
-LDLIBS = -lcholmod -lamd -lcolamd -lsuitesparseconfig -lcerbla -lmetis -lcamd -lccolamd -lm -llapack -lblas
+LDFLAGS += -Lexternal/CHOLMOD/Lib -Lexternal/AMD/Lib -Lexternal/COLAMD/Lib -Lexternal/SuiteSparse_config -Lusr/lib64
+LDLIBS = -lcholmod -lamd -lcolamd -lsuitesparseconfig -lm -llapack -lblas
 TEST_INCLUDES = -Itest -Itest/generated
 
 # Compile all C code, including the C-callable routine

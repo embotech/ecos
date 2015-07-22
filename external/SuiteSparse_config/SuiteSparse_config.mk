@@ -156,7 +156,7 @@ INSTALL_INCLUDE = /usr/local/include
 # includes a Fortran-callable xerbla routine that prints nothing and does not
 # stop the application program.  This is optional.
 
-XERBLA = ../../SuiteSparse_config/xerbla/libcerbla.a 
+# XERBLA = ../../SuiteSparse_config/xerbla/libcerbla.a 
 
 # If you wish to use the XERBLA in LAPACK and/or the BLAS instead,
 # use this option:
