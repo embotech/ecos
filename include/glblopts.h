@@ -59,7 +59,7 @@ typedef double pfloat;              /* for numerical values  */
 #endif
 
 /* Exponential cone */
-#define EXPCONE      /*When defined the exponential cone solver code is enabled*/
+/* #define EXPCONE      /*When defined the exponential cone solver code is enabled*/
 
 /* SYSTEM INCLUDES FOR PRINTING ---------------------------------------- */
 #if PRINTLEVEL > 0

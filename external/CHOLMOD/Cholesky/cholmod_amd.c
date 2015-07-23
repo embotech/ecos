@@ -33,7 +33,7 @@
 #ifndef NCHOLESKY
 
 #include "cholmod_internal.h"
-#include "amd.h"
+#include "../../amd/include/amd.h"
 #include "cholmod_cholesky.h"
 
 #if (!defined (AMD_VERSION) || (AMD_VERSION < AMD_VERSION_CODE (2,0)))
