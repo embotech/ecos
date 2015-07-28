@@ -53,6 +53,16 @@ typedef struct spmat{
 void sparseMV(spmat* A, pfloat* x, pfloat* y, idxint a, idxint newVector);
 
 
+/*
+ * Sparse matrix-transpose-vector multiplication.
+ * 
+ * 		y = X'*x
+ *
+ * where X is a sparse matrix and x and y are dense vectors.
+ */
+void sparseMtv(spmat* X, pfloat* x, pfloat* y);
+
+
 /* 
  * Sparse matrix-transpose-vector multiply with subtraction.
  *
@@ -67,6 +77,46 @@ void sparseMV(spmat* A, pfloat* x, pfloat* y, idxint a, idxint newVector);
  *       transpose.
  */
 void sparseMtVm(spmat* A, pfloat* x, pfloat* y, idxint newVector, idxint skipDiagonal);
+
+
+/* 
+ * Sparse matrix addition.
+ * 
+ *		S += X
+ *
+ * S needs to have enough space allocated.
+ */
+void sparseAdd(spmat* X, spmat* S);
+
+
+/*
+ * Sparse matrix-scalar division, S = S/eta.
+ */
+void sparseDivison(pfloat eta, spmat* S);
+
+
+/* 
+ * Vector-scalar division x = x/eta. m = length(x).
+ */
+void vecDiv(pfloat eta, idxint m, pfloat* x);
+
+
+/* 
+ * Return product z = x'*y, where x and y are two columns of a sparse matrix, given as xir, xpr, xnnz, yir, ypr, ynnz 
+ */
+pfloat spmat_dotprod(idxint* xir, pfloat* xpr, idxint xnnz, idxint* yir, pfloat* ypr, idxint ynnz);
+
+
+/* 
+ * Returns 1 if x and y are orthogonal, 0 otherwise.
+ */
+idxint is_orthogonal(idxint* x, idxint* y, idxint sizex, idxint sizey);
+
+
+/*
+ * For K >= 3 very accurate dot product x'*y. n; size of vectors. 
+ */
+pfloat DotK(idxint n, pfloat* x, pfloat* y, idxint K);
 
 
 /*

@@ -35,9 +35,16 @@
  */
 pfloat socres(pfloat* u, idxint p)
 {
-	pfloat res = u[0]*u[0];
+	idxint K = 3;
 	idxint i;
-	for( i=1; i<p; i++) { res -= u[i]*u[i]; }
+	pfloat u0_square, dprod, temp[2], res;
+	u0_square = u[0]*u[0];
+	u++;
+	dprod = DotK(p-1,u,u,K);
+	temp[0] = u0_square;
+	temp[1] = -dprod;
+	res = SumK(2,temp,K);
+		
 	return res;
 }
 

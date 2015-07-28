@@ -74,53 +74,8 @@ void initfactors(pfc* mypfc, cone* C);
 
 /********** LinAlg **********/
 
-/* Sparse matrix addition, S += X. S needs to have enough space allocated. TESTED*/
-void sparseAdd(spmat* X, spmat* S);
-
-/* Sparse matrix-scalar division, S = S/eta. TESTED*/
-void sparseDivison(pfloat eta, spmat* S);
-
-/* Vector-scalar division x = x/eta. m = length(x). TESTED */
-void vecDiv(pfloat eta, idxint m, pfloat* x);
-
-/* Sparse matrix-transpose-vector multiplication. y = X'*x. TESTED */
-void sparseMtv(spmat* X, pfloat* x, pfloat* y);
-
-/* Return product z = x'*y, where x and y are two columns of a sparse matrix, given as xir, xpr, xnnz, yir, ypr, ynnz. TESTED*/
-pfloat spmat_dotprod(idxint* xir, pfloat* xpr, idxint xnnz, idxint* yir, pfloat* ypr, idxint ynnz);
-
 /* write (k+1)-th column of sparse matrix X to x. TESTED */
 void spmat_column(spmat* X, idxint k, pfloat* x);
-
-/* x and y: row indices of some matrix. returns 1 if the corresponding columns are orthogonal, 0 otherwise. TESTED */
-idxint is_orthogonal(idxint* x, idxint* y, idxint sizex, idxint sizey);
-
-/* Needed for TwoProduct */
-void Split(pfloat a, pfloat* split);
-
-/* Accurate product of two numbers */ 
-void TwoProduct(pfloat a, pfloat b, pfloat* prod);
-
-/* Accurate sum of two numbers */
-void TwoSum(pfloat a, pfloat b, pfloat* sum);
-
-/* Needed for SumK */
-void VecSum(idxint n, pfloat* p, pfloat* vsum);
-
-/* Computes the Vector sum. Higher K -> more accurate result */
-pfloat SumK(idxint n, pfloat* p, idxint K);
-
-/* Accurate sum of a vector (1-norm) of length n */
-pfloat Sum2s(idxint n, pfloat* p);
-
-/* Accurate dot-product x'*y */
-pfloat Dot2s(idxint n, pfloat* x, pfloat* y);
-
-/* Very accurate dot-product */
-pfloat DotXBLAS(idxint n, pfloat* x, pfloat* y);
-
-/* DotK: for K >= 3 very accurate dot product. n; size of vectors. */
-pfloat DotK(idxint n, pfloat* x, pfloat* y, idxint K);
 
 /********** FACTOR & SOLVE **********/
 
