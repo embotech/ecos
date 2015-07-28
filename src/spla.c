@@ -249,10 +249,6 @@ void sparseDivison(pfloat eta, spmat* S){
  */
 void vecDiv(pfloat eta, idxint m, pfloat* x){
 	idxint i;
-	if(eta > 0 && eta < EPS)
-		eta = EPS;
-	else if (eta < 0 && eta > -EPS)
-		eta = -EPS;
 	for(i = 0; i < m; i++){
 		x[i] = x[i]/eta;
 	}

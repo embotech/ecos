@@ -117,6 +117,11 @@ idxint is_orthogonal(idxint* x, idxint* y, idxint sizex, idxint sizey);
  * For K >= 3 very accurate dot product x'*y. n; size of vectors. 
  */
 pfloat DotK(idxint n, pfloat* x, pfloat* y, idxint K);
+pfloat SumK(idxint n, pfloat* p, idxint K);
+void VecSum(idxint n, pfloat* p, pfloat* vsum);
+void TwoSum(pfloat a, pfloat b, pfloat* sum);
+void TwoProduct(pfloat a, pfloat b, pfloat* prod);
+void Split(pfloat a, pfloat* split);
 
 
 /*
