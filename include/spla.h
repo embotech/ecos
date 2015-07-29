@@ -92,7 +92,7 @@ void sparseAdd(spmat* X, spmat* S);
 /*
  * Sparse matrix-scalar division, S = S/eta.
  */
-void sparseDivison(pfloat eta, spmat* S);
+void sparseDiv(pfloat eta, spmat* S);
 
 
 /* 

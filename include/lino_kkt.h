@@ -70,12 +70,8 @@ idxint count_mem(spmat* X);
 /* Computes how much memory is needed to compute X'*X + eye*delta */
 idxint count_mem_diag(spmat* X);
 
+/* Symbolic factorization of S. Future work: do the same for M. */
 void initfactors(pfc* mypfc, cone* C);
-
-/********** LinAlg **********/
-
-/* write (k+1)-th column of sparse matrix X to x. TESTED */
-void spmat_column(spmat* X, idxint k, pfloat* x);
 
 /********** FACTOR & SOLVE **********/
 
