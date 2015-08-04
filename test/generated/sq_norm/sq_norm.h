@@ -16,7 +16,7 @@ extern "C" {
 
 /* the parameter struct */
 typedef struct sq_norm_params {
-
+	char dummy[];
 } sq_norm_params;
 
 /* the input dimensions struct */
