@@ -16,7 +16,7 @@ extern "C" {
 
 /* the parameter struct */
 typedef struct inv_pos_params {
-
+	char dummy[];
 } inv_pos_params;
 
 /* the input dimensions struct */

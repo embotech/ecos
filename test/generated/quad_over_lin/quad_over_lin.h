@@ -16,7 +16,7 @@ extern "C" {
 
 /* the parameter struct */
 typedef struct quad_over_lin_params {
-
+	char dummy[];
 } quad_over_lin_params;
 
 /* the input dimensions struct */

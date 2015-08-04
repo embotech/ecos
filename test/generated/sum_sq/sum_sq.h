@@ -16,7 +16,7 @@ extern "C" {
 
 /* the parameter struct */
 typedef struct sum_sq_params {
-
+	char dummy[];
 } sum_sq_params;
 
 /* the input dimensions struct */
