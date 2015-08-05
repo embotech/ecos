@@ -17,10 +17,10 @@
  */
 
 #include "glblopts.h"
-#include <math.h>
 
 #if (defined _WIN32 || defined _WIN64 || defined _WINDLL )
 #define _USE_MATH_DEFINES
 #endif
+#include <math.h>
 
 pfloat wrightOmega(pfloat z);
