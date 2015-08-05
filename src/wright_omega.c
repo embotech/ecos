@@ -59,25 +59,16 @@ pfloat wrightOmega(pfloat z)
     /* FSC iteration */
     /* Initialize the residual */
     r = z-w-log(w);
-#ifdef DEBUG
-    printf("Zeroth round residual %e \n",r);
-#endif
     z = (1+w);
     q = z+2/3.0*r;
     w *= 1+r/z*(z*q-0.5*r)/(z*q-r);
     r = (2*w*w-8*w-1)/(72.0*(z*z*z*z*z*z))*r*r*r*r;
-#ifdef DEBUG
-    printf("First round residual %e \n",r);
-#endif
     /* Check residual */
     /*  if(r<1.e-16) return w; */ /*XXX Just do two rounds */
     z = (1+w);
     q = z+2/3.0*r;
     w *= 1+r/z*(z*q-0.5*r)/(z*q-r);
     r = (2*w*w-8*w-1)/(72.0*(z*z*z*z*z*z))*r*r*r*r;
-#ifdef DEBUG
-    printf("Second round residual %e \n",r);
-#endif
 
     return w;
 }
