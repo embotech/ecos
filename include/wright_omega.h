@@ -16,17 +16,11 @@
  * ISSN: 0098-3500 EISSN: 1557-7295 doi>10.1145/2168773.2168779
  */
 
-/* #define DEBUG */
-#define pfloat double
-#define idxint long int
+#include "glblopts.h"
+#include <math.h>
 
 #if (defined _WIN32 || defined _WIN64 || defined _WINDLL )
 #define _USE_MATH_DEFINES
-#endif
-#include <math.h>
-
-#ifdef DEBUG
-#include <stdio.h>
 #endif
 
 pfloat wrightOmega(pfloat z);
