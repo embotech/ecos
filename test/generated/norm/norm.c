@@ -10,12 +10,12 @@ qc_socp * qc_norm2socp()
      */
 
     /* all local variables */
-    long i;  /* loop index */
-    long *q_ptr;
-    long *A_row_ptr, *A_col_ptr;
-    long *G_row_ptr, *G_col_ptr;
+    idxint i;  /* loop index */
+    idxint *q_ptr;
+    idxint *A_row_ptr, *A_col_ptr;
+    idxint *G_row_ptr, *G_col_ptr;
     double *A_data_ptr, *G_data_ptr;
-    long nnzA, nnzG;
+    idxint nnzA, nnzG;
     qc_matrix *G_csc;
     qc_matrix G_coo;
 
@@ -42,8 +42,8 @@ qc_socp * qc_norm2socp()
     /* allocate G matrix */
     nnzG =  + 7;
     data->Gx = (double *) malloc(nnzG * sizeof(double));
-    data->Gp = (long *) malloc(nnzG * sizeof(long));
-    data->Gi = (long *) malloc(nnzG * sizeof(long));
+    data->Gp = (idxint *) malloc(nnzG * sizeof(idxint));
+    data->Gi = (idxint *) malloc(nnzG * sizeof(idxint));
     if ((!data->Gx) || (!data->Gp) || (!data->Gi)) return qc_socp_free(data);
     G_data_ptr = data->Gx;
     G_row_ptr = data->Gi;
@@ -61,7 +61,7 @@ qc_socp * qc_norm2socp()
     /* allocate the cone sizes */
     data->l = 3;
     data->nsoc = 1;
-    data->q = (long *) malloc(data->nsoc * sizeof(long));
+    data->q = (idxint *) malloc(data->nsoc * sizeof(idxint));
     if(!data->q) return qc_socp_free(data);
 
     /* initialize the cone */
