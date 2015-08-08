@@ -79,7 +79,7 @@ typedef double pfloat;              /* for numerical values  */
 /* #define NAN ((float)0x7fc00000) */
 
 /* USE SAME NUMBER REPRESENTATION FOR INDEXING AS AMD AND LDL ---------- */
-typedef SuiteSparse_long idxint;
+typedef int idxint;
 
 /* SYSTEM INCLUDE IF COMPILING FOR MATLAB ------------------------------ */
 #ifdef MATLAB_MEX_FILE
