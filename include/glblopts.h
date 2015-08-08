@@ -79,7 +79,15 @@ typedef double pfloat;              /* for numerical values  */
 /* #define NAN ((float)0x7fc00000) */
 
 /* USE SAME NUMBER REPRESENTATION FOR INDEXING AS AMD AND LDL ---------- */
+#if defined(DLONG) && !defined(LDL_LONG) || defined(LDL_LONG) && !defined(DLONG)
+#error "Inconsistent definition of DLONG and LDL_LONG"
+#endif
+
+#ifdef DLONG
+typedef SuiteSparse_long idxint;
+#else
 typedef int idxint;
+#endif
 
 /* SYSTEM INCLUDE IF COMPILING FOR MATLAB ------------------------------ */
 #ifdef MATLAB_MEX_FILE
