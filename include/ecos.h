@@ -21,6 +21,10 @@
 #ifndef __ECOS_H__
 #define __ECOS_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "glblopts.h"
 #include "spla.h"
 #include "cone.h"
@@ -90,9 +94,6 @@
 #define ECOS_SIGINT   (-4)  /* solver interrupted by a signal/ctrl-c     */
 #define ECOS_FATAL    (-7)  /* Unknown problem in solver                 */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* SETTINGS STRUCT ----------------------------------------------------- */
 typedef struct settings{
