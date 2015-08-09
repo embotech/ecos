@@ -23,9 +23,6 @@
 #ifndef __GLBLOPTS_H__
 #define __GLBLOPTS_H__
 
-/* DATA TYPES ---------------------------------------------------------- */
-typedef double pfloat;              /* for numerical values  */
-
 /* SET PRINT LEVEL ----------------------------------------------------- */
 #define PRINTLEVEL (2)     /* 0: no prints					             */
 						   /* 1: only final info				         */
@@ -48,11 +45,12 @@ typedef double pfloat;              /* for numerical values  */
                            /* 1: debug info & dump intermediate results  */
                            /* (flag used only for development)           */
 
-/* NAN ----------------------------------------------------------------- */
-#define ECOS_NAN ((double)0x7ff8000000000000)
-
-/* INF ---------------------------------------------------------------- */
-#define ECOS_INFINITY ((double)0x7ff0000000000000)
+/* DATA TYPES ---------------------------------------------------------- */
+#include <float.h>
+/* NOTE: Currently, pfloat MUST be double for ecos */
+typedef double pfloat;              /* for numerical values  */
+#define ECOS_NAN (-DBL_MAX)
+#define ECOS_INFINITY DBL_MAX
 
 /* Exponential cone */
 #define EXPCONE      /*When defined the exponential cone solver code is enabled*/
@@ -74,9 +72,6 @@ typedef double pfloat;              /* for numerical values  */
 #endif
 
 #include "SuiteSparse_config.h"
-
-/* use this if pfloat is float: */
-/* #define NAN ((float)0x7fc00000) */
 
 /* USE SAME NUMBER REPRESENTATION FOR INDEXING AS AMD AND LDL ---------- */
 #if defined(DLONG) && !defined(LDL_LONG) || defined(LDL_LONG) && !defined(DLONG)
@@ -102,8 +97,5 @@ typedef int idxint;
 #define MALLOC malloc
 #define FREE free
 #endif
-
-/* Other commonly used macros ----------------------------------------- */
-#define inline __inline
 
 #endif
