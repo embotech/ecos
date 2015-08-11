@@ -30,24 +30,6 @@
 
 #if CTRLC > 0
 
-#if defined MATLAB_MEX_FILE
-
-/* No header file available here; define the prototypes ourselves */
-extern bool utIsInterruptPending(void);
-extern bool utSetInterruptEnabled(bool);
-
-#elif (defined _WIN32 || defined _WIN64 || defined _WINDLL )
-
-/* Use Windows SetConsoleCtrlHandler for signal handling */
-#include <Windows.h>
-
-#else
-
-/* Use POSIX clocl_gettime() for timing on non-Windows machines */
-#include <signal.h>
-
-#endif
-
 /* METHODS are the same for both */
 void init_ctrlc(void);
 void remove_ctrlc(void);
