@@ -19,7 +19,7 @@
 
 /*
  * Interface for ECOS signal handling.
- * 
+ *
  * This module is (c) Michael Grant, [mcg@cvxr.com] contributed by Github PR #82
  */
 

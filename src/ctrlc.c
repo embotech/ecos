@@ -35,6 +35,10 @@
 
 #if defined MATLAB_MEX_FILE
 
+ /* No header file available here; define the prototypes ourselves */
+extern bool utIsInterruptPending(void);
+extern bool utSetInterruptEnabled(bool);
+
 static int istate;
 void init_ctrlc(void) 
 {
@@ -50,6 +54,9 @@ int check_ctrlc(void)
 }
 
 #elif defined _WIN32 || defined _WIN64
+
+/* Use Windows SetConsoleCtrlHandler for signal handling */
+#include <windows.h>
 
 static int int_detected;
 BOOL WINAPI handle_ctrlc(DWORD dwCtrlType)
@@ -73,6 +80,8 @@ int check_ctrlc(void)
 }
 
 #else /* Unix */
+
+/* Use POSIX clocl_gettime() for timing on non-Windows machines */
 
 #include <signal.h>
 static int int_detected;

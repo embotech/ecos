@@ -34,7 +34,7 @@
 
 #if (defined WIN32 || _WIN64)
 
-#include <Windows.h>
+#include <windows.h>
 
 void tic(timer* t)
 {
