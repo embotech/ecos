@@ -214,7 +214,7 @@ idxint checkExitConditions(pwork* w, idxint mode)
     }
 
     /* Dual infeasible? */
-    else if( (w->info->dinfres != NAN) && (w->info->dinfres < feastol) ){
+    else if( (w->info->dinfres != NAN) && (w->info->dinfres < feastol) && (w->tau < w->stgs->feastol) ){
 #if PRINTLEVEL > 0
         if( w->stgs->verbose ) {
             if( mode == 0) {
@@ -230,7 +230,7 @@ idxint checkExitConditions(pwork* w, idxint mode)
     }
 
     /* Primal infeasible? */
-    else if( (w->info->pinfres != NAN && w->info->pinfres < feastol) ||
+    else if( (w->info->pinfres != NAN && w->info->pinfres < feastol &&  w->tau < w->stgs->feastol) ||
             ( w->tau < w->stgs->feastol && w->kap < w->stgs->feastol && w->info->pinfres < w->stgs->feastol) ){
 #if PRINTLEVEL > 0
         if( w->stgs->verbose ) {
@@ -514,8 +514,8 @@ void updateStatistics(pwork* w)
 	info->dcost = -(w->hz + w->by) / w->tau;
 
     /* relative duality gap */
-	if( info->pcost < 0 ){ info->relgap = info->gap / (-info->pcost); }
-	else if( info->dcost > 0 ){ info->relgap = info->gap / info->dcost; }
+	if( info->pcost < 0 ){ info->relgap = info->gap / MAX(-info->pcost,1); }
+	else if( info->dcost > 0 ){ info->relgap = info->gap / MAX(info->dcost,1); }
 	else info->relgap = NAN;
 
     /* residuals */
