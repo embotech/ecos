@@ -198,7 +198,7 @@ idxint checkExitConditions(pwork* w, idxint mode)
     /* Optimal? */
     if( ( -w->cx > 0 || -w->by - w->hz >= -abstol ) &&
         ( w->info->pres < feastol && w->info->dres < feastol ) &&
-        ( w->info->gap < abstol || w->info->relgap < reltol  ) ){
+        ( w->info->gap < abstol || w->info->relgap < reltol  )){
 #if PRINTLEVEL > 0
         if( w->stgs->verbose ) {
             if( mode == 0) {
@@ -214,7 +214,7 @@ idxint checkExitConditions(pwork* w, idxint mode)
     }
 
     /* Dual infeasible? */
-    else if( (w->info->dinfres != NAN) && (w->info->dinfres < feastol) ){
+    else if( (w->info->dinfres != NAN) && (w->info->dinfres < feastol) && (w->tau < w->kap) ){
 #if PRINTLEVEL > 0
         if( w->stgs->verbose ) {
             if( mode == 0) {
@@ -230,7 +230,7 @@ idxint checkExitConditions(pwork* w, idxint mode)
     }
 
     /* Primal infeasible? */
-    else if( (w->info->pinfres != NAN && w->info->pinfres < feastol) ||
+    else if( (w->info->pinfres != NAN && w->info->pinfres < feastol) && (w->tau < w->kap) ||
             ( w->tau < w->stgs->feastol && w->kap < w->stgs->feastol && w->info->pinfres < w->stgs->feastol) ){
 #if PRINTLEVEL > 0
         if( w->stgs->verbose ) {
