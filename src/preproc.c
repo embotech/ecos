@@ -697,7 +697,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #ifdef EXPCONE
     /* Exponential cones */
     mywork->C->nexc  = nexc;
-    mywork->C->expc  = (expcone *)MALLOC(nexc*sizeof(expcone));
+    mywork->C->expc  = (nexc == 0) ? NULL : (expcone *)MALLOC(nexc*sizeof(expcone));
     mywork->C->fexv  = cidx+l;
 #if PRINTLEVEL > 2
     PRINTTEXT("Memory allocated for exponential cones\n");
