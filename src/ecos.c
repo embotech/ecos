@@ -230,7 +230,7 @@ idxint checkExitConditions(pwork* w, idxint mode)
     }
 
     /* Primal infeasible? */
-    else if( (w->info->pinfres != NAN && w->info->pinfres < feastol) && (w->tau < w->kap) ||
+    else if( ((w->info->pinfres != NAN && w->info->pinfres < feastol) && (w->tau < w->kap)) ||
             ( w->tau < w->stgs->feastol && w->kap < w->stgs->feastol && w->info->pinfres < w->stgs->feastol) ){
 #if PRINTLEVEL > 0
         if( w->stgs->verbose ) {
