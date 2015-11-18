@@ -55,72 +55,12 @@ pfc* neSetup(idxint l, idxint ncones, idxint* q, spmat* G, spmat* A, pfloat delt
 /* Deallocate memory. TESTED */
 void neCleanup(pfc* mypfc, idxint ncones, idxint l);
 
-/* Compute amount of memory needed to store blockrow of X, row k+1 to (and including) row l+1. TESTED */
-idxint mem_blockrow(spmat* X, idxint k, idxint l);
-
-/* return blockrow of X, row k+1 to (and including) row l+1. uses MALLOC. TESTED */ 
-spmat* blockrow(spmat* X, idxint k, idxint l);
-
-/* Return Y = X'*X. uses MALLOC. TESTED */
-spmat* sparseMtM(spmat* X);
-
-/* Computes how much memory is needed to compute X'*X TESTED */
-idxint count_mem(spmat* X);
-
-/* Computes how much memory is needed to compute X'*X + eye*delta */
-idxint count_mem_diag(spmat* X);
-
-/* Symbolic factorization of S. Future work: do the same for M. */
-void initfactors(pfc* mypfc, cone* C);
-
 /********** FACTOR & SOLVE **********/
-
-/* Compute bxpGtWinv2bz (a part of the RHS) */
-void xpGtWinv2z(pfc* mypfc, cone* C, idxint isItRef);
-
-/* compute G'_i*w_i and G'_i*e0. TESTED */
-void computeUpdates(pfc* mypfc, cone* C);
-
-/* change scaling representation. TESTED */
-void change_scaling(cone* C, pfloat** w_new);
-
-/* Add the scaled G_i'*G_i matrices together */
-void addS(pfc* mypfc, cone* C);
-
-/* Regularize, then factor S = sum((1/eta^2_i)*G'_i*G_i) TESTED*/
-void factorS(pfc* mypfc);
-
-/* up- and downdates on factor L TESTED */
-void updown(pfc* mypfc);
-
-/* compute Z and M, L*Z = A', Z'*Z = M = A*(G'*W^(-2)*G)^(-1)*A' TESTED*/
-void compZM(pfc* mypfc);
-
-/* Regularize, then factor M = Z'*Z = A*(G'*W^(-2)*G)^(-1)*A' TESTED*/
-void factorM(pfc* mypfc);
-
-/* Compute RHS of normal equations form TESTED */
-void RHS(pfc* mypfc, cone* C, idxint isItRef);
-
-/* Solve TESTED */
-void LinSyssolve(pfc* mypfc, cone* C, idxint isItRef);
-
-/* Iterative refinement TESTED */
-idxint itref(pfc* mypfc, cone* C);
 
 /* Factor */
 void NEfactor(pfc* mypfc, cone* C);
 
 /* Solve */
 idxint NEsolve(pfc* mypfc,cone* C, pfloat* bx, pfloat* by, pfloat* bz);
-
-/********** DEBUG **********/
-
-/* print sparse matrix */
-void printSparse(spmat* Y);
-
-/* print sparse cholmod matrix */
-void printSparseCM(cholmod_sparse* Y, cholmod_common* c);
-
 
 #endif
