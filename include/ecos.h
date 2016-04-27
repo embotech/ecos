@@ -213,6 +213,9 @@ typedef struct pwork{
     /* problem data */
     spmat* A;  spmat* G;  pfloat* c;  pfloat* b;  pfloat* h;
 
+    /* indices that map entries of A and G to the KKT matrix */
+    idxint *AtoK; idxint *GtoK;
+
 #if defined EQUILIBRATE && EQUILIBRATE > 0
     /* equilibration vector */
     pfloat *xequil;
@@ -302,6 +305,15 @@ void ecos_updateDataEntry_h(pwork* w, idxint idx, pfloat value);
  * After the call, w->c[idx] = value (but equilibrated)
  */
 void ecos_updateDataEntry_c(pwork* w, idxint idx, pfloat value);
+
+/*
+ * Updates numerical data for G, A, c, h, and b,
+ * and re-equilibrates.
+ * Then updates the corresponding KKT entries.
+ */
+void ECOS_updateData(pwork *w, pfloat *Gpr, pfloat *Apr,
+                     pfloat* c, pfloat* h, pfloat* b);
+
 
 #ifdef __cplusplus
 }
