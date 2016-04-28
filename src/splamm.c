@@ -58,9 +58,11 @@ void pinv(idxint n, idxint* p, idxint* pinv)
 
 
 /**
- * Transpose a matrix; returns A = M'
+ * Transpose a matrix; returns A = M',
+ * and an index vector MtoMt that directly maps elements of M
+ * to elements of M'.
  */
-spmat* transposeSparseMatrix(spmat* M)
+spmat* transposeSparseMatrix(spmat* M, idxint* MtoMt)
 {	
 	idxint j, i, k, q;    
 	idxint* w;
@@ -83,6 +85,7 @@ spmat* transposeSparseMatrix(spmat* M)
 			q = w[M->ir[k]]++;
 			A->ir[q] = j;
 			A->pr[q] = M->pr[k];
+			MtoMt[k] = q;
 		}
 	}
 
