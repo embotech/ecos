@@ -29,12 +29,13 @@
 
 #if (defined _WIN32 || defined _WIN64 )
 
-typedef struct timer{
-	__int64 tic;
-	__int64 toc;
-	__int64 freq;
-} timer;
+#include <stdint.h>
 
+typedef struct timer{
+	uint64_t tic;
+	uint64_t toc;
+	uint64_t freq;
+} timer;
 
 #elif (defined __APPLE__)
 
@@ -46,8 +47,6 @@ typedef struct timer{
 	uint64_t toc;
 	mach_timebase_info_data_t tinfo;
 } timer;
-
-
 
 #else
 
