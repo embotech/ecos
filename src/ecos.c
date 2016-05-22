@@ -22,8 +22,8 @@
 
 /* ECOS HEADER FILE ---------------------------------------------------- */
 #include "ecos.h"
-
 #include "splamm.h"
+#include "equil.h"
 
 /* NEEDED FOR SQRT ----------------------------------------------------- */
 #include <math.h>
@@ -1608,4 +1608,40 @@ void ecos_updateDataEntry_h(pwork* w, idxint idx, pfloat value)
 void ecos_updateDataEntry_c(pwork* w, idxint idx, pfloat value)
 {
     w->c[idx] = value;
+}
+
+
+/*
+ * Updates numerical data for G, A, c, h, and b,
+ * and re-equilibrates.
+ * Then updates the corresponding KKT entries.
+ */
+void ECOS_updateData(pwork *w, pfloat *Gpr, pfloat *Apr,
+                     pfloat* c, pfloat* h, pfloat* b)
+{
+
+    idxint k;
+
+#if defined EQUILIBRATE && EQUILIBRATE > 0
+    unset_equilibration(w);
+#endif
+
+    /* update pointers */
+    w->G->pr = Gpr;
+    w->A->pr = Apr;
+    w->c = c;
+    w->h = h;
+    w->b = b;
+
+#if defined EQUILIBRATE && EQUILIBRATE > 0
+    set_equilibration(w);
+#endif
+
+    /* update KKT matrix */
+    for (k=0; k<w->A->nnz; k++){
+        w->KKT->PKPt->pr[w->KKT->PK[w->AtoK[k]]] = Apr[k];
+    }
+    for (k=0; k<w->G->nnz; k++){
+        w->KKT->PKPt->pr[w->KKT->PK[w->GtoK[k]]] = Gpr[k];
+    }
 }
