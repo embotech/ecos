@@ -479,6 +479,10 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
     FREE(w->KKT->work5);            /* mywork->KKT->work5 = (pfloat *)MALLOC(nK*sizeof(pfloat));      */
     FREE(w->KKT->work6);            /* mywork->KKT->work6 = (pfloat *)MALLOC(nK*sizeof(pfloat));      */
 	FREE(w->KKT);                   /* mywork->KKT = (kkt *)MALLOC(sizeof(kkt));                      */
+	if (w->A) {
+		FREE(w->AtoK);
+	}
+	FREE(w->GtoK);
 
 	/* Free memory for cones */
 	if( w->C->lpc->p > 0 ){
