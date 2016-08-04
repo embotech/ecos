@@ -1525,14 +1525,17 @@ idxint ECOS_solve(pwork* w)
         {
 
 #if PRINTLEVEL > 1
-            PRINTTEXT("Combined backtracking failed %i %i %i %i sigma %g\n",\
-            (int)w->info->cb,\
-            (int)w->info->cob,\
-            (int)w->info->pb,\
-            (int)w->info->db,\
-            sigma);
+            if( w->stgs->verbose ){
+	            PRINTTEXT("Combined backtracking failed %i %i %i %i sigma %g\n",\
+	            (int)w->info->cb,\
+	            (int)w->info->cob,\
+	            (int)w->info->pb,\
+	            (int)w->info->db,\
+	            sigma);
 
-            if( w->stgs->verbose ) PRINTTEXT("Combined line search failed, recovering best iterate (%i) and stopping.\n", (int)w->best_info->iter);
+	            PRINTTEXT("Combined line search failed, recovering best iterate (%i) and stopping.\n",\
+	            (int)w->best_info->iter);
+            }
 #endif
             restoreBestIterate( w );
 
