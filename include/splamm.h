@@ -50,7 +50,7 @@ void freeSparseMatrix(spmat* M);
 /**
  * Transpose a matrix; returns A = M' (uses malloc!)
  */
-spmat* transposeSparseMatrix(spmat* M);
+spmat* transposeSparseMatrix(spmat* M, idxint* MtoMt);
 
 
 /**
