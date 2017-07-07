@@ -28,10 +28,11 @@
 /* NEEDED FOR SQRT ----------------------------------------------------- */
 #include <math.h>
 
-#if (defined _WIN32 || defined _WIN64 )
-/* include stdio.h for _set_output_format */
-#include <stdio.h>
-#endif
+// DEPRICATED - _set_output_format
+// #if (defined _WIN32 || defined _WIN64 )
+// /* include stdio.h for _set_output_format */
+// #include <stdio.h>
+// #endif
 
 
 
@@ -1088,10 +1089,11 @@ idxint ECOS_solve(pwork* w)
     char fn[20];
 #endif
 
-#if (defined _WIN32 || defined _WIN64 )
-	/* sets width of exponent for floating point numbers to 2 instead of 3 */
-	unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);
-#endif
+// DEPRICATED - _set_output_format
+// #if (defined _WIN32 || defined _WIN64 )
+// 	/* sets width of exponent for floating point numbers to 2 instead of 3 */
+// 	unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);
+// #endif
 
 #if PROFILING > 0
 	timer tsolve;
