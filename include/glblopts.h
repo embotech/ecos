@@ -27,7 +27,7 @@
 typedef double pfloat;              /* for numerical values  */
 
 /* SET PRINT LEVEL ----------------------------------------------------- */
-#define PRINTLEVEL (2)     /* 0: no prints					             */
+#define PRINTLEVEL (0)     /* 0: no prints					             */
 						   /* 1: only final info				         */
                            /* 2: progress print per iteration            */
 						   /* 3: debug level, enables print & dump fcns. */
@@ -39,7 +39,7 @@ typedef double pfloat;              /* for numerical values  */
                             /* problems.                                 */
 
 /* SET PROFILING LEVEL ------------------------------------------------- */
-#define PROFILING (1)      /* 0: no timing information				     */
+#define PROFILING (2)      /* 0: no timing information				     */
                            /* 1: runtime (divided in setup and solve)    */
                            /* 2: detailed profiling                      */
 
@@ -47,6 +47,8 @@ typedef double pfloat;              /* for numerical values  */
 #define DEBUG (0)          /* 0: no debugging information                */
                            /* 1: debug info & dump intermediate results  */
                            /* (flag used only for development)           */
+
+#include <math.h>
 
 /* NAN ----------------------------------------------------------------- */
 #ifndef NAN
