@@ -33,7 +33,7 @@
 /**
  * Create a sparse matrix from existing arrays.
  */
-spmat* createSparseMatrix(idxint m, idxint n, idxint nnz, idxint* jc, idxint* ir, pfloat* pr);
+spmat* EcosCreateSparseMatrix(idxint m, idxint n, idxint nnz, idxint* jc, idxint* ir, pfloat* pr);
 
 
 /**
