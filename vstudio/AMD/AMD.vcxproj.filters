@@ -61,5 +61,8 @@
     <ClCompile Include="..\..\external\amd\src\amd_valid.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\external\SuiteSparse_config\SuiteSparse_config.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
