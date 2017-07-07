@@ -44,10 +44,13 @@ typedef double pfloat;              /* for numerical values  */
                            /* 2: detailed profiling                      */
 
 /* SET DEBUG LEVEL ----------------------------------------------------- */
+#ifndef DEBUG
 #define DEBUG (0)          /* 0: no debugging information                */
                            /* 1: debug info & dump intermediate results  */
                            /* (flag used only for development)           */
+#endif
 
+/* SYSTEM INCLUDES FOR NAN & INFINITY ---------------------------------- */
 #include <math.h>
 
 /* NAN ----------------------------------------------------------------- */
@@ -64,6 +67,11 @@ typedef double pfloat;              /* for numerical values  */
 #define EXPCONE      /*When defined the exponential cone solver code is enabled*/
 
 /* SYSTEM INCLUDES FOR PRINTING ---------------------------------------- */
+#if DEBUG || PRINTLEVEL > 0
+#include <stdio.h>
+#endif
+
+/* PRINTTEXT ----------------------------------------------------------- */
 #if PRINTLEVEL > 0
 #ifdef MATLAB_MEX_FILE
 #include "mex.h"
@@ -74,7 +82,6 @@ typedef double pfloat;              /* for numerical values  */
 #else
 #define PRINTTEXT printf
 #endif
-#include <stdio.h>
 #else
 #define PRINTTEXT(...)
 #endif

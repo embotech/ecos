@@ -26,8 +26,8 @@
 #include "splamm.h"
 
 /* SYSTEM INCLUDES FOR MEMORY ALLOCATION ------------------------------- */
-#if PRINTLEVEL > 2
-#include <stdlib.h>
+#if DEBUG || PRINTLEVEL > 0
+#include <stdio.h>
 #endif
 
 
@@ -254,7 +254,6 @@ void printDenseMatrix_i(idxint *M, idxint dim1, idxint dim2, char *name)
     PRINTTEXT("\n");
 }
 
-
 /*
  * Prints a sparse matrix.
  */
@@ -274,8 +273,9 @@ void printSparseMatrix(spmat* M)
         }
     }
 }
+#endif
 
-
+#if DEBUG
 /* dump a sparse matrix in Matlab format */
 /* use LOAD and SPCONVERT to read in the file in MATLAB */
 void dumpSparseMatrix(spmat* M, char* fn)
@@ -297,9 +297,13 @@ void dumpSparseMatrix(spmat* M, char* fn)
 		}
         fprintf(f,"%d\t%d\t%20.18e\n", (int)M->m, (int)M->n, 0.0);
 		fclose(f);
+#if PRINTLEVEL > 0
 		PRINTTEXT("File %s successfully written.\n", fn);
+#endif
 	} else {
+#if PRINTLEVEL > 0
 		PRINTTEXT("Error during writing file %s.\n", fn);
+#endif
 	}
 }
 
@@ -332,9 +336,13 @@ void dumpDenseMatrix(pfloat *M, int dim1, int dim2, char *fn)
             }                
         }
         fclose(f);
-        printf("Written %d x %d matrix to '%s'.\n",i,dim2,fn);
+#if PRINTLEVEL > 0
+        PRINTTEXT("Written %d x %d matrix to '%s'.\n",i,dim2,fn);
+#endif
     } else {
-        printf("ERROR: file %s could not be opened. Exiting.",fn);
+#if PRINTLEVEL > 0
+		PRINTTEXT("ERROR: file %s could not be opened. Exiting.",fn);
+#endif
         exit(1);
     }    
 }
@@ -368,9 +376,13 @@ void dumpDenseMatrix_i(idxint *M, int dim1, int dim2, char *fn)
             }                
         }
         fclose(f);
-        printf("Written %d x %d matrix to '%s'.\n",i,dim2,fn);
+#if PRINTLEVEL > 0
+		PRINTTEXT("Written %d x %d matrix to '%s'.\n",i,dim2,fn);
+#endif
     } else {
-        printf("ERROR: file %s could not be opened. Exiting.",fn);
+#if PRINTLEVEL > 0
+		PRINTTEXT("ERROR: file %s could not be opened. Exiting.",fn);
+#endif
         exit(1);
     }    
 }

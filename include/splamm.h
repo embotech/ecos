@@ -100,6 +100,9 @@ void printDenseMatrix_i(idxint *M, idxint dim1, idxint dim2, char *name);
  */
 void printSparseMatrix(spmat* M);
 
+#endif
+
+#if DEBUG
 
 /**
  * Dumps a sparse matrix in Matlab format.
