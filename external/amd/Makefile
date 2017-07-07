@@ -1,59 +1,73 @@
-#-------------------------------------------------------------------------------
-# AMD Makefile for compiling on Unix systems (for GNU make only)
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# AMD Makefile
+#------------------------------------------------------------------------------
 
-default: libamd.a
+SUITESPARSE ?= $(realpath $(CURDIR)/..)
+export SUITESPARSE
 
-include ../../ecos.mk
+default: all
 
-C = $(CC) $(CFLAGS) -Iinclude -I../SuiteSparse_config
+include ../SuiteSparse_config/SuiteSparse_config.mk
 
-#-------------------------------------------------------------------------------
-# source files
-#-------------------------------------------------------------------------------
+demos: all
 
-AMD = amd_aat amd_1 amd_2 amd_dump amd_postorder amd_post_tree amd_defaults \
-	amd_order amd_control amd_info amd_valid amd_preprocess
+# Compile all C code.  Do not compile the FORTRAN versions.
+all:
+	( cd Lib    ; $(MAKE) )
+	( cd Demo   ; $(MAKE) )
 
-CONFIG = ../SuiteSparse_config/SuiteSparse_config.h
+# compile just the C-callable libraries (not Demos)
+library:
+	( cd Lib    ; $(MAKE) )
 
-INC = include/amd.h include/amd_internal.h $(CONFIG)
+# compile the static libraries only
+static:
+	( cd Lib    ; $(MAKE) static )
 
-#-------------------------------------------------------------------------------
-# object files for each version
-#-------------------------------------------------------------------------------
+# compile the FORTRAN libraries and demo programs (not compiled by "make all")
+fortran:
+	( cd Lib    ; $(MAKE) fortran )
+	( cd Demo   ; $(MAKE) fortran )
 
-AMDI = $(addsuffix .o, $(subst amd_,amd_i_,$(AMD)))
-AMDL = $(addsuffix .o, $(subst amd_,amd_l_,$(AMD)))
+# compile a FORTRAN demo program that calls the C version of AMD
+# (not compiled by "make all")
+cross:
+	( cd Demo   ; $(MAKE) cross )
 
-#-------------------------------------------------------------------------------
-# compile each int and long routine (with no real/complex version)
-#-------------------------------------------------------------------------------
-
-amd_global.o: src/amd_global.c $(INC)
-	$(C) -c $< -o $@
-
-amd_i_%.o: src/amd_%.c $(INC)
-	$(C) -DDINT -c $< -o $@
-
-amd_l_%.o: src/amd_%.c $(INC)
-	$(C) -DDLONG -c $< -o $@
-
-#-------------------------------------------------------------------------------
-# Create the libamd.a library (C versions only)
-#-------------------------------------------------------------------------------
-
-libamd.a: amd_global.o $(AMDI) $(AMDL)
-	$(ARCHIVE) libamd.a $^
-	- $(RANLIB) libamd.a
-
-#-------------------------------------------------------------------------------
-# Remove all but the files in the original distribution
-#-------------------------------------------------------------------------------
-
+# remove object files, but keep the compiled programs and library archives
 clean:
-	- $(RM) $(CLEAN)
+	( cd Lib    ; $(MAKE) clean )
+	( cd Demo   ; $(MAKE) clean )
+	( cd MATLAB ; $(RM) $(CLEAN) )
+	( cd Doc    ; $(MAKE) clean )
 
-purge: 
-	- $(RM) libamd.a libamdf77.a
+# clean, and then remove compiled programs and library archives
+purge:
+	( cd Lib    ; $(MAKE) purge )
+	( cd Demo   ; $(MAKE) purge )
+	( cd MATLAB ; $(RM) $(CLEAN) ; $(RM) *.mex* )
+	( cd Doc    ; $(MAKE) purge )
+
+distclean: purge
+
+# create PDF documents for the original distribution
+docs:
+	( cd Doc    ; $(MAKE) )
+
+# get ready for distribution
+dist: purge
+	( cd Demo   ; $(MAKE) dist )
+	( cd Doc    ; $(MAKE) )
+
+ccode: library
+
+lib: library
+
+# install AMD
+install:
+	( cd Lib  ; $(MAKE) install )
+
+# uninstall AMD
+uninstall:
+	( cd Lib  ; $(MAKE) uninstall )
 

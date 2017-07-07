@@ -600,7 +600,7 @@ GLOBAL void AMD_2
     }
     else
     {
-	dense = (SuiteSparse_long)(alpha * sqrt ((double) n));
+	dense = alpha * sqrt ((double) n) ;
     }
     dense = MAX (16, dense) ;
     dense = MIN (n,  dense) ;
@@ -1522,8 +1522,8 @@ GLOBAL void AMD_2
 
 	if (Info != (double *) NULL)
 	{
-	    f = (double)nvpiv ;
-	    r = (double)(degme + ndense );
+	    f = nvpiv ;
+	    r = degme + ndense ;
 	    dmax = MAX (dmax, f + r) ;
 
 	    /* number of nonzeros in L (excluding the diagonal) */
@@ -1560,7 +1560,7 @@ GLOBAL void AMD_2
     {
 
 	/* count the work to factorize the ndense-by-ndense submatrix */
-	f = (double)ndense ;
+	f = ndense ;
 	dmax = MAX (dmax, (double) ndense) ;
 
 	/* number of nonzeros in L (excluding the diagonal) */
@@ -1590,13 +1590,13 @@ GLOBAL void AMD_2
 	Info [AMD_NMULTSUBS_LU] = nms_lu ;
 
 	/* number of "dense" rows/columns */
-	Info [AMD_NDENSE] = (double)ndense ;
+	Info [AMD_NDENSE] = ndense ;
 
 	/* largest front is dmax-by-dmax */
 	Info [AMD_DMAX] = dmax ;
 
 	/* number of garbage collections in AMD */
-	Info [AMD_NCMPA] = (double)ncmpa ;
+	Info [AMD_NCMPA] = ncmpa ;
 
 	/* successful ordering */
 	Info [AMD_STATUS] = AMD_OK ;

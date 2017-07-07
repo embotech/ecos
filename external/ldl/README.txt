@@ -1,4 +1,4 @@
-LDL Copyright (c) 2005-2012 by Timothy A. Davis. http://www.suitesparse.com
+LDL Copyright (c) 2005-2013 by Timothy A. Davis. http://www.suitesparse.com
 
 LDL: a sparse LDL' factorization and solve package.
     Written in C, with both a C and MATLAB mexFunction interface. 
@@ -16,12 +16,12 @@ this directory.
 Quick start (Unix, or Windows with Cygwin):
 
     To compile, test, and install LDL, you may wish to first obtain a copy of
-    AMD v2.0 from http://www.suitesparse.com and place it in the
+    AMD from http://www.suitesparse.com and place it in the
     ../AMD directory, relative to this directory.  Next, type "make", which
     will compile the LDL library and three demo main programs (one of which
     requires AMD).  It will also compile the LDL MATLAB mexFunction (if you
     have MATLAB).  Typing "make clean" will remove non-essential files.
-    AMD v2.0 or later is required.  Its use is optional.
+    AMD v2.4 or later is required.  Its use is optional.
 
 Quick start (for MATLAB users);
 
@@ -31,36 +31,7 @@ Quick start (for MATLAB users);
 
 --------------------------------------------------------------------------------
 
-
-LDL License:
-
-    Your use or distribution of LDL or any modified version of
-    LDL implies that you agree to this License.
-
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
-
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301
-    USA
-
-    Permission is hereby granted to use or copy this program under the
-    terms of the GNU LGPL, provided that the Copyright, this License,
-    and the Availability of the original version is retained on all copies.
-    User documentation of any code that uses this code or any modified
-    version of this code must cite the Copyright, this License, the
-    Availability note, and "Used by permission." Permission to modify
-    the code and to distribute modified code is granted, provided the
-    Copyright, this License, and the Availability note are retained,
-    and a notice that the code was modified is included.
+LDL License: see LDL/Doc/License.txt for the license
 
 Availability:
 
@@ -86,8 +57,7 @@ Files and directories in this distribution:
 	README.txt	this file
 	Makefile	for compiling LDL
 	ChangeLog	changes since V1.0 (Dec 31, 2003)
-	License		license
-	lesser.txt	the GNU LGPL license
+	License.txt	license
 
 	ldl_userguide.pdf   user guide in PDF
 	ldl_userguide.ps    user guide in postscript

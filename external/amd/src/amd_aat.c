@@ -173,11 +173,11 @@ GLOBAL size_t AMD_aat	/* returns nz in A+A' */
     if (Info != (double *) NULL)
     {
 	Info [AMD_STATUS] = AMD_OK ;
-	Info [AMD_N] = (double)n ;
-	Info [AMD_NZ] = (double)nz ;
-	Info [AMD_SYMMETRY] = sym ;					/* symmetry of pattern of A */
-	Info [AMD_NZDIAG] = (double)nzdiag ;	    /* nonzeros on diagonal of A */
-	Info [AMD_NZ_A_PLUS_AT] = (double)nzaat ;	/* nonzeros in A+A' */
+	Info [AMD_N] = n ;
+	Info [AMD_NZ] = nz ;
+	Info [AMD_SYMMETRY] = sym ;	    /* symmetry of pattern of A */
+	Info [AMD_NZDIAG] = nzdiag ;	    /* nonzeros on diagonal of A */
+	Info [AMD_NZ_A_PLUS_AT] = nzaat ;   /* nonzeros in A+A' */
     }
 
     return (nzaat) ;

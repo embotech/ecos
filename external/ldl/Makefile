@@ -1,28 +1,63 @@
-#-------------------------------------------------------------------------------
-# Makefile for the LDL library
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# LDL Makefile
+#------------------------------------------------------------------------------
+
+SUITESPARSE ?= $(realpath $(CURDIR)/..)
+export SUITESPARSE
 
 default: all
 
-include ../../ecos.mk
+include ../SuiteSparse_config/SuiteSparse_config.mk
 
-INCLUDES = -I../SuiteSparse_config -Iinclude
+demos: all
 
-C = $(CC) $(CFLAGS) $(INCLUDES)
+# Compile all C code, including the C-callable routine.
+all:
+	( cd Lib    ; $(MAKE) )
+	( cd Demo   ; $(MAKE) )
 
-all: libldl.a
+# compile just the C-callable libraries (not Demos)
+library:
+	( cd Lib    ; $(MAKE) )
 
-#-------------------------------------------------------------------------------
-# the ldl library:
-#-------------------------------------------------------------------------------
+# compile the static libraries only
+static:
+	( cd Lib    ; $(MAKE) static )
 
-libldl.a: src/ldl.c include/ldl.h ../../include/glblopts.h ../../include/ecos.h
-	$(C) -c src/ldl.c -o ldl.o
-	$(C) -DLDL_LONG -c src/ldl.c -o ldll.o
-	$(ARCHIVE)  libldl.a ldl.o ldll.o
-	- $(RANLIB) libldl.a
-
-purge:
-	- $(RM) libldl.a
+# remove object files, but keep the compiled programs and library archives
 clean:
-	- $(RM) $(CLEAN)
+	( cd Lib    ; $(MAKE) clean )
+	( cd Demo   ; $(MAKE) clean )
+	( cd Doc    ; $(MAKE) clean )
+	( cd MATLAB ; $(RM) $(CLEAN) )
+
+# clean, and then remove compiled programs and library archives
+purge:
+	( cd Lib    ; $(MAKE) purge )
+	( cd Demo   ; $(MAKE) purge )
+	( cd Doc    ; $(MAKE) purge )
+	( cd MATLAB ; $(RM) $(CLEAN) *.mex* )
+
+distclean: purge
+
+# create PDF documents for the original distribution
+docs:
+	( cd Doc    ; $(MAKE) )
+
+# get ready for distribution
+dist: purge
+	( cd Demo   ; $(MAKE) dist )
+	( cd Doc    ; $(MAKE) )
+
+ccode: library
+
+lib: library
+
+# install LDL
+install:
+	( cd Lib ; $(MAKE) install )
+
+# uninstall LDL
+uninstall:
+	( cd Lib ; $(MAKE) uninstall )
+

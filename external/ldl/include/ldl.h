@@ -3,7 +3,7 @@
 /* ========================================================================== */
 
 /* Copyright (c) Timothy A Davis, http://www.suitesparse.com.
- * All Rights Reserved.  See README for the License.
+ * All Rights Reserved.  See LDL/Doc/License.txt for the License.
  *
  * Stripped down by Alexander Domahidi, 2012.
  */
@@ -23,6 +23,10 @@
 #define LDL_lsolve2 ldl_l_lsolve2
 #define LDL_dsolve ldl_l_dsolve
 #define LDL_ltsolve ldl_l_ltsolve
+#define LDL_perm ldl_l_perm
+#define LDL_permt ldl_l_permt
+#define LDL_valid_perm ldl_l_valid_perm
+#define LDL_valid_matrix ldl_l_valid_matrix
 
 #else
 #define LDL_int int
@@ -34,6 +38,10 @@
 #define LDL_lsolve2 ldl_lsolve2
 #define LDL_dsolve ldl_dsolve
 #define LDL_ltsolve ldl_ltsolve
+#define LDL_perm ldl_perm
+#define LDL_permt ldl_permt
+#define LDL_valid_perm ldl_valid_perm
+#define LDL_valid_matrix ldl_valid_matrix
 
 #endif
 
@@ -58,6 +66,12 @@ void ldl_dsolve (int n, double X [ ], double D [ ]) ;
 
 void ldl_ltsolve (int n, double X [ ], int Lp [ ], int Li [ ],
     double Lx [ ]) ;
+
+void ldl_perm  (int n, double X [ ], double B [ ], int P [ ]) ;
+void ldl_permt (int n, double X [ ], double B [ ], int P [ ]) ;
+
+int ldl_valid_perm (int n, int P [ ], int Flag [ ]) ;
+int ldl_valid_matrix ( int n, int Ap [ ], int Ai [ ]) ;
 
 /* ========================================================================== */
 /* === long version ========================================================= */
@@ -86,13 +100,24 @@ void ldl_l_dsolve (SuiteSparse_long n, double X [ ], double D [ ]) ;
 void ldl_l_ltsolve (SuiteSparse_long n, double X [ ], SuiteSparse_long Lp [ ],
     SuiteSparse_long Li [ ], double Lx [ ]) ;
 
+void ldl_l_perm  (SuiteSparse_long n, double X [ ], double B [ ],
+    SuiteSparse_long P [ ]) ;
+void ldl_l_permt (SuiteSparse_long n, double X [ ], double B [ ],
+    SuiteSparse_long P [ ]) ;
+
+SuiteSparse_long ldl_l_valid_perm (SuiteSparse_long n, SuiteSparse_long P [ ],
+    SuiteSparse_long Flag [ ]) ;
+SuiteSparse_long ldl_l_valid_matrix ( SuiteSparse_long n,
+    SuiteSparse_long Ap [ ], SuiteSparse_long Ai [ ]) ;
+
 /* ========================================================================== */
 /* === LDL version ========================================================== */
 /* ========================================================================== */
 
-#define LDL_DATE "April 6, 2013, with dynamic regularization by A. Domahidi"
+#define LDL_DATE "May 4, 2016, with dynamic regularization by A. Domahidi"
 #define LDL_VERSION_CODE(main,sub) ((main) * 1000 + (sub))
 #define LDL_MAIN_VERSION 2
-#define LDL_SUB_VERSION 1
-#define LDL_SUBSUB_VERSION 0
+#define LDL_SUB_VERSION 2
+#define LDL_SUBSUB_VERSION 6
 #define LDL_VERSION LDL_VERSION_CODE(LDL_MAIN_VERSION,LDL_SUB_VERSION)
+
