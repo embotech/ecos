@@ -12,25 +12,30 @@ TEST_INCLUDES = -Itest -Itest/generated
 .PHONY: all
 all: libecos.a libecos_bb.a runecos runecosexp
 
+# build Tim Davis' SuiteSparse_config package
+$(SuiteSparse_config):
+	( cd external/SuiteSparse_config    ; $(MAKE) static )
+	$(AR) -x external/SuiteSparse_config/libsuitesparseconfig.a
+
 # build Tim Davis' sparse LDL package
 $(LDL):
-	( cd external/ldl    ; $(MAKE) )
-	$(AR) -x external/ldl/libldl.a
+	( cd external/ldl    ; $(MAKE) static )
+	$(AR) -x external/ldl/lib/libldl.a
 
 # build Tim Davis' AMD package
 $(AMD):
-	( cd external/amd    ; $(MAKE) )
-	$(AR) -x external/amd/libamd.a
+	( cd external/amd    ; $(MAKE) static )
+	$(AR) -x external/amd/lib/libamd.a
 
 # build ECOS
 ECOS_OBJS = ecos.o kkt.o cone.o spla.o ctrlc.o timer.o preproc.o splamm.o equil.o expcone.o wright_omega.o
-libecos.a: $(ECOS_OBJS) $(LDL) $(AMD)
+libecos.a: $(ECOS_OBJS) $(SuiteSparse_config) $(LDL) $(AMD)
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
 
 # build ECOS branch-and-bound
 ECOS_BB_OBJS = $(ECOS_OBJS) ecos_bb_preproc.o ecos_bb.o
-libecos_bb.a: $(ECOS_BB_OBJS) $(LDL) $(AMD)
+libecos_bb.a: $(ECOS_BB_OBJS) $(SuiteSparse_config) $(LDL) $(AMD)
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
 
@@ -68,8 +73,10 @@ runecosexp: src/runecos_exp.c libecos.a
 
 # Shared library
 .PHONY: shared
-shared: $(SHAREDNAME)
-$(SHAREDNAME): $(LDL) $(AMD) $(ECOS_OBJS)
+shared: $(SHARED_ECOS) $(SHARED_ECOS_BB)
+$(SHARED_ECOS): $(SuiteSparse_config) $(LDL) $(AMD) $(ECOS_OBJS)
+	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
+$(SHARED_ECOS_BB): $(SuiteSparse_config) $(LDL) $(AMD) $(ECOS_BB_OBJS)
 	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
 
 # ECOS tester
@@ -92,6 +99,7 @@ ecos_bb_test: test/bb_test.c libecos_bb.a
 # remove object files, but keep the compiled programs and library archives
 .PHONY: clean
 clean:
+	( cd external/SuiteSparse_config    ; $(MAKE) clean )
 	( cd external/ldl    ; $(MAKE) clean )
 	( cd external/amd    ; $(MAKE) clean )
 	- $(RM) $(CLEAN)
@@ -99,6 +107,26 @@ clean:
 # clean, and then remove compiled programs and library archives
 .PHONY: purge
 purge: clean
+	( cd external/SuiteSparse_config    ; $(MAKE) purge )
 	( cd external/ldl    ; $(MAKE) purge )
 	( cd external/amd    ; $(MAKE) purge )
-	- $(RM) libecos.a libecos_bb.a runecos runecosexp
+	- $(RM) runecos runecosexp \
+			libecos*.a libecos*.so libecos*.dylib libecos*.dll \
+			ecos_bb_test ecos_bb_test.exe \
+			ecostester ecostester.exe
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
