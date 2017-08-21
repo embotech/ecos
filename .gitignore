@@ -24,7 +24,9 @@
 __.SYMDEF
 
 ecostester
+ecos_bb_test
 runecos
+runecosexp
 python/build
 python/dist
 python/*.pyc
