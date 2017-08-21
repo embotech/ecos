@@ -28,3 +28,19 @@ runecos
 python/build
 python/dist
 python/*.pyc
+
+# VS temp files
+*.vs
+*.db
+*.db-*
+*.idb
+*.ilk
+*.lastbuildstate
+*.log
+*.obj
+*.opendb
+*.ipch
+*.pdb
+*.tlog
+*.vcxproj.filters
+*.vcxproj.user

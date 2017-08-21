@@ -15,10 +15,12 @@ USE_LONG = 1
 CFLAGS += -O2 -Wall -DCTRLC=1 -Wextra -fPIC #-ansi -Werror #-ipo
 ifdef USE_LONG
 CFLAGS += -DLDL_LONG -DDLONG
+SuiteSparse_config = SuiteSparse_config.o
 LDL = ldll.o
 AMD = amd_l*.o amd_global.o
 else
 CFLAGS +=
+SuiteSparse_config = SuiteSparse_config.o
 LDL = ldl.o
 AMD = amd_i*.o amd_global.o
 endif

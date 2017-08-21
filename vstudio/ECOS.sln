@@ -4,17 +4,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 15.0.26430.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AMD", "AMD\AMD.vcxproj", "{530A3224-506F-4C26-853B-475E069FDDD6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CA776687-65F0-47CA-8578-45160B8D9AA6} = {CA776687-65F0-47CA-8578-45160B8D9AA6}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LDL", "LDL\LDL.vcxproj", "{724D412D-5DA9-4FB0-A5C9-AD28AC037305}"
-	ProjectSection(ProjectDependencies) = postProject
-		{530A3224-506F-4C26-853B-475E069FDDD6} = {530A3224-506F-4C26-853B-475E069FDDD6}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ECOS", "ECOS\ECOS.vcxproj", "{BD19D8A4-021F-440D-9C95-5CB13F20CBD9}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RUNECOS", "RUNECOS\RUNECOS.vcxproj", "{8DAB4734-3693-4430-848F-68AA005565B3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RUNECOSEXP", "RUNECOSEXP\RUNECOSEXP.vcxproj", "{2AB26548-4B88-4D0C-83DC-C4F3C1B0417A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SuiteSparse_config", "SuiteSparse_config\SuiteSparse_config.vcxproj", "{CA776687-65F0-47CA-8578-45160B8D9AA6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -64,6 +66,14 @@ Global
 		{2AB26548-4B88-4D0C-83DC-C4F3C1B0417A}.Release|Win32.Build.0 = Release|Win32
 		{2AB26548-4B88-4D0C-83DC-C4F3C1B0417A}.Release|x64.ActiveCfg = Release|x64
 		{2AB26548-4B88-4D0C-83DC-C4F3C1B0417A}.Release|x64.Build.0 = Release|x64
+		{CA776687-65F0-47CA-8578-45160B8D9AA6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CA776687-65F0-47CA-8578-45160B8D9AA6}.Debug|Win32.Build.0 = Debug|Win32
+		{CA776687-65F0-47CA-8578-45160B8D9AA6}.Debug|x64.ActiveCfg = Debug|x64
+		{CA776687-65F0-47CA-8578-45160B8D9AA6}.Debug|x64.Build.0 = Debug|x64
+		{CA776687-65F0-47CA-8578-45160B8D9AA6}.Release|Win32.ActiveCfg = Release|Win32
+		{CA776687-65F0-47CA-8578-45160B8D9AA6}.Release|Win32.Build.0 = Release|Win32
+		{CA776687-65F0-47CA-8578-45160B8D9AA6}.Release|x64.ActiveCfg = Release|x64
+		{CA776687-65F0-47CA-8578-45160B8D9AA6}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
