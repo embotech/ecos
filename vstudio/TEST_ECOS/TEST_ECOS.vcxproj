@@ -19,10 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{8DAB4734-3693-4430-848F-68AA005565B3}</ProjectGuid>
+    <ProjectGuid>{87755E44-8CEC-4B20-A4B9-73AD1D2F190B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>RUNECOS</RootNamespace>
-    <ProjectName>RUNECOS</ProjectName>
+    <RootNamespace>TEST_ECOS</RootNamespace>
+    <ProjectName>TEST_ECOS</ProjectName>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -85,7 +85,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\SuiteSparse_config;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\SuiteSparse_config;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include;$(ProjectDir)\..\..\test;$(ProjectDir)\..\..\test\generated</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -101,7 +101,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\SuiteSparse_config;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\SuiteSparse_config;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include;$(ProjectDir)\..\..\test;$(ProjectDir)\..\..\test\generated</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -117,7 +117,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\SuiteSparse_config;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\SuiteSparse_config;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include;$(ProjectDir)\..\..\test;$(ProjectDir)\..\..\test\generated</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -133,7 +133,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\SuiteSparse_config;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\SuiteSparse_config;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include;$(ProjectDir)\..\..\test;$(ProjectDir)\..\..\test\generated</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -143,11 +143,41 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\runecos.c" />
+    <ClInclude Include="..\..\test\cvxpyProblems\githubIssue98.h" />
+    <ClInclude Include="..\..\test\emptyProblem\emptyProblem.h" />
+    <ClInclude Include="..\..\test\feasibilityProblems\feas.h" />
+    <ClInclude Include="..\..\test\generated\generated_tests.h" />
+    <ClInclude Include="..\..\test\generated\inv_pos\inv_pos.h" />
+    <ClInclude Include="..\..\test\generated\norm\norm.h" />
+    <ClInclude Include="..\..\test\generated\qcml_utils.h" />
+    <ClInclude Include="..\..\test\generated\quad_over_lin\quad_over_lin.h" />
+    <ClInclude Include="..\..\test\generated\sq_norm\sq_norm.h" />
+    <ClInclude Include="..\..\test\generated\sum_sq\sum_sq.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_25fv47.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_adlittle.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_afiro.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_agg.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_agg2.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_agg3.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_bandm.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_beaconfd.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_blend.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_bnl1.h" />
+    <ClInclude Include="..\..\test\minunit.h" />
+    <ClInclude Include="..\..\test\MPC\MPC01.h" />
+    <ClInclude Include="..\..\test\MPC\MPC02.h" />
+    <ClInclude Include="..\..\test\unboundedProblems\unboundedLP1.h" />
+    <ClInclude Include="..\..\test\unboundedProblems\unboundedMaxSqrt.h" />
+    <ClInclude Include="..\..\test\updateData\update_data.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\data.h" />
-    <ClInclude Include="..\..\include\ecos.h" />
+    <ClCompile Include="..\..\test\ecostester.c" />
+    <ClCompile Include="..\..\test\generated\inv_pos\inv_pos.c" />
+    <ClCompile Include="..\..\test\generated\norm\norm.c" />
+    <ClCompile Include="..\..\test\generated\qcml_utils.c" />
+    <ClCompile Include="..\..\test\generated\quad_over_lin\quad_over_lin.c" />
+    <ClCompile Include="..\..\test\generated\sq_norm\sq_norm.c" />
+    <ClCompile Include="..\..\test\generated\sum_sq\sum_sq.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ECOS\ECOS.vcxproj">

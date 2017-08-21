@@ -21,6 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{BD19D8A4-021F-440D-9C95-5CB13F20CBD9}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
+    <RootNamespace>ECOS</RootNamespace>
     <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -162,6 +163,9 @@
     </ProjectReference>
     <ProjectReference Include="..\LDL\LDL.vcxproj">
       <Project>{724d412d-5da9-4fb0-a5c9-ad28ac037305}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\SuiteSparse_config\SuiteSparse_config.vcxproj">
+      <Project>{CA776687-65F0-47CA-8578-45160B8D9AA6}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

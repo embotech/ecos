@@ -1,0 +1,5 @@
+# VS temp files
+Debug
+Release
+*.vcxproj.filters
+*.vcxproj.user
