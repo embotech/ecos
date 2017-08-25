@@ -103,14 +103,14 @@ spmat* newSparseMatrix(idxint m, idxint n, idxint nnz)
 	idxint* ir = (idxint *)MALLOC(nnz*sizeof(idxint));
 	pfloat* pr = (pfloat *)MALLOC(nnz*sizeof(pfloat));
 	jc[n] = nnz;
-	return createSparseMatrix(m, n, nnz, jc, ir, pr);
+	return EcosCreateSparseMatrix(m, n, nnz, jc, ir, pr);
 }
 
 
 /** 
  * Create a sparse matrix from existing arrays (no MALLOC) 
  */
-spmat* createSparseMatrix(idxint m, idxint n, idxint nnz, idxint* jc, idxint* ir, pfloat* pr)
+spmat* EcosCreateSparseMatrix(idxint m, idxint n, idxint nnz, idxint* jc, idxint* ir, pfloat* pr)
 {
 	spmat* M = (spmat *)MALLOC(sizeof(spmat));
 	M->m = m;
