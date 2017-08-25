@@ -39,17 +39,20 @@ ifeq ($(UNAME), Darwin)
 # we're on apple, no need to link rt library
 LDFLAGS = -lm
 # shared library has extension .dylib
-SHAREDNAME = libecos.dylib
+SHARED_ECOS = libecos.dylib
+SHARED_ECOS_BB = libecos_bb.dylib
 else ifeq ($(ISWINDOWS), 1)
 # we're on windows (cygwin or msys)
 LDFLAGS = -lm
 # shared library has extension .dll
-SHAREDNAME = libecos.dll
+SHARED_ECOS = libecos.dll
+SHARED_ECOS_BB = libecos_bb.dll
 else
 # we're on a linux system, use accurate timer provided by clock_gettime()
 LDFLAGS = -lm -lrt
 # shared library has extension .so
-SHAREDNAME = libecos.so
+SHARED_ECOS = libecos.so
+SHARED_ECOS_BB = libecos_bb.so
 endif
 
 

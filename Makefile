@@ -68,8 +68,10 @@ runecosexp: src/runecos_exp.c libecos.a
 
 # Shared library
 .PHONY: shared
-shared: $(SHAREDNAME)
-$(SHAREDNAME): $(LDL) $(AMD) $(ECOS_OBJS)
+shared: $(SHARED_ECOS) $(SHARED_ECOS_BB)
+$(SHARED_ECOS): $(LDL) $(AMD) $(ECOS_OBJS)
+	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
+$(SHARED_ECOS_BB): $(LDL) $(AMD) $(ECOS_BB_OBJS)
 	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
 
 # ECOS tester
