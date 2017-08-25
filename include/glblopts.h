@@ -54,6 +54,9 @@ typedef double pfloat;              /* for numerical values  */
                            /* (flag used only for development)           */
 #endif
 
+/* SYSTEM INCLUDES FOR NAN & INFINITY ---------------------------------- */
+#include <math.h>
+
 /* NAN ----------------------------------------------------------------- */
 #ifndef NAN
 #define NAN ((double)0x7ff8000000000000)
