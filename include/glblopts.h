@@ -68,6 +68,11 @@ typedef double pfloat;              /* for numerical values  */
 #define EXPCONE      /*When defined the exponential cone solver code is enabled*/
 
 /* SYSTEM INCLUDES FOR PRINTING ---------------------------------------- */
+#if DEBUG || PRINTLEVEL > 0
+#include <stdio.h>
+#endif
+
+/* PRINTTEXT ----------------------------------------------------------- */
 #if PRINTLEVEL > 0
 #ifdef MATLAB_MEX_FILE
 #include "mex.h"
@@ -78,7 +83,6 @@ typedef double pfloat;              /* for numerical values  */
 #else
 #define PRINTTEXT printf
 #endif
-#include <stdio.h>
 #else
 #define PRINTTEXT(...)
 #endif
