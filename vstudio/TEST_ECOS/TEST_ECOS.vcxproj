@@ -27,41 +27,48 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{BD19D8A4-021F-440D-9C95-5CB13F20CBD9}</ProjectGuid>
+    <ProjectGuid>{87755E44-8CEC-4B20-A4B9-73AD1D2F190B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>ECOS</RootNamespace>
-    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
+    <RootNamespace>TEST_ECOS</RootNamespace>
+    <ProjectName>TEST_ECOS</ProjectName>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Export|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Export|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -105,126 +112,140 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;ECOS_EXPORTS;DLONG;ZLONG;LDL_LONG;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include;$(ProjectDir)\..\..\external\SuiteSparse_config;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\SuiteSparse_config;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include;$(ProjectDir)\..\..\test;$(ProjectDir)\..\..\test\generated</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <TargetMachine>MachineX86</TargetMachine>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions> %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;ECOS_EXPORTS;DLONG;ZLONG;LDL_LONG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include;$(ProjectDir)\..\..\external\SuiteSparse_config;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\SuiteSparse_config;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include;$(ProjectDir)\..\..\test;$(ProjectDir)\..\..\test\generated</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <TargetMachine>MachineX86</TargetMachine>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions> %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Export|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;ECOS_EXPORTS;DLONG;ZLONG;LDL_LONG;PRINTLEVEL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include;$(ProjectDir)\..\..\external\SuiteSparse_config;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\SuiteSparse_config;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include;$(ProjectDir)\..\..\test;$(ProjectDir)\..\..\test\generated</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <TargetMachine>MachineX86</TargetMachine>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions> %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;ECOS_EXPORTS;DLONG;ZLONG;LDL_LONG;PRINTLEVEL=0</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include;$(ProjectDir)\..\..\external\SuiteSparse_config;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\SuiteSparse_config;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include;$(ProjectDir)\..\..\test;$(ProjectDir)\..\..\test\generated</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions> %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;ECOS_EXPORTS;DLONG;ZLONG;LDL_LONG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include;$(ProjectDir)\..\..\external\SuiteSparse_config;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\SuiteSparse_config;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include;$(ProjectDir)\..\..\test;$(ProjectDir)\..\..\test\generated</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions> %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Export|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;ECOS_EXPORTS;DLONG;ZLONG;LDL_LONG;PRINTLEVEL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include;$(ProjectDir)\..\..\external\SuiteSparse_config;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include;$(ProjectDir)\..\..\external\SuiteSparse_config;$(ProjectDir)\..\..\external\ldl\include;$(ProjectDir)\..\..\external\amd\include;$(ProjectDir)\..\..\test;$(ProjectDir)\..\..\test\generated</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions> %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\cone.c" />
-    <ClCompile Include="..\..\src\ctrlc.c" />
-    <ClCompile Include="..\..\src\ecos.c" />
-    <ClCompile Include="..\..\src\equil.c" />
-    <ClCompile Include="..\..\src\expcone.c" />
-    <ClCompile Include="..\..\src\kkt.c" />
-    <ClCompile Include="..\..\src\preproc.c" />
-    <ClCompile Include="..\..\src\spla.c" />
-    <ClCompile Include="..\..\src\splamm.c" />
-    <ClCompile Include="..\..\src\timer.c" />
-    <ClCompile Include="..\..\src\wright_omega.c" />
+    <ClInclude Include="..\..\test\cvxpyProblems\githubIssue98.h" />
+    <ClInclude Include="..\..\test\emptyProblem\emptyProblem.h" />
+    <ClInclude Include="..\..\test\feasibilityProblems\feas.h" />
+    <ClInclude Include="..\..\test\generated\generated_tests.h" />
+    <ClInclude Include="..\..\test\generated\inv_pos\inv_pos.h" />
+    <ClInclude Include="..\..\test\generated\norm\norm.h" />
+    <ClInclude Include="..\..\test\generated\qcml_utils.h" />
+    <ClInclude Include="..\..\test\generated\quad_over_lin\quad_over_lin.h" />
+    <ClInclude Include="..\..\test\generated\sq_norm\sq_norm.h" />
+    <ClInclude Include="..\..\test\generated\sum_sq\sum_sq.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_25fv47.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_adlittle.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_afiro.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_agg.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_agg2.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_agg3.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_bandm.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_beaconfd.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_blend.h" />
+    <ClInclude Include="..\..\test\LPnetlib\lp_bnl1.h" />
+    <ClInclude Include="..\..\test\minunit.h" />
+    <ClInclude Include="..\..\test\MPC\MPC01.h" />
+    <ClInclude Include="..\..\test\MPC\MPC02.h" />
+    <ClInclude Include="..\..\test\unboundedProblems\unboundedLP1.h" />
+    <ClInclude Include="..\..\test\unboundedProblems\unboundedMaxSqrt.h" />
+    <ClInclude Include="..\..\test\updateData\update_data.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\cone.h" />
-    <ClInclude Include="..\..\include\ctrlc.h" />
-    <ClInclude Include="..\..\include\ecos.h" />
-    <ClInclude Include="..\..\include\equil.h" />
-    <ClInclude Include="..\..\include\expcone.h" />
-    <ClInclude Include="..\..\include\glblopts.h" />
-    <ClInclude Include="..\..\include\kkt.h" />
-    <ClInclude Include="..\..\include\spla.h" />
-    <ClInclude Include="..\..\include\splamm.h" />
-    <ClInclude Include="..\..\include\timer.h" />
-    <ClInclude Include="..\..\include\wright_omega.h" />
+    <ClCompile Include="..\..\test\ecostester.c" />
+    <ClCompile Include="..\..\test\generated\inv_pos\inv_pos.c" />
+    <ClCompile Include="..\..\test\generated\norm\norm.c" />
+    <ClCompile Include="..\..\test\generated\qcml_utils.c" />
+    <ClCompile Include="..\..\test\generated\quad_over_lin\quad_over_lin.c" />
+    <ClCompile Include="..\..\test\generated\sq_norm\sq_norm.c" />
+    <ClCompile Include="..\..\test\generated\sum_sq\sum_sq.c" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AMD\AMD.vcxproj">
-      <Project>{530a3224-506f-4c26-853b-475e069fddd6}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\LDL\LDL.vcxproj">
-      <Project>{724d412d-5da9-4fb0-a5c9-ad28ac037305}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\SuiteSparse_config\SuiteSparse_config.vcxproj">
-      <Project>{CA776687-65F0-47CA-8578-45160B8D9AA6}</Project>
+    <ProjectReference Include="..\ECOS\ECOS.vcxproj">
+      <Project>{bd19d8a4-021f-440d-9c95-5cb13f20cbd9}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
