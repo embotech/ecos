@@ -103,4 +103,7 @@ clean:
 purge: clean
 	( cd external/ldl    ; $(MAKE) purge )
 	( cd external/amd    ; $(MAKE) purge )
-	- $(RM) libecos.a libecos_bb.a runecos runecosexp
+	- $(RM) runecos runecosexp \
+			libecos*.a libecos*.so libecos*.dylib libecos*.dll \
+			ecos_bb_test ecos_bb_test.exe \
+			ecostester ecostester.exe
