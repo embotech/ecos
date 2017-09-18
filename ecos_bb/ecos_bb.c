@@ -291,7 +291,7 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
         for (i=0; i<prob->num_int_vars; ++i){
             prob->tmp_int_node_id[2 * i + 1] = pfloat_round(prob->ecos_prob->x[prob->int_vars_idx[i]] );
             prob->tmp_int_node_id[2*i] = -(prob->tmp_int_node_id[2*i + 1]);
-            branchable &= float_eqls( prob->ecos_prob->x[i] , prob->tmp_int_node_id[2*i + 1], prob->stgs->integer_tol );
+            branchable &= float_eqls( prob->ecos_prob->x[prob->int_vars_idx[i]] , prob->tmp_int_node_id[2*i + 1], prob->stgs->integer_tol );
         }
         branchable = !branchable;
 
