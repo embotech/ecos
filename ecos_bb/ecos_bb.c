@@ -264,7 +264,7 @@ void load_solution(ecos_bb_pwork* prob){
 void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
     idxint i, ret_code, branchable, viable_rounded_sol;
     viable_rounded_sol = 0;
-    
+
     set_prob( prob, get_bool_node_id(node_idx,prob), get_int_node_id(node_idx, prob) );
     ret_code = ECOS_solve(prob->ecos_prob);
 
@@ -275,25 +275,25 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
     }
 #endif
 
-    if (ret_code >= 0 || 
+    if (ret_code >= 0 ||
         ret_code == ECOS_MAXIT ||
         ret_code == ECOS_NUMERICS )
     {
         prob->nodes[node_idx].L = eddot(prob->ecos_prob->n, prob->ecos_prob->x, prob->ecos_prob->c);
 
-        /* Figure out if x is already an integer solution 
+        /* Figure out if x is already an integer solution
             if the solution had no numerical errors*/
         branchable = 1;
         for (i=0; i<prob->num_bool_vars; ++i){
             prob->tmp_bool_node_id[i] = (char) pfloat_round( prob->ecos_prob->x[prob->bool_vars_idx[i]] );
-            branchable &= float_eqls( prob->ecos_prob->x[i] , (pfloat) prob->tmp_bool_node_id[i], prob->stgs->integer_tol );
+            branchable &= float_eqls( prob->ecos_prob->x[prob->bool_vars_idx[i]] , (pfloat) prob->tmp_bool_node_id[i], prob->stgs->integer_tol );
         }
         for (i=0; i<prob->num_int_vars; ++i){
             prob->tmp_int_node_id[2 * i + 1] = pfloat_round(prob->ecos_prob->x[prob->int_vars_idx[i]] );
             prob->tmp_int_node_id[2*i] = -(prob->tmp_int_node_id[2*i + 1]);
             branchable &= float_eqls( prob->ecos_prob->x[i] , prob->tmp_int_node_id[2*i + 1], prob->stgs->integer_tol );
         }
-        branchable = !branchable;        
+        branchable = !branchable;
 
 #if MI_PRINTLEVEL > 1
         if (prob->stgs->verbose){ PRINTTEXT("Is branchable: %u\n",branchable); }
