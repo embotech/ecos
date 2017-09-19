@@ -2,6 +2,50 @@
 #include "ecos.h"
 #include "ecos_bb.h"
 
+int test_basic(){
+	idxint n = 2;
+	idxint m = 1;
+	pfloat feas_Ax[1] = {1.0};
+	idxint feas_Ap[3] = {0, 1, 1};
+	idxint feas_Ai[1] = {0};
+
+	pfloat feas_Gx[1] = {-1.0};
+	idxint feas_Gp[3] = {0, 0, 1};
+	idxint feas_Gi[1] = {0};
+
+	pfloat feas_c[2] = {1., 1.};
+	pfloat feas_b[1] = {0.};
+	pfloat feas_h[1] = {-0.5};
+
+	idxint bool_idx[1] = {1};
+
+	/* Answer: */
+	pfloat x[2] = {0.0, 0.0};
+
+	idxint i, ret_code, pass;
+
+	ecos_bb_pwork* prob = ECOS_BB_setup(
+                                      n, m, 1,
+                                      1, 0, NULL, 0,
+                                      feas_Gx, feas_Gp, feas_Gi,
+                                      feas_Ax, feas_Ap, feas_Ai,
+                                      feas_c, feas_h, feas_b, 1, bool_idx, 0 , NULL, NULL);
+
+	printf("Passed setup \n");
+
+	prob->stgs->verbose = 0;
+	ret_code = ECOS_BB_solve(prob);
+
+	pass = 1;
+
+	printf("Soln:");
+	for (i=0; i<n; ++i){
+		pass &= float_eqls(x[i], prob->x[i], prob->stgs->integer_tol );
+		printf("%f ", prob->x[i]);
+	}
+	ECOS_BB_cleanup(prob, 0);
+	return pass;
+}
 
 int test_1a_bool(){
 	idxint n = 2;
@@ -19,24 +63,24 @@ int test_1a_bool(){
 	pfloat x[2] = {1.0, 2.0};
 
 	idxint i, ret_code, pass;
-	
+
 	ecos_bb_pwork* prob = ECOS_BB_setup(
-		n, m, 0, 
+		n, m, 0,
 		m, 0, NULL, 0,
 		feas_Gx, feas_Gp, feas_Gi,
 		NULL, NULL, NULL,
 		feas_c, feas_h, NULL, 1, bool_idx, 0 , NULL, NULL);
-	
+
 	printf("Passed setup \n");
 
 	prob->stgs->verbose = 0;
 	ret_code = ECOS_BB_solve(prob);
-	
+
 	pass = 1;
 
 	printf("Soln:");
 	for (i=0; i<n; ++i){
-		pass &= float_eqls(x[i] ,prob->x[i], prob->stgs->integer_tol );
+		pass &= float_eqls(x[i], prob->x[i], prob->stgs->integer_tol );
 		printf("%f ", prob->x[i]);
 	}
 	ECOS_BB_cleanup(prob, 0);
@@ -404,5 +448,6 @@ int main(){
 	printf("\n\nTest 5: %u\n=============\n", test_5());
 	printf("\n\nTest 6: %u\n=============\n", test_6());	
 	printf("\n\nTest 7: %u\n=============\n", test_7());			
+	printf("\n\nTest basic: %u\n=============\n", test_basic());			
 	return 0;
 }
