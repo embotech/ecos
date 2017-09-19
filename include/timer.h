@@ -27,17 +27,15 @@
 
 #if PROFILING > 0
 
-#if (defined _WIN32 || defined _WIN64 || defined _WINDLL )
+#if (defined _WIN32 || defined _WIN64 )
 
-/* Use Windows QueryPerformanceCounter for timing */
-#include <windows.h>
+#include <stdint.h>
 
 typedef struct timer{
-	LARGE_INTEGER tic;
-	LARGE_INTEGER toc;
-	LARGE_INTEGER freq;
+	uint64_t tic;
+	uint64_t toc;
+	uint64_t freq;
 } timer;
-
 
 #elif (defined __APPLE__)
 
@@ -49,8 +47,6 @@ typedef struct timer{
 	uint64_t toc;
 	mach_timebase_info_data_t tinfo;
 } timer;
-
-
 
 #else
 

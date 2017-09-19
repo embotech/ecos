@@ -14,11 +14,6 @@
 extern "C" {
 #endif
 
-/* the parameter struct */
-typedef struct sum_sq_params {
-
-} sum_sq_params;
-
 /* the input dimensions struct */
 typedef struct sum_sq_dims {
     char SENTINEL; /* empty dims struct */
