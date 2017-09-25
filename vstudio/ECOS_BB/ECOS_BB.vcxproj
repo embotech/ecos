@@ -27,9 +27,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{BD19D8A4-021F-440D-9C95-5CB13F20CBD9}</ProjectGuid>
+    <ProjectGuid>{D4850429-67BC-4051-AD8D-B6D72EEB51DB}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>ECOS</RootNamespace>
+    <RootNamespace>ECOS_BB</RootNamespace>
     <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -191,6 +191,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\ecos_bb\ecos_bb.c" />
+    <ClCompile Include="..\..\ecos_bb\ecos_bb_preproc.c" />
     <ClCompile Include="..\..\src\cone.c" />
     <ClCompile Include="..\..\src\ctrlc.c" />
     <ClCompile Include="..\..\src\ecos.c" />
@@ -207,6 +209,7 @@
     <ClInclude Include="..\..\include\cone.h" />
     <ClInclude Include="..\..\include\ctrlc.h" />
     <ClInclude Include="..\..\include\ecos.h" />
+    <ClInclude Include="..\..\include\ecos_bb.h" />
     <ClInclude Include="..\..\include\equil.h" />
     <ClInclude Include="..\..\include\expcone.h" />
     <ClInclude Include="..\..\include\glblopts.h" />

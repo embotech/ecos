@@ -27,10 +27,12 @@
 typedef double pfloat;              /* for numerical values  */
 
 /* SET PRINT LEVEL ----------------------------------------------------- */
+#ifndef PRINTLEVEL
 #define PRINTLEVEL (2)     /* 0: no prints					             */
 						   /* 1: only final info				         */
                            /* 2: progress print per iteration            */
 						   /* 3: debug level, enables print & dump fcns. */
+#endif
 
 #define MATLAB_FLUSH_PRINTS
                             /* print each iteration directly to Matlab.  */
@@ -39,14 +41,21 @@ typedef double pfloat;              /* for numerical values  */
                             /* problems.                                 */
 
 /* SET PROFILING LEVEL ------------------------------------------------- */
+#ifndef PROFILING
 #define PROFILING (1)      /* 0: no timing information				     */
                            /* 1: runtime (divided in setup and solve)    */
                            /* 2: detailed profiling                      */
+#endif
 
 /* SET DEBUG LEVEL ----------------------------------------------------- */
+#ifndef DEBUG
 #define DEBUG (0)          /* 0: no debugging information                */
                            /* 1: debug info & dump intermediate results  */
                            /* (flag used only for development)           */
+#endif
+
+/* SYSTEM INCLUDES FOR NAN & INFINITY ---------------------------------- */
+#include <math.h>
 
 /* NAN ----------------------------------------------------------------- */
 #ifndef NAN
@@ -62,6 +71,11 @@ typedef double pfloat;              /* for numerical values  */
 #define EXPCONE      /*When defined the exponential cone solver code is enabled*/
 
 /* SYSTEM INCLUDES FOR PRINTING ---------------------------------------- */
+#if DEBUG || PRINTLEVEL > 0
+#include <stdio.h>
+#endif
+
+/* PRINTTEXT ----------------------------------------------------------- */
 #if PRINTLEVEL > 0
 #ifdef MATLAB_MEX_FILE
 #include "mex.h"
@@ -72,7 +86,6 @@ typedef double pfloat;              /* for numerical values  */
 #else
 #define PRINTTEXT printf
 #endif
-#include <stdio.h>
 #else
 #define PRINTTEXT(...)
 #endif

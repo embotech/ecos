@@ -68,8 +68,10 @@ runecosexp: src/runecos_exp.c libecos.a
 
 # Shared library
 .PHONY: shared
-shared: $(SHAREDNAME)
-$(SHAREDNAME): $(LDL) $(AMD) $(ECOS_OBJS)
+shared: $(SHARED_ECOS) $(SHARED_ECOS_BB)
+$(SHARED_ECOS): $(LDL) $(AMD) $(ECOS_OBJS)
+	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
+$(SHARED_ECOS_BB): $(LDL) $(AMD) $(ECOS_BB_OBJS)
 	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
 
 # ECOS tester
@@ -101,4 +103,7 @@ clean:
 purge: clean
 	( cd external/ldl    ; $(MAKE) purge )
 	( cd external/amd    ; $(MAKE) purge )
-	- $(RM) libecos.a libecos_bb.a runecos runecosexp
+	- $(RM) runecos runecosexp \
+			libecos*.a libecos*.so libecos*.dylib libecos*.dll \
+			ecos_bb_test ecos_bb_test.exe \
+			ecostester ecostester.exe

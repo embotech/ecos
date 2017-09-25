@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "timer.h"
 #include "ecos.h"
 #include "ecos_bb.h"

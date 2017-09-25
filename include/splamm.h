@@ -33,7 +33,7 @@
 /**
  * Create a sparse matrix from existing arrays.
  */
-spmat* createSparseMatrix(idxint m, idxint n, idxint nnz, idxint* jc, idxint* ir, pfloat* pr);
+spmat* EcosCreateSparseMatrix(idxint m, idxint n, idxint nnz, idxint* jc, idxint* ir, pfloat* pr);
 
 
 /**
@@ -100,6 +100,9 @@ void printDenseMatrix_i(idxint *M, idxint dim1, idxint dim2, char *name);
  */
 void printSparseMatrix(spmat* M);
 
+#endif
+
+#if DEBUG
 
 /**
  * Dumps a sparse matrix in Matlab format.

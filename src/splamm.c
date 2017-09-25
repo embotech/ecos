@@ -26,8 +26,8 @@
 #include "splamm.h"
 
 /* SYSTEM INCLUDES FOR MEMORY ALLOCATION ------------------------------- */
-#if PRINTLEVEL > 2
-#include <stdlib.h>
+#if DEBUG || PRINTLEVEL > 0
+#include <stdio.h>
 #endif
 
 
@@ -103,14 +103,14 @@ spmat* newSparseMatrix(idxint m, idxint n, idxint nnz)
 	idxint* ir = (idxint *)MALLOC(nnz*sizeof(idxint));
 	pfloat* pr = (pfloat *)MALLOC(nnz*sizeof(pfloat));
 	jc[n] = nnz;
-	return createSparseMatrix(m, n, nnz, jc, ir, pr);
+	return EcosCreateSparseMatrix(m, n, nnz, jc, ir, pr);
 }
 
 
 /** 
  * Create a sparse matrix from existing arrays (no MALLOC) 
  */
-spmat* createSparseMatrix(idxint m, idxint n, idxint nnz, idxint* jc, idxint* ir, pfloat* pr)
+spmat* EcosCreateSparseMatrix(idxint m, idxint n, idxint nnz, idxint* jc, idxint* ir, pfloat* pr)
 {
 	spmat* M = (spmat *)MALLOC(sizeof(spmat));
 	M->m = m;
@@ -274,8 +274,9 @@ void printSparseMatrix(spmat* M)
         }
     }
 }
+#endif
 
-
+#if DEBUG
 /* dump a sparse matrix in Matlab format */
 /* use LOAD and SPCONVERT to read in the file in MATLAB */
 void dumpSparseMatrix(spmat* M, char* fn)
@@ -297,9 +298,13 @@ void dumpSparseMatrix(spmat* M, char* fn)
 		}
         fprintf(f,"%d\t%d\t%20.18e\n", (int)M->m, (int)M->n, 0.0);
 		fclose(f);
+#if PRINTLEVEL > 0
 		PRINTTEXT("File %s successfully written.\n", fn);
+#endif
 	} else {
+#if PRINTLEVEL > 0
 		PRINTTEXT("Error during writing file %s.\n", fn);
+#endif
 	}
 }
 
@@ -332,9 +337,13 @@ void dumpDenseMatrix(pfloat *M, int dim1, int dim2, char *fn)
             }                
         }
         fclose(f);
-        printf("Written %d x %d matrix to '%s'.\n",i,dim2,fn);
+#if PRINTLEVEL > 0
+        PRINTTEXT("Written %d x %d matrix to '%s'.\n",i,dim2,fn);
+#endif
     } else {
-        printf("ERROR: file %s could not be opened. Exiting.",fn);
+#if PRINTLEVEL > 0
+		PRINTTEXT("ERROR: file %s could not be opened. Exiting.",fn);
+#endif
         exit(1);
     }    
 }
@@ -368,9 +377,13 @@ void dumpDenseMatrix_i(idxint *M, int dim1, int dim2, char *fn)
             }                
         }
         fclose(f);
-        printf("Written %d x %d matrix to '%s'.\n",i,dim2,fn);
+#if PRINTLEVEL > 0
+		PRINTTEXT("Written %d x %d matrix to '%s'.\n",i,dim2,fn);
+#endif
     } else {
-        printf("ERROR: file %s could not be opened. Exiting.",fn);
+#if PRINTLEVEL > 0
+		PRINTTEXT("ERROR: file %s could not be opened. Exiting.",fn);
+#endif
         exit(1);
     }    
 }
