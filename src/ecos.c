@@ -1088,7 +1088,7 @@ idxint ECOS_solve(pwork* w)
     char fn[20];
 #endif
 
-#if (defined _WIN32 || defined _WIN64 )
+#if ((defined _WIN32 || defined _WIN64 ) && _MSC_VER < 1400)
 	/* sets width of exponent for floating point numbers to 2 instead of 3 */
 	unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);
 #endif
