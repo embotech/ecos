@@ -256,8 +256,27 @@ typedef struct pwork{
 
 /* METHODS */
 
-/* set up work space */
-/* could be done by codegen */
+/* set up work space
+ * could be done by codegen 
+ *
+ * Parameters:
+ * idxint n        Number of variables
+ * idxint m        Number of inequalities, number of rows of G
+ * idxint p        Number of equality constraints
+ * idxint l        Dimension of positive orthant
+ * idxint ncones   Number of second order cones
+ * idxint* q       Array of length 'ncones', defines the dimension of each cone
+ * idxint nex      Number of exponential cones
+ * pfloat* Gpr     Sparse G matrix data array (column compressed storage)
+ * idxint* Gjc     Sparse G matrix column index array (column compressed storage)
+ * idxint* Gir     Sparse G matrix row index array (column compressed storage)
+ * pfloat* Apr     Sparse A matrix data array (column compressed storage) (can be all NULL if no equalities are present)
+ * idxint* Ajc     Sparse A matrix column index array (column compressed storage) (can be all NULL if no equalities are present)
+ * idxint* Air     Sparse A matrix row index array (column compressed storage) (can be all NULL if no equalities are present)
+ * pfloat* c       Array of size n, cost function weights
+ * pfloat* h       Array of size m, RHS vector of cone constraint
+ * pfloat* b       Array of size p, RHS vector of equalities (can be NULL if no equalities are present)
+ */
 pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint* q, idxint nex,
                    pfloat* Gpr, idxint* Gjc, idxint* Gir,
                    pfloat* Apr, idxint* Ajc, idxint* Air,
