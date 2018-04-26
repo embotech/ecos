@@ -432,7 +432,7 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K,
 
 	/* return Sign vector and KKT matrix */
     *S = Sign;
-	*K = createSparseMatrix(nK, nK, nnzK, Kjc, Kir, Kpr);
+	*K = ecoscreateSparseMatrix(nK, nK, nnzK, Kjc, Kir, Kpr);
 }
 
 /**
@@ -791,15 +791,15 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 
     /* Store problem data */
   if(Apr && Ajc && Air) {
-    mywork->A = createSparseMatrix(p, n, Ajc[n], Ajc, Air, Apr);
+    mywork->A = ecoscreateSparseMatrix(p, n, Ajc[n], Ajc, Air, Apr);
   } else {
     mywork->A = NULL;
   }
   if (Gpr && Gjc && Gir) {
-	  mywork->G = createSparseMatrix(m, n, Gjc[n], Gjc, Gir, Gpr);
+	  mywork->G = ecoscreateSparseMatrix(m, n, Gjc[n], Gjc, Gir, Gpr);
   } else {
     /* create an empty sparse matrix */
-	mywork->G = createSparseMatrix(m, n, 0, Gjc, Gir, Gpr);
+	mywork->G = ecoscreateSparseMatrix(m, n, 0, Gjc, Gir, Gpr);
   }
 
 #if defined EQUILIBRATE && EQUILIBRATE > 0
@@ -992,7 +992,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #endif
 	Lir = (idxint *)MALLOC(lnz*sizeof(idxint));
 	Lpr = (pfloat *)MALLOC(lnz*sizeof(pfloat));
-	mywork->KKT->L = createSparseMatrix(nK, nK, lnz, Ljc, Lir, Lpr);
+	mywork->KKT->L = ecoscreateSparseMatrix(nK, nK, lnz, Ljc, Lir, Lpr);
 #if PRINTLEVEL > 2
 	PRINTTEXT("Created Cholesky factor of K in KKT struct\n");
 #endif
