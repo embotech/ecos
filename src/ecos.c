@@ -61,8 +61,8 @@ const char* ECOS_ver(void)
 idxint compareStatistics(stats* infoA, stats* infoB)
 {
 
-    if ( infoA->pinfres != NAN && infoA->kapovert > 1){
-        if( infoB->pinfres != NAN ) {
+    if ( infoA->pinfres != ECOS_NAN && infoA->kapovert > 1){
+        if( infoB->pinfres != ECOS_NAN) {
             /* A->pinfres != NAN, B->pinfres!=NAN */
             if ( ( infoA->gap > 0 && infoB->gap > 0 && infoA->gap < infoB->gap ) &&
                 ( infoA->pinfres > 0 && infoA->pinfres < infoB->pres ) &&
@@ -214,7 +214,7 @@ idxint checkExitConditions(pwork* w, idxint mode)
     }
 
     /* Dual infeasible? */
-    else if( (w->info->dinfres != NAN) && (w->info->dinfres < feastol) && (w->tau < w->kap) ){
+    else if( (w->info->dinfres != ECOS_NAN) && (w->info->dinfres < feastol) && (w->tau < w->kap) ){
 #if PRINTLEVEL > 0
         if( w->stgs->verbose ) {
             if( mode == 0) {
@@ -230,7 +230,7 @@ idxint checkExitConditions(pwork* w, idxint mode)
     }
 
     /* Primal infeasible? */
-    else if( ((w->info->pinfres != NAN && w->info->pinfres < feastol) && (w->tau < w->kap)) ||
+    else if( ((w->info->pinfres != ECOS_NAN && w->info->pinfres < feastol) && (w->tau < w->kap)) ||
             ( w->tau < w->stgs->feastol && w->kap < w->stgs->feastol && w->info->pinfres < w->stgs->feastol) ){
 #if PRINTLEVEL > 0
         if( w->stgs->verbose ) {
@@ -516,7 +516,7 @@ void updateStatistics(pwork* w)
     /* relative duality gap */
 	if( info->pcost < 0 ){ info->relgap = info->gap / (-info->pcost); }
 	else if( info->dcost > 0 ){ info->relgap = info->gap / info->dcost; }
-	else info->relgap = NAN;
+	else info->relgap = ECOS_NAN;
 
     /* residuals */
     nry = w->p > 0 ? norm2(w->ry, w->p)/MAX(w->resy0+w->nx,1) : 0.0;
@@ -530,8 +530,8 @@ void updateStatistics(pwork* w)
      * info->pinfres = w->hz + w->by < 0 ? w->hresx / w->resx0 / (-w->hz - w->by) : NAN;
      * info->dinfres = w->cx < 0 ? MAX(w->hresy/w->resy0, w->hresz/w->resz0) / (-w->cx) : NAN;
      */
-    info->pinfres = (w->hz + w->by)/MAX(w->ny+w->nz,1) < -w->stgs->reltol ? w->hresx / MAX(w->ny+w->nz,1) : NAN;
-    info->dinfres = w->cx/MAX(w->nx,1) < -w->stgs->reltol ? MAX(w->hresy/MAX(w->nx,1), w->hresz/MAX(w->nx+w->ns,1)) : NAN;
+    info->pinfres = (w->hz + w->by)/MAX(w->ny+w->nz,1) < -w->stgs->reltol ? w->hresx / MAX(w->ny+w->nz,1) : ECOS_NAN;
+    info->dinfres = w->cx/MAX(w->nx,1) < -w->stgs->reltol ? MAX(w->hresy/MAX(w->nx,1), w->hresz/MAX(w->nx+w->ns,1)) : ECOS_NAN;
 
 
 
@@ -791,9 +791,9 @@ pfloat expConeLineSearch(pwork* w, pfloat dtau, pfloat dkappa, idxint affine)
     idxint* db;
 
 	 /* Initialize the other statistics */
-	pfloat* centrality = &w->info->centrality; 
+	pfloat* centrality = &w->info->centrality;
 	pfloat barrier = 0.0;  /* Variable to hold the value of f_e(s_e)+f^\star_e(z_e) */
-	
+
 	/* Constants */
     const pfloat cent_constant = w->D+1;
 
@@ -1077,7 +1077,7 @@ idxint ECOS_solve(pwork* w)
 	idxint i, initcode, KKT_FACTOR_RETURN_CODE;
 	pfloat dtau_denom, dtauaff, dkapaff, sigma, dtau, dkap, bkap;
 	idxint exitcode = ECOS_FATAL, interrupted = 0;
-	pfloat pres_prev = (pfloat)NAN;
+	pfloat pres_prev = (pfloat)ECOS_NAN;
 
 #ifdef EXPCONE
         idxint fc = w->C->fexv; /* First cone variable e */
@@ -1086,11 +1086,6 @@ idxint ECOS_solve(pwork* w)
 
 #if DEBUG
     char fn[20];
-#endif
-
-#if (defined _WIN32 || defined _WIN64 )
-	/* sets width of exponent for floating point numbers to 2 instead of 3 */
-	unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);
 #endif
 
 #if PROFILING > 0

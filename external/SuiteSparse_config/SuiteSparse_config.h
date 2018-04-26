@@ -50,19 +50,14 @@ extern "C" {
 /* ========================================================================== */
 
 #ifndef SuiteSparse_long
-
-#if _WIN64 && !(defined PYTHON) && (defined _MSC_VER)
-
+#if _WIN64
 #define SuiteSparse_long __int64
 #define SuiteSparse_long_max _I64_MAX
 #define SuiteSparse_long_idd "I64d"
-
 #else
-
 #define SuiteSparse_long long
 #define SuiteSparse_long_max LONG_MAX
 #define SuiteSparse_long_idd "ld"
-
 #endif
 #define SuiteSparse_long_id "%" SuiteSparse_long_idd
 #endif

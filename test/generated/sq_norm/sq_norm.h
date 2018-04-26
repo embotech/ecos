@@ -14,11 +14,6 @@
 extern "C" {
 #endif
 
-/* the parameter struct */
-typedef struct sq_norm_params {
-
-} sq_norm_params;
-
 /* the input dimensions struct */
 typedef struct sq_norm_dims {
     char SENTINEL; /* empty dims struct */

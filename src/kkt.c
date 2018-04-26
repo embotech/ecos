@@ -112,7 +112,7 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
     pfloat ney = 0;
     pfloat nez = 0;
     pfloat nerr;
-    pfloat nerr_prev = (pfloat)NAN;
+    pfloat nerr_prev = (pfloat)ECOS_NAN;
     pfloat error_threshold = bnorm*LINSYSACC;
     idxint nK = KKT->PKPt->n;
 

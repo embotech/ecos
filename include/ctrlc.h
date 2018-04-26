@@ -19,7 +19,7 @@
 
 /*
  * Interface for ECOS signal handling.
- * 
+ *
  * This module is (c) Michael Grant, [mcg@cvxr.com] contributed by Github PR #82
  */
 
@@ -29,24 +29,6 @@
 #include "glblopts.h"
 
 #if CTRLC > 0
-
-#if defined MATLAB_MEX_FILE
-
-/* No header file available here; define the prototypes ourselves */
-extern bool utIsInterruptPending(void);
-extern bool utSetInterruptEnabled(bool);
-
-#elif (defined _WIN32 || defined _WIN64 || defined _WINDLL )
-
-/* Use Windows SetConsoleCtrlHandler for signal handling */
-#include <windows.h>
-
-#else
-
-/* Use POSIX clocl_gettime() for timing on non-Windows machines */
-#include <signal.h>
-
-#endif
 
 /* METHODS are the same for both */
 void init_ctrlc(void);
