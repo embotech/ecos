@@ -40,7 +40,7 @@ extern bool utIsInterruptPending(void);
 extern bool utSetInterruptEnabled(bool);
 
 static int istate;
-void init_ctrlc(void) 
+void init_ctrlc(void)
 {
     istate = (int)utSetInterruptEnabled(true);
 }
@@ -75,7 +75,7 @@ void remove_ctrlc(void)
     SetConsoleCtrlHandler( handle_ctrlc, FALSE );
 }
 int check_ctrlc(void)
-{ 
+{
     return int_detected;
 }
 
@@ -90,7 +90,7 @@ void handle_ctrlc(int dummy)
 {
     int_detected = dummy?dummy:-1;
 }
-void init_ctrlc(void) 
+void init_ctrlc(void)
 {
     int_detected = 0;
     struct sigaction act;
@@ -105,7 +105,7 @@ void remove_ctrlc(void)
     sigaction(SIGINT,&oact,&act);
 }
 int check_ctrlc(void)
-{ 
+{
     return int_detected;
 }
 
