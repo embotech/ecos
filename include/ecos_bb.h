@@ -19,8 +19,8 @@
 
 
 /*
- * The branch and bound module is (c) Han Wang, Stanford University, 
- * [hanwang2@stanford.edu] 
+ * The branch and bound module is (c) Han Wang, Stanford University,
+ * [hanwang2@stanford.edu]
  */
 
 #ifndef __ecos_bb_H__
@@ -51,13 +51,13 @@
 
 /*** Exit flags ***/
 /*ECOS_BB found optimal solution*/
-#define MI_OPTIMAL_SOLN (ECOS_OPTIMAL) 
+#define MI_OPTIMAL_SOLN (ECOS_OPTIMAL)
 /*ECOS_BB proved problem is infeasible*/
-#define MI_INFEASIBLE (ECOS_PINF)	   
+#define MI_INFEASIBLE (ECOS_PINF)
 /*ECOS_BB proved problem is unbounded*/
-#define MI_UNBOUNDED (ECOS_DINF)	   
+#define MI_UNBOUNDED (ECOS_DINF)
 /*ECOS_BB hit maximum iterations but a feasible solution was found and the best seen feasible solution was returned*/
-#define MI_MAXITER_FEASIBLE_SOLN (ECOS_OPTIMAL + ECOS_INACC_OFFSET) 
+#define MI_MAXITER_FEASIBLE_SOLN (ECOS_OPTIMAL + ECOS_INACC_OFFSET)
 /*ECOS_BB hit maximum iterations without finding a feasible solution*/
 #define MI_MAXITER_NO_SOLN (ECOS_PINF + ECOS_INACC_OFFSET)
 /*ECOS_BB hit maximum iterations without finding a feasible solution that was unbounded*/
@@ -169,31 +169,31 @@ void updateDataEntry_c(ecos_bb_pwork* w, idxint idx, pfloat value);
 settings_bb* get_default_ECOS_BB_settings();
 
 /* Calculate the offset into the node_id array */
-static inline char* get_bool_node_id(idxint idx, ecos_bb_pwork* prob){
+static char* get_bool_node_id(idxint idx, ecos_bb_pwork* prob){
     return &prob->bool_node_ids[prob->num_bool_vars * idx];
 }
 
-static inline pfloat* get_int_node_id(idxint idx, ecos_bb_pwork* prob){
+static pfloat* get_int_node_id(idxint idx, ecos_bb_pwork* prob){
     return &prob->int_node_ids[prob->num_int_vars * idx * 2];
 }
 
-static inline pfloat abs_2(pfloat number){
+static pfloat abs_2(pfloat number){
 	return number < 0.0 ? -number : number;
 }
 
-static inline pfloat pfloat_round(pfloat number){
+static pfloat pfloat_round(pfloat number){
     return (number >= 0) ? (int)(number + 0.5) : (int)(number - 0.5);
 }
 
-static inline pfloat pfloat_ceil(pfloat number, pfloat integer_tol){
+static pfloat pfloat_ceil(pfloat number, pfloat integer_tol){
 	return (pfloat) (number < 0 ? (int) number : (int) (number+(1-integer_tol)) );
 }
 
-static inline pfloat pfloat_floor(pfloat number, pfloat integer_tol){
+static pfloat pfloat_floor(pfloat number, pfloat integer_tol){
     return (pfloat) (number < 0 ? (int) (number-(1-integer_tol)) : (int) number);
 }
 
-static inline idxint float_eqls(pfloat a, pfloat b, pfloat integer_tol){
+static idxint float_eqls(pfloat a, pfloat b, pfloat integer_tol){
 	return abs_2(a - b) < integer_tol;
 }
 
