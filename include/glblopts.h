@@ -47,10 +47,16 @@
 
 /* DATA TYPES ---------------------------------------------------------- */
 #include <float.h>
+#include <math.h>
 /* NOTE: Currently, pfloat MUST be double for ecos */
 typedef double pfloat;              /* for numerical values  */
-#define ECOS_NAN (-DBL_MAX)
-#define ECOS_INFINITY DBL_MAX
+#define ECOS_INFINITY   (DBL_MAX + DBL_MAX)
+#define ECOS_NAN        (ECOS_INFINITY - ECOS_INFINITY)
+
+#ifndef isinf
+/* this will also return true if x is nan, but we don't check that anyway */
+#define isinf(x) (!_finite(x))
+#endif
 
 /* Exponential cone */
 #define EXPCONE      /*When defined the exponential cone solver code is enabled*/
