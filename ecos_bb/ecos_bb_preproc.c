@@ -238,7 +238,7 @@ ecos_bb_pwork* ECOS_BB_setup(
     prob->num_bool_vars = num_bool_vars;
     prob->num_int_vars = num_int_vars;
 
-    prob->global_U = INFINITY;
+    prob->global_U = ECOS_INFINITY;
 
     /* offset the h pointer for the user*/
     prob->h = &prob->ecos_prob->h[ 2*(num_bool_vars + num_int_vars) ];

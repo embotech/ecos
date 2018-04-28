@@ -19,8 +19,8 @@
 
 
 /*
- * The branch and bound module is (c) Han Wang, Stanford University, 
- * [hanwang2@stanford.edu] 
+ * The branch and bound module is (c) Han Wang, Stanford University,
+ * [hanwang2@stanford.edu]
  */
 
 #include "glblopts.h"
@@ -48,7 +48,7 @@ void print_ecos_xequil(ecos_bb_pwork* prob){
 #if EQUILIBRATE > 0
     int i; PRINTTEXT("ecos->xequil: ");
     for (i=0; i<prob->ecos_prob->n; ++i) PRINTTEXT("%.2f ", prob->ecos_prob->xequil[i] );
-#else 
+#else
     PRINTTEXT("ecos->xequil: 1, (equilibration dissabled) ");
 #endif
     PRINTTEXT("\n");
@@ -149,7 +149,7 @@ void branch(idxint curr_node_idx, ecos_bb_pwork* prob){
 idxint get_next_node(ecos_bb_pwork* prob){
     idxint i;
     idxint next_node = -1;
-    pfloat L = INFINITY;
+    pfloat L = ECOS_INFINITY;
     for(i=0; i <= prob->iter; ++i){
         if(prob->nodes[i].status == MI_SOLVED_BRANCHABLE && prob->nodes[i].L < L ){
             next_node = i;
@@ -161,7 +161,7 @@ idxint get_next_node(ecos_bb_pwork* prob){
 
 pfloat get_global_L(ecos_bb_pwork* prob){
     idxint i;
-    pfloat L = INFINITY;
+    pfloat L = ECOS_INFINITY;
     for(i=0; i <= prob->iter; ++i) L = MIN(L,prob->nodes[i].L);
     return L;
 }
@@ -341,12 +341,12 @@ void get_bounds(idxint node_idx, ecos_bb_pwork* prob){
 
         if (viable_rounded_sol){
             /* Reset the node's U back to INF because it was not originally feasible */
-            prob->nodes[node_idx].U = INFINITY; 
+            prob->nodes[node_idx].U = ECOS_INFINITY;
         }
 
     }else { /*Assume node infeasible*/
-        prob->nodes[node_idx].L = INFINITY;
-        prob->nodes[node_idx].U = INFINITY;
+        prob->nodes[node_idx].L = ECOS_INFINITY;
+        prob->nodes[node_idx].U = ECOS_INFINITY;
         prob->nodes[node_idx].status = MI_SOLVED_NON_BRANCHABLE;
     }
 }
@@ -362,20 +362,20 @@ int get_ret_code(ecos_bb_pwork* prob){
     if ( prob->iter < prob->stgs->maxit-1){
         if ( isinf(prob->global_U) ){
             if ( prob->global_U >= 0){
-                return MI_INFEASIBLE;      
+                return MI_INFEASIBLE;
             }else{
-                return MI_UNBOUNDED;      
+                return MI_UNBOUNDED;
             }
-        } 
+        }
         else return MI_OPTIMAL_SOLN;
     } else {
         if ( isinf(prob->global_U) ){
             if ( prob->global_U >= 0){
                 return MI_MAXITER_NO_SOLN;
             }else{
-                return MI_MAXITER_UNBOUNDED;      
+                return MI_MAXITER_UNBOUNDED;
             }
-        } 
+        }
         else return MI_MAXITER_FEASIBLE_SOLN;
     }
 }
@@ -383,10 +383,10 @@ int get_ret_code(ecos_bb_pwork* prob){
 void initialize_root(ecos_bb_pwork* prob){
     idxint i;
     prob->nodes[0].status = MI_NOT_SOLVED;
-    prob->nodes[0].L = -INFINITY;
-    prob->nodes[0].U =  INFINITY;
-    prob->global_L = -INFINITY;
-    prob->global_U = INFINITY;
+    prob->nodes[0].L = -ECOS_INFINITY;
+    prob->nodes[0].U =  ECOS_INFINITY;
+    prob->global_L = -ECOS_INFINITY;
+    prob->global_U = ECOS_INFINITY;
     for (i=0; i < prob->num_bool_vars; ++i) prob->bool_node_ids[i] = MI_STAR;
     for (i=0; i < prob->num_int_vars; ++i) {prob->int_node_ids[2*i] = MAX_FLOAT_INT; prob->int_node_ids[2*i+1] = MAX_FLOAT_INT;}
 }
