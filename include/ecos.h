@@ -39,7 +39,7 @@ extern "C" {
 #endif
 
 /* ECOS VERSION NUMBER - FORMAT: X.Y.Z --------------------------------- */
-#define ECOS_VERSION ("2.0.4")
+#define ECOS_VERSION ("2.0.7")
 
 /* DEFAULT SOLVER PARAMETERS AND SETTINGS STRUCT ----------------------- */
 #define MAXIT      (100)          /* maximum number of iterations         */
@@ -258,7 +258,7 @@ typedef struct pwork{
 /* METHODS */
 
 /* set up work space
- * could be done by codegen 
+ * could be done by codegen
  *
  * Parameters:
  * idxint n        Number of variables
