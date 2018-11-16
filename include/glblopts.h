@@ -53,7 +53,7 @@ typedef double pfloat;              /* for numerical values  */
 #define ECOS_INFINITY   (DBL_MAX + DBL_MAX)
 #define ECOS_NAN        (ECOS_INFINITY - ECOS_INFINITY)
 
-#ifndef isinf
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
 /* this will also return true if x is nan, but we don't check that anyway */
 #define isinf(x) (!_finite(x))
 #endif
