@@ -71,8 +71,11 @@
  *
  * OUTPUT:  idxint* Sign - pointer to vector of signs for regularization
  *              spmat* K - pointer to unpermuted upper triangular part of KKT matrix
+ *         idxint* AttoK - vector of indices such that K[AtoK[i]] = A[i]
+ *         idxint* GttoK - vector of indices such that K[GtoK[i]] = G[i]
  */
-void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
+void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K,
+                 idxint* AttoK, idxint* GttoK)
 {
 	idxint i, j, k, l, r, row_stop, row, cone_strt, ks, conesize;
 	idxint n = Gt->m;
@@ -204,7 +207,7 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 			while( row++ < row_stop ){
 				Kir[k] = At->ir[i];
 				Kpr[k] = At->pr[i];
-                k++; i++;
+				AttoK[i++] = k++;
 			}
 		}
 #if STATICREG == 1
@@ -234,7 +237,7 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 			while( row++ < row_stop ){
 				Kir[k] = Gt->ir[i];
 				Kpr[k] = Gt->pr[i];
-                k++; i++;
+				GttoK[i++] = k++;
 			}
 		}
         /* -I for LP-cone */
@@ -277,7 +280,8 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
                Kjc[n+p+cone_strt+2*l+j] = k;
                while( row++ < row_stop ){
                    Kir[k] = Gt->ir[i];
-                   Kpr[k++] = Gt->pr[i++];
+                   Kpr[k] = Gt->pr[i];
+                   GttoK[i++] = k++;
                }
            }
 
@@ -344,7 +348,8 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
                 Kjc[n+p+cone_strt+j] = k;
                 while( row++ < row_stop ){
                     Kir[k] = Gt->ir[i];
-                    Kpr[k++] = Gt->pr[i++];
+                    Kpr[k] = Gt->pr[i];
+                    GttoK[i++] = k++;
                 }
             }
 
@@ -394,7 +399,8 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
                 Kjc[n+p+exp_cone_strt+j] = k;
                 while( row++ < row_stop ){
                     Kir[k] = Gt->ir[i];
-                    Kpr[k++] = Gt->pr[i++];
+                    Kpr[k] = Gt->pr[i];
+                    GttoK[i++] = k++;
                 }
             }
 
@@ -426,7 +432,7 @@ void createKKT_U(spmat* Gt, spmat* At, cone* C, idxint** S, spmat** K)
 
 	/* return Sign vector and KKT matrix */
     *S = Sign;
-	*K = createSparseMatrix(nK, nK, nnzK, Kjc, Kir, Kpr);
+	*K = ecoscreateSparseMatrix(nK, nK, nnzK, Kjc, Kir, Kpr);
 }
 
 /**
@@ -473,6 +479,10 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
     FREE(w->KKT->work5);            /* mywork->KKT->work5 = (pfloat *)MALLOC(nK*sizeof(pfloat));      */
     FREE(w->KKT->work6);            /* mywork->KKT->work6 = (pfloat *)MALLOC(nK*sizeof(pfloat));      */
 	FREE(w->KKT);                   /* mywork->KKT = (kkt *)MALLOC(sizeof(kkt));                      */
+	if (w->A) {
+		FREE(w->AtoK);
+	}
+	FREE(w->GtoK);
 
 	/* Free memory for cones */
 	if( w->C->lpc->p > 0 ){
@@ -551,6 +561,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	double Control [AMD_CONTROL], Info [AMD_INFO];
 	pfloat *Lpr;
 	spmat *At, *Gt, *KU;
+	idxint *AtoAt, *GtoGt, *AttoK, *GttoK;
 
 #if PROFILING > 0
 	timer tsetup;
@@ -780,15 +791,15 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 
     /* Store problem data */
   if(Apr && Ajc && Air) {
-    mywork->A = createSparseMatrix(p, n, Ajc[n], Ajc, Air, Apr);
+    mywork->A = ecoscreateSparseMatrix(p, n, Ajc[n], Ajc, Air, Apr);
   } else {
     mywork->A = NULL;
   }
   if (Gpr && Gjc && Gir) {
-	  mywork->G = createSparseMatrix(m, n, Gjc[n], Gjc, Gir, Gpr);
+	  mywork->G = ecoscreateSparseMatrix(m, n, Gjc[n], Gjc, Gir, Gpr);
   } else {
     /* create an empty sparse matrix */
-	mywork->G = createSparseMatrix(m, n, 0, Gjc, Gir, Gpr);
+	mywork->G = ecoscreateSparseMatrix(m, n, 0, Gjc, Gir, Gpr);
   }
 
 #if defined EQUILIBRATE && EQUILIBRATE > 0
@@ -802,10 +813,14 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->info->ttranspose = 0;
 	tic(&tmattranspose);
 #endif
-  if(mywork->A)
-	  At = transposeSparseMatrix(mywork->A);
-  else
+  if(mywork->A) {
+      AtoAt = MALLOC(mywork->A->nnz*sizeof(idxint));
+	  At = transposeSparseMatrix(mywork->A, AtoAt);
+  }
+  else {
     At = NULL;
+    AtoAt = NULL;
+  }
 #if PROFILING > 1
 	mywork->info->ttranspose += toc(&tmattranspose);
 #endif
@@ -817,7 +832,8 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #if PROFILING > 1
 	tic(&tmattranspose);
 #endif
-	Gt = transposeSparseMatrix(mywork->G);
+	GtoGt = MALLOC(mywork->G->nnz*sizeof(idxint));
+	Gt = transposeSparseMatrix(mywork->G, GtoGt);
 #if PROFILING > 1
 	mywork->info->ttranspose += toc(&tmattranspose);
 #endif
@@ -829,13 +845,29 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #if PROFILING > 1
 	tic(&tcreatekkt);
 #endif
-	createKKT_U(Gt, At, mywork->C, &Sign, &KU);
+	if (mywork->A)
+		AttoK = MALLOC(mywork->A->nnz*sizeof(idxint));
+	else
+		AttoK = NULL;
+	GttoK = MALLOC(mywork->G->nnz*sizeof(idxint));
+	createKKT_U(Gt, At, mywork->C, &Sign, &KU, AttoK, GttoK);
 #if PROFILING > 1
 	mywork->info->tkktcreate = toc(&tcreatekkt);
 #endif
 #if PRINTLEVEL > 2
     PRINTTEXT("Created upper part of KKT matrix K\n");
 #endif
+
+    /* Save a mapping from data in A and G to the KKT matrix */
+    if (mywork->A){
+        mywork->AtoK = MALLOC(mywork->A->nnz*sizeof(idxint));
+        for(i=0; i<mywork->A->nnz; i++){ mywork->AtoK[i] = AttoK[AtoAt[i]]; }
+    }
+    else
+        mywork->AtoK = NULL;
+    mywork->GtoK = MALLOC(mywork->G->nnz*sizeof(idxint));
+    for(i=0; i<mywork->G->nnz; i++){ mywork->GtoK[i] = GttoK[GtoGt[i]]; }
+
 
 	/*
      * Set up KKT system related data
@@ -960,7 +992,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #endif
 	Lir = (idxint *)MALLOC(lnz*sizeof(idxint));
 	Lpr = (pfloat *)MALLOC(lnz*sizeof(pfloat));
-	mywork->KKT->L = createSparseMatrix(nK, nK, lnz, Ljc, Lir, Lpr);
+	mywork->KKT->L = ecoscreateSparseMatrix(nK, nK, lnz, Ljc, Lir, Lpr);
 #if PRINTLEVEL > 2
 	PRINTTEXT("Created Cholesky factor of K in KKT struct\n");
 #endif
@@ -980,9 +1012,15 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     /* clean up */
     mywork->KKT->P = P;
 	FREE(Sign);
-  if(At) freeSparseMatrix(At);
+    if(At) {
+        freeSparseMatrix(At);
+        FREE(AtoAt);
+        FREE(AttoK);
+    }
 	freeSparseMatrix(Gt);
 	freeSparseMatrix(KU);
+    FREE(GtoGt);
+    FREE(GttoK);
 
 #if PROFILING > 0
 	mywork->info->tsetup = toc(&tsetup);

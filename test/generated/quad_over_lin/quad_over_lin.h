@@ -14,11 +14,6 @@
 extern "C" {
 #endif
 
-/* the parameter struct */
-typedef struct quad_over_lin_params {
-
-} quad_over_lin_params;
-
 /* the input dimensions struct */
 typedef struct quad_over_lin_dims {
     char SENTINEL; /* empty dims struct */

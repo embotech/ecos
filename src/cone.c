@@ -242,9 +242,9 @@ pfloat evalSymmetricBarrierValue(pfloat* siter, pfloat *ziter, pfloat tauIter, p
    idxint socDim;
    /* Positive orthant barrier */
    for(k=0;k<C->lpc->p;k++)
-        barrier -= (siter[k]<=0||ziter[k]<=0)? INFINITY : (log(siter[k])+log(ziter[k]));
+        barrier -= (siter[k]<=0||ziter[k]<=0)? ECOS_INFINITY : (log(siter[k])+log(ziter[k]));
 
-    barrier-= (tauIter<=0||kapIter<=0) ? INFINITY : (log(tauIter)+log(kapIter));
+    barrier-= (tauIter<=0||kapIter<=0) ? ECOS_INFINITY : (log(tauIter)+log(kapIter));
     /* Socp cones */
     for(l=0;l<C->nsoc;l++)
     {
@@ -260,8 +260,8 @@ pfloat evalSymmetricBarrierValue(pfloat* siter, pfloat *ziter, pfloat tauIter, p
             normAccumZ -= ziter[k]*ziter[k];
             k++;
         }
-        barrier-= normAccumS<=0.0? INFINITY : 0.5*log(normAccumS);
-        barrier-= normAccumZ<=0.0? INFINITY : 0.5*log(normAccumZ);
+        barrier-= normAccumS<=0.0? ECOS_INFINITY : 0.5*log(normAccumS);
+        barrier-= normAccumZ<=0.0? ECOS_INFINITY : 0.5*log(normAccumZ);
 
     }
     return barrier-D-1;

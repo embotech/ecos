@@ -23,9 +23,6 @@
 #ifndef __GLBLOPTS_H__
 #define __GLBLOPTS_H__
 
-/* DATA TYPES ---------------------------------------------------------- */
-typedef double pfloat;              /* for numerical values  */
-
 /* SET PRINT LEVEL ----------------------------------------------------- */
 #define PRINTLEVEL (2)     /* 0: no prints					             */
 						   /* 1: only final info				         */
@@ -48,14 +45,17 @@ typedef double pfloat;              /* for numerical values  */
                            /* 1: debug info & dump intermediate results  */
                            /* (flag used only for development)           */
 
-/* NAN ----------------------------------------------------------------- */
-#ifndef NAN
-#define NAN ((double)0x7ff8000000000000)
-#endif
+/* DATA TYPES ---------------------------------------------------------- */
+#include <float.h>
+#include <math.h>
+/* NOTE: Currently, pfloat MUST be double for ecos */
+typedef double pfloat;              /* for numerical values  */
+#define ECOS_INFINITY   (DBL_MAX + DBL_MAX)
+#define ECOS_NAN        (ECOS_INFINITY - ECOS_INFINITY)
 
-/* INF ---------------------------------------------------------------- */
-#ifndef INFINITY
-#define INFINITY ((double)0x7ff0000000000000)
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+/* this will also return true if x is nan, but we don't check that anyway */
+#define isinf(x) (!_finite(x))
 #endif
 
 /* Exponential cone */
@@ -79,11 +79,16 @@ typedef double pfloat;              /* for numerical values  */
 
 #include "SuiteSparse_config.h"
 
-/* use this if pfloat is float: */
-/* #define NAN ((float)0x7fc00000) */
-
 /* USE SAME NUMBER REPRESENTATION FOR INDEXING AS AMD AND LDL ---------- */
+#if defined(DLONG) && !defined(LDL_LONG) || defined(LDL_LONG) && !defined(DLONG)
+#error "Inconsistent definition of DLONG and LDL_LONG"
+#endif
+
+#ifdef DLONG
 typedef SuiteSparse_long idxint;
+#else
+typedef int idxint;
+#endif
 
 /* SYSTEM INCLUDE IF COMPILING FOR MATLAB ------------------------------ */
 #ifdef MATLAB_MEX_FILE
@@ -98,8 +103,5 @@ typedef SuiteSparse_long idxint;
 #define MALLOC malloc
 #define FREE free
 #endif
-
-/* Other commonly used macros ----------------------------------------- */
-#define inline __inline
 
 #endif

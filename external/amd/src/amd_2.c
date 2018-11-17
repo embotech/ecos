@@ -600,7 +600,7 @@ GLOBAL void AMD_2
     }
     else
     {
-	dense = (SuiteSparse_long)(alpha * sqrt ((double) n));
+	dense = (Int)(alpha * sqrt ((double) n));
     }
     dense = MAX (16, dense) ;
     dense = MIN (n,  dense) ;

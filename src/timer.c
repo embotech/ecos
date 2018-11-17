@@ -34,16 +34,18 @@
 
 #if (defined WIN32 || _WIN64)
 
+#include <windows.h>
+
 void tic(timer* t)
 {
-	QueryPerformanceFrequency(&t->freq);
-	QueryPerformanceCounter(&t->tic);
+	QueryPerformanceFrequency((LARGE_INTEGER*)&t->freq);
+	QueryPerformanceCounter((LARGE_INTEGER*)&t->tic);
 }
 
 pfloat toc(timer* t)
 {
-	QueryPerformanceCounter(&t->toc);
-	return ((t->toc.QuadPart - t->tic.QuadPart) / (pfloat)t->freq.QuadPart);
+	QueryPerformanceCounter((LARGE_INTEGER*)&t->toc);
+	return ((t->toc - t->tic) / (pfloat)t->freq);
 }
 
 

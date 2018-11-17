@@ -41,7 +41,7 @@
 #define CALLOC calloc
 #endif
 
-int contains(idxint idx, idxint num_int, idxint* bool_vars_idx){
+static int contains(idxint idx, idxint num_int, idxint* bool_vars_idx){
     idxint i;
     idxint ans = 0;
     for (i=0; i<num_int; ++i){
@@ -54,7 +54,7 @@ int contains(idxint idx, idxint num_int, idxint* bool_vars_idx){
  * for all of the variables marked integer
  * USES MALLOC
  */
-void socp_to_ecos_bb(
+static void socp_to_ecos_bb(
     idxint num_bool_vars, idxint* bool_vars_idx,
     idxint num_int_vars, idxint* int_vars_idx,
     idxint n, idxint m,
@@ -238,7 +238,7 @@ ecos_bb_pwork* ECOS_BB_setup(
     prob->num_bool_vars = num_bool_vars;
     prob->num_int_vars = num_int_vars;
 
-    prob->global_U = INFINITY;
+    prob->global_U = ECOS_INFINITY;
 
     /* offset the h pointer for the user*/
     prob->h = &prob->ecos_prob->h[ 2*(num_bool_vars + num_int_vars) ];

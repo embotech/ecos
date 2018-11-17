@@ -14,11 +14,6 @@
 extern "C" {
 #endif
 
-/* the parameter struct */
-typedef struct norm_params {
-
-} norm_params;
-
 /* the input dimensions struct */
 typedef struct norm_dims {
     char SENTINEL; /* empty dims struct */

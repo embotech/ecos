@@ -35,8 +35,12 @@
 
 #if defined MATLAB_MEX_FILE
 
+ /* No header file available here; define the prototypes ourselves */
+extern bool utIsInterruptPending(void);
+extern bool utSetInterruptEnabled(bool);
+
 static int istate;
-void init_ctrlc(void) 
+void init_ctrlc(void)
 {
     istate = (int)utSetInterruptEnabled(true);
 }
@@ -50,6 +54,9 @@ int check_ctrlc(void)
 }
 
 #elif defined _WIN32 || defined _WIN64
+
+/* Use Windows SetConsoleCtrlHandler for signal handling */
+#include <windows.h>
 
 static int int_detected;
 BOOL WINAPI handle_ctrlc(DWORD dwCtrlType)
@@ -68,11 +75,13 @@ void remove_ctrlc(void)
     SetConsoleCtrlHandler( handle_ctrlc, FALSE );
 }
 int check_ctrlc(void)
-{ 
+{
     return int_detected;
 }
 
 #else /* Unix */
+
+/* Use POSIX clocl_gettime() for timing on non-Windows machines */
 
 #include <signal.h>
 static int int_detected;
@@ -81,7 +90,7 @@ void handle_ctrlc(int dummy)
 {
     int_detected = dummy?dummy:-1;
 }
-void init_ctrlc(void) 
+void init_ctrlc(void)
 {
     int_detected = 0;
     struct sigaction act;
@@ -96,7 +105,7 @@ void remove_ctrlc(void)
     sigaction(SIGINT,&oact,&act);
 }
 int check_ctrlc(void)
-{ 
+{
     return int_detected;
 }
 

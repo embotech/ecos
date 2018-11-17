@@ -45,6 +45,7 @@
 #include "LPnetlib/lp_beaconfd.h"
 #include "LPnetlib/lp_blend.h"
 #include "LPnetlib/lp_bnl1.h"
+#include "updateData/update_data.h"
 
 #if defined EXPCONE
 #include "exponential/random_feasible.h"
@@ -80,7 +81,8 @@ static char * all_tests() {
 /*    mu_run_test(test_unboundedMaxSqrt); */
     mu_run_test(test_emptyProblem);
     mu_run_test(test_issue98);
- 
+    mu_run_test(test_update_data);
+
     #ifdef EXPCONE
         mu_run_test(test_random_feasible);
         mu_run_test(test_random_infeasible);
