@@ -20,6 +20,9 @@
 /*
  * The branch and bound module is (c) Han Wang, Stanford University,
  * [hanwang2@stanford.edu]
+ * 
+ * Extended with improved branching rules by Pascal Lüscher, student of FHNW
+ * [luescherpascal@gmail.com]
  */
 
 #include "glblopts.h"
@@ -251,6 +254,16 @@ ecos_bb_pwork *ECOS_BB_setup(
     prob->tmp_bool_node_id = (char *)MALLOC(num_bool_vars * sizeof(char));
     prob->tmp_int_node_id = (pfloat *)MALLOC(2 * num_int_vars * sizeof(pfloat));
 
+    /* MALLOC the tmp nodes used in branching strategies*/
+    prob->tmp_branching_bool_node_id = MALLOC(num_bool_vars * sizeof(char));
+    prob->tmp_branching_int_node_id = MALLOC(2 * num_int_vars * sizeof(pfloat));
+
+    /* CALLOC pseudocost branching values*/
+    prob->pseudocost_bin_cnt = CALLOC(2 * num_bool_vars, sizeof(idxint));
+    prob->pseudocost_bin_sum = CALLOC(2 * num_bool_vars, sizeof(pfloat));
+    prob->pseudocost_int_cnt = CALLOC(2 * num_int_vars, sizeof(idxint));
+    prob->pseudocost_int_sum = CALLOC(2 * num_int_vars, sizeof(pfloat));
+
     /* Store the pointer to the boolean idx*/
     prob->bool_vars_idx = bool_vars_idx;
     prob->int_vars_idx = int_vars_idx;
@@ -317,6 +330,8 @@ void ECOS_BB_cleanup(ecos_bb_pwork *prob, idxint num_vars_keep)
     ECOS_cleanup(prob->ecos_prob, num_vars_keep);
     FREE(prob->tmp_bool_node_id);
     FREE(prob->tmp_int_node_id);
+    FREE(prob->tmp_branching_bool_node_id);
+    FREE(prob->tmp_branching_int_node_id);
     FREE(prob->nodes);
     FREE(prob->bool_node_ids);
     FREE(prob->int_node_ids);
@@ -325,6 +340,10 @@ void ECOS_BB_cleanup(ecos_bb_pwork *prob, idxint num_vars_keep)
     FREE(prob->z);
     FREE(prob->s);
     FREE(prob->info);
+    FREE(prob->pseudocost_bin_cnt);
+    FREE(prob->pseudocost_bin_sum);
+    FREE(prob->pseudocost_int_cnt);
+    FREE(prob->pseudocost_int_sum);
     if (prob->default_settings)
     {
         FREE(prob->stgs);
@@ -340,5 +359,8 @@ settings_bb *get_default_ECOS_BB_settings()
     stgs->abs_tol_gap = MI_ABS_EPS;
     stgs->rel_tol_gap = MI_REL_EPS;
     stgs->integer_tol = MI_INT_TOL;
+    stgs->branching_strategy = BRANCHING_STRATEGY_RELIABILITY;
+    stgs->reliable_eta = 6;
+    stgs->node_selection_method = DIVE_LOWER_NODE;
     return stgs;
 };
