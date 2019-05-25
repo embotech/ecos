@@ -357,12 +357,13 @@ static pfloat get_score(const pfloat delta_q_down, const pfloat delta_q_up)
 static idxint *get_shuffled_array(const idxint n)
 {
     idxint *ret_val = MALLOC(n * sizeof(idxint));
-    for (idxint i = 0; i < n; ++i)
+    idxint i;
+    for (i = 0; i < n; ++i)
     {
         ret_val[i] = i;
     }
 
-    for (idxint i = 0; i < n - 1; i++)
+    for (i = 0; i < n - 1; i++)
     {
         idxint j = i + rand() / (RAND_MAX / (n - i) + 1);
         const idxint t = ret_val[j];
@@ -543,7 +544,8 @@ static void get_branch_var_strong_branching(ecos_bb_pwork *problem, idxint *spli
     *split_idx = -1;
 
     idxint *random_idx = get_shuffled_array(problem->num_bool_vars + problem->num_int_vars);
-    for (idxint rand_i = 0; rand_i < problem->num_bool_vars + problem->num_int_vars; ++rand_i)
+    idxint rand_i;
+    for (rand_i = 0; rand_i < problem->num_bool_vars + problem->num_int_vars; ++rand_i)
     {
         idxint const i = random_idx[rand_i];
 
@@ -602,8 +604,9 @@ static void get_branch_var_strong_branching(ecos_bb_pwork *problem, idxint *spli
 static pfloat avg_pseudocost(pfloat *pseudocost_sums, idxint *pseudocost_cnts, const int pseudocost_sums_cnt, const char up)
 {
     pfloat sum = 0.0;
-    int cnt = 0;
-    for (int i = 0; i < pseudocost_sums_cnt; ++i)
+    idxint cnt = 0;
+    idxint i = 0;
+    for (i = 0; i < pseudocost_sums_cnt; ++i)
     {
         if (pseudocost_cnts[2 * i + up] > 0)
         {
@@ -677,7 +680,8 @@ static void get_branch_var_pseudocost_branching(ecos_bb_pwork *problem, idxint *
     pfloat up_psi, down_psi;
     idxint var_idx;
     idxint *random_idx = get_shuffled_array(problem->num_bool_vars + problem->num_int_vars);
-    for (idxint rand_i = 0; rand_i < problem->num_bool_vars + problem->num_int_vars; ++rand_i)
+    idxint rand_i;
+    for (rand_i = 0; rand_i < problem->num_bool_vars + problem->num_int_vars; ++rand_i)
     {
         idxint const i = random_idx[rand_i];
         if (i < problem->num_bool_vars)
@@ -747,7 +751,8 @@ static void get_branch_var_reliability_branching(ecos_bb_pwork *problem, idxint 
     pfloat *x_values = NULL;
 
     idxint *random_idx = get_shuffled_array(problem->num_bool_vars + problem->num_int_vars);
-    for (idxint rand_i = 0; rand_i < problem->num_bool_vars + problem->num_int_vars; ++rand_i)
+    idxint rand_i;
+    for (rand_i = 0; rand_i < problem->num_bool_vars + problem->num_int_vars; ++rand_i)
     {
         idxint const i = random_idx[rand_i];
 
