@@ -112,7 +112,7 @@ extern "C"
 		idxint prev_split_idx;
 		pfloat prev_split_val;
 		pfloat prev_relaxation;
-		BOOL up_branch_node;
+		int up_branch_node;
 	} node;
 
 	/* Wrapper for mixed integer module */
