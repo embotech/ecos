@@ -35,8 +35,6 @@
 /* Print verbosity */
 #define MI_PRINTLEVEL (1)
 
-#define LPA_FILE (1)
-
 /* ecos_bb configuration settings */
 #define MI_ABS_EPS (1E-6)
 #define MI_REL_EPS (1E-3)
