@@ -199,7 +199,7 @@ static idxint get_next_node(ecos_bb_pwork *prob)
     pfloat L = ECOS_INFINITY;
     for (i = 0; i <= prob->iter; ++i)
     {
-        if (prob->nodes[i].status == MI_SOLVED_BRANCHABLE && prob->nodes[i].L < L)
+        if (prob->nodes[i].status == MI_SOLVED_BRANCHABLE && prob->nodes[i].L < L && prob->nodes[i].L < prob->global_U)
         {
             next_node = i;
             L = prob->nodes[i].L;
