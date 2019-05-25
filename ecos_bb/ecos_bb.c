@@ -345,7 +345,8 @@ static pfloat get_score(const pfloat delta_q_down, const pfloat delta_q_up)
 {
 
     const pfloat epsilon = 0.00000001;
-    return max(epsilon, delta_q_down) * max(epsilon, delta_q_up);
+	return (delta_q_down > epsilon ? delta_q_down : epsilon) * (delta_q_up > epsilon ? delta_q_up : epsilon);
+    
     // alternative score function using weighted avg
     // const pfloat mu = 1.0 / 6.0;
     // return (1 - mu) * min(delta_q_down, delta_q_up) + mu * max(delta_q_down, delta_q_up);
@@ -383,8 +384,9 @@ static void initialize_strong_branching(ecos_bb_pwork *problem, idxint node_idx)
     const int int_node_size = sizeof(pfloat) * 2 * problem->num_int_vars;
 
     // copy over current state to tmp_branching_nodes
-    memcpy_s(problem->tmp_branching_bool_node_id, bool_node_size, get_bool_node_id(node_idx, problem), bool_node_size);
-    memcpy_s(problem->tmp_branching_int_node_id, int_node_size, get_int_node_id(node_idx, problem), int_node_size);
+	
+    memcpy(problem->tmp_branching_bool_node_id, get_bool_node_id(node_idx, problem), bool_node_size);
+    memcpy(problem->tmp_branching_int_node_id, get_int_node_id(node_idx, problem), int_node_size);
 }
 
 /*
@@ -529,7 +531,7 @@ static void get_branch_var_strong_branching(ecos_bb_pwork *problem, idxint *spli
     pfloat q;
     calc_tmp_branching_problem(problem, &q, &ecos_result);
     pfloat *x_values = MALLOC(sizeof(pfloat) * problem->ecos_prob->n);
-    memcpy_s(x_values, sizeof(pfloat) * problem->ecos_prob->n, problem->ecos_prob->x, sizeof(pfloat) * problem->ecos_prob->n);
+    memcpy(x_values, problem->ecos_prob->x, sizeof(pfloat) * problem->ecos_prob->n);
 
     /* the lp-relaxation for the down branching solution */
     pfloat q_down;
@@ -790,7 +792,7 @@ static void get_branch_var_reliability_branching(ecos_bb_pwork *problem, idxint 
 
                 calc_tmp_branching_problem(problem, &q, &ecos_result);
                 x_values = MALLOC(sizeof(pfloat) * problem->ecos_prob->n);
-                memcpy_s(x_values, sizeof(pfloat) * problem->ecos_prob->n, problem->ecos_prob->x, sizeof(pfloat) * problem->ecos_prob->n);
+                memcpy(x_values, problem->ecos_prob->x, sizeof(pfloat) * problem->ecos_prob->n);
             }
 
             var_idx = i;
