@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 /*
  * The branch and bound module is (c) Han Wang, Stanford University,
  * [hanwang2@stanford.edu]
@@ -67,127 +66,138 @@
 #define MAX_FLOAT_INT (8388608)
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-typedef struct settings_bb{
-	idxint maxit;               /* maximum number of iterations         */
-    idxint verbose;             /* verbosity bool for PRINTLEVEL < 3    */
-	pfloat abs_tol_gap;			/* termination criteria |U-L|    		*/
-	pfloat rel_tol_gap;			/* termination criteria for |U-L|/|L| < 3    */
-	pfloat integer_tol; 		/* integer rounding tolerance */
-} settings_bb;
+	typedef struct settings_bb
+	{
+		idxint maxit;		/* maximum number of iterations         */
+		idxint verbose;		/* verbosity bool for PRINTLEVEL < 3    */
+		pfloat abs_tol_gap; /* termination criteria |U-L|    		*/
+		pfloat rel_tol_gap; /* termination criteria for |U-L|/|L| < 3    */
+		pfloat integer_tol; /* integer rounding tolerance */
+	} settings_bb;
 
-typedef struct node {
-	char status;
-	pfloat L;
-	pfloat U;
-	idxint split_idx;
-	pfloat split_val;
-} node;
+	typedef struct node
+	{
+		char status;
+		pfloat L;
+		pfloat U;
+		idxint split_idx;
+		pfloat split_val;
+	} node;
 
-/* Wrapper for mixed integer module */
-typedef struct ecos_bb_pwork{
-	/* Mixed integer data */
-	idxint num_bool_vars;
-	idxint num_int_vars;
+	/* Wrapper for mixed integer module */
+	typedef struct ecos_bb_pwork
+	{
+		/* Mixed integer data */
+		idxint num_bool_vars;
+		idxint num_int_vars;
 
-	node* nodes;
-	char* bool_node_ids;
-	pfloat* int_node_ids;
+		node *nodes;
+		char *bool_node_ids;
+		pfloat *int_node_ids;
 
-	idxint* bool_vars_idx;
-	idxint* int_vars_idx;
+		idxint *bool_vars_idx;
+		idxint *int_vars_idx;
 
-	/* ECOS data */
-	pwork* ecos_prob;
+		/* ECOS data */
+		pwork *ecos_prob;
 
-	/* Modified pointers to ecos internals */
-	/* Use these to edit or reset the h variables */
-	spmat* A;
-	spmat* G;
-	pfloat* c;
-	pfloat* b;
-	pfloat* h;
+		/* Modified pointers to ecos internals */
+		/* Use these to edit or reset the h variables */
+		spmat *A;
+		spmat *G;
+		pfloat *c;
+		pfloat *b;
+		pfloat *h;
 
-	/* best iterate seen so far */
-    /* variables */
-    pfloat* x;  /* primal variables                    */
-    pfloat* y;  /* multipliers for equality constaints */
-    pfloat* z;  /* multipliers for conic inequalities  */
-    pfloat* s;  /* slacks for conic inequalities       */
-    pfloat kap; /* kappa (homogeneous embedding)       */
-	pfloat tau; /* tau (homogeneous embedding)         */
-    stats* info; /* info of best iterate               */
-	pfloat global_U;
-	pfloat global_L;
+		/* best iterate seen so far */
+		/* variables */
+		pfloat *x;   /* primal variables                    */
+		pfloat *y;   /* multipliers for equality constaints */
+		pfloat *z;   /* multipliers for conic inequalities  */
+		pfloat *s;   /* slacks for conic inequalities       */
+		pfloat kap;  /* kappa (homogeneous embedding)       */
+		pfloat tau;  /* tau (homogeneous embedding)         */
+		stats *info; /* info of best iterate               */
+		pfloat global_U;
+		pfloat global_L;
 
-	/* Tmp data */
-	char* tmp_bool_node_id;
-	pfloat* tmp_int_node_id;
-	idxint iter;
+		/* Tmp data */
+		char *tmp_bool_node_id;
+		pfloat *tmp_int_node_id;
+		idxint iter;
 
-	/* Stored pointers to prevent memory leaks */
-	pfloat* Gpr_new;
-	idxint* Gjc_new;
-	idxint* Gir_new;
-	pfloat* h_new;
+		/* Stored pointers to prevent memory leaks */
+		pfloat *Gpr_new;
+		idxint *Gjc_new;
+		idxint *Gir_new;
+		pfloat *h_new;
 
-	/* settings struct */
-	settings* ecos_stgs;
-	settings_bb* stgs;
-	idxint default_settings;
+		/* settings struct */
+		settings *ecos_stgs;
+		settings_bb *stgs;
+		idxint default_settings;
 
-} ecos_bb_pwork;
+	} ecos_bb_pwork;
 
-ecos_bb_pwork* ECOS_BB_setup(
-    idxint n, idxint m, idxint p,
-    idxint l, idxint ncones, idxint* q, idxint nex,
-    pfloat* Gpr, idxint* Gjc, idxint* Gir,
-    pfloat* Apr, idxint* Ajc, idxint* Air,
-    pfloat* c, pfloat* h, pfloat* b,
-    idxint num_bool_vars, idxint* bool_vars_idx,
-    idxint num_int_vars, idxint* int_vars_idx,
-    settings_bb* stgs);
+	ecos_bb_pwork *ECOS_BB_setup(
+		idxint n, idxint m, idxint p,
+		idxint l, idxint ncones, idxint *q, idxint nex,
+		pfloat *Gpr, idxint *Gjc, idxint *Gir,
+		pfloat *Apr, idxint *Ajc, idxint *Air,
+		pfloat *c, pfloat *h, pfloat *b,
+		idxint num_bool_vars, idxint *bool_vars_idx,
+		idxint num_int_vars, idxint *int_vars_idx,
+		settings_bb *stgs);
 
-idxint ECOS_BB_solve(ecos_bb_pwork* prob);
+	idxint ECOS_BB_solve(ecos_bb_pwork *prob);
 
-void ECOS_BB_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep);
+	void ECOS_BB_cleanup(ecos_bb_pwork *prob, idxint num_vars_keep);
 
-void updateDataEntry_h(ecos_bb_pwork* w, idxint idx, pfloat value);
+	void updateDataEntry_h(ecos_bb_pwork *w, idxint idx, pfloat value);
 
-void updateDataEntry_c(ecos_bb_pwork* w, idxint idx, pfloat value);
+	void updateDataEntry_c(ecos_bb_pwork *w, idxint idx, pfloat value);
 
-settings_bb* get_default_ECOS_BB_settings();
+	settings_bb *get_default_ECOS_BB_settings();
 
-/* Calculate the offset into the node_id array */
-static char* get_bool_node_id(idxint idx, ecos_bb_pwork* prob){
-    return &prob->bool_node_ids[prob->num_bool_vars * idx];
-}
+	/* Calculate the offset into the node_id array */
+	static char *get_bool_node_id(idxint idx, ecos_bb_pwork *prob)
+	{
+		return &prob->bool_node_ids[prob->num_bool_vars * idx];
+	}
 
-static pfloat* get_int_node_id(idxint idx, ecos_bb_pwork* prob){
-    return &prob->int_node_ids[prob->num_int_vars * idx * 2];
-}
+	static pfloat *get_int_node_id(idxint idx, ecos_bb_pwork *prob)
+	{
+		return &prob->int_node_ids[prob->num_int_vars * idx * 2];
+	}
 
-static pfloat abs_2(pfloat number){
-	return number < 0.0 ? -number : number;
-}
+	static pfloat abs_2(pfloat number)
+	{
+		return number < 0.0 ? -number : number;
+	}
 
-static pfloat pfloat_round(pfloat number){
-    return (number >= 0) ? (int)(number + 0.5) : (int)(number - 0.5);
-}
+	static pfloat pfloat_round(pfloat number)
+	{
+		return (number >= 0) ? (int)(number + 0.5) : (int)(number - 0.5);
+	}
 
-static pfloat pfloat_ceil(pfloat number, pfloat integer_tol){
-	return (pfloat) (number < 0 ? (int) number : (int) (number+(1-integer_tol)) );
-}
+	static pfloat pfloat_ceil(pfloat number, pfloat integer_tol)
+	{
+		return (pfloat)(number < 0 ? (int)number : (int)(number + (1 - integer_tol)));
+	}
 
-static pfloat pfloat_floor(pfloat number, pfloat integer_tol){
-    return (pfloat) (number < 0 ? (int) (number-(1-integer_tol)) : (int) number);
-}
+	static pfloat pfloat_floor(pfloat number, pfloat integer_tol)
+	{
+		return (pfloat)(number < 0 ? (int)(number - (1 - integer_tol)) : (int)number);
+	}
 
-static idxint float_eqls(pfloat a, pfloat b, pfloat integer_tol){
-	return abs_2(a - b) < integer_tol;
-}
+	static idxint float_eqls(pfloat a, pfloat b, pfloat integer_tol)
+	{
+		return abs_2(a - b) < integer_tol;
+	}
 
 #ifdef __cplusplus
 }

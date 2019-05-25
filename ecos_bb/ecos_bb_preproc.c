@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 /*
  * The branch and bound module is (c) Han Wang, Stanford University,
  * [hanwang2@stanford.edu]
@@ -41,13 +40,15 @@
 #define CALLOC calloc
 #endif
 
-static int contains(idxint idx, idxint num_int, idxint* bool_vars_idx){
+static int contains(idxint idx, idxint num_int, idxint *bool_vars_idx)
+{
     idxint i;
     idxint ans = 0;
-    for (i=0; i<num_int; ++i){
+    for (i = 0; i < num_int; ++i)
+    {
         ans += (bool_vars_idx[i] == idx);
     }
-    return (int) ans;
+    return (int)ans;
 }
 
 /* Augments the G and b arrays to take lb and ub constraints
@@ -55,98 +56,111 @@ static int contains(idxint idx, idxint num_int, idxint* bool_vars_idx){
  * USES MALLOC
  */
 static void socp_to_ecos_bb(
-    idxint num_bool_vars, idxint* bool_vars_idx,
-    idxint num_int_vars, idxint* int_vars_idx,
+    idxint num_bool_vars, idxint *bool_vars_idx,
+    idxint num_int_vars, idxint *int_vars_idx,
     idxint n, idxint m,
-    pfloat* Gpr_in, idxint* Gjc_in, idxint* Gir_in,
-    pfloat* Gpr_out, idxint* Gjc_out, idxint* Gir_out,
-    pfloat* h_in, pfloat* h_out)
+    pfloat *Gpr_in, idxint *Gjc_in, idxint *Gir_in,
+    pfloat *Gpr_out, idxint *Gjc_out, idxint *Gir_out,
+    pfloat *h_in, pfloat *h_out)
 {
     idxint i, j, k;
 
     /* First map in the column pointers, remember Gir_out[0]=0*/
-    for (i=0; i<=n; ++i){
+    for (i = 0; i <= n; ++i)
+    {
         Gjc_out[i] = Gjc_in[i];
     }
 
-    j=0;
-    for (i=0; i<n; ++i){
-        if (contains(i, num_bool_vars, bool_vars_idx)){
-            Gpr_out[ Gjc_out[i] ] = -1;
-            Gpr_out[ Gjc_out[i] + 1 ] = 1;
+    j = 0;
+    for (i = 0; i < n; ++i)
+    {
+        if (contains(i, num_bool_vars, bool_vars_idx))
+        {
+            Gpr_out[Gjc_out[i]] = -1;
+            Gpr_out[Gjc_out[i] + 1] = 1;
 
-            Gir_out[ Gjc_out[i] ] = 2*j;
-            Gir_out[ Gjc_out[i] + 1 ] = 2*j + 1;
+            Gir_out[Gjc_out[i]] = 2 * j;
+            Gir_out[Gjc_out[i] + 1] = 2 * j + 1;
 
             /* Set lower bound to 0*/
-            h_out[ 2*j ] = 0;
+            h_out[2 * j] = 0;
 
             /* Set upper bound to 1*/
-            h_out[ 2*j + 1] = 1;
+            h_out[2 * j + 1] = 1;
 
             /* Expand the following arrays */
-            for (k=(i+1); k<=n; ++k){
+            for (k = (i + 1); k <= n; ++k)
+            {
                 Gjc_out[k] += 2;
             }
 
             /* Now fill in the array */
-            for(k=0; k<(Gjc_in[i+1] - Gjc_in[i]); ++k){
-                Gpr_out[Gjc_out[i]+2+k] = Gpr_in[Gjc_in[i]+k];
-                Gir_out[Gjc_out[i]+2+k] = Gir_in[Gjc_in[i]+k] + 2*num_bool_vars + 2*num_int_vars;
+            for (k = 0; k < (Gjc_in[i + 1] - Gjc_in[i]); ++k)
+            {
+                Gpr_out[Gjc_out[i] + 2 + k] = Gpr_in[Gjc_in[i] + k];
+                Gir_out[Gjc_out[i] + 2 + k] = Gir_in[Gjc_in[i] + k] + 2 * num_bool_vars + 2 * num_int_vars;
             }
 
             ++j;
-        }else if (contains(i, num_int_vars, int_vars_idx)){
-            Gpr_out[ Gjc_out[i] ] = -1;
-            Gpr_out[ Gjc_out[i] + 1 ] = 1;
+        }
+        else if (contains(i, num_int_vars, int_vars_idx))
+        {
+            Gpr_out[Gjc_out[i]] = -1;
+            Gpr_out[Gjc_out[i] + 1] = 1;
 
-            Gir_out[ Gjc_out[i] ] = 2*j;
-            Gir_out[ Gjc_out[i] + 1 ] = 2*j + 1;
+            Gir_out[Gjc_out[i]] = 2 * j;
+            Gir_out[Gjc_out[i] + 1] = 2 * j + 1;
 
             /* Set lower bound to 0*/
-            h_out[ 2*j ] = MAX_FLOAT_INT;
+            h_out[2 * j] = MAX_FLOAT_INT;
 
             /* Set upper bound to 1*/
-            h_out[ 2*j + 1] = MAX_FLOAT_INT;
+            h_out[2 * j + 1] = MAX_FLOAT_INT;
 
             /* Expand the following arrays */
-            for (k=(i+1); k<=n; ++k){
+            for (k = (i + 1); k <= n; ++k)
+            {
                 Gjc_out[k] += 2;
             }
 
             /* Now fill in the array */
-            for(k=0; k<(Gjc_in[i+1] - Gjc_in[i]); ++k){
-                Gpr_out[Gjc_out[i]+2+k] = Gpr_in[Gjc_in[i]+k];
-                Gir_out[Gjc_out[i]+2+k] = Gir_in[Gjc_in[i]+k] + 2*num_bool_vars + 2*num_int_vars;
+            for (k = 0; k < (Gjc_in[i + 1] - Gjc_in[i]); ++k)
+            {
+                Gpr_out[Gjc_out[i] + 2 + k] = Gpr_in[Gjc_in[i] + k];
+                Gir_out[Gjc_out[i] + 2 + k] = Gir_in[Gjc_in[i] + k] + 2 * num_bool_vars + 2 * num_int_vars;
             }
 
             ++j;
-        }else{
-            for(k=0; k<(Gjc_in[i+1] - Gjc_in[i]); ++k){
-                Gpr_out[Gjc_out[i]+k] = Gpr_in[Gjc_in[i]+k];
-                Gir_out[Gjc_out[i]+k] = Gir_in[Gjc_in[i]+k] + 2*num_bool_vars + 2*num_int_vars;
+        }
+        else
+        {
+            for (k = 0; k < (Gjc_in[i + 1] - Gjc_in[i]); ++k)
+            {
+                Gpr_out[Gjc_out[i] + k] = Gpr_in[Gjc_in[i] + k];
+                Gir_out[Gjc_out[i] + k] = Gir_in[Gjc_in[i] + k] + 2 * num_bool_vars + 2 * num_int_vars;
             }
         }
     }
 
     /* Copy the remaining entries of b*/
-    for (i=0; i<m; ++i){
-        h_out[2*(num_bool_vars + num_int_vars) + i] = h_in[i];
+    for (i = 0; i < m; ++i)
+    {
+        h_out[2 * (num_bool_vars + num_int_vars) + i] = h_in[i];
     }
 }
 
-ecos_bb_pwork* ECOS_BB_setup(
+ecos_bb_pwork *ECOS_BB_setup(
     idxint n, idxint m, idxint p,
-    idxint l, idxint ncones, idxint* q, idxint nex,
-    pfloat* Gpr, idxint* Gjc, idxint* Gir,
-    pfloat* Apr, idxint* Ajc, idxint* Air,
-    pfloat* c, pfloat* h, pfloat* b,
-    idxint num_bool_vars, idxint* bool_vars_idx,
-    idxint num_int_vars, idxint* int_vars_idx,
-    settings_bb* stgs)
+    idxint l, idxint ncones, idxint *q, idxint nex,
+    pfloat *Gpr, idxint *Gjc, idxint *Gir,
+    pfloat *Apr, idxint *Ajc, idxint *Air,
+    pfloat *c, pfloat *h, pfloat *b,
+    idxint num_bool_vars, idxint *bool_vars_idx,
+    idxint num_int_vars, idxint *int_vars_idx,
+    settings_bb *stgs)
 {
     idxint new_G_size;
-    ecos_bb_pwork* prob;
+    ecos_bb_pwork *prob;
 
 #if MI_PRINTLEVEL > 2
     int i;
@@ -161,38 +175,60 @@ ecos_bb_pwork* ECOS_BB_setup(
     PRINTTEXT("  ****************************************************************\n");
     PRINTTEXT("\n\n");
     PRINTTEXT("PROBLEM SUMMARY:\n");
-    PRINTTEXT("   Boolean variables (num_bool_vars): %d\n", (int) num_bool_vars);
-    PRINTTEXT("   Integer variables ( num_int_vars): %d\n", (int) num_int_vars);
+    PRINTTEXT("   Boolean variables (num_bool_vars): %d\n", (int)num_bool_vars);
+    PRINTTEXT("   Integer variables ( num_int_vars): %d\n", (int)num_int_vars);
     PRINTTEXT("- - - - - - - - - - - - - - -\n");
-    PRINTTEXT("   Boolean var indices: "); for( i=0; i<num_bool_vars; ++i) PRINTTEXT("%u ", (unsigned int) bool_vars_idx[i]); PRINTTEXT("\n");
-    PRINTTEXT("   Integer var indices: "); for( i=0; i<num_int_vars; ++i) PRINTTEXT("%u ", (unsigned int) int_vars_idx[i]); PRINTTEXT("\n");
+    PRINTTEXT("   Boolean var indices: ");
+    for (i = 0; i < num_bool_vars; ++i)
+        PRINTTEXT("%u ", (unsigned int)bool_vars_idx[i]);
+    PRINTTEXT("\n");
+    PRINTTEXT("   Integer var indices: ");
+    for (i = 0; i < num_int_vars; ++i)
+        PRINTTEXT("%u ", (unsigned int)int_vars_idx[i]);
+    PRINTTEXT("\n");
     PRINTTEXT("\n");
 
-    PRINTTEXT("n=%u\n",n);
-    PRINTTEXT("m=%u\n",m);
-    PRINTTEXT("Gpr=");for (i=0;i<Gjc[n];i++){PRINTTEXT("%f,",Gpr[i]);}PRINTTEXT("\n");
-    PRINTTEXT("Gir=");for (i=0;i<Gjc[n];i++){PRINTTEXT("%u,",Gir[i]);}PRINTTEXT("\n");
-    PRINTTEXT("Gjc=");for (i=0;i<=n;i++){PRINTTEXT("%u,",Gjc[i]);}PRINTTEXT("\n");
+    PRINTTEXT("n=%u\n", n);
+    PRINTTEXT("m=%u\n", m);
+    PRINTTEXT("Gpr=");
+    for (i = 0; i < Gjc[n]; i++)
+    {
+        PRINTTEXT("%f,", Gpr[i]);
+    }
+    PRINTTEXT("\n");
+    PRINTTEXT("Gir=");
+    for (i = 0; i < Gjc[n]; i++)
+    {
+        PRINTTEXT("%u,", Gir[i]);
+    }
+    PRINTTEXT("\n");
+    PRINTTEXT("Gjc=");
+    for (i = 0; i <= n; i++)
+    {
+        PRINTTEXT("%u,", Gjc[i]);
+    }
+    PRINTTEXT("\n");
 #endif
 
-
-
     /* MALLOC the problem's memory*/
-    prob = (ecos_bb_pwork*) MALLOC(sizeof(ecos_bb_pwork));
+    prob = (ecos_bb_pwork *)MALLOC(sizeof(ecos_bb_pwork));
 
-    if (stgs == NULL){
+    if (stgs == NULL)
+    {
         stgs = get_default_ECOS_BB_settings();
         prob->default_settings = 1;
-    }else{
+    }
+    else
+    {
         prob->default_settings = 0;
     }
     prob->stgs = stgs;
 
-    new_G_size = Gjc[n] + (2*num_bool_vars) + (2*num_int_vars);
-    prob->Gpr_new = (pfloat *) MALLOC( new_G_size*sizeof(pfloat) );
-    prob->Gjc_new = (idxint *) MALLOC( (n+1) * sizeof(idxint) );
-    prob->Gir_new = (idxint *) MALLOC( new_G_size*sizeof(idxint) );
-    prob->h_new   = (pfloat *) MALLOC( (m + 2*num_bool_vars + 2*num_int_vars) * sizeof(pfloat) );
+    new_G_size = Gjc[n] + (2 * num_bool_vars) + (2 * num_int_vars);
+    prob->Gpr_new = (pfloat *)MALLOC(new_G_size * sizeof(pfloat));
+    prob->Gjc_new = (idxint *)MALLOC((n + 1) * sizeof(idxint));
+    prob->Gir_new = (idxint *)MALLOC(new_G_size * sizeof(idxint));
+    prob->h_new = (pfloat *)MALLOC((m + 2 * num_bool_vars + 2 * num_int_vars) * sizeof(pfloat));
 
     /* Copy the data and convert it to boolean*/
     socp_to_ecos_bb(num_bool_vars, bool_vars_idx,
@@ -201,31 +237,30 @@ ecos_bb_pwork* ECOS_BB_setup(
                     Gpr, Gjc, Gir,
                     prob->Gpr_new, prob->Gjc_new, prob->Gir_new,
                     h, prob->h_new);
-    m += 2*(num_bool_vars + num_int_vars);
-    l += 2*(num_bool_vars + num_int_vars);
+    m += 2 * (num_bool_vars + num_int_vars);
+    l += 2 * (num_bool_vars + num_int_vars);
 
     /* MALLOC the initial node's book keeping data #(2*maxIter)*/
-    prob->nodes = (node*) CALLOC( prob->stgs->maxit, sizeof(node) );
+    prob->nodes = (node *)CALLOC(prob->stgs->maxit, sizeof(node));
 
     /* MALLOC the id arrays*/
-    prob->bool_node_ids = (char*)  MALLOC( prob->stgs->maxit*num_bool_vars*sizeof(char) );
-    prob->int_node_ids = (pfloat*) MALLOC( 2*prob->stgs->maxit*num_int_vars*sizeof(pfloat) );
+    prob->bool_node_ids = (char *)MALLOC(prob->stgs->maxit * num_bool_vars * sizeof(char));
+    prob->int_node_ids = (pfloat *)MALLOC(2 * prob->stgs->maxit * num_int_vars * sizeof(pfloat));
 
     /* MALLOC the tmp node id*/
-    prob->tmp_bool_node_id = (char*) MALLOC( num_bool_vars*sizeof(char) );
-    prob->tmp_int_node_id = (pfloat*) MALLOC( 2*num_int_vars*sizeof(pfloat) );
+    prob->tmp_bool_node_id = (char *)MALLOC(num_bool_vars * sizeof(char));
+    prob->tmp_int_node_id = (pfloat *)MALLOC(2 * num_int_vars * sizeof(pfloat));
 
     /* Store the pointer to the boolean idx*/
     prob->bool_vars_idx = bool_vars_idx;
     prob->int_vars_idx = int_vars_idx;
 
     /* MALLOC the best optimal solution's memory*/
-    prob->x = (pfloat*) MALLOC( n*sizeof(pfloat) );
-    prob->y = (pfloat*) MALLOC( p*sizeof(pfloat) );
-    prob->z = (pfloat*) MALLOC( m*sizeof(pfloat) );
-    prob->s = (pfloat*) MALLOC( m*sizeof(pfloat) );
-    prob->info = (stats*) MALLOC( sizeof(stats) );
-
+    prob->x = (pfloat *)MALLOC(n * sizeof(pfloat));
+    prob->y = (pfloat *)MALLOC(p * sizeof(pfloat));
+    prob->z = (pfloat *)MALLOC(m * sizeof(pfloat));
+    prob->s = (pfloat *)MALLOC(m * sizeof(pfloat));
+    prob->info = (stats *)MALLOC(sizeof(stats));
 
     /* Setup the ecos solver*/
     prob->ecos_prob = ECOS_setup(
@@ -241,7 +276,7 @@ ecos_bb_pwork* ECOS_BB_setup(
     prob->global_U = ECOS_INFINITY;
 
     /* offset the h pointer for the user*/
-    prob->h = &prob->ecos_prob->h[ 2*(num_bool_vars + num_int_vars) ];
+    prob->h = &prob->ecos_prob->h[2 * (num_bool_vars + num_int_vars)];
 
     /* Map the other variables*/
     prob->A = prob->ecos_prob->A;
@@ -263,11 +298,11 @@ ecos_bb_pwork* ECOS_BB_setup(
 #endif
 
     PRINTTEXT("ECOS h: ");
-    for (i=0; i<m; ++i){
-        PRINTTEXT("%.2f ", prob->ecos_prob->h[i] );
+    for (i = 0; i < m; ++i)
+    {
+        PRINTTEXT("%.2f ", prob->ecos_prob->h[i]);
     }
     PRINTTEXT("\n");
-
 
     PRINTTEXT("\n");
 #endif
@@ -276,7 +311,8 @@ ecos_bb_pwork* ECOS_BB_setup(
 }
 
 /* Performs the same function as ecos_cleanup*/
-void ECOS_BB_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep){
+void ECOS_BB_cleanup(ecos_bb_pwork *prob, idxint num_vars_keep)
+{
     /* FREE solver memory*/
     ECOS_cleanup(prob->ecos_prob, num_vars_keep);
     FREE(prob->tmp_bool_node_id);
@@ -289,12 +325,16 @@ void ECOS_BB_cleanup(ecos_bb_pwork* prob, idxint num_vars_keep){
     FREE(prob->z);
     FREE(prob->s);
     FREE(prob->info);
-    if (prob->default_settings){FREE(prob->stgs);}
+    if (prob->default_settings)
+    {
+        FREE(prob->stgs);
+    }
     FREE(prob);
 }
 
-settings_bb* get_default_ECOS_BB_settings(){
-    settings_bb* stgs = (settings_bb*) MALLOC( sizeof(settings_bb) );
+settings_bb *get_default_ECOS_BB_settings()
+{
+    settings_bb *stgs = (settings_bb *)MALLOC(sizeof(settings_bb));
     stgs->maxit = MI_MAXITER;
     stgs->verbose = 1;
     stgs->abs_tol_gap = MI_ABS_EPS;
