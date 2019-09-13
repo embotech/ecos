@@ -332,6 +332,10 @@ void ECOS_BB_cleanup(ecos_bb_pwork *prob, idxint num_vars_keep)
     FREE(prob->tmp_int_node_id);
     FREE(prob->tmp_branching_bool_node_id);
     FREE(prob->tmp_branching_int_node_id);
+    FREE(prob->Gpr_new);
+    FREE(prob->Gjc_new);
+    FREE(prob->Gir_new);
+    FREE(prob->h_new);
     FREE(prob->nodes);
     FREE(prob->bool_node_ids);
     FREE(prob->int_node_ids);
