@@ -1231,7 +1231,38 @@ idxint ECOS_solve(pwork* w)
 #endif
                 }
                 break;
+            }
+            /* stuck on NAN? */
+            else if( isnan(w->info->pcost) ){
+#if PRINTLEVEL > 0
+                const char *what = "Reached NAN dead end";
+#endif
+                /* Determine whether current iterate is better than what we had so far */
+                if( compareStatistics( w->info, w->best_info) ){
+#if PRINTLEVEL > 0
+                    if( w->stgs->verbose )
+                        PRINTTEXT("%s, stopping.\n",what);
+#endif
+                } else {
+#if PRINTLEVEL > 0
+                    if( w->stgs->verbose )
+                        PRINTTEXT("%s, recovering best iterate (%i) and stopping.\n", what, (int)w->best_info->iter);
+#endif
+                    restoreBestIterate( w );
+                }
 
+                /* Determine whether we have reached reduced precision */
+                exitcode = checkExitConditions( w, ECOS_INACC_OFFSET );
+                if( exitcode == ECOS_NOT_CONVERGED_YET ){
+                    exitcode = ECOS_NUMERICS;
+#if PRINTLEVEL > 0
+                    if( w->stgs->verbose ) {
+                        const char* what = interrupted ? "INTERRUPTED" : "RAN OUT OF ITERATIONS";
+                        PRINTTEXT("\n%s (reached feastol=%3.1e, reltol=%3.1e, abstol=%3.1e).", what, MAX(w->info->dres, w->info->pres), w->info->relgap, w->info->gap);
+                    }
+#endif
+                }
+                break;
             }
         } else {
 
