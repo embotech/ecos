@@ -29,3 +29,5 @@ runecos
 python/build
 python/dist
 python/*.pyc
+
+.vscode/
