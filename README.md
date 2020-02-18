@@ -5,8 +5,6 @@ Embedded Conic Solver (ECOS)
 [![Windows Build](https://ci.appveyor.com/api/projects/status/github/embotech/ecos)](https://ci.appveyor.com/api/projects/status/github/embotech/ecos)
 [![Coverage Status](https://coveralls.io/repos/embotech/ecos/badge.svg?branch=develop)](https://coveralls.io/r/embotech/ecos)
 
-**Visit www.embotech.com/ECOS for detailed information on ECOS.**
-
 ECOS is a numerical software for solving convex second-order cone programs (SOCPs) of type
 ```
 min  c'*x
@@ -56,7 +54,7 @@ ECOS has numerous interfaces, each hosted in a separate git repository. The core
 * [R interface](https://github.com/bnaras/ECOSolveR). Also on [CRAN](https://cran.r-project.org/package=ECOSolveR).
 
 
-Please refer to the corresponding repositories or the [embotech documentation](https://www.embotech.com/ECOS) for information on how to install and use the software.
+Please refer to the corresponding repositories or the [wiki](https://github.com/embotech/ecos/wiki) for information on how to install and use ECOS through these interfaces.
 
 
 License
@@ -67,7 +65,7 @@ ECOS is distributed under the [GNU General Public License v3.0](http://www.gnu.o
 
 Documentation
 ----
-A full list of features, documentation and installation instructions as well as pre-compiled Matlab MEX binaries can be found [here](https://www.embotech.com/ECOS).
+The current home of the documentation is [here](https://github.com/embotech/ecos/wiki). If you find something is missing, feel free to open an issue and describe what you'd like to be documented better.
 
 
 Credits
