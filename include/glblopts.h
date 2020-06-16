@@ -66,9 +66,9 @@ typedef double pfloat;              /* for numerical values  */
 #ifdef MATLAB_MEX_FILE
 #include "mex.h"
 #define PRINTTEXT mexPrintf
-#elif defined PYTHON
-#include <Python.h>
-#define PRINTTEXT PySys_WriteStdout
+// #elif defined PYTHON
+// #include <Python.h>
+// #define PRINTTEXT PySys_WriteStdout
 #else
 #define PRINTTEXT printf
 #endif
