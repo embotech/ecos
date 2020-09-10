@@ -1652,7 +1652,8 @@ void ECOS_updateData(pwork *w, pfloat *Gpr, pfloat *Apr,
     idxint k;
 
 #if defined EQUILIBRATE && EQUILIBRATE > 0
-    /* only unset the equilibration if new data is outside old data */
+    /* Only unequilibrate the old data if the new data is in a different location in memory. */
+    /* This is required for backward compatibility since existing code might need this step. */
     if (
         ((Gpr + w->G->nnz < w->G->pr) || (w->G->pr + w->G->nnz < Gpr)) &&
         ((Apr + w->A->nnz < w->A->pr) || (w->A->pr + w->A->nnz < Apr)) &&
@@ -1676,6 +1677,7 @@ void ECOS_updateData(pwork *w, pfloat *Gpr, pfloat *Apr,
     w->c = c;
 
 #if defined EQUILIBRATE && EQUILIBRATE > 0
+    /* Here, we need to equilibrate unconditionally since all new data is unequilibrated. */
     set_equilibration(w);
 #endif
 
