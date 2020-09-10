@@ -10,8 +10,16 @@ project(ecos
 option(USE_LONG "Whether to use Long or Int for index type." ON)
 
 # Set compiler flags
-set(DEBUG_OPTIONS -O0 -Wall -Wextra)
-set(RELEASE_OPTIONS -O3)
+set(DEBUG_OPTIONS "")
+set(RELEASE_OPTIONS "")
+
+if(MSVC)
+    list(APPEND DEBUG_OPTIONS "/Od" "/Wall")
+    list(APPEND RELEASE_OPTIONS "/O2")
+else()
+    list(APPEND DEBUG_OPTIONS "-O0" "-Wall" "-Wextra")
+    list(APPEND RELEASE_OPTIONS "-O3")
+endif()
 
 # Add the ECOS headers
 set(ecos_headers
@@ -80,7 +88,9 @@ if(USE_LONG)
 endif()
 
 # Link math library
-target_link_libraries(ecos PRIVATE m)
+if(NOT MSVC)
+    target_link_libraries(ecos PRIVATE m)
+endif()
 
 target_include_directories(ecos
     PUBLIC 
