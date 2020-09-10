@@ -31,3 +31,5 @@ python/dist
 python/*.pyc
 
 .vscode/
+
+build
