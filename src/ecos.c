@@ -1652,25 +1652,44 @@ void ECOS_updateData(pwork *w, pfloat *Gpr, pfloat *Apr,
     idxint k;
 
 #if defined EQUILIBRATE && EQUILIBRATE > 0
+    /* Only unequilibrate the old data if the new data is in a different location in memory. */
+    /* This is required for backward compatibility since existing code might need this step. */
+    if (
+        ((Gpr + w->G->nnz < w->G->pr) || (w->G->pr + w->G->nnz < Gpr)) &&
+        ((Apr + w->A->nnz < w->A->pr) || (w->A->pr + w->A->nnz < Apr)) &&
+        ((c + w->n < w->c) || (w->c + w->n < c)) &&
+        ((h + w->m < w->h) || (w->h + w->m < h)) &&
+        ((b + w->p < w->b) || (w->b + w->p < b))
+    ){
     unset_equilibration(w);
+    }
 #endif
 
     /* update pointers */
-    w->G->pr = Gpr;
-    w->A->pr = Apr;
+    if(w->G){
+        w->G->pr = Gpr;
+        w->h = h;
+    }
+    if(w->A){
+        w->A->pr = Apr;
+        w->b = b;
+    }
     w->c = c;
-    w->h = h;
-    w->b = b;
 
 #if defined EQUILIBRATE && EQUILIBRATE > 0
+    /* Here, we need to equilibrate unconditionally since all new data is unequilibrated. */
     set_equilibration(w);
 #endif
 
     /* update KKT matrix */
-    for (k=0; k<w->A->nnz; k++){
-        w->KKT->PKPt->pr[w->KKT->PK[w->AtoK[k]]] = Apr[k];
+    if(w->A){
+        for (k=0; k<w->A->nnz; k++){
+            w->KKT->PKPt->pr[w->KKT->PK[w->AtoK[k]]] = Apr[k];
+        }
     }
-    for (k=0; k<w->G->nnz; k++){
-        w->KKT->PKPt->pr[w->KKT->PK[w->GtoK[k]]] = Gpr[k];
+    if(w->G){
+        for (k=0; k<w->G->nnz; k++){
+            w->KKT->PKPt->pr[w->KKT->PK[w->GtoK[k]]] = Gpr[k];
+        }
     }
 }
