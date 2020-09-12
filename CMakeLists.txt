@@ -92,6 +92,8 @@ if(NOT MSVC)
     target_link_libraries(ecos PRIVATE m)
 endif()
 
+include(GNUInstallDirs)
+
 target_include_directories(ecos
     PUBLIC 
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
@@ -102,8 +104,6 @@ target_include_directories(ecos
 )
 
 # Installation
-include(GNUInstallDirs)
-
 install(TARGETS ecos
         EXPORT  ${PROJECT_NAME}
         ARCHIVE       DESTINATION "${CMAKE_INSTALL_LIBDIR}"
