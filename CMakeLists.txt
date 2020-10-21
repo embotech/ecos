@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 project(ecos
-        VERSION 2.0.7
+        VERSION 2.0.8
         LANGUAGES C)
 
 # Options
