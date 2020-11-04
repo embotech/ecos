@@ -32,6 +32,8 @@
 #include "equil.h"
 #include "spla.h"
 
+#include <string.h>
+
 #define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
 
 /* Print utility functions*/
