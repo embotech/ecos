@@ -99,7 +99,7 @@ static void print_node(ecos_bb_pwork *prob, idxint i)
     else
     {
         int j;
-        PRINTTEXT("Node info %u: %u : %.2f : %.2f : %u : %.2f Partial id:", i, prob->nodes[i].status, prob->nodes[i].L, prob->nodes[i].U, (int)prob->nodes[i].split_idx, prob->nodes[i].split_val);
+        PRINTTEXT("Node info %li: %u : %.2f : %.2f : %u : %.2f Partial id:", (long)i, prob->nodes[i].status, prob->nodes[i].L, prob->nodes[i].U, (int)prob->nodes[i].split_idx, prob->nodes[i].split_val);
         for (j = 0; j < prob->num_bool_vars; ++j)
             PRINTTEXT("%i ", get_bool_node_id(i, prob)[j]);
         PRINTTEXT(" | ");
