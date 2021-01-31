@@ -50,7 +50,7 @@ ECOS has numerous interfaces, each hosted in a separate git repository. The core
 
 * [MATLAB interface](https://github.com/embotech/ecos-matlab)
 * [Python interface](https://github.com/embotech/ecos-python)
-* [Julia interface](https://github.com/JuliaOpt/ECOS.jl)
+* [Julia interface](https://github.com/jump-dev/ECOS.jl)
 * [R interface](https://github.com/bnaras/ECOSolveR). Also on [CRAN](https://cran.r-project.org/package=ECOSolveR).
 
 
