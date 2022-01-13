@@ -38,7 +38,8 @@ typedef struct kkt{
 	spmat*  PKPt;    /* Permuted KKT matrix, upper part only      */	
 	spmat*  L;       /* LDL factor L                              */
     
-	pfloat* D;       /* diagonal matrix D                         */	
+	pfloat* D;       /* diagonal matrix D                         */
+    pfloat* Dinv;    /* inverse of diagonal matrix D              */
 	pfloat* work1;   /* workspace needed for factorization        */
 	pfloat* work2;   /* workspace needed for factorization        */
 	pfloat* work3;   /* workspace needed for factorization        */
@@ -58,9 +59,9 @@ typedef struct kkt{
 	idxint* Pinv;    /* reverse permutation						  */
 	idxint* PK;      /* permutation of row indices of KKT matrix  */	
 	idxint* Parent;  /* Elimination tree of factorization         */
-	idxint* Sign;    /* Permuted sign vector for regularization   */
-	idxint* Pattern; /* idxint workspace needed for factorization */
-	idxint* Flag;    /* idxint workspace needed for factorization */
+    idxint* Sign;    /* Permuted sign vector for regularization   */
+    ecos_bool*  bwork; /* ecos_bool workspace needed for factorization */
+	idxint* iwork;   /* idxint workspace needed for factorization */
 	idxint* Lnz;     /* idxint workspace needed for factorization */
 	
 	pfloat delta;    /* size of regularization					  */

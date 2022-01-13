@@ -50,6 +50,8 @@
 #include <math.h>
 /* NOTE: Currently, pfloat MUST be double for ecos */
 typedef double pfloat;              /* for numerical values  */
+typedef unsigned char ecos_bool;    /* for boolean values  */
+
 #define ECOS_INFINITY   (DBL_MAX + DBL_MAX)
 #define ECOS_NAN        (ECOS_INFINITY - ECOS_INFINITY)
 

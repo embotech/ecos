@@ -24,6 +24,8 @@ endif()
 # Add the ECOS headers
 set(ecos_headers
     "${CMAKE_CURRENT_SOURCE_DIR}/external/SuiteSparse_config/SuiteSparse_config.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/qdldl/configure/qdldl_types.h.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/qdldl/configure/qdldl_version.h.in"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/cone.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/ctrlc.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/data.h"
@@ -57,6 +59,9 @@ set(ecos_sources
 
     # LDL
     "${CMAKE_CURRENT_SOURCE_DIR}/external/ldl/src/ldl.c"
+
+    # QDLDL
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/qdldl/src/qdldl.c"
 
     # ECOS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/cone.c"
@@ -97,6 +102,7 @@ target_include_directories(ecos
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/amd/include>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/ldl/include>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/qdldl/include>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/SuiteSparse_config>"
     "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}/ecos>"
 )

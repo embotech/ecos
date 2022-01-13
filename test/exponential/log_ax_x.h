@@ -46,7 +46,7 @@ pfloat abs_err = fabs(true_x-ecos_x);
 ECOS_cleanup(mywork, 0);
 
 mu_assert("log_ax_x: ECOS failed to produce outputflag OPTIMAL", exitflag == ECOS_OPTIMAL );
-mu_assert("log_ax_x: ECOS failed to produce the desired precision", abs_err < 1e-11);
+mu_assert("log_ax_x: ECOS failed to produce the desired precision", abs_err < 1.3e-11);
 
 return 0;
 }

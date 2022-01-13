@@ -27,7 +27,7 @@
  */
 
 #include "kkt.h"
-#include "ldl.h"
+#include "qdldl.h"
 #include "splamm.h"
 #include "ecos.h"
 #include "cone.h"
@@ -43,30 +43,24 @@ idxint kkt_factor(kkt* KKT, pfloat eps, pfloat delta)
 {
 	idxint nd;
 
-    /* returns n if successful, k if D (k,k) is zero */
-	nd = LDL_numeric2(
-				KKT->PKPt->n,	/* K and L are n-by-n, where n >= 0 */
-				KKT->PKPt->jc,	/* input of size n+1, not modified */
-				KKT->PKPt->ir,	/* input of size nz=Kjc[n], not modified */
-				KKT->PKPt->pr,	/* input of size nz=Kjc[n], not modified */
-				KKT->L->jc,		/* input of size n+1, not modified */
-				KKT->Parent,	/* input of size n, not modified */
-				KKT->Sign,      /* input, permuted sign vector for regularization */
-                eps,            /* input, inverse permutation vector */
-				delta,          /* size of dynamic regularization */
-				KKT->Lnz,		/* output of size n, not defn. on input */
-				KKT->L->ir,		/* output of size lnz=Lp[n], not defined on input */
-				KKT->L->pr,		/* output of size lnz=Lp[n], not defined on input */
-				KKT->D,			/* output of size n, not defined on input */
-				KKT->work1,		/* workspace of size n, not defn. on input or output */
-				KKT->Pattern,   /* workspace of size n, not defn. on input or output */
-				KKT->Flag	    /* workspace of size n, not defn. on input or output */
-#if PROFILING > 1
-                      , t1, t2
-#endif
+    nd = QDLDL_factor(
+            KKT->PKPt->n,	/* K and L are n-by-n, where n >= 0 */
+            KKT->PKPt->jc,	/* input of size n+1, not modified */
+            KKT->PKPt->ir,	/* input of size nz=Kjc[n], not modified */
+            KKT->PKPt->pr,	/* input of size nz=Kjc[n], not modified */
+            KKT->L->jc,		/* input of size n+1, not modified */
+            KKT->L->ir,		/* output of size lnz=Lp[n], not defined on input */
+            KKT->L->pr,		/* output of size lnz=Lp[n], not defined on input */
+            KKT->D,			/* output of size n, not defined on input */
+            KKT->Dinv,     /* output of size n, not defined on input */
+            KKT->Lnz,		/* output of size n, not defn. on input */
+            KKT->Parent,	/* input of size n, not modified */
+            KKT->bwork,  /* workspace of size n, not defined on input or output */
+            KKT->iwork,   /* workspace of size 3*n, not defined on input or output */
+            KKT->work1    /* workspace of size n, not defined on input or output */
     );
-
-	return nd == KKT->PKPt->n ? KKT_OK : KKT_PROBLEM;
+    /* Negative return values indicate problems factoring the matrix */
+	return nd > 0 ? KKT_OK : KKT_PROBLEM;
 }
 
 
@@ -116,10 +110,11 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
     pfloat error_threshold = bnorm*LINSYSACC;
     idxint nK = KKT->PKPt->n;
 
-	/* forward - diagonal - backward solves: Px holds solution */
-	LDL_lsolve2(nK, Pb, KKT->L->jc, KKT->L->ir, KKT->L->pr, Px );
-	LDL_dsolve(nK, Px, KKT->D);
-	LDL_ltsolve(nK, Px, KKT->L->jc, KKT->L->ir, KKT->L->pr);
+    /* Initialize Px to the value of Pb */
+    for( j=0; j < nK; j++ ){ Px[j] = Pb[j]; }
+
+    /* Solve the system of equations, Px holds the solution */
+    QDLDL_solve(nK, KKT->L->jc, KKT->L->ir, KKT->L->pr, KKT->Dinv, Px );
 
 #if PRINTLEVEL > 2
     if( p > 0 ){
@@ -245,10 +240,11 @@ idxint kkt_solve(kkt* KKT, spmat* A, spmat* G, pfloat* Pb, pfloat* dx, pfloat* d
         /* permute */
         for( i=0; i<nK; i++) { Pe[Pinv[i]] = e[i]; }
 
-        /* forward - diagonal - backward solves: dPx holds solution */
-        LDL_lsolve2(nK, Pe, KKT->L->jc, KKT->L->ir, KKT->L->pr, dPx);
-        LDL_dsolve(nK, dPx, KKT->D);
-        LDL_ltsolve(nK, dPx, KKT->L->jc, KKT->L->ir, KKT->L->pr);
+        /* Initialize dPx to the value of Pe */
+        for( j=0; j<nK; j++ ){ dPx[j] = Pe[j]; }
+
+        /* Solve the system of equations, dPx holds the solution */
+        QDLDL_solve(nK, KKT->L->jc, KKT->L->ir, KKT->L->pr, KKT->Dinv, dPx );
 
         /* add refinement to Px */
         for( i=0; i<nK; i++ ){ Px[i] += dPx[i]; }

@@ -5,7 +5,7 @@
 
 # Configuration of make process in ecos.mk
 include ecos.mk
-CFLAGS += -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config 
+CFLAGS += -Iinclude -Iexternal/qdldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config
 TEST_INCLUDES = -Itest -Itest/generated
 
 # Compile all C code, including the C-callable routine
@@ -76,7 +76,7 @@ $(SHAREDNAME): $(LDL) $(AMD) $(ECOS_OBJS)
 TEST_OBJS = qcml_utils.o norm.o sq_norm.o sum_sq.o quad_over_lin.o inv_pos.o
 .PHONY: test
 test: ecostester ecos_bb_test
-ecostester: test/ecostester.c $(TEST_OBJS) libecos.a
+ecostester: test/ecostester.c $(TEST_OBJS) libecos.a external/qdldl/build/out/libqdldl.a
 	$(CC) $(CFLAGS) $(TEST_INCLUDES) -o $@ $^ $(LDFLAGS)
 
 ecos_bb_test: test/bb_test.c libecos_bb.a
