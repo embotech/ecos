@@ -79,7 +79,7 @@ test: ecostester ecos_bb_test
 ecostester: test/ecostester.c $(TEST_OBJS) libecos.a external/qdldl/build/out/libqdldl.a
 	$(CC) $(CFLAGS) $(TEST_INCLUDES) -o $@ $^ $(LDFLAGS)
 
-ecos_bb_test: test/bb_test.c libecos_bb.a
+ecos_bb_test: test/bb_test.c libecos_bb.a external/qdldl/build/out/libqdldl.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 %.o: test/generated/%.c test/generated/%.h
