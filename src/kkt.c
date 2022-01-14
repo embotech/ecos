@@ -41,8 +41,10 @@ idxint kkt_factor(kkt* KKT, pfloat eps, pfloat delta, pfloat *t1, pfloat* t2)
 idxint kkt_factor(kkt* KKT, pfloat eps, pfloat delta)
 #endif
 {
-	idxint nd;
+    /* If problem has size zero, there is nothing to factor */
+    if (KKT->PKPt->n == 0){ return KKT_OK; }
 
+	idxint nd;
     nd = QDLDL_factor(
             KKT->PKPt->n,	/* K and L are n-by-n, where n >= 0 */
             KKT->PKPt->jc,	/* input of size n+1, not modified */
@@ -60,7 +62,7 @@ idxint kkt_factor(kkt* KKT, pfloat eps, pfloat delta)
             KKT->work1    /* workspace of size n, not defined on input or output */
     );
     /* Negative return values indicate problems factoring the matrix */
-	return nd > 0 ? KKT_OK : KKT_PROBLEM;
+	return nd >= 0 ? KKT_OK : KKT_PROBLEM;
 }
 
 
