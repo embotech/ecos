@@ -267,9 +267,6 @@ idxint init(pwork* w)
 	timer tfactor, tkktsolve;
 #endif
 
-    /* set regularization parameter */
-	w->KKT->delta = w->stgs->delta;
-
     /* Initialize KKT matrix */
     kkt_init(w->KKT->PKPt, w->KKT->PK, w->C);
 

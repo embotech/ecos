@@ -759,8 +759,6 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->stgs = (settings *)MALLOC(sizeof(settings));
 	mywork->stgs->maxit = MAXIT;
 	mywork->stgs->gamma = GAMMA;
-	mywork->stgs->delta = DELTA;
-    mywork->stgs->eps = EPS;
 	mywork->stgs->nitref = NITREF;
 	mywork->stgs->abstol = ABSTOL;
 	mywork->stgs->feastol = FEASTOL;

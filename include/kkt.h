@@ -63,8 +63,6 @@ typedef struct kkt{
 	ecos_bool*  bwork; /* ecos_bool workspace needed for factorization */
 	idxint* iwork;   /* idxint workspace needed for factorization */
 	idxint* Lnz;     /* idxint workspace needed for factorization */
-	
-	pfloat delta;    /* size of regularization					  */
 } kkt;
 
 /* Return codes */

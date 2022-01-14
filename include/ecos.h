@@ -98,8 +98,6 @@ extern "C" {
 /* SETTINGS STRUCT ----------------------------------------------------- */
 typedef struct settings{
 	pfloat gamma;                /* scaling the final step length        */
-	pfloat delta;                /* regularization parameter             */
-    pfloat eps;                  /* regularization threshold             */
 	pfloat feastol;              /* primal/dual infeasibility tolerance  */
 	pfloat abstol;               /* absolute tolerance on duality gap    */
 	pfloat reltol;               /* relative tolerance on duality gap    */
