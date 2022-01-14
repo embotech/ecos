@@ -73,19 +73,10 @@ typedef struct kkt{
 
 /* METHODS */
 
-/** 
- * Factorization of KKT matrix. Just a convenient wrapper for the LDL call.
- * The second argument delta determindes the threshold of dynamic regularization,
- * while the last argument is the regularization parameter if it becomes active.
- *
- * If detailed profiling is turned on, the function returns the accumulated times
- * for sparsity pattern computation in t1 and for numerical solve in t2.
+/**
+ * Factorization of KKT matrix. Just a convenient wrapper for the QDLDL call.
  */
-#if PROFILING > 1
-idxint kkt_factor(kkt* KKT, pfloat eps, pfloat delta, pfloat *t1, pfloat *t2);
-#else
-idxint kkt_factor(kkt* KKT, pfloat eps, pfloat delta);
-#endif
+idxint kkt_factor(kkt* KKT);
 
 
 /**

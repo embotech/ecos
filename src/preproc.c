@@ -739,8 +739,6 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #if PROFILING > 1
 	mywork->info->tfactor = 0;
 	mywork->info->tkktsolve = 0;
-    mywork->info->tfactor_t1 = 0;
-    mywork->info->tfactor_t2 = 0;
 #endif
 #if PRINTLEVEL > 2
     PRINTTEXT("Memory allocated for info struct\n");

@@ -320,10 +320,10 @@ idxint init(pwork* w)
 	/* Factor KKT matrix - this is needed in all 3 linear system solves */
 #if PROFILING > 1
 	tic(&tfactor);
-    KKT_FACTOR_RETURN_CODE = kkt_factor(w->KKT, w->stgs->eps, w->stgs->delta, &w->info->tfactor_t1, &w->info->tfactor_t2);
+    KKT_FACTOR_RETURN_CODE = kkt_factor(w->KKT);
 	w->info->tfactor += toc(&tfactor);
 #else
-    KKT_FACTOR_RETURN_CODE = kkt_factor(w->KKT, w->stgs->eps, w->stgs->delta);
+    KKT_FACTOR_RETURN_CODE = kkt_factor(w->KKT);
 #endif
 
     /* check if factorization was successful, exit otherwise */
@@ -1322,10 +1322,10 @@ idxint ECOS_solve(pwork* w)
         /* factor KKT matrix */
 #if PROFILING > 1
 		tic(&tfactor);
-        KKT_FACTOR_RETURN_CODE = kkt_factor(w->KKT, w->stgs->eps, w->stgs->delta, &w->info->tfactor_t1, &w->info->tfactor_t2);
+        KKT_FACTOR_RETURN_CODE = kkt_factor(w->KKT);
         w->info->tfactor += toc(&tfactor);
 #else
-        KKT_FACTOR_RETURN_CODE = kkt_factor(w->KKT, w->stgs->eps, w->stgs->delta);
+        KKT_FACTOR_RETURN_CODE = kkt_factor(w->KKT);
 #endif
 
 #if DEBUG > 0

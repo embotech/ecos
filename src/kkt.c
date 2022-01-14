@@ -35,11 +35,7 @@
 #include <math.h>
 
 /* Factorization of KKT matrix. Just a wrapper for some LDL code */
-#if PROFILING > 1
-idxint kkt_factor(kkt* KKT, pfloat eps, pfloat delta, pfloat *t1, pfloat* t2)
-#else
-idxint kkt_factor(kkt* KKT, pfloat eps, pfloat delta)
-#endif
+idxint kkt_factor(kkt* KKT)
 {
     /* If problem has size zero, there is nothing to factor */
     if (KKT->PKPt->n == 0){ return KKT_OK; }

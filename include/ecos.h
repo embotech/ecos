@@ -149,8 +149,6 @@ typedef struct stats{
 	pfloat tkktcreate;
 	pfloat ttranspose;
 	pfloat tperm;
-    pfloat tfactor_t1;
-    pfloat tfactor_t2;
 #endif
 #ifdef EXPCONE
     /* Counters for backtracking, each of these counts
