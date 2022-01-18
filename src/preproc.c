@@ -38,9 +38,8 @@
 #include "amd.h"
 #include "amd_internal.h"
 
-/* SPARSE LDL LIBRARY -------------------------------------------------- */
-#include "ldl.h"
-
+/* SPARSE QDLDL LIBRARY -------------------------------------------------*/
+#include "qdldl.h"
 
 /* CHOOSE RIGHT MEMORY MANAGER ----------------------------------------- */
 #ifdef MATLAB_MEX_FILE
@@ -454,22 +453,23 @@ void ECOS_cleanup(pwork* w, idxint keepvars)
 
 	/* Free KKT related memory      ---            below are the corresponding MALLOCs                */
 	FREE(w->KKT->D);                /* mywork->KKT->D = (pfloat *)MALLOC(nK*sizeof(pfloat));          */
+    FREE(w->KKT->Dinv);              /* mywork->KKT->Dinv = (pfloat *)MALLOC(nK*sizeof(pfloat));      */
 	FREE(w->KKT->dx1);              /* mywork->KKT->dx1 = (pfloat *)MALLOC(mywork->n*sizeof(pfloat)); */
 	FREE(w->KKT->dx2);              /* mywork->KKT->dx2 = (pfloat *)MALLOC(mywork->n*sizeof(pfloat)); */
 	FREE(w->KKT->dy1);              /* mywork->KKT->dy1 = (pfloat *)MALLOC(mywork->p*sizeof(pfloat)); */
 	FREE(w->KKT->dy2);              /* mywork->KKT->dy2 = (pfloat *)MALLOC(mywork->p*sizeof(pfloat)); */
 	FREE(w->KKT->dz1);              /* mywork->KKT->dz1 = (pfloat *)MALLOC(mywork->m*sizeof(pfloat)); */
 	FREE(w->KKT->dz2);              /* mywork->KKT->dz2 = (pfloat *)MALLOC(mywork->m*sizeof(pfloat)); */
-	FREE(w->KKT->Flag);             /* mywork->KKT->Flag = (idxint *)MALLOC(nK*sizeof(idxint));       */
+	FREE(w->KKT->iwork);            /* mywork->KKT->iwork = (idxint *)MALLOC(3*nK*sizeof(idxint));    */
 	freeSparseMatrix(w->KKT->L);
 	FREE(w->KKT->Lnz);              /* mywork->KKT->Lnz = (idxint *)MALLOC(nK*sizeof(idxint));        */
 	FREE(w->KKT->Parent);           /* mywork->KKT->Parent = (idxint *)MALLOC(nK*sizeof(idxint));     */
-	FREE(w->KKT->Pattern);          /* mywork->KKT->Pattern = (idxint *)MALLOC(nK*sizeof(idxint));    */
-	FREE(w->KKT->Sign);             /* mywork->KKT->Sign = (idxint *)MALLOC(nK*sizeof(idxint));       */
+	FREE(w->KKT->bwork);            /* mywork->KKT->bwork = (ecos_bool *)MALLOC(nK*sizeof(ecos_bool));*/
+    FREE(w->KKT->Sign);             /* mywork->KKT->Sign = (idxint *)MALLOC(nK*sizeof(idxint));       */
 	FREE(w->KKT->Pinv);             /* mywork->KKT->Pinv = (idxint *)MALLOC(nK*sizeof(idxint));       */
     FREE(w->KKT->P);
 	FREE(w->KKT->PK);               /* mywork->KKT->PK = (idxint *)MALLOC(KU->nnz*sizeof(idxint));    */
-	freeSparseMatrix(w->KKT->PKPt); /* mywork->KKT->PKPt = newSparseMatrix(nK, nK, KU->nnz);          */
+	freeSparseMatrix(w->KKT->PKPt); /* mywork->KKT->PKPt = newSparseMatrix(nK, nK, KU->nnz);       */
 	FREE(w->KKT->RHS1);             /* mywork->KKT->RHS1 = (pfloat *)MALLOC(nK*sizeof(pfloat));       */
 	FREE(w->KKT->RHS2);             /* mywork->KKT->RHS2 = (pfloat *)MALLOC(nK*sizeof(pfloat));       */
 	FREE(w->KKT->work1);            /* mywork->KKT->work1 = (pfloat *)MALLOC(nK*sizeof(pfloat));      */
@@ -739,8 +739,6 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #if PROFILING > 1
 	mywork->info->tfactor = 0;
 	mywork->info->tkktsolve = 0;
-    mywork->info->tfactor_t1 = 0;
-    mywork->info->tfactor_t2 = 0;
 #endif
 #if PRINTLEVEL > 2
     PRINTTEXT("Memory allocated for info struct\n");
@@ -761,8 +759,6 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 	mywork->stgs = (settings *)MALLOC(sizeof(settings));
 	mywork->stgs->maxit = MAXIT;
 	mywork->stgs->gamma = GAMMA;
-	mywork->stgs->delta = DELTA;
-    mywork->stgs->eps = EPS;
 	mywork->stgs->nitref = NITREF;
 	mywork->stgs->abstol = ABSTOL;
 	mywork->stgs->feastol = FEASTOL;
@@ -888,6 +884,7 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     /* allocate memory in KKT system */
 	mywork->KKT = (kkt *)MALLOC(sizeof(kkt));
 	mywork->KKT->D = (pfloat *)MALLOC(nK*sizeof(pfloat));
+    mywork->KKT->Dinv = (pfloat *)MALLOC(nK*sizeof(pfloat));
 	mywork->KKT->Parent = (idxint *)MALLOC(nK*sizeof(idxint));
 	mywork->KKT->Pinv = (idxint *)MALLOC(nK*sizeof(idxint));
 	mywork->KKT->work1 = (pfloat *)MALLOC(nK*sizeof(pfloat));
@@ -896,8 +893,8 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
     mywork->KKT->work4 = (pfloat *)MALLOC(nK*sizeof(pfloat));
     mywork->KKT->work5 = (pfloat *)MALLOC(nK*sizeof(pfloat));
     mywork->KKT->work6 = (pfloat *)MALLOC(nK*sizeof(pfloat));
-	mywork->KKT->Flag = (idxint *)MALLOC(nK*sizeof(idxint));
-	mywork->KKT->Pattern = (idxint *)MALLOC(nK*sizeof(idxint));
+	mywork->KKT->iwork = (idxint *)MALLOC(3*nK*sizeof(idxint));
+	mywork->KKT->bwork = (ecos_bool *)MALLOC(nK*sizeof(ecos_bool));
 	mywork->KKT->Lnz = (idxint *)MALLOC(nK*sizeof(idxint));
 	mywork->KKT->RHS1 = (pfloat *)MALLOC(nK*sizeof(pfloat));
 	mywork->KKT->RHS2 = (pfloat *)MALLOC(nK*sizeof(pfloat));
@@ -974,19 +971,15 @@ pwork* ECOS_setup(idxint n, idxint m, idxint p, idxint l, idxint ncones, idxint*
 #if PRINTLEVEL > 2
     PRINTTEXT("Allocated memory for cholesky factor L\n");
 #endif
-	LDL_symbolic2(
-		mywork->KKT->PKPt->n,    /* A and L are n-by-n, where n >= 0 */
-		mywork->KKT->PKPt->jc,   /* input of size n+1, not modified */
-		mywork->KKT->PKPt->ir,	 /* input of size nz=Ap[n], not modified */
-		Ljc,					 /* output of size n+1, not defined on input */
-		mywork->KKT->Parent,	 /* output of size n, not defined on input */
-		mywork->KKT->Lnz,		 /* output of size n, not defined on input */
-		mywork->KKT->Flag		 /* workspace of size n, not defn. on input or output */
-	);
+     lnz = QDLDL_etree(
+            mywork->KKT->PKPt->n,
+            mywork->KKT->PKPt->jc,
+            mywork->KKT->PKPt->ir,
+            mywork->KKT->iwork,
+            mywork->KKT->Lnz,
+            mywork->KKT->Parent
+     );
 
-
-	/* assign memory for L */
-	lnz = Ljc[nK];
 #if PRINTLEVEL > 2
 	PRINTTEXT("Nonzeros in L, excluding diagonal: %d\n", (int)lnz) ;
 #endif

@@ -98,8 +98,6 @@ extern "C" {
 /* SETTINGS STRUCT ----------------------------------------------------- */
 typedef struct settings{
 	pfloat gamma;                /* scaling the final step length        */
-	pfloat delta;                /* regularization parameter             */
-    pfloat eps;                  /* regularization threshold             */
 	pfloat feastol;              /* primal/dual infeasibility tolerance  */
 	pfloat abstol;               /* absolute tolerance on duality gap    */
 	pfloat reltol;               /* relative tolerance on duality gap    */
@@ -149,8 +147,6 @@ typedef struct stats{
 	pfloat tkktcreate;
 	pfloat ttranspose;
 	pfloat tperm;
-    pfloat tfactor_t1;
-    pfloat tfactor_t2;
 #endif
 #ifdef EXPCONE
     /* Counters for backtracking, each of these counts

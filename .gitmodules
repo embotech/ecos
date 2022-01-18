@@ -1,0 +1,3 @@
+[submodule "external/qdldl"]
+	path = external/qdldl
+	url = https://github.com/osqp/qdldl.git

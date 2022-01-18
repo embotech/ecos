@@ -55,9 +55,6 @@ set(ecos_sources
     "${CMAKE_CURRENT_SOURCE_DIR}/external/amd/src/amd_preprocess.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/external/amd/src/amd_valid.c"
 
-    # LDL
-    "${CMAKE_CURRENT_SOURCE_DIR}/external/ldl/src/ldl.c"
-
     # ECOS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/cone.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/ctrlc.c"
@@ -76,6 +73,9 @@ set(ecos_sources
     "${CMAKE_CURRENT_SOURCE_DIR}/ecos_bb/ecos_bb_preproc.c"
 )
 
+# QDLDL library
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/qdldl")
+
 # ECOS library
 add_library(ecos SHARED ${ecos_headers} ${ecos_sources})
 
@@ -92,18 +92,20 @@ if(NOT MSVC)
     target_link_libraries(ecos PRIVATE m)
 endif()
 
+# Link QDLDL library
+target_link_libraries(ecos PUBLIC qdldl)
+
 target_include_directories(ecos
-    PUBLIC 
+    PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/amd/include>"
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/ldl/include>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/qdldl/include>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/SuiteSparse_config>"
     "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}/ecos>"
 )
 
 # Installation
 include(GNUInstallDirs)
-
 install(TARGETS ecos
         EXPORT  ${PROJECT_NAME}
         ARCHIVE       DESTINATION "${CMAKE_INSTALL_LIBDIR}"

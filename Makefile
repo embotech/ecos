@@ -5,17 +5,15 @@
 
 # Configuration of make process in ecos.mk
 include ecos.mk
-CFLAGS += -Iinclude -Iexternal/ldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config 
+CFLAGS += -Iinclude -Iexternal/qdldl/include -Iexternal/amd/include -Iexternal/SuiteSparse_config
 TEST_INCLUDES = -Itest -Itest/generated
 
 # Compile all C code, including the C-callable routine
 .PHONY: all
 all: libecos.a libecos_bb.a runecos runecosexp
 
-# build Tim Davis' sparse LDL package
-$(LDL):
-	( cd external/ldl    ; $(MAKE) )
-	$(AR) -x external/ldl/libldl.a
+external/qdldl/build/out/libqdldl.a:
+	( mkdir external/qdldl/build ; cd external/qdldl/build ; cmake .. ; cmake --build . ;)
 
 # build Tim Davis' AMD package
 $(AMD):
@@ -24,13 +22,13 @@ $(AMD):
 
 # build ECOS
 ECOS_OBJS = ecos.o kkt.o cone.o spla.o ctrlc.o timer.o preproc.o splamm.o equil.o expcone.o wright_omega.o
-libecos.a: $(ECOS_OBJS) $(LDL) $(AMD)
+libecos.a: $(ECOS_OBJS) $(AMD) external/qdldl/build/out/libqdldl.a
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
 
 # build ECOS branch-and-bound
 ECOS_BB_OBJS = $(ECOS_OBJS) ecos_bb_preproc.o ecos_bb.o
-libecos_bb.a: $(ECOS_BB_OBJS) $(LDL) $(AMD)
+libecos_bb.a: $(ECOS_BB_OBJS) $(AMD) external/qdldl/build/out/libqdldl.a
 	$(ARCHIVE) $@ $^
 	- $(RANLIB) $@
 
@@ -58,28 +56,28 @@ wright_omega.o      : include/wright_omega.h
 # ECOS demo
 .PHONY: demo
 demo: runecos
-runecos: src/runecos.c libecos.a
+runecos: src/runecos.c libecos.a external/qdldl/build/out/libqdldl.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 	echo ECOS successfully built. Type ./runecos to run demo problem.
 
-runecosexp: src/runecos_exp.c libecos.a
+runecosexp: src/runecos_exp.c libecos.a external/qdldl/build/out/libqdldl.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 	echo ECOS-Exp successfully built. Type ./runecosexp to run demo problem.
 
 # Shared library
 .PHONY: shared
 shared: $(SHAREDNAME)
-$(SHAREDNAME): $(LDL) $(AMD) $(ECOS_OBJS)
+$(SHAREDNAME): $(AMD) $(ECOS_OBJS) external/qdldl/build/out/libqdldl.a
 	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
 
 # ECOS tester
 TEST_OBJS = qcml_utils.o norm.o sq_norm.o sum_sq.o quad_over_lin.o inv_pos.o
 .PHONY: test
 test: ecostester ecos_bb_test
-ecostester: test/ecostester.c $(TEST_OBJS) libecos.a
+ecostester: test/ecostester.c $(TEST_OBJS) libecos.a external/qdldl/build/out/libqdldl.a
 	$(CC) $(CFLAGS) $(TEST_INCLUDES) -o $@ $^ $(LDFLAGS)
 
-ecos_bb_test: test/bb_test.c libecos_bb.a
+ecos_bb_test: test/bb_test.c libecos_bb.a external/qdldl/build/out/libqdldl.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 %.o: test/generated/%.c test/generated/%.h
@@ -92,13 +90,12 @@ ecos_bb_test: test/bb_test.c libecos_bb.a
 # remove object files, but keep the compiled programs and library archives
 .PHONY: clean
 clean:
-	( cd external/ldl    ; $(MAKE) clean )
+	( cd external/qdldl/build    ; $(MAKE) clean )
 	( cd external/amd    ; $(MAKE) clean )
 	- $(RM) $(CLEAN)
 
 # clean, and then remove compiled programs and library archives
 .PHONY: purge
 purge: clean
-	( cd external/ldl    ; $(MAKE) purge )
 	( cd external/amd    ; $(MAKE) purge )
 	- $(RM) libecos.a libecos_bb.a runecos runecosexp
