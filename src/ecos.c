@@ -1655,11 +1655,11 @@ void ECOS_updateData(pwork *w, pfloat *Gpr, pfloat *Apr,
     /* Only unequilibrate the old data if the new data is in a different location in memory. */
     /* This is required for backward compatibility since existing code might need this step. */
     if (
-        ((Gpr + w->G->nnz < w->G->pr) || (w->G->pr + w->G->nnz < Gpr)) &&
-        ((Apr + w->A->nnz < w->A->pr) || (w->A->pr + w->A->nnz < Apr)) &&
+        (!w->G || ((Gpr + w->G->nnz < w->G->pr) || (w->G->pr + w->G->nnz < Gpr))) &&
+        (!w->A || ((Apr + w->A->nnz < w->A->pr) || (w->A->pr + w->A->nnz < Apr))) &&
         ((c + w->n < w->c) || (w->c + w->n < c)) &&
-        ((h + w->m < w->h) || (w->h + w->m < h)) &&
-        ((b + w->p < w->b) || (w->b + w->p < b))
+        (!w->h || ((h + w->m < w->h) || (w->h + w->m < h))) &&
+        (!w->b || ((b + w->p < w->b) || (w->b + w->p < b)))
     ){
     unset_equilibration(w);
     }

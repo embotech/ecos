@@ -371,9 +371,9 @@ void unset_equilibration(pwork *w)
     idxint i;
     /* idxint num_cols = w->A ? w->A->n : w->G->n; */
     idxint num_A_rows = w->A ? w->A->m : 0;
-    idxint num_G_rows = w->G->m;
+    idxint num_G_rows = w->G ? w->G->m : 0;
 
-    if(w->A)
+    if(num_A_rows > 0)
         restore(w->Aequil, w->xequil, w->A);
     if(num_G_rows > 0)
         restore(w->Gequil, w->xequil, w->G);
