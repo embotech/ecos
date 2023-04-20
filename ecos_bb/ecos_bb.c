@@ -414,7 +414,7 @@ static int check_infeasible_bool_var(ecos_bb_pwork *problem, const idxint ecos_r
         get_bool_node_id(node_idx, problem)[var_idx] = other_val;
         problem->tmp_branching_bool_node_id[var_idx] = other_val;
 #if PRINTLEVEL >= 3
-        PRINTTEXT("Found infeasible node path for down-branching in node [%d] in var [%d]\n", node_idx, i);
+        PRINTTEXT("Found infeasible node path for down-branching in node [%d] in var [%d]\n", node_idx, var_idx);
 #endif
         // prevent to have no branching variable set because of continuing
         if (*split_idx == -1)
@@ -443,7 +443,7 @@ static int check_infeasible_int_var(ecos_bb_pwork *problem, const idxint ecos_re
         get_int_node_id(node_idx, problem)[2 * var_idx + (fix_lb ? 0 : 1)] = fix_val;
         problem->tmp_branching_int_node_id[2 * var_idx + (fix_lb ? 0 : 1)] = fix_val;
 #if PRINTLEVEL >= 3
-        PRINTTEXT("Found infeasible node path for down-branching in node [%d] in var [%d]\n", node_idx, i);
+        PRINTTEXT("Found infeasible node path for down-branching in node [%d] in var [%d]\n", node_idx, var_idx);
 #endif
         // prevent to have no branching variable set because of continuing
         if (*split_idx == -1)
